@@ -42,6 +42,8 @@ export interface DispatchTransaction {
   quarryName?: string;       // Nama Kuari Asal (snapshot terdenormalisasi)
   projectId?: string;        // Ref ke Project.id (Proyek Tujuan)
   projectName?: string;      // Nama Proyek Tujuan (snapshot terdenormalisasi)
+  investorId?: string;       // Ref ke Investor.id (Investor Pendana Proyek)
+  investorName?: string;     // Nama Investor Pendana (snapshot terdenormalisasi)
   unit: UnitType;
   quantity: number;          // Jumlah DT atau Ton
 

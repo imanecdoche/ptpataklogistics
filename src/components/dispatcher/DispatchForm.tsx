@@ -352,6 +352,8 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
         quarryName: selectedQuarryName,
         projectId: formProjectId,
         projectName: formProjectName,
+        investorId: selectedProject?.investorId || '',
+        investorName: selectedProject?.investorName || '',
         materialId: selectedMaterialId,
         materialName,
         unit,

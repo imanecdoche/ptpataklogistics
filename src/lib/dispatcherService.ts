@@ -102,6 +102,8 @@ export interface CreateDispatchPayload {
   quarryName?: string;
   projectId?: string;
   projectName?: string;
+  investorId?: string;
+  investorName?: string;
   materialId: string;
   materialName: string;
   unit: 'DT' | 'Ton';
@@ -144,6 +146,8 @@ export async function createDispatchTransaction(
     quarryName: payload.quarryName?.trim() || '',
     projectId: payload.projectId || '',
     projectName: payload.projectName?.trim() || '',
+    investorId: payload.investorId || '',
+    investorName: payload.investorName?.trim() || '',
     materialId: payload.materialId,
     materialName: payload.materialName,
     unit: payload.unit,
