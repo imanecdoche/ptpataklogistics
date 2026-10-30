@@ -1,6 +1,13 @@
 export type UnitType = 'DT' | 'Ton'; // DT = Dump Truck standar 6 m³
 export type PaymentStatus = 'TEMPO' | 'LUNAS';
-export type CashFlowType = 'MODAL_AWAL' | 'TOPUP_MODAL' | 'BELI_MATERIAL' | 'BIAYA_OPERASIONAL' | 'PELUNASAN_PIUTANG';
+export type CashFlowType =
+  | 'MODAL_AWAL'
+  | 'TOPUP_MODAL'
+  | 'BELI_MATERIAL'
+  | 'BIAYA_OPERASIONAL'
+  | 'PELUNASAN_PIUTANG'
+  | 'HUTANG_PIHAK_KETIGA'
+  | 'CICILAN_HUTANG';
 
 export type ClientType = 'PT' | 'CV' | 'UD' | 'PERORANGAN';
 
@@ -28,6 +35,7 @@ export interface MaterialItem {
 export interface DispatchTransaction {
   id: string;
   ticketNumber: string;      // Format: PTK-YYYYMMDD-XXXX
+  suratJalan?: string;       // No. Surat Jalan fisik kuari / pengantaran (opsional)
   deliveryDate: string;      // Format YYYY-MM-DD (Tanggal Jalan / Pelaksanaan Ritase)
   createdAt: string;         // ISO Timestamp (Waktu Tiket Dibuat di Sistem)
   date?: string;             // Legacy field untuk kompatibilitas

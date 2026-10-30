@@ -21,6 +21,7 @@ import { ProjectCombobox } from '@/components/ui/ProjectCombobox';
 import { CustomSelectCombobox } from '@/components/ui/CustomSelectCombobox';
 import { CurrencyInput } from '@/components/ui/CurrencyInput';
 import { useDialog } from '@/context/DialogContext';
+import { useProjectFilter } from '@/context/ProjectFilterContext';
 import { formatEntityNameLive } from '@/lib/nameUtils';
 
 export type MaterialSubTab = 'pricing' | 'routes' | 'catalog';
@@ -37,9 +38,13 @@ export function MasterMaterialPage({
   onNavigateSubTab
 }: MasterMaterialPageProps): React.JSX.Element {
   const dialog = useDialog();
+  const { isDispatcherUser } = useProjectFilter();
 
   // Active Sub-Tab State
   const [currentSubTab, setCurrentSubTab] = useState<MaterialSubTab>(() => {
+    if (isDispatcherUser) {
+      return activeSubTab === 'catalog' ? 'catalog' : 'routes';
+    }
     if (activeSubTab === 'routes' || activeSubTab === 'catalog') {
       return activeSubTab;
     }
@@ -47,12 +52,23 @@ export function MasterMaterialPage({
   });
 
   useEffect(() => {
+    if (isDispatcherUser) {
+      if (activeSubTab === 'catalog') {
+        setCurrentSubTab('catalog');
+      } else {
+        setCurrentSubTab('routes');
+      }
+      return;
+    }
     if (activeSubTab === 'pricing' || activeSubTab === 'routes' || activeSubTab === 'catalog') {
       setCurrentSubTab(activeSubTab);
     }
-  }, [activeSubTab]);
+  }, [activeSubTab, isDispatcherUser]);
 
   const handleSubTabChange = (tab: MaterialSubTab) => {
+    if (isDispatcherUser && tab === 'pricing') {
+      tab = 'routes';
+    }
     setCurrentSubTab(tab);
     if (onNavigateSubTab) {
       onNavigateSubTab('materials', tab);
@@ -543,23 +559,25 @@ export function MasterMaterialPage({
       {/* Sub-Tab Navigation Bar (Monochromatic clean per Rule 66) */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#eaeaea] pb-3">
         <div className="flex items-center gap-1.5 p-1 bg-[#f5f5f5] rounded-[8px]">
-          <button
-            type="button"
-            onClick={() => handleSubTabChange('pricing')}
-            className={`px-3.5 py-1.5 text-xs font-semibold rounded-[6px] transition-colors ${
-              currentSubTab === 'pricing'
-                ? 'bg-[#111111] text-white shadow-sm'
-                : 'text-[#666666] hover:text-[#111111] hover:bg-[#ebebeb]'
-            }`}
-          >
-            Harga & Mutu Kuari
-          </button>
+          {!isDispatcherUser && (
+            <button
+              type="button"
+              onClick={() => handleSubTabChange('pricing')}
+              className={`px-3.5 py-1.5 text-xs font-semibold rounded-[6px] transition-colors ${
+                currentSubTab === 'pricing'
+                  ? 'bg-[#111111] text-white'
+                  : 'text-[#666666] hover:text-[#111111] hover:bg-[#ebebeb]'
+              }`}
+            >
+              Harga & Mutu Kuari
+            </button>
+          )}
           <button
             type="button"
             onClick={() => handleSubTabChange('routes')}
             className={`px-3.5 py-1.5 text-xs font-semibold rounded-[6px] transition-colors ${
               currentSubTab === 'routes'
-                ? 'bg-[#111111] text-white shadow-sm'
+                ? 'bg-[#111111] text-white'
                 : 'text-[#666666] hover:text-[#111111] hover:bg-[#ebebeb]'
             }`}
           >
@@ -570,7 +588,7 @@ export function MasterMaterialPage({
             onClick={() => handleSubTabChange('catalog')}
             className={`px-3.5 py-1.5 text-xs font-semibold rounded-[6px] transition-colors ${
               currentSubTab === 'catalog'
-                ? 'bg-[#111111] text-white shadow-sm'
+                ? 'bg-[#111111] text-white'
                 : 'text-[#666666] hover:text-[#111111] hover:bg-[#ebebeb]'
             }`}
           >
@@ -602,7 +620,7 @@ export function MasterMaterialPage({
       </div>
 
       {/* SUB-TAB 1: HARGA & MUTU KUARI */}
-      {currentSubTab === 'pricing' && (
+      {currentSubTab === 'pricing' && !isDispatcherUser && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-[#666666]">
@@ -611,14 +629,14 @@ export function MasterMaterialPage({
             <button
               type="button"
               onClick={handleOpenAddRate}
-              className="px-3 py-1.5 bg-[#111111] hover:bg-[#222222] text-white rounded-[6px] text-xs font-semibold transition-colors flex items-center gap-1.5 shadow-sm"
+              className="px-3 py-1.5 bg-[#111111] hover:bg-[#222222] text-white rounded-[6px] text-xs font-semibold transition-colors flex items-center gap-1.5"
             >
               <span>+</span>
               <span>Atur Harga Kuari</span>
             </button>
           </div>
 
-          <div className="border border-[#eaeaea] rounded-[10px] bg-white overflow-hidden shadow-sm">
+          <div className="border border-[#eaeaea] rounded-[10px] bg-white overflow-hidden">
             <div className="w-full overflow-x-auto">
               <table className="w-full table-fixed text-left text-xs border-collapse min-w-[700px]">
                 <thead className="sticky top-0 bg-[#f9f9f9] border-b border-[#eaeaea] text-[11px] font-semibold text-[#555555] uppercase tracking-wider select-none z-10">
@@ -704,14 +722,14 @@ export function MasterMaterialPage({
             <button
               type="button"
               onClick={handleOpenAddRoute}
-              className="px-3 py-1.5 bg-[#111111] hover:bg-[#222222] text-white rounded-[6px] text-xs font-semibold transition-colors flex items-center gap-1.5 shadow-sm"
+              className="px-3 py-1.5 bg-[#111111] hover:bg-[#222222] text-white rounded-[6px] text-xs font-semibold transition-colors flex items-center gap-1.5"
             >
               <span>+</span>
               <span>Tambah Rute Acuan</span>
             </button>
           </div>
 
-          <div className="border border-[#eaeaea] rounded-[10px] bg-white overflow-hidden shadow-sm">
+          <div className="border border-[#eaeaea] rounded-[10px] bg-white overflow-hidden">
             <div className="w-full overflow-x-auto">
               <table className="w-full table-fixed text-left text-xs border-collapse min-w-[700px]">
                 <thead className="sticky top-0 bg-[#f9f9f9] border-b border-[#eaeaea] text-[11px] font-semibold text-[#555555] uppercase tracking-wider select-none z-10">
@@ -795,14 +813,14 @@ export function MasterMaterialPage({
             <button
               type="button"
               onClick={handleOpenAddCommodity}
-              className="px-3 py-1.5 bg-[#111111] hover:bg-[#222222] text-white rounded-[6px] text-xs font-semibold transition-colors flex items-center gap-1.5 shadow-sm"
+              className="px-3 py-1.5 bg-[#111111] hover:bg-[#222222] text-white rounded-[6px] text-xs font-semibold transition-colors flex items-center gap-1.5"
             >
               <span>+</span>
               <span>Komoditas Baru</span>
             </button>
           </div>
 
-          <div className="border border-[#eaeaea] rounded-[10px] bg-white overflow-hidden shadow-sm">
+          <div className="border border-[#eaeaea] rounded-[10px] bg-white overflow-hidden">
             <div className="w-full overflow-x-auto">
               <table className="w-full table-fixed text-left text-xs border-collapse min-w-[700px]">
                 <thead className="sticky top-0 bg-[#f9f9f9] border-b border-[#eaeaea] text-[11px] font-semibold text-[#555555] uppercase tracking-wider select-none z-10">
@@ -810,21 +828,23 @@ export function MasterMaterialPage({
                     <th className="py-2.5 px-3 w-[15%]">Kode</th>
                     <th className="py-2.5 px-3 w-[35%]">Nama Komoditas</th>
                     <th className="py-2.5 px-3 w-[12%]">Satuan Acuan</th>
-                    <th className="py-2.5 px-3 w-[18%] text-right">Harga Beli Dasar</th>
-                    <th className="py-2.5 px-3 w-[18%] text-right">Harga Jual Dasar</th>
+                    {!isDispatcherUser && (
+                      <th className="py-2.5 px-3 w-[18%] text-right">Harga Beli Dasar</th>
+                    )}
+                    <th className={`py-2.5 px-3 ${isDispatcherUser ? 'w-[28%]' : 'w-[18%]'} text-right`}>Harga Jual Dasar</th>
                     <th className="py-2.5 px-3 w-[10%] text-center">Aksi</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#eaeaea]">
                   {isLoading ? (
                     <tr>
-                      <td colSpan={6} className="py-8 text-center text-xs text-[#888888]">
+                      <td colSpan={isDispatcherUser ? 5 : 6} className="py-8 text-center text-xs text-[#888888]">
                         Memuat data komoditas material...
                       </td>
                     </tr>
                   ) : filteredCommodities.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="py-8 text-center text-xs text-[#888888]">
+                      <td colSpan={isDispatcherUser ? 5 : 6} className="py-8 text-center text-xs text-[#888888]">
                         Belum ada komoditas material. Klik "+ Komoditas Baru" untuk menambahkan.
                       </td>
                     </tr>
@@ -840,9 +860,11 @@ export function MasterMaterialPage({
                         <td className="py-2.5 px-3 text-[#555555] font-mono whitespace-nowrap">
                           {item.unit === 'DT' ? 'DT (6 m³)' : 'Ton'}
                         </td>
-                        <td className="py-2.5 px-3 text-right font-mono text-[#333333] whitespace-nowrap">
-                          {formatRupiah(item.defaultBuyPrice)}
-                        </td>
+                        {!isDispatcherUser && (
+                          <td className="py-2.5 px-3 text-right font-mono text-[#333333] whitespace-nowrap">
+                            {formatRupiah(item.defaultBuyPrice)}
+                          </td>
+                        )}
                         <td className="py-2.5 px-3 text-right font-mono font-bold text-[#111111] whitespace-nowrap">
                           {formatRupiah(item.defaultSellPrice)}
                         </td>
@@ -1203,16 +1225,18 @@ export function MasterMaterialPage({
                 </div>
               </div>
 
-              <div>
-                <label className="block text-[#666666] font-medium mb-1">
-                  Harga Beli Acuan Dasar / {commUnit}
-                </label>
-                <CurrencyInput
-                  required
-                  value={commDefaultBuyPrice}
-                  onChange={setCommDefaultBuyPrice}
-                />
-              </div>
+              {!isDispatcherUser && (
+                <div>
+                  <label className="block text-[#666666] font-medium mb-1">
+                    Harga Beli Acuan Dasar / {commUnit}
+                  </label>
+                  <CurrencyInput
+                    required
+                    value={commDefaultBuyPrice}
+                    onChange={setCommDefaultBuyPrice}
+                  />
+                </div>
+              )}
 
               <div>
                 <label className="block text-[#666666] font-medium mb-1">

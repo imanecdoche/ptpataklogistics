@@ -305,12 +305,15 @@ export function Sidebar({
           if (isInvestorUser && !['dashboard', 'projects', 'investors'].includes(item.id)) {
             return null;
           }
-          if (isDispatcherUser && !['dispatcher', 'projects', 'quarries', 'clients', 'materials', 'database'].includes(item.id)) {
+          if (isDispatcherUser && !['dispatcher', 'projects', 'quarries', 'clients', 'materials', 'database', 'recap'].includes(item.id)) {
             return null;
           }
 
           const isActive = activeTab === item.id;
-          const subItems = SUB_MENU_ITEMS[item.id] || [];
+          const rawSubItems = SUB_MENU_ITEMS[item.id] || [];
+          const subItems = isDispatcherUser && item.id === 'recap'
+            ? rawSubItems.filter(s => s.id !== 'financial')
+            : rawSubItems;
           const isExpanded = Boolean(expandedTabs[item.id]);
 
           return (
@@ -377,17 +380,12 @@ export function Sidebar({
                           key={sub.id}
                           type="button"
                           onClick={() => handleSubItemClick(item.id, sub.id)}
-                          className={`w-full flex items-center space-x-2 px-2.5 py-1.5 text-[11px] md:text-xs rounded-[5px] transition-colors text-left cursor-pointer ${
+                          className={`w-full flex items-center px-2.5 py-1.5 text-[11px] md:text-xs rounded-[5px] transition-colors text-left cursor-pointer ${
                             isSubActive
                               ? 'bg-[#111111] text-white font-medium'
                               : 'text-[#666666] hover:bg-[#f0f0f0] hover:text-[#111111]'
                           }`}
                         >
-                          <span
-                            className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
-                              isSubActive ? 'bg-white' : 'bg-[#cccccc]'
-                            }`}
-                          />
                           <span className="truncate">{sub.label}</span>
                         </button>
                       );

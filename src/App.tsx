@@ -14,27 +14,42 @@ import { ProjectsPage } from '@/components/projects/ProjectsPage';
 import { InvestorsPage } from '@/components/investors/InvestorsPage';
 import { QuarriesPage } from '@/components/quarries/QuarriesPage';
 import { ClientsPage } from '@/components/clients/ClientsPage';
+import { RecapPage } from '@/components/recap/RecapPage';
 import { DevPage } from '@/components/dev/DevPage';
 import { OfflineOverlay } from '@/components/ui/OfflineOverlay';
 import { isDeveloperEmail } from '@/lib/userManagementService';
-import { ProjectFilterProvider } from '@/context/ProjectFilterContext';
+import { ProjectFilterProvider, useProjectFilter } from '@/context/ProjectFilterContext';
 
-export default function App(): React.JSX.Element {
-  const [user, setUser] = useState<User | null>(null);
-  const [isInitializing, setIsInitializing] = useState(true);
-  const [isVerifying, setIsVerifying] = useState(false);
-  const [isFadingOut, setIsFadingOut] = useState(false);
-  const [currentTab, setCurrentTab] = useState<NavigationTab>('dashboard');
-  const [currentSubTab, setCurrentSubTab] = useState<string>('overview');
-  const [isTerminatingSession, setIsTerminatingSession] = useState(false);
-  const [isTerminatingFadingOut, setIsTerminatingFadingOut] = useState(false);
-  const prevUserRef = useRef<User | null>(null);
+interface AuthenticatedAppProps {
+  user: User | null;
+  onLogout: () => void;
+}
+
+function AuthenticatedApp({ user, onLogout }: AuthenticatedAppProps): React.JSX.Element {
+  const { isDispatcherUser } = useProjectFilter();
+  const [currentTab, setCurrentTab] = useState<NavigationTab>(() => (isDispatcherUser ? 'dispatcher' : 'dashboard'));
+  const [currentSubTab, setCurrentSubTab] = useState<string>(() => (isDispatcherUser ? 'new_ticket' : 'overview'));
+
+  // Keamanan Route Protection: dispatcher otomatis diarahkan ke 'dispatcher' dan dicegah membuka dashboard, investors, atau cash_ledger
+  useEffect(() => {
+    if (isDispatcherUser && (currentTab === 'dashboard' || currentTab === 'investors' || currentTab === 'cash_ledger')) {
+      setCurrentTab('dispatcher');
+      setCurrentSubTab('new_ticket');
+    }
+  }, [isDispatcherUser, currentTab]);
 
   const handleSelectTab = (tab: NavigationTab): void => {
     // Keamanan: tab dev hanya untuk akun developer
     if (tab === 'dev' && !isDeveloperEmail(user?.email)) {
-      setCurrentTab('dashboard');
-      setCurrentSubTab('overview');
+      setCurrentTab(isDispatcherUser ? 'dispatcher' : 'dashboard');
+      setCurrentSubTab(isDispatcherUser ? 'new_ticket' : 'overview');
+      return;
+    }
+
+    // Keamanan RBAC: dispatcher tidak boleh mengakses dashboard, investors, atau cash_ledger
+    if (isDispatcherUser && (tab === 'dashboard' || tab === 'investors' || tab === 'cash_ledger')) {
+      setCurrentTab('dispatcher');
+      setCurrentSubTab('new_ticket');
       return;
     }
 
@@ -48,10 +63,19 @@ export default function App(): React.JSX.Element {
     } else if (tab === 'dispatcher') {
       setCurrentSubTab('new_ticket');
       window.dispatchEvent(new CustomEvent('patak:close-dispatch-drawer'));
+    } else if (tab === 'recap') {
+      setCurrentSubTab('volume');
     }
   };
 
   const handleSelectSubTab = (tab: NavigationTab, subTabId?: string): void => {
+    // Keamanan RBAC: dispatcher tidak boleh mengakses dashboard, investors, atau cash_ledger
+    if (isDispatcherUser && (tab === 'dashboard' || tab === 'investors' || tab === 'cash_ledger')) {
+      setCurrentTab('dispatcher');
+      setCurrentSubTab('new_ticket');
+      return;
+    }
+
     setCurrentTab(tab);
     if (subTabId) {
       setCurrentSubTab(subTabId);
@@ -64,6 +88,108 @@ export default function App(): React.JSX.Element {
       }
     }
   };
+
+  return (
+    <AppShell
+      user={user}
+      activeTab={currentTab}
+      activeSubTab={currentSubTab}
+      onSelectTab={handleSelectTab}
+      onSelectSubTab={handleSelectSubTab}
+      onLogout={onLogout}
+    >
+      {currentTab === 'dashboard' && (
+        <DashboardPage
+          userEmail={user?.email || 'admin@patak.id'}
+          activeSubTab={currentSubTab}
+          onNavigateTab={handleSelectSubTab}
+        />
+      )}
+
+      {currentTab === 'dispatcher' && (
+        <DispatcherPage userEmail={user?.email || 'operator@patak.id'} />
+      )}
+
+      {currentTab === 'database' && (
+        <DatabasePage userEmail={user?.email || 'admin@patak.id'} />
+      )}
+
+      {currentTab === 'dev' && (
+        <DevPage userEmail={user?.email || 'fatih@patak.dev'} />
+      )}
+
+      {currentTab === 'materials' && (
+        <MasterMaterialPage
+          userEmail={user?.email || 'admin@patak.id'}
+          activeSubTab={currentSubTab}
+          onNavigateSubTab={handleSelectSubTab}
+        />
+      )}
+
+      {currentTab === 'projects' && (
+        <ProjectsPage userEmail={user?.email || 'admin@patak.id'} />
+      )}
+
+      {currentTab === 'investors' && (
+        <InvestorsPage userEmail={user?.email || 'admin@patak.id'} />
+      )}
+
+      {currentTab === 'quarries' && (
+        <QuarriesPage userEmail={user?.email || 'admin@patak.id'} />
+      )}
+
+      {currentTab === 'clients' && (
+        <ClientsPage userEmail={user?.email || 'admin@patak.id'} />
+      )}
+
+      {currentTab === 'recap' && (
+        <RecapPage
+          userEmail={user?.email || 'admin@patak.id'}
+          activeSubTab={currentSubTab}
+          onNavigateSubTab={handleSelectSubTab}
+        />
+      )}
+
+      {currentTab !== 'dashboard' &&
+        currentTab !== 'dispatcher' &&
+        currentTab !== 'database' &&
+        currentTab !== 'dev' &&
+        currentTab !== 'materials' &&
+        currentTab !== 'projects' &&
+        currentTab !== 'investors' &&
+        currentTab !== 'quarries' &&
+        currentTab !== 'clients' &&
+        currentTab !== 'recap' && (
+        <div className="bg-white rounded-[10px] p-6 space-y-4">
+          <div className="space-y-1">
+            <h2 className="text-sm font-semibold text-[#111111]">
+              {currentTab === 'cash_ledger' && 'Buku Kas & Piutang Tempo'}
+            </h2>
+            <p className="text-xs text-[#666666]">
+              Sistem terhubung ke database <span className="font-mono text-[#111111]">pataklogisticdb</span> di zona <span className="font-mono text-[#111111]">asia-southeast2</span>.
+            </p>
+          </div>
+
+          <div className="border-t border-[#eaeaea] pt-4 text-xs text-[#666666]">
+            Menu aktif saat ini:{' '}
+            <span className="font-medium text-[#111111]">
+              {currentTab === 'cash_ledger' && 'Kas & Piutang Tempo'}
+            </span>
+          </div>
+        </div>
+      )}
+    </AppShell>
+  );
+}
+
+export default function App(): React.JSX.Element {
+  const [user, setUser] = useState<User | null>(null);
+  const [isInitializing, setIsInitializing] = useState(true);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [isFadingOut, setIsFadingOut] = useState(false);
+  const [isTerminatingSession, setIsTerminatingSession] = useState(false);
+  const [isTerminatingFadingOut, setIsTerminatingFadingOut] = useState(false);
+  const prevUserRef = useRef<User | null>(null);
 
   const handleLogout = (): void => {
     setIsTerminatingSession(true);
@@ -142,88 +268,7 @@ export default function App(): React.JSX.Element {
   return (
     <>
       <ProjectFilterProvider currentUserEmail={user?.email}>
-        <AppShell
-          user={user}
-          activeTab={currentTab}
-          activeSubTab={currentSubTab}
-          onSelectTab={handleSelectTab}
-          onSelectSubTab={handleSelectSubTab}
-          onLogout={handleLogout}
-        >
-          {currentTab === 'dashboard' && (
-            <DashboardPage
-              userEmail={user?.email || 'admin@patak.id'}
-              activeSubTab={currentSubTab}
-              onNavigateTab={handleSelectSubTab}
-            />
-          )}
-
-          {currentTab === 'dispatcher' && (
-            <DispatcherPage userEmail={user?.email || 'operator@patak.id'} />
-          )}
-
-          {currentTab === 'database' && (
-            <DatabasePage userEmail={user?.email || 'admin@patak.id'} />
-          )}
-
-          {currentTab === 'dev' && (
-            <DevPage userEmail={user?.email || 'fatih@patak.dev'} />
-          )}
-
-          {currentTab === 'materials' && (
-            <MasterMaterialPage
-              userEmail={user?.email || 'admin@patak.id'}
-              activeSubTab={currentSubTab}
-              onNavigateSubTab={handleSelectSubTab}
-            />
-          )}
-
-          {currentTab === 'projects' && (
-            <ProjectsPage userEmail={user?.email || 'admin@patak.id'} />
-          )}
-
-          {currentTab === 'investors' && (
-            <InvestorsPage userEmail={user?.email || 'admin@patak.id'} />
-          )}
-
-          {currentTab === 'quarries' && (
-            <QuarriesPage userEmail={user?.email || 'admin@patak.id'} />
-          )}
-
-          {currentTab === 'clients' && (
-            <ClientsPage userEmail={user?.email || 'admin@patak.id'} />
-          )}
-
-          {currentTab !== 'dashboard' &&
-            currentTab !== 'dispatcher' &&
-            currentTab !== 'database' &&
-            currentTab !== 'dev' &&
-            currentTab !== 'materials' &&
-            currentTab !== 'projects' &&
-            currentTab !== 'investors' &&
-            currentTab !== 'quarries' &&
-            currentTab !== 'clients' && (
-            <div className="bg-white rounded-[10px] p-6 space-y-4">
-              <div className="space-y-1">
-                <h2 className="text-sm font-semibold text-[#111111]">
-                  {currentTab === 'cash_ledger' && 'Buku Kas & Piutang Tempo'}
-                  {currentTab === 'recap' && 'Rekapitulasi Periode Transaksi'}
-                </h2>
-                <p className="text-xs text-[#666666]">
-                  Sistem terhubung ke database <span className="font-mono text-[#111111]">pataklogisticdb</span> di zona <span className="font-mono text-[#111111]">asia-southeast2</span>.
-                </p>
-              </div>
-
-              <div className="border-t border-[#eaeaea] pt-4 text-xs text-[#666666]">
-                Menu aktif saat ini:{' '}
-                <span className="font-medium text-[#111111]">
-                  {currentTab === 'cash_ledger' && 'Kas & Piutang Tempo'}
-                  {currentTab === 'recap' && 'Rekapitulasi Periode'}
-                </span>
-              </div>
-            </div>
-          )}
-        </AppShell>
+        <AuthenticatedApp user={user} onLogout={handleLogout} />
       </ProjectFilterProvider>
 
       {/* Layar Verifikasi Kredensial 3 Detik dengan Transisi Fade-Out */}

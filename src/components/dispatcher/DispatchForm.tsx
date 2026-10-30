@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { MaterialItem, UnitType, DispatchTransaction, Client, MasterQuarry, Project, QuarryMaterialRate, RouteOperatingTariff } from '@/types/database';
 import { createDispatchTransaction, CreateDispatchPayload, subscribeKnownTrucks, KnownTruck, subscribeKnownDrivers, KnownDriver } from '@/lib/dispatcherService';
 import { subscribeClients } from '@/lib/clientService';
@@ -37,6 +37,7 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
   };
 
   const [deliveryDate, setDeliveryDate] = useState<string>(getTodayString());
+  const [suratJalan, setSuratJalan] = useState('');
   const [truckPlate, setTruckPlate] = useState('');
   const [isPlateInvalid, setIsPlateInvalid] = useState(false);
   const plateInputRef = useRef<HTMLInputElement>(null);
@@ -53,11 +54,12 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
   const [selectedQuarryId, setSelectedQuarryId] = useState<string>('');
   const [selectedQuarryName, setSelectedQuarryName] = useState<string>('');
 
-  // Proyek Tujuan State (Multi-Proyek Architecture)
+  // Proyek Tujuan State (Multi-Proyek Architecture - Filter Proyek Aktif Saja)
   const { projects, selectedProjectId: globalProjectId, isDispatcherUser } = useProjectFilter();
+  const activeProjects = useMemo(() => projects.filter(p => p.status === 'ACTIVE'), [projects]);
   const [formProjectId, setFormProjectId] = useState<string>('');
   const [formProjectName, setFormProjectName] = useState<string>('');
-  const selectedProject = projects.find(p => p.id === formProjectId);
+  const selectedProject = activeProjects.find(p => p.id === formProjectId) || projects.find(p => p.id === formProjectId);
 
   // Master Material Rates & Route Tariffs State (Matriks 3 Titik)
   const [quarryRates, setQuarryRates] = useState<QuarryMaterialRate[]>([]);
@@ -65,10 +67,10 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
   const [matchedRate, setMatchedRate] = useState<QuarryMaterialRate | null>(null);
   const [matchedRoute, setMatchedRoute] = useState<RouteOperatingTariff | null>(null);
 
-  // Sinkronisasi dengan filter global proyek di header
+  // Sinkronisasi dengan filter global proyek di header (hanya jika aktif)
   useEffect(() => {
-    if (globalProjectId && globalProjectId !== 'ALL' && projects.length > 0) {
-      const p = projects.find(item => item.id === globalProjectId);
+    if (globalProjectId && globalProjectId !== 'ALL' && activeProjects.length > 0) {
+      const p = activeProjects.find(item => item.id === globalProjectId);
       if (p) {
         setFormProjectId(p.id);
         setFormProjectName(p.name);
@@ -77,7 +79,7 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
         setCustomerName(p.clientName);
       }
     }
-  }, [globalProjectId, projects]);
+  }, [globalProjectId, activeProjects]);
 
   const handleSelectProject = (project: Project | null) => {
     if (project) {
@@ -173,9 +175,15 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
         setBuyPricePerUnit(found.buyPriceCash);
       } else {
         setMatchedRate(null);
+        if (selectedMat) {
+          setBuyPricePerUnit(selectedMat.defaultBuyPrice || 0);
+        }
       }
     } else {
       setMatchedRate(null);
+      if (selectedMat) {
+        setBuyPricePerUnit(selectedMat.defaultBuyPrice || 0);
+      }
     }
   }, [selectedQuarryId, selectedMaterialId, quarryRates, selectedMat]);
 
@@ -322,6 +330,7 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
     try {
       const payload: CreateDispatchPayload = {
         deliveryDate: deliveryDate || getTodayString(),
+        suratJalan: suratJalan.trim(),
         truckPlate: truckPlate.trim().toUpperCase(),
         driverName: driverName.trim(),
         clientId: selectedClientId,
@@ -346,6 +355,7 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
       await createDispatchTransaction(payload, userEmail);
 
       // Reset form
+      setSuratJalan('');
       setTruckPlate('');
       setDriverName('');
       setSelectedClientId('');
@@ -561,6 +571,23 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
               )}
             </div>
           </div>
+
+          {/* Row 2: No. Surat Jalan Fisik */}
+          <div>
+            <label className="block text-[#666666] font-medium mb-1">
+              No. Surat Jalan (Opsional)
+            </label>
+            <input
+              type="text"
+              placeholder="Contoh: SJ-00123"
+              value={suratJalan}
+              onChange={e => setSuratJalan(e.target.value)}
+              className="w-full bg-white border-none outline-none focus:outline-none focus:ring-0 rounded-[6px] px-3 py-2 text-xs text-black font-semibold font-mono placeholder:text-[#888888] placeholder:font-sans transition-colors"
+            />
+            <span className="text-[10px] text-[#888888] mt-1 block">
+              Nomor surat jalan fisik dari kuari tambang atau bukti kirim armada.
+            </span>
+          </div>
         </div>
 
         {/* Section 2: Lokasi & Mitra */}
@@ -575,7 +602,7 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
               Proyek Tujuan <span className="text-[#888888] font-normal">(Otomatis Kunci Klien)</span>
             </label>
             <ProjectCombobox
-              projects={projects}
+              projects={activeProjects}
               selectedProjectId={formProjectId}
               selectedProjectName={formProjectName}
               onSelect={handleSelectProject}
@@ -616,22 +643,24 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
           </div>
 
           {/* Row 2.5: Baris Akhir Section Lokasi & Mitra (Informasi Investor Terhubung) */}
-          <div className="pt-0.5">
-            <span className="block text-[#666666] font-medium mb-1">
-              Investor
-            </span>
-            <div className="text-xs">
-              {selectedProject?.investorName ? (
-                <span className="text-black font-bold">
-                  {selectedProject.investorName}
-                </span>
-              ) : (
-                <span className="text-[#888888] italic">
-                  — (Pilih proyek tujuan terlebih dahulu)
-                </span>
-              )}
+          {!isDispatcherUser && (
+            <div className="pt-0.5">
+              <span className="block text-[#666666] font-medium mb-1">
+                Investor
+              </span>
+              <div className="text-xs">
+                {selectedProject?.investorName ? (
+                  <span className="text-black font-bold">
+                    {selectedProject.investorName}
+                  </span>
+                ) : (
+                  <span className="text-[#888888] italic">
+                    — (Pilih proyek tujuan terlebih dahulu)
+                  </span>
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Section 3: Komoditas & Volume */}
@@ -714,23 +743,25 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
           </div>
 
           {/* Row 4: Harga Beli (Cash Kuari) & Harga Jual (Tempo Proyek) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-[#666666] font-medium mb-1 whitespace-nowrap">
-                Beli Kuari / {unit} (Cash)
-              </label>
-              <CurrencyInput
-                required
-                value={buyPricePerUnit}
-                onChange={setBuyPricePerUnit}
-                variant="solid-white"
-              />
-              {matchedRate && (
-                <div className="text-[10px] text-[#666666] mt-1 font-mono truncate">
-                  Acuan Kuari: <span className="font-semibold text-[#111111]">{matchedRate.qualityGrade}</span>
-                </div>
-              )}
-            </div>
+          <div className={`grid grid-cols-1 ${isDispatcherUser ? '' : 'sm:grid-cols-2'} gap-3`}>
+            {!isDispatcherUser && (
+              <div>
+                <label className="block text-[#666666] font-medium mb-1 whitespace-nowrap">
+                  Beli Kuari / {unit} (Cash)
+                </label>
+                <CurrencyInput
+                  required
+                  value={buyPricePerUnit}
+                  onChange={setBuyPricePerUnit}
+                  variant="solid-white"
+                />
+                {matchedRate && (
+                  <div className="text-[10px] text-[#666666] mt-1 font-mono truncate">
+                    Acuan Kuari: <span className="font-semibold text-[#111111]">{matchedRate.qualityGrade}</span>
+                  </div>
+                )}
+              </div>
+            )}
 
             <div>
               <label className="block text-[#666666] font-medium mb-1 whitespace-nowrap">

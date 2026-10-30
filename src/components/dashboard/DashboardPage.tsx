@@ -142,7 +142,7 @@ export function DashboardPage({
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
             {/* Card 1: Ritase Hari Ini */}
-            <div className="bg-white rounded-[10px] p-4 border border-[#eaeaea] shadow-sm flex flex-col justify-between">
+            <div className="bg-white rounded-[10px] p-4 border border-[#eaeaea] flex flex-col justify-between">
               <span className="text-[11px] font-medium text-[#666666]">
                 Ritase Hari Ini
               </span>
@@ -158,7 +158,7 @@ export function DashboardPage({
             </div>
 
             {/* Card 2: Estimasi Laba Bersih / Omzet Hari Ini */}
-            <div className="bg-white rounded-[10px] p-4 border border-[#eaeaea] shadow-sm flex flex-col justify-between">
+            <div className="bg-white rounded-[10px] p-4 border border-[#eaeaea] flex flex-col justify-between">
               <span className="text-[11px] font-medium text-[#666666]">
                 {hideMargin ? 'Omzet Penjualan Hari Ini' : 'Estimasi Laba Bersih Hari Ini'}
               </span>
@@ -182,7 +182,7 @@ export function DashboardPage({
             </div>
 
             {/* Card 3: Saldo Kas Riil Berjalan */}
-            <div className="bg-white rounded-[10px] p-4 border border-[#eaeaea] shadow-sm flex flex-col justify-between">
+            <div className="bg-white rounded-[10px] p-4 border border-[#eaeaea] flex flex-col justify-between">
               <span className="text-[11px] font-medium text-[#666666]">
                 {selectedProject ? `Kas Proyek (${selectedProject.name})` : 'Posisi Kas Riil'}
               </span>
@@ -200,7 +200,7 @@ export function DashboardPage({
             </div>
 
             {/* Card 4: Piutang Tempo Berjalan */}
-            <div className="bg-white rounded-[10px] p-4 border border-[#eaeaea] shadow-sm flex flex-col justify-between">
+            <div className="bg-white rounded-[10px] p-4 border border-[#eaeaea] flex flex-col justify-between">
               <span className="text-[11px] font-medium text-[#666666]">
                 Piutang Tempo Berjalan
               </span>

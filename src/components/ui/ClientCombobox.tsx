@@ -114,6 +114,11 @@ export function ClientCombobox({
             : 'bg-[#f5f5f5] focus-within:bg-[#ebebeb]'
         }`}
       >
+        <img
+          src="/icons/search.png"
+          alt="Search"
+          className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 object-contain pointer-events-none opacity-60"
+        />
         <input
           ref={inputRef}
           type="text"
@@ -124,7 +129,7 @@ export function ClientCombobox({
           onChange={handleInputChange}
           onBlur={handleInputBlur}
           onFocus={() => setIsOpen(true)}
-          className={`w-full bg-transparent outline-none border-none py-2 px-3 text-xs ${
+          className={`w-full bg-transparent outline-none border-none py-2 pl-9 pr-3 text-xs ${
             variant === 'solid-white'
               ? 'text-black font-semibold placeholder:text-[#888888]'
               : 'text-[#111111] placeholder:text-[#999999]'

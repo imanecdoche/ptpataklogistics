@@ -136,7 +136,8 @@ export async function updateProjectBalance(id: string, delta: number): Promise<v
 }
 
 /**
- * Inisialisasi otomatis 3 master proyek awal (Situ Cikedal, Menes, Cipeucang) jika belum ada
+ * Inisialisasi otomatis master proyek produksi (Situ Cikedal & Cipeucang aktif, Menes completed)
+ * serta memastikan investor Bpk. Yadi dan pemisahan hutang perseroan Bpk. Pei tercatat dengan benar.
  */
 export async function seedDefaultProjects(): Promise<void> {
   try {
@@ -146,19 +147,33 @@ export async function seedDefaultProjects(): Promise<void> {
       return; // Sudah ada data, tidak perlu seeding
     }
 
-    const defaultProjects = [
+    const defaultProjects: Project[] = [
       {
         id: 'prj-situ-cikedal',
-        name: 'Proyek Situ Cikedal',
-        location: 'Situ Cikedal, Pandeglang',
-        investorId: 'inv-situ-cikedal',
-        investorName: 'Investor A (Situ Cikedal)',
+        name: 'Proyek Konservasi Situ Cikedal',
+        location: 'Kec. Cikedal, Pandeglang',
+        investorId: 'inv-bpk-yadi',
+        investorName: 'Bpk. Yadi',
         clientId: 'cli-situ-cikedal',
         clientName: 'PT Mandiri Konstruksi (Situ Cikedal)',
-        initialDeposit: 50000000,
-        currentBalance: 50000000,
-        status: 'ACTIVE' as const,
-        notes: 'Penyaluran material batu belah & pasir untuk proyek Situ Cikedal',
+        initialDeposit: 15000000,
+        currentBalance: 15000000,
+        status: 'ACTIVE',
+        notes: 'Penyaluran material batu belah & pasir untuk proyek konservasi Situ Cikedal',
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: 'prj-cipeucang',
+        name: 'Proyek Irigasi Cipeucang',
+        location: 'Kec. Cipeucang, Pandeglang',
+        investorId: 'inv-bpk-yadi',
+        investorName: 'Bpk. Yadi',
+        clientId: 'cli-cipeucang',
+        clientName: 'PT Cipeucang Sarana Abadi',
+        initialDeposit: 15000000,
+        currentBalance: 15000000,
+        status: 'ACTIVE',
+        notes: 'Proyek infrastruktur jembatan & drainase irigasi Cipeucang',
         createdAt: new Date().toISOString()
       },
       {
@@ -169,48 +184,62 @@ export async function seedDefaultProjects(): Promise<void> {
         investorName: 'Investor B (Menes)',
         clientId: 'cli-menes',
         clientName: 'CV Menes Raya Perkasa',
-        initialDeposit: 50000000,
-        currentBalance: 50000000,
-        status: 'ACTIVE' as const,
-        notes: 'Proyek pengurukan dan pemadatan jalan Menes',
-        createdAt: new Date().toISOString()
-      },
-      {
-        id: 'prj-cipeucang',
-        name: 'Proyek Cipeucang',
-        location: 'Cipeucang, Pandeglang',
-        investorId: 'inv-cipeucang',
-        investorName: 'Investor C (Cipeucang)',
-        clientId: 'cli-cipeucang',
-        clientName: 'PT Cipeucang Sarana Abadi',
-        initialDeposit: 50000000,
-        currentBalance: 50000000,
-        status: 'ACTIVE' as const,
-        notes: 'Proyek infrastruktur jembatan & drainase Cipeucang',
+        initialDeposit: 0,
+        currentBalance: 0,
+        status: 'COMPLETED',
+        notes: 'Proyek pengurukan dan pemadatan jalan Menes (Selesai)',
         createdAt: new Date().toISOString()
       }
     ];
 
     for (const prj of defaultProjects) {
       await setDoc(doc(colRef, prj.id), prj);
+    }
 
-      // Seed juga Investor pendana jika belum ada
-      const invDocRef = doc(db, INVESTORS_COLLECTION, prj.investorId);
-      const invSnap = await getDoc(invDocRef);
-      if (!invSnap.exists()) {
-        const newInv: Investor = {
-          id: prj.investorId,
-          name: prj.investorName,
-          phoneNumber: '+62 812-3456-7890',
-          bankAccount: 'BCA 123456789 a.n ' + prj.investorName,
-          initialCapital: prj.initialDeposit,
-          notes: `Pemodal proyek ${prj.name}`,
-          createdAt: new Date().toISOString()
-        };
-        await setDoc(invDocRef, newInv);
-      }
+    // Seed Investor Tunggal Aktif Bpk. Yadi jika belum ada
+    const invDocRef = doc(db, INVESTORS_COLLECTION, 'inv-bpk-yadi');
+    const invSnap = await getDoc(invDocRef);
+    if (!invSnap.exists()) {
+      const bpkYadi: Investor = {
+        id: 'inv-bpk-yadi',
+        name: 'Bpk. Yadi',
+        phoneNumber: '+62 812-3456-7890',
+        bankAccount: 'BCA - Rekening Investor Bpk. Yadi',
+        initialCapital: 30000000,
+        notes: 'Investor Tunggal Aktif PT Patak Abadi Jaya (Mendanai Proyek Situ Cikedal & Proyek Irigasi Cipeucang)',
+        createdAt: new Date().toISOString()
+      };
+      await setDoc(invDocRef, bpkYadi);
+    }
+
+    // Seed Buku Kas Induk & Hutang Pihak Ketiga Bpk. Pei jika cash_ledger masih kosong
+    const cashLedgerCol = collection(db, 'cash_ledger');
+    const cashSnap = await getDocs(cashLedgerCol);
+    if (cashSnap.empty) {
+      await setDoc(doc(cashLedgerCol, 'ledger-modal-bpk-yadi'), {
+        date: '2026-10-30T06:00:00.000Z',
+        type: 'MODAL_AWAL',
+        amount: 30000000,
+        isCredit: true,
+        runningBalance: 30000000,
+        referenceId: '',
+        description: 'Setoran Modal Awal Investor Bpk. Yadi',
+        createdByName: 'System / Management'
+      });
+
+      await setDoc(doc(cashLedgerCol, 'ledger-debt-bpk-pei'), {
+        date: '2026-10-30T06:05:00.000Z',
+        type: 'HUTANG_PIHAK_KETIGA',
+        amount: 18000000,
+        isCredit: true,
+        runningBalance: 48000000,
+        referenceId: '',
+        description: 'Pinjaman Pihak Ketiga / Hutang Perseroan Bpk. Pei',
+        createdByName: 'System / Management'
+      });
     }
   } catch (err) {
     console.warn('Gagal melakukan seed default projects:', err);
   }
 }
+

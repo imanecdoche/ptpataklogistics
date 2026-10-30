@@ -8,6 +8,7 @@ import { FlexibleTextarea } from '@/components/ui/FlexibleTextarea';
 import { PinAuthModal } from '@/components/ui/PinAuthModal';
 import { QuarryCombobox } from '@/components/ui/QuarryCombobox';
 import { CurrencyInput } from '@/components/ui/CurrencyInput';
+import { CustomSelectCombobox } from '@/components/ui/CustomSelectCombobox';
 import { useProjectFilter } from '@/context/ProjectFilterContext';
 import { formatPersonNameLive } from '@/lib/nameUtils';
 
@@ -34,6 +35,7 @@ export function EditDispatchModal({
   const hideMargin = isDispatcherUser || isInvestorUser;
 
   const [deliveryDate, setDeliveryDate] = useState('');
+  const [suratJalan, setSuratJalan] = useState('');
   const [truckPlate, setTruckPlate] = useState('');
   const [driverName, setDriverName] = useState('');
   const [projectId, setProjectId] = useState('');
@@ -67,6 +69,7 @@ export function EditDispatchModal({
   useEffect(() => {
     if (transaction) {
       setDeliveryDate(transaction.deliveryDate || transaction.date?.slice(0, 10) || new Date().toISOString().slice(0, 10));
+      setSuratJalan(transaction.suratJalan || '');
       setTruckPlate(transaction.truckPlate || '');
       setDriverName(transaction.driverName || '');
       setProjectId(transaction.projectId || '');
@@ -105,8 +108,7 @@ export function EditDispatchModal({
     quantity > 0 &&
     sellPricePerUnit > 0;
 
-  const handleProjectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selId = e.target.value;
+  const handleProjectSelect = (selId: string) => {
     setProjectId(selId);
     const found = projects.find(p => p.id === selId);
     if (found) {
@@ -120,8 +122,7 @@ export function EditDispatchModal({
     }
   };
 
-  const handleMaterialChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selId = e.target.value;
+  const handleMaterialSelect = (selId: string) => {
     setMaterialId(selId);
     const found = materials.find(m => m.id === selId);
     if (found) {
@@ -130,8 +131,7 @@ export function EditDispatchModal({
     }
   };
 
-  const handleClientChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selId = e.target.value;
+  const handleClientSelect = (selId: string) => {
     setClientId(selId);
     const found = clients.find(c => c.id === selId);
     if (found) {
@@ -149,6 +149,7 @@ export function EditDispatchModal({
     try {
       const payload: UpdateDispatchPayload = {
         deliveryDate,
+        suratJalan: suratJalan.trim(),
         truckPlate,
         driverName,
         projectId,
@@ -179,7 +180,7 @@ export function EditDispatchModal({
 
   return (
     <>
-      <div className="fixed inset-0 z-40 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm select-none overflow-y-auto">
+      <div className="fixed inset-0 z-40 flex items-center justify-center p-4 bg-black/50 select-none overflow-y-auto">
         <div 
           className="w-full max-w-2xl bg-white rounded-[12px] border border-[#eaeaea] shadow-2xl my-6 flex flex-col max-h-[92vh] overflow-hidden"
           onClick={e => e.stopPropagation()}
@@ -235,8 +236,21 @@ export function EditDispatchModal({
               </div>
             </div>
 
-            {/* Grid 2: Nama Sopir & Status Pembayaran */}
+            {/* Grid 2: No. Surat Jalan & Nama Sopir */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <div>
+                <label className="block text-xs font-semibold text-[#444444] mb-1">
+                  No. Surat Jalan (Opsional):
+                </label>
+                <input
+                  type="text"
+                  value={suratJalan}
+                  onChange={e => setSuratJalan(e.target.value)}
+                  placeholder="Contoh: SJ-00123"
+                  className="w-full px-3 py-2 text-xs bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#111111] font-mono"
+                />
+              </div>
+
               <div>
                 <label className="block text-xs font-semibold text-[#444444] mb-1">
                   Nama Sopir (Opsional):
@@ -249,20 +263,23 @@ export function EditDispatchModal({
                   className="w-full px-3 py-2 text-xs bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#111111]"
                 />
               </div>
+            </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-[#444444] mb-1">
-                  Status Pembayaran:
-                </label>
-                <select
-                  value={status}
-                  onChange={e => setStatus(e.target.value as 'TEMPO' | 'LUNAS')}
-                  className="w-full px-3 py-2 text-xs bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#111111] font-mono"
-                >
-                  <option value="TEMPO">TEMPO (Belum Lunas)</option>
-                  <option value="LUNAS">LUNAS</option>
-                </select>
-              </div>
+            {/* Grid 2.5: Status Pembayaran */}
+            <div>
+              <label className="block text-xs font-semibold text-[#444444] mb-1">
+                Status Pembayaran:
+              </label>
+              <CustomSelectCombobox
+                options={[
+                  { id: 'TEMPO', label: 'TEMPO (Belum Lunas)' },
+                  { id: 'LUNAS', label: 'LUNAS' }
+                ]}
+                value={status}
+                onChange={val => setStatus(val as 'TEMPO' | 'LUNAS')}
+                variant="white"
+                searchable={false}
+              />
             </div>
 
             {/* Grid 3: Proyek Tujuan & Kuari Asal */}
@@ -271,18 +288,19 @@ export function EditDispatchModal({
                 <label className="block text-xs font-semibold text-[#444444] mb-1">
                   Proyek Tujuan (Alokasi Kas/Investor):
                 </label>
-                <select
+                <CustomSelectCombobox
+                  options={[
+                    { id: '', label: '-- Proyek Umum / Tanpa Proyek --' },
+                    ...projects
+                      .filter(p => p.status === 'ACTIVE')
+                      .map(p => ({ id: p.id, label: p.name }))
+                  ]}
                   value={projectId}
-                  onChange={handleProjectChange}
-                  className="w-full px-3 py-2 text-xs bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#111111] font-medium"
-                >
-                  <option value="">-- Proyek Umum / Tanpa Proyek --</option>
-                  {projects.map(p => (
-                    <option key={p.id} value={p.id}>
-                      {p.name}
-                    </option>
-                  ))}
-                </select>
+                  onChange={handleProjectSelect}
+                  variant="white"
+                  searchable={true}
+                  placeholder="Pilih proyek tujuan..."
+                />
               </div>
 
               <div>
@@ -312,18 +330,17 @@ export function EditDispatchModal({
               <label className="block text-xs font-semibold text-[#444444] mb-1">
                 Klien / Pemilik Proyek (Penagihan):
               </label>
-              <select
+              <CustomSelectCombobox
+                options={[
+                  { id: '', label: '-- Pilih Klien / Pemilik Proyek --' },
+                  ...clients.map(c => ({ id: c.id, label: c.name }))
+                ]}
                 value={clientId}
-                onChange={handleClientChange}
-                className="w-full px-3 py-2 text-xs bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#111111]"
-              >
-                <option value="">-- Pilih Klien / Pemilik Proyek --</option>
-                {clients.map(c => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
+                onChange={handleClientSelect}
+                variant="white"
+                searchable={true}
+                placeholder="Pilih klien / pemilik..."
+              />
             </div>
 
             {/* Grid 3.5: Jenis Material */}
@@ -331,18 +348,17 @@ export function EditDispatchModal({
               <label className="block text-xs font-semibold text-[#444444] mb-1">
                 Jenis Material:
               </label>
-              <select
+              <CustomSelectCombobox
+                options={[
+                  { id: '', label: '-- Pilih Jenis Material --' },
+                  ...materials.map(m => ({ id: m.id, label: `${m.name} (${m.unit})` }))
+                ]}
                 value={materialId}
-                onChange={handleMaterialChange}
-                className="w-full px-3 py-2 text-xs bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#111111]"
-              >
-                <option value="">-- Pilih Jenis Material --</option>
-                {materials.map(m => (
-                  <option key={m.id} value={m.id}>
-                    {m.name} ({m.unit})
-                  </option>
-                ))}
-              </select>
+                onChange={handleMaterialSelect}
+                variant="white"
+                searchable={true}
+                placeholder="Pilih jenis material..."
+              />
             </div>
 
             {/* Grid 4: Volume & Satuan */}
@@ -365,14 +381,16 @@ export function EditDispatchModal({
                 <label className="block text-xs font-semibold text-[#444444] mb-1">
                   Satuan Muat:
                 </label>
-                <select
+                <CustomSelectCombobox
+                  options={[
+                    { id: 'DT', label: 'DT (Dump Truck)' },
+                    { id: 'Ton', label: 'Ton' }
+                  ]}
                   value={unit}
-                  onChange={e => setUnit(e.target.value as 'DT' | 'Ton')}
-                  className="w-full px-3 py-2 text-xs font-mono bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#111111]"
-                >
-                  <option value="DT">DT (Dump Truck)</option>
-                  <option value="Ton">Ton</option>
-                </select>
+                  onChange={val => setUnit(val as 'DT' | 'Ton')}
+                  variant="white"
+                  searchable={false}
+                />
               </div>
 
               {!hideMargin && (

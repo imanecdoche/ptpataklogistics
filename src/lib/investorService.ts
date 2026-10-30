@@ -1,6 +1,7 @@
 import {
   collection,
   doc,
+  getDocs,
   setDoc,
   updateDoc,
   deleteDoc,
@@ -100,3 +101,31 @@ export async function deleteInvestor(id: string): Promise<void> {
   const docRef = doc(db, INVESTORS_COLLECTION, id);
   await deleteDoc(docRef);
 }
+
+/**
+ * Inisialisasi otomatis investor tunggal aktif (Bpk. Yadi) jika koleksi investors masih kosong
+ */
+export async function seedDefaultInvestors(): Promise<void> {
+  try {
+    const colRef = collection(db, INVESTORS_COLLECTION);
+    const snap = await getDocs(colRef);
+    if (!snap.empty) {
+      return;
+    }
+
+    const defaultInvestor: Investor = {
+      id: 'inv-bpk-yadi',
+      name: 'Bpk. Yadi',
+      phoneNumber: '+62 812-3456-7890',
+      bankAccount: 'BCA - Rekening Investor Bpk. Yadi',
+      initialCapital: 30000000,
+      notes: 'Investor Tunggal Aktif PT Patak Abadi Jaya (Mendanai Proyek Situ Cikedal & Proyek Irigasi Cipeucang)',
+      createdAt: new Date().toISOString()
+    };
+
+    await setDoc(doc(colRef, defaultInvestor.id), defaultInvestor);
+  } catch (err) {
+    console.warn('Gagal melakukan seed default investors:', err);
+  }
+}
+

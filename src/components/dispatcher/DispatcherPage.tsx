@@ -90,10 +90,10 @@ export function DispatcherPage({ userEmail }: DispatcherPageProps): React.JSX.El
         />
       </div>
 
-      {/* Mobile Docked Handler Bar: "Riwayat Ritase Armada" (Frosted Glass + Soft Drop Shadow) */}
+      {/* Mobile Docked Handler Bar: "Riwayat Ritase Armada" (Solid Surface) */}
       <div
         onClick={() => setIsHistoryDrawerOpen(true)}
-        className="fixed bottom-0 inset-x-0 z-30 md:hidden bg-white/80 backdrop-blur-md rounded-t-[16px] border-t border-[#eaeaea]/80 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] px-4 py-3 cursor-pointer select-none active:bg-white/95 transition-all flex flex-col items-center"
+        className="fixed bottom-0 inset-x-0 z-30 md:hidden bg-white rounded-t-[16px] border-t border-[#eaeaea] px-4 py-3 cursor-pointer select-none active:bg-[#fafafa] transition-colors flex flex-col items-center"
       >
         <div className="w-8 h-1 rounded-full bg-[#cccccc] mb-1.5" />
         <div className="w-full flex items-center justify-between text-xs">
@@ -113,11 +113,11 @@ export function DispatcherPage({ userEmail }: DispatcherPageProps): React.JSX.El
           isHistoryDrawerOpen ? 'translate-y-0' : 'translate-y-full pointer-events-none'
         }`}
       >
-        {/* Frosted Glass Header: Riwayat Ritase Armada (Bisa diklik di seluruh area untuk menutup) */}
+        {/* Solid Header: Riwayat Ritase Armada (Bisa diklik di seluruh area untuk menutup) */}
         <div
           ref={drawerHeaderRef}
           onClick={() => setIsHistoryDrawerOpen(false)}
-          className="h-14 bg-white/80 backdrop-blur-md border-b border-[#eaeaea] rounded-b-[16px] px-4 flex items-center justify-between flex-shrink-0 z-10 select-none cursor-pointer active:bg-[#f5f5f5]/80 transition-colors"
+          className="h-14 bg-white border-b border-[#eaeaea] rounded-b-[16px] px-4 flex items-center justify-between flex-shrink-0 z-10 select-none cursor-pointer active:bg-[#f5f5f5] transition-colors"
         >
           {/* Tombol Tutup Panah Bawah (Style Line) di Sisi Kiri */}
           <button

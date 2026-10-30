@@ -238,7 +238,7 @@ export function FundTransferSection({ projects, userEmail }: FundTransferSection
 
       {/* Modal Input Talangan Baru */}
       {isCreateOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm select-none overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 select-none overflow-y-auto">
           <div
             className="w-full max-w-md bg-white rounded-[12px] border border-[#eaeaea] shadow-2xl p-5 my-6 flex flex-col space-y-4"
             onClick={e => e.stopPropagation()}

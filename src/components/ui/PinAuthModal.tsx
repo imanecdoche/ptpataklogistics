@@ -128,7 +128,7 @@ export function PinAuthModal({
   const isComplete = digits.every(d => d !== '');
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
       <div 
         className="w-full max-w-md bg-white rounded-[12px] border border-[#eaeaea] shadow-xl overflow-hidden select-none"
         onClick={e => e.stopPropagation()}

@@ -13,6 +13,28 @@ import { RunningText } from '@/components/ui/RunningText';
 import { TableActionMenu } from '@/components/ui/TableActionMenu';
 import { EyeToggleIcon } from '@/components/auth/EyeToggleIcon';
 import { formatPersonNameLive } from '@/lib/nameUtils';
+import { CustomSelectCombobox, SelectOption } from '@/components/ui/CustomSelectCombobox';
+
+const CREATE_ROLE_OPTIONS: SelectOption[] = [
+  { id: 'dispatcher', label: 'Dispatcher (Operator Ritase)' },
+  { id: 'admin', label: 'Administrator Logistik' },
+  { id: 'founder', label: 'Founder / CEO' },
+  { id: 'viewer', label: 'Viewer (Hanya Lihat)' }
+];
+
+const EDIT_ROLE_OPTIONS: SelectOption[] = [
+  { id: 'dispatcher', label: 'Dispatcher (Operator Ritase)' },
+  { id: 'admin', label: 'Administrator Logistik' },
+  { id: 'founder', label: 'Founder / CEO' },
+  { id: 'developer', label: 'Developer' },
+  { id: 'viewer', label: 'Viewer' }
+];
+
+const EDIT_STATUS_OPTIONS: SelectOption[] = [
+  { id: 'ACTIVE', label: 'ACTIVE (Aktif)' },
+  { id: 'PENDING', label: 'PENDING (Menunggu Review)' },
+  { id: 'INACTIVE', label: 'INACTIVE (Nonaktif)' }
+];
 
 interface DevPageProps {
   userEmail: string;
@@ -212,7 +234,7 @@ export function DevPage({ userEmail }: DevPageProps): React.JSX.Element {
       {/* 2. METRIC CARDS RINGKASAN AKUN (Rule 99: Sans-serif bold tracking-tight, no monospace) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
         {/* Card 1: Total Akun */}
-        <div className="bg-white rounded-[10px] p-4 border border-[#eaeaea] shadow-sm flex flex-col justify-between">
+        <div className="bg-white rounded-[10px] p-4 border border-[#eaeaea] flex flex-col justify-between">
           <span className="text-[11px] font-medium text-[#666666]">Total Akun Terdaftar</span>
           <div className="mt-2 flex items-baseline gap-1.5">
             <span className="text-2xl font-bold tracking-tight text-[#111111]">{counts.total}</span>
@@ -222,7 +244,7 @@ export function DevPage({ userEmail }: DevPageProps): React.JSX.Element {
         </div>
 
         {/* Card 2: Menunggu Review (Pending) */}
-        <div className="bg-white rounded-[10px] p-4 border border-[#eaeaea] shadow-sm flex flex-col justify-between">
+        <div className="bg-white rounded-[10px] p-4 border border-[#eaeaea] flex flex-col justify-between">
           <span className="text-[11px] font-medium text-[#ca8a04]">Menunggu ACC (Pending)</span>
           <div className="mt-2 flex items-baseline gap-1.5">
             <span className={`text-2xl font-bold tracking-tight ${counts.pending > 0 ? 'text-[#ca8a04]' : 'text-[#111111]'}`}>
@@ -234,7 +256,7 @@ export function DevPage({ userEmail }: DevPageProps): React.JSX.Element {
         </div>
 
         {/* Card 3: Akun Aktif */}
-        <div className="bg-white rounded-[10px] p-4 border border-[#eaeaea] shadow-sm flex flex-col justify-between">
+        <div className="bg-white rounded-[10px] p-4 border border-[#eaeaea] flex flex-col justify-between">
           <span className="text-[11px] font-medium text-[#008060]">Akun Berstatus Aktif</span>
           <div className="mt-2 flex items-baseline gap-1.5">
             <span className="text-2xl font-bold tracking-tight text-[#008060]">{counts.active}</span>
@@ -244,7 +266,7 @@ export function DevPage({ userEmail }: DevPageProps): React.JSX.Element {
         </div>
 
         {/* Card 4: Akun Nonaktif (>30 Hari Inaktif) */}
-        <div className="bg-white rounded-[10px] p-4 border border-[#eaeaea] shadow-sm flex flex-col justify-between">
+        <div className="bg-white rounded-[10px] p-4 border border-[#eaeaea] flex flex-col justify-between">
           <span className="text-[11px] font-medium text-[#666666]">Akun Nonaktif</span>
           <div className="mt-2 flex items-baseline gap-1.5">
             <span className="text-2xl font-bold tracking-tight text-[#dc2626]">{counts.inactive}</span>
@@ -360,20 +382,17 @@ export function DevPage({ userEmail }: DevPageProps): React.JSX.Element {
                       </td>
                       <td className="py-3 px-4 whitespace-nowrap w-[130px] align-middle">
                         {u.status === 'ACTIVE' && (
-                          <span className="flex items-center gap-1.5 text-[11px] font-bold text-[#008060]">
-                            <span className="w-1.5 h-1.5 rounded-full bg-[#008060]" />
+                          <span className="text-[11px] font-bold text-[#008060]">
                             AKTIF
                           </span>
                         )}
                         {u.status === 'PENDING' && (
-                          <span className="flex items-center gap-1.5 text-[11px] font-bold text-[#ca8a04]">
-                            <span className="w-1.5 h-1.5 rounded-full bg-[#ca8a04]" />
+                          <span className="text-[11px] font-bold text-[#ca8a04]">
                             MENUNGGU ACC
                           </span>
                         )}
                         {u.status === 'INACTIVE' && (
-                          <span className="flex items-center gap-1.5 text-[11px] font-bold text-[#dc2626]">
-                            <span className="w-1.5 h-1.5 rounded-full bg-[#dc2626]" />
+                          <span className="text-[11px] font-bold text-[#dc2626]">
                             NONAKTIF
                           </span>
                         )}
@@ -499,16 +518,14 @@ export function DevPage({ userEmail }: DevPageProps): React.JSX.Element {
             <label className="block text-[#666666] font-medium mb-1">
               Peran Hak Akses (Role)
             </label>
-            <select
+            <CustomSelectCombobox
+              options={CREATE_ROLE_OPTIONS}
               value={newRole}
-              onChange={e => setNewRole(e.target.value as UserRole)}
-              className="w-full px-3.5 py-2 text-xs bg-white border border-[#eaeaea] rounded-[8px] focus:outline-none focus:border-[#111111]"
-            >
-              <option value="dispatcher">Dispatcher (Operator Ritase)</option>
-              <option value="admin">Administrator Logistik</option>
-              <option value="founder">Founder / CEO</option>
-              <option value="viewer">Viewer (Hanya Lihat)</option>
-            </select>
+              onChange={val => setNewRole(val as UserRole)}
+              variant="white"
+              searchable={false}
+              triggerClassName="py-2 rounded-[8px]"
+            />
           </div>
 
           {createError && (
@@ -579,32 +596,28 @@ export function DevPage({ userEmail }: DevPageProps): React.JSX.Element {
 
             <div>
               <label className="block text-[#666666] font-medium mb-1">Peran Hak Akses (Role)</label>
-              <select
+              <CustomSelectCombobox
+                options={EDIT_ROLE_OPTIONS}
                 value={editingUser.role}
-                onChange={e => setEditingUser({ ...editingUser, role: e.target.value as UserRole })}
+                onChange={val => setEditingUser({ ...editingUser, role: val as UserRole })}
                 disabled={isDeveloperEmail(editingUser.email)}
-                className="w-full px-3.5 py-2 text-xs bg-white border border-[#eaeaea] rounded-[8px] focus:outline-none focus:border-[#111111]"
-              >
-                <option value="dispatcher">Dispatcher (Operator Ritase)</option>
-                <option value="admin">Administrator Logistik</option>
-                <option value="founder">Founder / CEO</option>
-                <option value="developer">Developer</option>
-                <option value="viewer">Viewer</option>
-              </select>
+                variant="white"
+                searchable={false}
+                triggerClassName="py-2 rounded-[8px]"
+              />
             </div>
 
             <div>
               <label className="block text-[#666666] font-medium mb-1">Status Akun</label>
-              <select
+              <CustomSelectCombobox
+                options={EDIT_STATUS_OPTIONS}
                 value={editingUser.status}
-                onChange={e => setEditingUser({ ...editingUser, status: e.target.value as UserStatus })}
+                onChange={val => setEditingUser({ ...editingUser, status: val as UserStatus })}
                 disabled={isDeveloperEmail(editingUser.email)}
-                className="w-full px-3.5 py-2 text-xs bg-white border border-[#eaeaea] rounded-[8px] focus:outline-none focus:border-[#111111]"
-              >
-                <option value="ACTIVE">ACTIVE (Aktif)</option>
-                <option value="PENDING">PENDING (Menunggu Review)</option>
-                <option value="INACTIVE">INACTIVE (Nonaktif)</option>
-              </select>
+                variant="white"
+                searchable={false}
+                triggerClassName="py-2 rounded-[8px]"
+              />
             </div>
 
             <div className="flex justify-end gap-2 pt-2 border-t border-[#eaeaea]">

@@ -16,13 +16,20 @@ import { CurrencyInput } from '@/components/ui/CurrencyInput';
 import { useProjectFilter } from '@/context/ProjectFilterContext';
 import { MetricCardCurrency } from '@/components/ui/MetricCardCurrency';
 import { formatEntityNameLive } from '@/lib/nameUtils';
+import { CustomSelectCombobox, SelectOption } from '@/components/ui/CustomSelectCombobox';
+
+const PROJECT_STATUS_OPTIONS: SelectOption[] = [
+  { id: 'ACTIVE', label: 'AKTIF' },
+  { id: 'ON_HOLD', label: 'HOLD' },
+  { id: 'COMPLETED', label: 'SELESAI' }
+];
 
 interface ProjectsPageProps {
   userEmail: string;
 }
 
 export function ProjectsPage({ userEmail: _userEmail }: ProjectsPageProps): React.JSX.Element {
-  const { isInvestorUser, selectedProjectId } = useProjectFilter();
+  const { isInvestorUser, isDispatcherUser, selectedProjectId } = useProjectFilter();
   const [projects, setProjects] = useState<Project[]>([]);
   const [investors, setInvestors] = useState<Investor[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
@@ -65,6 +72,26 @@ export function ProjectsPage({ userEmail: _userEmail }: ProjectsPageProps): Reac
       unsubClients();
     };
   }, []);
+
+  const investorOptions: SelectOption[] = useMemo(() => {
+    return investors.map(inv => ({ id: inv.id, label: inv.name }));
+  }, [investors]);
+
+  const clientOptions: SelectOption[] = useMemo(() => {
+    return clients.map(cli => ({ id: cli.id, label: cli.name }));
+  }, [clients]);
+
+  useEffect(() => {
+    if (!investorId && investors.length > 0 && investors[0]) {
+      setInvestorId(investors[0].id);
+    }
+  }, [investors, investorId]);
+
+  useEffect(() => {
+    if (!clientId && clients.length > 0 && clients[0]) {
+      setClientId(clients[0].id);
+    }
+  }, [clients, clientId]);
 
   // Filter projects berdasarkan RBAC investor & search & status
   const filteredProjects = useMemo(() => {
@@ -208,23 +235,46 @@ export function ProjectsPage({ userEmail: _userEmail }: ProjectsPageProps): Reac
           </div>
         </div>
 
-        <div className="bg-white border border-[#eaeaea] rounded-[8px] p-3.5">
-          <span className="text-[11px] text-[#888888] font-medium block">Total Modal Disetor</span>
-          <div className="mt-1">
-            <MetricCardCurrency amount={totalDeposit} size="lg" />
-          </div>
-        </div>
+        {isDispatcherUser ? (
+          <>
+            <div className="bg-white border border-[#eaeaea] rounded-[8px] p-3.5">
+              <span className="text-[11px] text-[#888888] font-medium block">Proyek Aktif Berjalan</span>
+              <div className="flex items-baseline gap-1.5 mt-1">
+                <span className="text-xl font-bold tracking-tight text-[#008060]">{activeProjectsCount}</span>
+                <span className="text-xs text-[#666666]">proyek operasional</span>
+              </div>
+            </div>
+            <div className="bg-white border border-[#eaeaea] rounded-[8px] p-3.5">
+              <span className="text-[11px] text-[#888888] font-medium block">Proyek Selesai / Hold</span>
+              <div className="flex items-baseline gap-1.5 mt-1">
+                <span className="text-xl font-bold tracking-tight text-[#666666]">
+                  {filteredProjects.length - activeProjectsCount}
+                </span>
+                <span className="text-xs text-[#666666]">proyek</span>
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="bg-white border border-[#eaeaea] rounded-[8px] p-3.5">
+              <span className="text-[11px] text-[#888888] font-medium block">Total Modal Disetor</span>
+              <div className="mt-1">
+                <MetricCardCurrency amount={totalDeposit} size="lg" />
+              </div>
+            </div>
 
-        <div className="bg-white border border-[#eaeaea] rounded-[8px] p-3.5">
-          <span className="text-[11px] text-[#888888] font-medium block">Total Saldo Kas Berjalan</span>
-          <div className="mt-1">
-            <MetricCardCurrency
-              amount={totalCurrentBalance}
-              size="lg"
-              colorClassName={totalCurrentBalance < 0 ? 'text-[#cf1124]' : 'text-[#008060]'}
-            />
-          </div>
-        </div>
+            <div className="bg-white border border-[#eaeaea] rounded-[8px] p-3.5">
+              <span className="text-[11px] text-[#888888] font-medium block">Total Saldo Kas Berjalan</span>
+              <div className="mt-1">
+                <MetricCardCurrency
+                  amount={totalCurrentBalance}
+                  size="lg"
+                  colorClassName={totalCurrentBalance < 0 ? 'text-[#cf1124]' : 'text-[#008060]'}
+                />
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* 2. Main Content Card */}
@@ -291,7 +341,7 @@ export function ProjectsPage({ userEmail: _userEmail }: ProjectsPageProps): Reac
                 type="text"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                placeholder="Cari proyek, lokasi, investor..."
+                placeholder={isDispatcherUser ? "Cari proyek, lokasi, klien..." : "Cari proyek, lokasi, investor..."}
                 className="w-full bg-white border border-[#eaeaea] rounded-[6px] pl-9 pr-3 py-1.5 text-xs text-[#111111] placeholder:text-[#999999] outline-none focus:border-[#111111] transition-colors"
               />
             </div>
@@ -310,15 +360,21 @@ export function ProjectsPage({ userEmail: _userEmail }: ProjectsPageProps): Reac
 
         {/* Tabel Master Proyek (Rule 66: Table-fixed, zero-wrap, sticky header) */}
         <div className="overflow-x-auto select-text">
-          <table className="w-full min-w-[1070px] table-fixed text-left text-xs border-collapse">
+          <table className={`w-full ${isDispatcherUser ? 'min-w-[700px]' : 'min-w-[1070px]'} table-fixed text-left text-xs border-collapse`}>
             <thead className="sticky top-0 z-10 bg-[#f9f9f9] border-b border-[#eaeaea] text-[#666666] font-medium text-[11px]">
               <tr>
                 <th className="py-2.5 px-4 w-[200px] min-w-[200px] whitespace-nowrap">Nama Proyek</th>
                 <th className="py-2.5 px-4 w-[160px] min-w-[160px] whitespace-nowrap">Lokasi</th>
-                <th className="py-2.5 px-4 w-[160px] min-w-[160px] whitespace-nowrap">Investor Pendana</th>
+                {!isDispatcherUser && (
+                  <th className="py-2.5 px-4 w-[160px] min-w-[160px] whitespace-nowrap">Investor Pendana</th>
+                )}
                 <th className="py-2.5 px-4 w-[160px] min-w-[160px] whitespace-nowrap">Klien / Pemilik</th>
-                <th className="py-2.5 px-4 w-[140px] min-w-[140px] text-right whitespace-nowrap">Modal Awal Disetor</th>
-                <th className="py-2.5 px-4 w-[140px] min-w-[140px] text-right whitespace-nowrap">Saldo Kas Berjalan</th>
+                {!isDispatcherUser && (
+                  <th className="py-2.5 px-4 w-[140px] min-w-[140px] text-right whitespace-nowrap">Modal Awal Disetor</th>
+                )}
+                {!isDispatcherUser && (
+                  <th className="py-2.5 px-4 w-[140px] min-w-[140px] text-right whitespace-nowrap">Saldo Kas Berjalan</th>
+                )}
                 <th className="py-2.5 px-4 w-[90px] min-w-[90px] text-center whitespace-nowrap">Status</th>
                 {!isInvestorUser && (
                   <th className="py-2.5 px-4 w-[60px] min-w-[60px] text-right whitespace-nowrap">Aksi</th>
@@ -328,13 +384,13 @@ export function ProjectsPage({ userEmail: _userEmail }: ProjectsPageProps): Reac
             <tbody className="divide-y divide-[#eaeaea]">
               {isLoading ? (
                 <tr>
-                  <td colSpan={isInvestorUser ? 7 : 8} className="py-8 text-center text-[#888888] whitespace-nowrap">
+                  <td colSpan={isDispatcherUser ? 5 : isInvestorUser ? 7 : 8} className="py-8 text-center text-[#888888] whitespace-nowrap">
                     Memuat data master proyek...
                   </td>
                 </tr>
               ) : filteredProjects.length === 0 ? (
                 <tr>
-                  <td colSpan={isInvestorUser ? 7 : 8} className="py-8 text-center text-[#888888] whitespace-nowrap">
+                  <td colSpan={isDispatcherUser ? 5 : isInvestorUser ? 7 : 8} className="py-8 text-center text-[#888888] whitespace-nowrap">
                     Tidak ada data proyek yang sesuai.
                   </td>
                 </tr>
@@ -348,32 +404,30 @@ export function ProjectsPage({ userEmail: _userEmail }: ProjectsPageProps): Reac
                     <td className="py-3 px-4 text-[#444444] whitespace-nowrap w-[160px] align-middle">
                       <RunningText text={proj.location} placeholder="-" className="text-[#444444]" />
                     </td>
-                    <td className="py-3 px-4 text-[#111111] whitespace-nowrap w-[160px] align-middle font-medium">
-                      <RunningText text={proj.investorName} placeholder="Umum" className="text-[#111111]" />
-                    </td>
+                    {!isDispatcherUser && (
+                      <td className="py-3 px-4 text-[#111111] whitespace-nowrap w-[160px] align-middle font-medium">
+                        <RunningText text={proj.investorName} placeholder="Umum" className="text-[#111111]" />
+                      </td>
+                    )}
                     <td className="py-3 px-4 text-[#444444] whitespace-nowrap w-[160px] align-middle">
                       <RunningText text={proj.clientName} placeholder="Umum" className="text-[#444444]" />
                     </td>
-                    <td className="py-3 px-4 font-mono font-medium text-[#111111] text-right whitespace-nowrap w-[140px] align-middle">
-                      {formatRupiah(proj.initialDeposit || 0)}
-                    </td>
-                    <td
-                      className={`py-3 px-4 font-mono font-bold text-right whitespace-nowrap w-[140px] align-middle ${
-                        (proj.currentBalance || 0) < 0 ? 'text-[#cf1124]' : 'text-[#008060]'
-                      }`}
-                    >
-                      {formatRupiah(proj.currentBalance || 0)}
-                    </td>
-                    <td className="py-3 px-4 text-center whitespace-nowrap w-[90px] align-middle">
-                      <span
-                        className={`text-[11px] font-bold px-2 py-0.5 rounded ${
-                          proj.status === 'COMPLETED'
-                            ? 'bg-[#f0fdf4] text-[#166534]'
-                            : proj.status === 'ON_HOLD'
-                            ? 'bg-[#fefce8] text-[#854d0e]'
-                            : 'bg-[#eff6ff] text-[#1e40af]'
+                    {!isDispatcherUser && (
+                      <td className="py-3 px-4 font-mono font-medium text-[#111111] text-right whitespace-nowrap w-[140px] align-middle">
+                        {formatRupiah(proj.initialDeposit || 0)}
+                      </td>
+                    )}
+                    {!isDispatcherUser && (
+                      <td
+                        className={`py-3 px-4 font-mono font-bold text-right whitespace-nowrap w-[140px] align-middle ${
+                          (proj.currentBalance || 0) < 0 ? 'text-[#cf1124]' : 'text-[#008060]'
                         }`}
                       >
+                        {formatRupiah(proj.currentBalance || 0)}
+                      </td>
+                    )}
+                    <td className="py-3 px-4 text-center whitespace-nowrap w-[90px] align-middle">
+                      <span className="text-[11px] font-semibold text-[#111111]">
                         {proj.status === 'COMPLETED' ? 'SELESAI' : proj.status === 'ON_HOLD' ? 'HOLD' : 'AKTIF'}
                       </span>
                     </td>
@@ -390,11 +444,11 @@ export function ProjectsPage({ userEmail: _userEmail }: ProjectsPageProps): Reac
                                 label: 'Salin ID Proyek',
                                 onClick: () => navigator.clipboard.writeText(proj.id)
                               },
-                              {
+                              ...(!isDispatcherUser ? [{
                                 label: 'Hapus Proyek',
-                                variant: 'danger',
+                                variant: 'danger' as const,
                                 onClick: () => handleDeleteProject(proj)
-                              }
+                              }] : [])
                             ]}
                           />
                         </div>
@@ -449,46 +503,46 @@ export function ProjectsPage({ userEmail: _userEmail }: ProjectsPageProps): Reac
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[#666666] font-medium mb-1">Investor Pendana</label>
-                  <select
-                    value={investorId}
-                    onChange={e => setInvestorId(e.target.value)}
-                    className="w-full bg-white border border-[#eaeaea] rounded-[6px] px-3 py-2 text-xs text-[#111111] outline-none focus:border-[#111111]"
-                  >
-                    {investors.map(inv => (
-                      <option key={inv.id} value={inv.id}>
-                        {inv.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+              <div className={`grid grid-cols-1 ${isDispatcherUser ? '' : 'sm:grid-cols-2'} gap-3`}>
+                {!isDispatcherUser && (
+                  <div>
+                    <label className="block text-[#666666] font-medium mb-1">Investor Pendana</label>
+                    <CustomSelectCombobox
+                      options={investorOptions}
+                      value={investorId}
+                      onChange={setInvestorId}
+                      placeholder="Pilih Investor..."
+                      variant="white"
+                      searchable={false}
+                      triggerClassName="py-2 rounded-[6px]"
+                    />
+                  </div>
+                )}
 
                 <div>
                   <label className="block text-[#666666] font-medium mb-1">Klien / Pemilik Proyek</label>
-                  <select
+                  <CustomSelectCombobox
+                    options={clientOptions}
                     value={clientId}
-                    onChange={e => setClientId(e.target.value)}
-                    className="w-full bg-white border border-[#eaeaea] rounded-[6px] px-3 py-2 text-xs text-[#111111] outline-none focus:border-[#111111]"
-                  >
-                    {clients.map(cli => (
-                      <option key={cli.id} value={cli.id}>
-                        {cli.name}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={setClientId}
+                    placeholder="Pilih Klien..."
+                    variant="white"
+                    searchable={false}
+                    triggerClassName="py-2 rounded-[6px]"
+                  />
                 </div>
               </div>
 
-              <div>
-                <label className="block text-[#666666] font-medium mb-1">Modal Awal Disetor (Rp)</label>
-                <CurrencyInput
-                  value={initialDeposit}
-                  onChange={setInitialDeposit}
-                  placeholder="0"
-                />
-              </div>
+              {!isDispatcherUser && (
+                <div>
+                  <label className="block text-[#666666] font-medium mb-1">Modal Awal Disetor (Rp)</label>
+                  <CurrencyInput
+                    value={initialDeposit}
+                    onChange={setInitialDeposit}
+                    placeholder="0"
+                  />
+                </div>
+              )}
 
               <div>
                 <label className="block text-[#666666] font-medium mb-1">Catatan Proyek</label>
@@ -558,62 +612,62 @@ export function ProjectsPage({ userEmail: _userEmail }: ProjectsPageProps): Reac
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[#666666] font-medium mb-1">Investor Pendana</label>
-                  <select
-                    value={editTarget.investorId}
-                    onChange={e => setEditTarget({ ...editTarget, investorId: e.target.value })}
-                    className="w-full bg-white border border-[#eaeaea] rounded-[6px] px-3 py-2 text-xs text-[#111111] outline-none focus:border-[#111111]"
-                  >
-                    {investors.map(inv => (
-                      <option key={inv.id} value={inv.id}>
-                        {inv.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+              <div className={`grid grid-cols-1 ${isDispatcherUser ? '' : 'sm:grid-cols-2'} gap-3`}>
+                {!isDispatcherUser && (
+                  <div>
+                    <label className="block text-[#666666] font-medium mb-1">Investor Pendana</label>
+                    <CustomSelectCombobox
+                      options={investorOptions}
+                      value={editTarget.investorId}
+                      onChange={val => setEditTarget({ ...editTarget, investorId: val })}
+                      placeholder="Pilih Investor..."
+                      variant="white"
+                      searchable={false}
+                      triggerClassName="py-2 rounded-[6px]"
+                    />
+                  </div>
+                )}
 
                 <div>
                   <label className="block text-[#666666] font-medium mb-1">Klien / Pemilik Proyek</label>
-                  <select
+                  <CustomSelectCombobox
+                    options={clientOptions}
                     value={editTarget.clientId}
-                    onChange={e => setEditTarget({ ...editTarget, clientId: e.target.value })}
-                    className="w-full bg-white border border-[#eaeaea] rounded-[6px] px-3 py-2 text-xs text-[#111111] outline-none focus:border-[#111111]"
-                  >
-                    {clients.map(cli => (
-                      <option key={cli.id} value={cli.id}>
-                        {cli.name}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={val => setEditTarget({ ...editTarget, clientId: val })}
+                    placeholder="Pilih Klien..."
+                    variant="white"
+                    searchable={false}
+                    triggerClassName="py-2 rounded-[6px]"
+                  />
                 </div>
               </div>
 
-              <div>
-                <label className="block text-[#666666] font-medium mb-1">Modal Awal Disetor (Rp)</label>
-                <CurrencyInput
-                  value={editTarget.initialDeposit || 0}
-                  onChange={val => setEditTarget({ ...editTarget, initialDeposit: val })}
-                />
-              </div>
+              {!isDispatcherUser && (
+                <div>
+                  <label className="block text-[#666666] font-medium mb-1">Modal Awal Disetor (Rp)</label>
+                  <CurrencyInput
+                    value={editTarget.initialDeposit || 0}
+                    onChange={val => setEditTarget({ ...editTarget, initialDeposit: val })}
+                  />
+                </div>
+              )}
 
               <div>
                 <label className="block text-[#666666] font-medium mb-1">Status Proyek</label>
-                <select
+                <CustomSelectCombobox
+                  options={PROJECT_STATUS_OPTIONS}
                   value={editTarget.status}
-                  onChange={e =>
+                  onChange={val =>
                     setEditTarget({
                       ...editTarget,
-                      status: e.target.value as 'ACTIVE' | 'ON_HOLD' | 'COMPLETED'
+                      status: val as 'ACTIVE' | 'ON_HOLD' | 'COMPLETED'
                     })
                   }
-                  className="w-full bg-white border border-[#eaeaea] rounded-[6px] px-3 py-2 text-xs text-[#111111] outline-none focus:border-[#111111]"
-                >
-                  <option value="ACTIVE">AKTIF</option>
-                  <option value="ON_HOLD">HOLD</option>
-                  <option value="COMPLETED">SELESAI</option>
-                </select>
+                  placeholder="Pilih Status..."
+                  variant="white"
+                  searchable={false}
+                  triggerClassName="py-2 rounded-[6px]"
+                />
               </div>
 
               <div className="pt-3 border-t border-[#eaeaea] flex items-center justify-end gap-2">

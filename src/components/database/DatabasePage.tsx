@@ -36,6 +36,7 @@ import { MetricCardCurrency } from '@/components/ui/MetricCardCurrency';
 import { PhoneInput } from '@/components/ui/PhoneInput';
 import { formatPhoneNumber } from '@/lib/phoneUtils';
 import { formatPersonNameLive } from '@/lib/nameUtils';
+import { useProjectFilter } from '@/context/ProjectFilterContext';
 
 type SubTab = 'ritase' | 'vehicles' | 'drivers';
 type TimeRangeFilter = 'all' | 'today' | 'this_month' | 'last_30_days';
@@ -53,6 +54,7 @@ interface DatabasePageProps {
 }
 
 export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Element {
+  const { isDispatcherUser } = useProjectFilter();
   const [activeSubTab, setActiveSubTab] = useState<SubTab>('ritase');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -279,15 +281,22 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
   );
 
   const sortOptions = useMemo(
-    () => [
-      { id: 'date_desc', label: 'Tanggal Terbaru' },
-      { id: 'date_asc', label: 'Tanggal Terlama' },
-      { id: 'revenue_desc', label: 'Omset Tertinggi' },
-      { id: 'revenue_asc', label: 'Omset Terendah' },
-      { id: 'profit_desc', label: 'Laba Tertinggi' },
-      { id: 'profit_asc', label: 'Laba Terendah' }
-    ],
-    []
+    () => {
+      const base = [
+        { id: 'date_desc', label: 'Tanggal Terbaru' },
+        { id: 'date_asc', label: 'Tanggal Terlama' },
+        { id: 'revenue_desc', label: 'Omset Tertinggi' },
+        { id: 'revenue_asc', label: 'Omset Terendah' }
+      ];
+      if (!isDispatcherUser) {
+        base.push(
+          { id: 'profit_desc', label: 'Laba Tertinggi' },
+          { id: 'profit_asc', label: 'Laba Terendah' }
+        );
+      }
+      return base;
+    },
+    [isDispatcherUser]
   );
 
   // Filtered lists Master Data
@@ -602,9 +611,9 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
 
       {/* 3. METRIC CARDS RINGKASAN KHUSUS TAB RIWAYAT RITASE (Aturan 71: 1 kolom di mobile) */}
       {activeSubTab === 'ritase' && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+        <div className={`grid grid-cols-1 sm:grid-cols-2 ${isDispatcherUser ? 'lg:grid-cols-2' : 'lg:grid-cols-4'} gap-3 md:gap-4`}>
           {/* Card 1: Total Ritase */}
-          <div className="bg-white rounded-[10px] p-4 border border-[#eaeaea] shadow-sm flex flex-col justify-between">
+          <div className="bg-white rounded-[10px] p-4 border border-[#eaeaea] flex flex-col justify-between">
             <span className="text-[11px] font-medium text-[#666666]">Total Ritase Terfilter</span>
             <div className="mt-2 flex items-baseline gap-1.5">
               <span className="text-2xl font-bold tracking-tight text-[#111111]">
@@ -616,7 +625,7 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
           </div>
 
           {/* Card 2: Total Omset Penjualan */}
-          <div className="bg-white rounded-[10px] p-4 border border-[#eaeaea] shadow-sm flex flex-col justify-between">
+          <div className="bg-white rounded-[10px] p-4 border border-[#eaeaea] flex flex-col justify-between">
             <span className="text-[11px] font-medium text-[#666666]">Total Omset (Piutang)</span>
             <div className="mt-2">
               <MetricCardCurrency amount={ritaseMetrics.totalOmset} />
@@ -625,27 +634,31 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
           </div>
 
           {/* Card 3: Belanja Modal Kuari */}
-          <div className="bg-white rounded-[10px] p-4 border border-[#eaeaea] shadow-sm flex flex-col justify-between">
-            <span className="text-[11px] font-medium text-[#666666]">Total Belanja Kuari</span>
-            <div className="mt-2">
-              <MetricCardCurrency amount={ritaseMetrics.totalBelanjaKuari} />
+          {!isDispatcherUser && (
+            <div className="bg-white rounded-[10px] p-4 border border-[#eaeaea] flex flex-col justify-between">
+              <span className="text-[11px] font-medium text-[#666666]">Total Belanja Kuari</span>
+              <div className="mt-2">
+                <MetricCardCurrency amount={ritaseMetrics.totalBelanjaKuari} />
+              </div>
+              <span className="text-[11px] text-[#888888] mt-1">Beban beli material tunai</span>
             </div>
-            <span className="text-[11px] text-[#888888] mt-1">Beban beli material tunai</span>
-          </div>
+          )}
 
           {/* Card 4: Estimasi Laba Bersih */}
-          <div className="bg-white rounded-[10px] p-4 border border-[#eaeaea] shadow-sm flex flex-col justify-between">
-            <span className="text-[11px] font-medium text-[#666666]">Estimasi Laba Bersih</span>
-            <div className="mt-2">
-              <MetricCardCurrency
-                amount={ritaseMetrics.totalLabaBersih}
-                colorClassName={
-                  ritaseMetrics.totalLabaBersih < 0 ? 'text-[#cf1124]' : 'text-[#008060]'
-                }
-              />
+          {!isDispatcherUser && (
+            <div className="bg-white rounded-[10px] p-4 border border-[#eaeaea] flex flex-col justify-between">
+              <span className="text-[11px] font-medium text-[#666666]">Estimasi Laba Bersih</span>
+              <div className="mt-2">
+                <MetricCardCurrency
+                  amount={ritaseMetrics.totalLabaBersih}
+                  colorClassName={
+                    ritaseMetrics.totalLabaBersih < 0 ? 'text-[#cf1124]' : 'text-[#008060]'
+                  }
+                />
+              </div>
+              <span className="text-[11px] text-[#888888] mt-1">Net profit setelah ops & kuari</span>
             </div>
-            <span className="text-[11px] text-[#888888] mt-1">Net profit setelah ops & kuari</span>
-          </div>
+          )}
         </div>
       )}
 
@@ -663,15 +676,20 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
                   <th className="py-2.5 px-3.5 w-[105px] min-w-[105px] whitespace-nowrap">Tanggal</th>
                   <th className="py-2.5 px-3.5 w-[110px] min-w-[110px] whitespace-nowrap">No. Plat</th>
                   <th className="py-2.5 px-3.5 w-[130px] min-w-[130px] whitespace-nowrap">Supir</th>
-                  <th className="py-2.5 px-3.5 w-[160px] min-w-[160px] whitespace-nowrap">Klien / Proyek</th>
+                  <th className="py-2.5 px-3.5 w-[150px] min-w-[150px] whitespace-nowrap">Proyek Tujuan</th>
+                  <th className="py-2.5 px-3.5 w-[160px] min-w-[160px] whitespace-nowrap">Konsumen</th>
                   <th className="py-2.5 px-3.5 w-[130px] min-w-[130px] whitespace-nowrap">Kuari Asal</th>
                   <th className="py-2.5 px-3.5 w-[140px] min-w-[140px] whitespace-nowrap">Material</th>
                   <th className="py-2.5 px-3.5 w-[90px] min-w-[90px] whitespace-nowrap">Vol</th>
                   <th className="py-2.5 px-3.5 w-[110px] min-w-[110px] whitespace-nowrap">Harga Jual</th>
                   <th className="py-2.5 px-3.5 w-[125px] min-w-[125px] whitespace-nowrap">Total Omset</th>
-                  <th className="py-2.5 px-3.5 w-[125px] min-w-[125px] whitespace-nowrap">Belanja Kuari</th>
+                  {!isDispatcherUser && (
+                    <th className="py-2.5 px-3.5 w-[125px] min-w-[125px] whitespace-nowrap">Belanja Kuari</th>
+                  )}
                   <th className="py-2.5 px-3.5 w-[110px] min-w-[110px] whitespace-nowrap">Beban Ops</th>
-                  <th className="py-2.5 px-3.5 w-[125px] min-w-[125px] whitespace-nowrap">Laba Bersih</th>
+                  {!isDispatcherUser && (
+                    <th className="py-2.5 px-3.5 w-[125px] min-w-[125px] whitespace-nowrap">Laba Bersih</th>
+                  )}
                   <th className="py-2.5 px-3.5 w-[85px] min-w-[85px] whitespace-nowrap">Status</th>
                   <th className="py-2.5 px-3.5 w-[180px] min-w-[180px] whitespace-nowrap">Catatan Ritase</th>
                   <th className="py-2.5 px-3.5 w-[60px] min-w-[60px] text-right whitespace-nowrap">Aksi</th>
@@ -680,7 +698,7 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
               <tbody className="divide-y divide-[#eaeaea]">
                 {filteredTransactions.length === 0 ? (
                   <tr>
-                    <td colSpan={16} className="py-10 text-center text-[#888888] whitespace-nowrap">
+                    <td colSpan={isDispatcherUser ? 15 : 17} className="py-10 text-center text-[#888888] whitespace-nowrap">
                       {isLoading ? 'Memuat riwayat ritase...' : 'Tidak ada data ritase yang sesuai filter.'}
                     </td>
                   </tr>
@@ -698,6 +716,9 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
                       </td>
                       <td className="py-3 px-3.5 text-[#444444] whitespace-nowrap w-[130px] align-middle">
                         <RunningText text={tx.driverName} placeholder="-" className="text-[#444444]" />
+                      </td>
+                      <td className="py-3 px-3.5 text-[#444444] whitespace-nowrap w-[150px] align-middle">
+                        <RunningText text={tx.projectName} placeholder="-" className="text-[#444444]" />
                       </td>
                       <td className="py-3 px-3.5 font-medium text-[#111111] whitespace-nowrap w-[160px] align-middle">
                         <RunningText text={tx.customerName || tx.clientName} className="font-medium text-[#111111]" />
@@ -717,26 +738,28 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
                       <td className="py-3 px-3.5 font-mono font-bold text-[#111111] whitespace-nowrap w-[125px] align-middle">
                         {formatRupiah(tx.totalRevenue)}
                       </td>
-                      <td className="py-3 px-3.5 font-mono text-[#555555] whitespace-nowrap w-[125px] align-middle">
-                        {formatRupiah(tx.totalBuyCost)}
-                      </td>
+                      {!isDispatcherUser && (
+                        <td className="py-3 px-3.5 font-mono text-[#555555] whitespace-nowrap w-[125px] align-middle">
+                          {formatRupiah(tx.totalBuyCost)}
+                        </td>
+                      )}
                       <td className="py-3 px-3.5 font-mono text-[#555555] whitespace-nowrap w-[110px] align-middle">
                         {formatRupiah(tx.operationalCost)}
                       </td>
-                      <td className={`py-3 px-3.5 font-mono font-bold whitespace-nowrap w-[125px] align-middle ${
-                        tx.netProfit < 0 ? 'text-[#cf1124]' : 'text-[#008060]'
-                      }`}>
-                        {formatRupiah(tx.netProfit)}
-                      </td>
+                      {!isDispatcherUser && (
+                        <td className={`py-3 px-3.5 font-mono font-bold whitespace-nowrap w-[125px] align-middle ${
+                          tx.netProfit < 0 ? 'text-[#cf1124]' : 'text-[#008060]'
+                        }`}>
+                          {formatRupiah(tx.netProfit)}
+                        </td>
+                      )}
                       <td className="py-3 px-3.5 whitespace-nowrap w-[85px] align-middle">
                         {tx.status === 'LUNAS' ? (
-                          <span className="flex items-center gap-1.5 text-[11px] font-bold text-[#008060]">
-                            <span className="w-1.5 h-1.5 rounded-full bg-[#008060]" />
+                          <span className="text-[11px] font-bold text-[#008060]">
                             LUNAS
                           </span>
                         ) : (
-                          <span className="flex items-center gap-1.5 text-[11px] font-bold text-[#d97706]">
-                            <span className="w-1.5 h-1.5 rounded-full bg-[#d97706]" />
+                          <span className="text-[11px] font-bold text-[#d97706]">
                             TEMPO
                           </span>
                         )}

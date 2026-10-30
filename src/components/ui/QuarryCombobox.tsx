@@ -104,6 +104,11 @@ export function QuarryCombobox({
   return (
     <div ref={containerRef} className="relative w-full">
       <div className="relative flex items-center">
+        <img
+          src="/icons/search.png"
+          alt="Search"
+          className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 object-contain pointer-events-none opacity-60"
+        />
         <input
           ref={inputRef}
           type="text"
@@ -119,7 +124,7 @@ export function QuarryCombobox({
           onFocus={() => setIsOpen(true)}
           placeholder={placeholder}
           required={required}
-          className={`w-full rounded-[6px] pl-3.5 pr-8 py-2 text-xs transition-colors disabled:bg-[#f9f9f9] disabled:cursor-not-allowed ${
+          className={`w-full rounded-[6px] pl-9 pr-8 py-2 text-xs transition-colors disabled:bg-[#f9f9f9] disabled:cursor-not-allowed ${
             variant === 'solid-white'
               ? 'bg-white border-none text-black font-semibold placeholder-[#888888] focus:outline-none'
               : 'bg-white border border-[#eaeaea] text-[#111111] placeholder-[#888888] focus:outline-none focus:border-[#111111]'

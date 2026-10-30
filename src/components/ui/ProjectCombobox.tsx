@@ -11,6 +11,7 @@ interface ProjectComboboxProps {
   required?: boolean;
   allowClear?: boolean;
   variant?: 'default' | 'solid-white';
+  activeOnly?: boolean;
 }
 
 export function ProjectCombobox({
@@ -22,7 +23,8 @@ export function ProjectCombobox({
   disabled = false,
   required = false,
   allowClear = true,
-  variant = 'default'
+  variant = 'default',
+  activeOnly = true
 }: ProjectComboboxProps): React.JSX.Element {
   const [query, setQuery] = useState(selectedProjectName || '');
   const [isOpen, setIsOpen] = useState(false);
@@ -56,14 +58,17 @@ export function ProjectCombobox({
   }, [selectedProjectName, query]);
 
   const filteredProjects = useMemo(() => {
-    if (!query.trim()) return projects;
+    const list = activeOnly !== false
+      ? projects.filter(item => item.status === 'ACTIVE')
+      : projects;
+    if (!query.trim()) return list;
     const q = query.toLowerCase().trim();
-    return projects.filter(
+    return list.filter(
       item =>
         item.name.toLowerCase().includes(q) ||
         (item.clientName && item.clientName.toLowerCase().includes(q))
     );
-  }, [projects, query]);
+  }, [projects, query, activeOnly]);
 
   const handleSelect = (p: Project): void => {
     setQuery(p.name);
@@ -89,12 +94,17 @@ export function ProjectCombobox({
             inputRef.current?.focus();
           }
         }}
-        className={`flex items-center justify-between w-full rounded-[6px] px-3 py-2 text-xs transition-colors cursor-pointer ${
+        className={`relative flex items-center justify-between w-full rounded-[6px] pl-9 pr-3 py-2 text-xs transition-colors cursor-pointer ${
           isSolidWhite
             ? 'bg-white border-none text-black font-semibold'
             : 'bg-[#f5f5f5] hover:bg-[#ebebeb] focus-within:bg-[#ebebeb] text-[#111111] border border-transparent focus-within:border-[#111111]'
         } ${disabled ? 'opacity-60 cursor-not-allowed' : ''}`}
       >
+        <img
+          src="/icons/search.png"
+          alt="Search"
+          className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 object-contain pointer-events-none opacity-60"
+        />
         <div className="flex-1 min-w-0 pr-2">
           <input
             ref={inputRef}

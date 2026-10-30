@@ -63,7 +63,7 @@ export function RequestAccessModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm select-none animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 select-none">
       <div 
         className="w-full max-w-md bg-white rounded-[12px] border border-[#eaeaea] shadow-2xl overflow-hidden"
         onClick={e => e.stopPropagation()}

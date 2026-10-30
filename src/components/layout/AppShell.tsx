@@ -132,9 +132,9 @@ export function AppShell({
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden relative">
-        {/* Replacement Compact Header (Mobile Khusus: Frosted Glass, Rounded Bottom, Slide down tanpa fading) */}
+        {/* Replacement Compact Header (Mobile Khusus: Solid Flat Surface per Rule 5, 26, 30) */}
         <div
-          className={`fixed top-0 inset-x-0 z-30 md:hidden h-14 bg-white/80 backdrop-blur-md rounded-b-[16px] px-4 flex items-center justify-between border-none select-none transition-transform duration-200 ease-out transform ${
+          className={`fixed top-0 inset-x-0 z-30 md:hidden h-14 bg-white border-b border-[#eaeaea] px-4 flex items-center justify-between select-none transition-transform duration-200 ease-out transform ${
             isScrolledPast ? 'translate-y-0' : '-translate-y-full'
           }`}
         >

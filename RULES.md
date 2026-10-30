@@ -1169,3 +1169,22 @@ Dokumen ini adalah hukum tertinggi operasional sistem. Kegagalan mematuhi aturan
       * Untuk nilai negatif, tanda minus ditempatkan di depan simbol Rp (`-Rp500.000`) dengan kelas warna defisit (`text-[#cf1124]`).
       * Angka menggunakan font sans-serif bold tracking-tight (`font-bold tracking-tight`), DILARANG menggunakan `font-mono`.
 
+104. **Standar Master Data Produksi & Pemisahan Liabilitas Perseroan (Prinsip Non-Investor Debt & Single Investor Allocation)**:
+    - **Investor Tunggal Aktif (Bpk. Yadi - Rp 30.000.000)**:
+      * Pemodal aktif tunggal awal perseroan adalah Bpk. Yadi dengan total modal disetor riil Rp 30.000.000 yang dialokasikan sebagai modal kerja bergulir (*revolving working capital*) untuk mendanai 2 proyek aktif sekaligus.
+      * Seluruh porsi bagi hasil investor dari ritase proyek yang didanai dialokasikan secara transparan ke Bpk. Yadi tanpa subsidi silang investor lain di fase awal.
+    - **Pemisahan Liabilitas Hutang Bpk. Pei (Rp 18.000.000)**:
+      * Bpk. Pei berstatus BATAL sebagai investor proyek ritase.
+      * Uang Rp 18.000.000 berstatus murni **Kewajiban / Liabilitas Perseroan (Hutang Pihak Ketiga)** milik PT Patak Abadi Jaya.
+      * DILARANG KERAS mencatatkan Bpk. Pei ke dalam tabel `investors` atau mengaitkannya ke transaksi ritase. Bpk. Pei TIDAK berhak atas bagi hasil keuntungan per m³/ton pengiriman batu.
+      * Pencatatan hutang Bpk. Pei ditempatkan di Buku Kas Induk Perseroan (`cash_ledger`), dan pelunasannya dicicil dari laba bersih internal PT Patak, bukan dari modal proyek Bpk. Yadi.
+    - **Dua Proyek Fisik Riil Aktif**:
+      * Dua proyek operasional aktif resmi adalah:
+        1. `Proyek Konservasi Situ Cikedal` (Kec. Cikedal, Pandeglang)
+        2. `Proyek Irigasi Cipeucang` (Kec. Cipeucang, Pandeglang)
+      * Proyek Menes untuk sementara dinonaktifkan (`status: 'COMPLETED'` / `isActive: false`) dan wajib disembunyikan dari dropdown pilihan proyek pada formulir input ritase lapangan agar operator terhindar dari salah pilih.
+    - **Hak Akses Jurnal Transaksi Global & Privasi Finansial (VN Papah)**:
+      * Operator lapangan / akun dengan role `dispatcher` hanya berhak mengakses formulir ritase dan **Jurnal Transaksi Operasional** (nomor surat jalan, nopol truk, nama supir, komoditas, kuari asal, proyek tujuan, kubikasi/tonase, tanggal) dengan filter periode 2 mingguan dan 2 bulanan.
+      * Seluruh data dapur finansial (tab Investor, nominal bagi hasil, saldo modal investor, margin keuntungan PT, dan tab Kas Perseroan) tertutup rapat dan hanya dapat diakses oleh peran Manajemen (`founder`, `developer`, `admin`).
+
+

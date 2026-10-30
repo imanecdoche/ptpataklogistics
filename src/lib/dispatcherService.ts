@@ -92,6 +92,8 @@ async function getLatestCashBalance(): Promise<number> {
 }
 
 export interface CreateDispatchPayload {
+  ticketNumber?: string;
+  suratJalan?: string; // Physical waybill number (Surat Jalan fisik kuari/lapangan)
   deliveryDate: string; // YYYY-MM-DD
   truckPlate: string;
   driverName?: string;
@@ -122,7 +124,7 @@ export async function createDispatchTransaction(
   payload: CreateDispatchPayload,
   userEmail: string
 ): Promise<string> {
-  const ticketNumber = generateTicketNumber();
+  const ticketNumber = payload.ticketNumber || generateTicketNumber();
   const nowIso = new Date().toISOString();
   const deliveryDate = payload.deliveryDate || nowIso.slice(0, 10);
 
@@ -134,6 +136,7 @@ export async function createDispatchTransaction(
 
   const txData: Omit<DispatchTransaction, 'id'> = {
     ticketNumber,
+    suratJalan: payload.suratJalan?.trim() || '',
     deliveryDate,
     createdAt: nowIso,
     date: nowIso,
@@ -439,6 +442,7 @@ export function subscribeKnownDrivers(callback: (drivers: KnownDriver[]) => void
 }
 
 export interface UpdateDispatchPayload {
+  suratJalan?: string;
   deliveryDate: string; // YYYY-MM-DD
   truckPlate: string;
   driverName?: string;
@@ -476,6 +480,7 @@ export async function updateDispatchTransaction(
 
   const updateData: Partial<DispatchTransaction> = {
     deliveryDate: payload.deliveryDate,
+    suratJalan: payload.suratJalan !== undefined ? payload.suratJalan.trim() : '',
     truckPlate: payload.truckPlate.toUpperCase().trim(),
     driverName: payload.driverName?.trim() || '',
     clientId: payload.clientId || '',
