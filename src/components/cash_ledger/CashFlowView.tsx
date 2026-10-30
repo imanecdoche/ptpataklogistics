@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { CashLedgerEntry } from '@/types/database';
+import { resolveCreatorName } from '@/lib/entityResolver';
 import { PayDebtModal } from './PayDebtModal';
 import { RecordMutationModal } from './RecordMutationModal';
 
@@ -219,12 +220,13 @@ export function CashFlowView({
                 <th className="py-2.5 px-3 w-[130px] text-right whitespace-nowrap">Kas Masuk (+)</th>
                 <th className="py-2.5 px-3 w-[130px] text-right whitespace-nowrap">Kas Keluar (-)</th>
                 <th className="py-2.5 px-3 w-[150px] text-right whitespace-nowrap">Saldo Berjalan</th>
+                <th className="py-2.5 px-3 w-[105px] whitespace-nowrap">Dibuat Oleh</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#eaeaea]">
               {filteredEntries.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-10 text-center text-xs text-[#888888]">
+                  <td colSpan={7} className="py-10 text-center text-xs text-[#888888]">
                     Tidak ada catatan mutasi kas yang sesuai kriteria pencarian.
                   </td>
                 </tr>
@@ -237,9 +239,6 @@ export function CashFlowView({
                     <td className="py-2.5 px-3 whitespace-nowrap align-middle">
                       <span className="font-semibold text-[#111111] block">
                         {e.type.replace(/_/g, ' ')}
-                      </span>
-                      <span className="text-[10px] text-[#888888] block">
-                        {e.createdByName || 'Sistem'}
                       </span>
                     </td>
                     <td className="py-2.5 px-3 text-[#333333] align-middle">
@@ -262,6 +261,9 @@ export function CashFlowView({
                       }`}
                     >
                       {formatRupiah(e.runningBalance)}
+                    </td>
+                    <td className="py-2.5 px-3 font-medium text-[#111111] whitespace-nowrap align-middle">
+                      {resolveCreatorName(e.createdByName)}
                     </td>
                   </tr>
                 ))

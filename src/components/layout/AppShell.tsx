@@ -180,12 +180,16 @@ export function AppShell({
               <div className="flex-1">
                 <CustomSelectCombobox
                   options={[
-                    ...(!isInvestorUser ? [{ id: 'ALL', label: 'Semua Proyek (Global)' }] : []),
+                    ...(!isInvestorUser
+                      ? [{ id: 'ALL', label: 'Semua Proyek (Global)' }]
+                      : projects.length > 1
+                      ? [{ id: 'ALL', label: 'Semua Proyek Saya' }]
+                      : []),
                     ...projects.map(p => ({ id: p.id, label: p.name }))
                   ]}
                   value={selectedProjectId}
                   onChange={val => setSelectedProjectId(val)}
-                  disabled={isInvestorUser}
+                  disabled={isInvestorUser ? projects.length <= 1 : false}
                   placeholder="Pilih Proyek..."
                   searchable={false}
                 />
@@ -241,12 +245,16 @@ export function AppShell({
                 <div className="flex-1">
                   <CustomSelectCombobox
                     options={[
-                      ...(!isInvestorUser ? [{ id: 'ALL', label: 'Semua Proyek (Global)' }] : []),
+                      ...(!isInvestorUser
+                        ? [{ id: 'ALL', label: 'Semua Proyek (Global)' }]
+                        : projects.length > 1
+                        ? [{ id: 'ALL', label: 'Semua Proyek Saya' }]
+                        : []),
                       ...projects.map(p => ({ id: p.id, label: p.name }))
                     ]}
                     value={selectedProjectId}
                     onChange={val => setSelectedProjectId(val)}
-                    disabled={isInvestorUser}
+                    disabled={isInvestorUser ? projects.length <= 1 : false}
                     placeholder="Pilih Proyek..."
                     searchable={false}
                   />

@@ -41,7 +41,7 @@ interface InvestorsPageProps {
 }
 
 export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPageProps): React.JSX.Element {
-  const { isInvestorUser, selectedProjectId, projects: allProjects } = useProjectFilter();
+  const { isInvestorUser, lockedInvestorId, selectedProjectId, projects: allProjects } = useProjectFilter();
   const [investors, setInvestors] = useState<Investor[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [transactions, setTransactions] = useState<DispatchTransaction[]>([]);
@@ -114,7 +114,9 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
   const filteredInvestors = useMemo(() => {
     let result = [...investors];
 
-    if (isInvestorUser && selectedProjectId && selectedProjectId !== 'ALL') {
+    if (isInvestorUser && lockedInvestorId) {
+      result = result.filter(i => i.id === lockedInvestorId);
+    } else if (isInvestorUser && selectedProjectId && selectedProjectId !== 'ALL') {
       const currentProj = allProjects.find(p => p.id === selectedProjectId);
       if (currentProj && currentProj.investorId) {
         result = result.filter(i => i.id === currentProj.investorId);
@@ -133,7 +135,7 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
     }
 
     return result;
-  }, [investors, isInvestorUser, selectedProjectId, allProjects, searchQuery]);
+  }, [investors, isInvestorUser, lockedInvestorId, selectedProjectId, allProjects, searchQuery]);
 
   // Statistik Ringkasan
   const totalCapital = useMemo(() => {

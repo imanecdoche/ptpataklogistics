@@ -11,6 +11,7 @@ interface ProjectFilterContextValue {
   setSelectedProjectId: (id: string) => void;
   isLoadingProjects: boolean;
   userRole: UserRole | 'guest';
+  lockedInvestorId: string | null;
   isInvestorUser: boolean;
   isDispatcherUser: boolean;
   isManagementUser: boolean;
@@ -85,34 +86,45 @@ export function ProjectFilterProvider({
     fetchRole();
   }, [currentUserEmail]);
 
-  // 3. Jika pengguna adalah role 'investor', kunci selectedProjectId ke proyek miliknya
-  useEffect(() => {
-    if (userRole === 'investor' && lockedInvestorId && projects.length > 0) {
-      const myProject = projects.find(p => p.investorId === lockedInvestorId);
-      if (myProject) {
-        setSelectedProjectId(myProject.id);
-      }
-    }
-  }, [userRole, lockedInvestorId, projects]);
-
-  const selectedProject = useMemo(() => {
-    if (selectedProjectId === 'ALL') return null;
-    return projects.find(p => p.id === selectedProjectId) || null;
-  }, [selectedProjectId, projects]);
-
   const isInvestorUser = userRole === 'investor';
   const isDispatcherUser = userRole === 'dispatcher';
   const isManagementUser = userRole === 'developer' || userRole === 'founder' || userRole === 'admin';
 
+  // Isolasi data proyek: investor hanya bisa melihat proyek yang didanainya
+  const visibleProjects = useMemo(() => {
+    if (isInvestorUser && lockedInvestorId) {
+      return projects.filter(p => p.investorId === lockedInvestorId);
+    }
+    return projects;
+  }, [isInvestorUser, lockedInvestorId, projects]);
+
+  // 3. Jika pengguna adalah role 'investor', kunci selectedProjectId ke proyek miliknya
+  useEffect(() => {
+    if (userRole === 'investor' && lockedInvestorId && visibleProjects.length > 0) {
+      if (selectedProjectId !== 'ALL' && !visibleProjects.some(p => p.id === selectedProjectId)) {
+        const firstProj = visibleProjects[0];
+        if (firstProj) {
+          setSelectedProjectId(firstProj.id);
+        }
+      }
+    }
+  }, [userRole, lockedInvestorId, visibleProjects, selectedProjectId]);
+
+  const selectedProject = useMemo(() => {
+    if (selectedProjectId === 'ALL') return null;
+    return visibleProjects.find(p => p.id === selectedProjectId) || null;
+  }, [selectedProjectId, visibleProjects]);
+
   return (
     <ProjectFilterContext.Provider
       value={{
-        projects,
+        projects: visibleProjects,
         selectedProjectId,
         selectedProject,
         setSelectedProjectId,
         isLoadingProjects,
         userRole,
+        lockedInvestorId,
         isInvestorUser,
         isDispatcherUser,
         isManagementUser

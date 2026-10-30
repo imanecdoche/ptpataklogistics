@@ -30,7 +30,7 @@ interface ProjectsPageProps {
 }
 
 export function ProjectsPage({ userEmail: _userEmail }: ProjectsPageProps): React.JSX.Element {
-  const { isInvestorUser, isDispatcherUser, selectedProjectId } = useProjectFilter();
+  const { isInvestorUser, isDispatcherUser, lockedInvestorId, selectedProjectId } = useProjectFilter();
   const [projects, setProjects] = useState<Project[]>([]);
   const [investors, setInvestors] = useState<Investor[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
@@ -99,7 +99,9 @@ export function ProjectsPage({ userEmail: _userEmail }: ProjectsPageProps): Reac
     let result = [...projects];
 
     // Jika role investor, batasi hanya pada proyek miliknya
-    if (isInvestorUser && selectedProjectId && selectedProjectId !== 'ALL') {
+    if (isInvestorUser && lockedInvestorId) {
+      result = result.filter(p => p.investorId === lockedInvestorId);
+    } else if (isInvestorUser && selectedProjectId && selectedProjectId !== 'ALL') {
       result = result.filter(p => p.id === selectedProjectId);
     }
 
@@ -120,7 +122,7 @@ export function ProjectsPage({ userEmail: _userEmail }: ProjectsPageProps): Reac
     }
 
     return result;
-  }, [projects, isInvestorUser, selectedProjectId, statusFilter, searchQuery]);
+  }, [projects, isInvestorUser, lockedInvestorId, selectedProjectId, statusFilter, searchQuery]);
 
   // Statistik Ringkasan
   const totalDeposit = useMemo(() => {

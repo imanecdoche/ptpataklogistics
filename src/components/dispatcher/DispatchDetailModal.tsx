@@ -1,17 +1,41 @@
 import React from 'react';
-import { DispatchTransaction } from '@/types/database';
+import {
+  DispatchTransaction,
+  Client,
+  Project,
+  MaterialItem,
+  MasterQuarry,
+  MasterVehicle,
+  MasterDriver
+} from '@/types/database';
 import { useProjectFilter } from '@/context/ProjectFilterContext';
+import { DynamicEntityText } from '@/components/ui/DynamicEntityText';
+import { resolveTransactionEntities, resolveCreatorName } from '@/lib/entityResolver';
 
 interface DispatchDetailModalProps {
   transaction: DispatchTransaction | null;
   onClose: () => void;
+  entityMaps?: {
+    clients: Map<string, Client>;
+    projects: Map<string, Project>;
+    materials: Map<string, MaterialItem>;
+    quarries: Map<string, MasterQuarry>;
+    vehicles: Map<string, MasterVehicle>;
+    drivers: Map<string, MasterDriver>;
+  };
 }
 
-export function DispatchDetailModal({ transaction, onClose }: DispatchDetailModalProps): React.JSX.Element | null {
+export function DispatchDetailModal({
+  transaction,
+  onClose,
+  entityMaps
+}: DispatchDetailModalProps): React.JSX.Element | null {
   const { isDispatcherUser, isInvestorUser } = useProjectFilter();
   const hideMargin = isDispatcherUser || isInvestorUser;
 
   if (!transaction) return null;
+
+  const ent = entityMaps ? resolveTransactionEntities(transaction, entityMaps) : null;
 
   const formatRupiah = (val: number): string => {
     return 'Rp ' + val.toLocaleString('id-ID');
@@ -63,24 +87,45 @@ export function DispatchDetailModal({ transaction, onClose }: DispatchDetailModa
             <div>
               <span className="text-[#888888] block text-[11px]">Proyek Tujuan</span>
               <span className="font-semibold text-xs md:text-sm text-[#111111] break-words">
-                {transaction.projectName || 'Proyek Umum'}
+                <DynamicEntityText
+                  name={ent ? ent.project.name : (transaction.projectName || 'Proyek Umum')}
+                  isOrphan={ent?.project.isOrphan}
+                  tooltipText={ent?.project.tooltipText}
+                  className="font-semibold text-xs md:text-sm text-[#111111]"
+                />
               </span>
             </div>
             <div>
               <span className="text-[#888888] block text-[11px]">No. Plat Truk</span>
               <span className="font-mono font-semibold text-xs md:text-sm text-[#111111]">
-                {transaction.truckPlate}
+                <DynamicEntityText
+                  name={ent ? ent.truck.name : transaction.truckPlate}
+                  isOrphan={ent?.truck.isOrphan}
+                  tooltipText={ent?.truck.tooltipText}
+                  className="font-mono font-semibold text-xs md:text-sm text-[#111111]"
+                />
               </span>
-              {transaction.driverName && (
+              {(ent?.driver.name || transaction.driverName) && (
                 <span className="text-[#666666] block text-[11px] mt-0.5">
-                  Sopir: {transaction.driverName}
+                  Sopir:{' '}
+                  <DynamicEntityText
+                    name={ent ? ent.driver.name : transaction.driverName || ''}
+                    isOrphan={ent?.driver.isOrphan}
+                    tooltipText={ent?.driver.tooltipText}
+                    className="text-[#666666] text-[11px]"
+                  />
                 </span>
               )}
             </div>
             <div>
               <span className="text-[#888888] block text-[11px]">Pembeli / Kontraktor</span>
               <span className="font-medium text-xs md:text-sm text-[#111111] break-words">
-                {transaction.clientName || transaction.customerName}
+                <DynamicEntityText
+                  name={ent ? ent.client.name : (transaction.clientName || transaction.customerName || '-')}
+                  isOrphan={ent?.client.isOrphan}
+                  tooltipText={ent?.client.tooltipText}
+                  className="font-medium text-xs md:text-sm text-[#111111]"
+                />
               </span>
             </div>
           </div>
@@ -90,13 +135,23 @@ export function DispatchDetailModal({ transaction, onClose }: DispatchDetailModa
             <div>
               <span className="text-[#888888] block text-[11px]">Jenis Material</span>
               <span className="font-medium text-xs md:text-sm text-[#111111] break-words">
-                {transaction.materialName}
+                <DynamicEntityText
+                  name={ent ? ent.material.name : transaction.materialName}
+                  isOrphan={ent?.material.isOrphan}
+                  tooltipText={ent?.material.tooltipText}
+                  className="font-medium text-xs md:text-sm text-[#111111]"
+                />
               </span>
             </div>
             <div>
               <span className="text-[#888888] block text-[11px]">Kuari Asal</span>
               <span className="font-medium text-xs md:text-sm text-[#111111] break-words">
-                {transaction.quarryName || '-'}
+                <DynamicEntityText
+                  name={ent ? ent.quarry.name : (transaction.quarryName || '-')}
+                  isOrphan={ent?.quarry.isOrphan}
+                  tooltipText={ent?.quarry.tooltipText}
+                  className="font-medium text-xs md:text-sm text-[#111111]"
+                />
               </span>
             </div>
             <div>
@@ -169,6 +224,12 @@ export function DispatchDetailModal({ transaction, onClose }: DispatchDetailModa
                   minute: '2-digit'
                 })}{' '}
                 WIB
+              </span>
+            </div>
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-0.5 pt-0.5">
+              <span className="text-[#888888]">Dibuat Oleh:</span>
+              <span className="font-medium text-[#111111] whitespace-nowrap">
+                {resolveCreatorName(transaction.createdBy)}
               </span>
             </div>
           </div>

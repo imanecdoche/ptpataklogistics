@@ -28,17 +28,20 @@ interface AuthenticatedAppProps {
 }
 
 function AuthenticatedApp({ user, onLogout }: AuthenticatedAppProps): React.JSX.Element {
-  const { isDispatcherUser } = useProjectFilter();
+  const { isDispatcherUser, isInvestorUser } = useProjectFilter();
   const [currentTab, setCurrentTab] = useState<NavigationTab>(() => (isDispatcherUser ? 'dispatcher' : 'dashboard'));
   const [currentSubTab, setCurrentSubTab] = useState<string>(() => (isDispatcherUser ? 'new_ticket' : 'overview'));
 
-  // Keamanan Route Protection: dispatcher otomatis diarahkan ke 'dispatcher' dan dicegah membuka dashboard, investors, atau cash_ledger
+  // Keamanan Route Protection: dispatcher & investor
   useEffect(() => {
     if (isDispatcherUser && (currentTab === 'dashboard' || currentTab === 'investors' || currentTab === 'cash_ledger' || currentTab === 'hok_labor')) {
       setCurrentTab('dispatcher');
       setCurrentSubTab('new_ticket');
+    } else if (isInvestorUser && !['dashboard', 'projects', 'investors'].includes(currentTab)) {
+      setCurrentTab('dashboard');
+      setCurrentSubTab('overview');
     }
-  }, [isDispatcherUser, currentTab]);
+  }, [isDispatcherUser, isInvestorUser, currentTab]);
 
   const handleSelectTab = (tab: NavigationTab): void => {
     // Keamanan: tab dev hanya untuk akun developer
@@ -52,6 +55,13 @@ function AuthenticatedApp({ user, onLogout }: AuthenticatedAppProps): React.JSX.
     if (isDispatcherUser && (tab === 'dashboard' || tab === 'investors' || tab === 'cash_ledger' || tab === 'hok_labor')) {
       setCurrentTab('dispatcher');
       setCurrentSubTab('new_ticket');
+      return;
+    }
+
+    // Keamanan RBAC: investor hanya boleh mengakses dashboard, projects, atau investors
+    if (isInvestorUser && !['dashboard', 'projects', 'investors'].includes(tab)) {
+      setCurrentTab('dashboard');
+      setCurrentSubTab('overview');
       return;
     }
 
@@ -79,6 +89,11 @@ function AuthenticatedApp({ user, onLogout }: AuthenticatedAppProps): React.JSX.
     if (isDispatcherUser && (tab === 'dashboard' || tab === 'investors' || tab === 'cash_ledger' || tab === 'hok_labor')) {
       setCurrentTab('dispatcher');
       setCurrentSubTab('new_ticket');
+      return;
+    }
+    if (isInvestorUser && !['dashboard', 'projects', 'investors'].includes(tab)) {
+      setCurrentTab('dashboard');
+      setCurrentSubTab('overview');
       return;
     }
 

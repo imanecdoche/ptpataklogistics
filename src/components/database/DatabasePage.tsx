@@ -4,7 +4,9 @@ import {
   MasterDriver,
   Client,
   DispatchTransaction,
-  MaterialItem
+  MaterialItem,
+  MasterQuarry,
+  SystemUser
 } from '@/types/database';
 import {
   subscribeMasterVehicles,
@@ -13,7 +15,8 @@ import {
   combineVehicleData,
   subscribeMasterDrivers,
   saveMasterDriver,
-  deleteMasterDriver
+  deleteMasterDriver,
+  subscribeMasterQuarries
 } from '@/lib/databaseMasterService';
 import { subscribeClients } from '@/lib/clientService';
 import {
@@ -34,6 +37,14 @@ import { EditDispatchModal } from '@/components/dispatcher/EditDispatchModal';
 import { CustomSelectCombobox } from '@/components/ui/CustomSelectCombobox';
 import { MetricCardCurrency } from '@/components/ui/MetricCardCurrency';
 import { PhoneInput } from '@/components/ui/PhoneInput';
+import { DynamicEntityText } from '@/components/ui/DynamicEntityText';
+import {
+  resolveTransactionEntities,
+  resolveClientName,
+  resolveMaterialName,
+  resolveCreatorName
+} from '@/lib/entityResolver';
+import { subscribeSystemUsers } from '@/lib/userManagementService';
 import { formatPhoneNumber } from '@/lib/phoneUtils';
 import { formatPersonNameLive } from '@/lib/nameUtils';
 import { useProjectFilter } from '@/context/ProjectFilterContext';
@@ -54,7 +65,7 @@ interface DatabasePageProps {
 }
 
 export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Element {
-  const { isDispatcherUser } = useProjectFilter();
+  const { projects, isDispatcherUser } = useProjectFilter();
   const [activeSubTab, setActiveSubTab] = useState<SubTab>('ritase');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -64,6 +75,8 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
   const [drivers, setDrivers] = useState<MasterDriver[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [materials, setMaterials] = useState<MaterialItem[]>([]);
+  const [quarries, setQuarries] = useState<MasterQuarry[]>([]);
+  const [systemUsers, setSystemUsers] = useState<SystemUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // Filter & Sorting states khusus Riwayat Ritase
@@ -136,6 +149,14 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
       setIsLoading(false);
     });
 
+    const unsubQuarries = subscribeMasterQuarries(list => {
+      setQuarries(list);
+    });
+
+    const unsubUsers = subscribeSystemUsers(list => {
+      setSystemUsers(list);
+    });
+
     getMaterials().then(setMaterials).catch(console.error);
 
     return () => {
@@ -143,6 +164,8 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
       unsubDrivers();
       unsubClients();
       unsubTx();
+      unsubQuarries();
+      unsubUsers();
     };
   }, []);
 
@@ -157,6 +180,50 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
   const combinedVehicles = useMemo(() => {
     return combineVehicleData(transactions, masterVehicles);
   }, [transactions, masterVehicles]);
+
+  // Maps Master Data untuk Dynamic Entity Resolution (SSoT)
+  const clientsMap = useMemo(() => new Map(clients.map(c => [c.id, c])), [clients]);
+  const projectsMap = useMemo(() => new Map(projects.map(p => [p.id, p])), [projects]);
+  const materialsMap = useMemo(() => new Map(materials.map(m => [m.id, m])), [materials]);
+  const quarriesMap = useMemo(() => new Map(quarries.map(q => [q.id, q])), [quarries]);
+  const vehiclesMap = useMemo(() => {
+    const m = new Map<string, MasterVehicle>();
+    masterVehicles.forEach(v => {
+      m.set(v.plateNumber.replace(/\s+/g, '').toUpperCase(), v);
+      if (v.id) m.set(v.id.replace(/\s+/g, '').toUpperCase(), v);
+    });
+    return m;
+  }, [masterVehicles]);
+  const driversMap = useMemo(() => {
+    const m = new Map<string, MasterDriver>();
+    drivers.forEach(d => {
+      m.set(d.name.trim().toLowerCase(), d);
+      if (d.id) m.set(d.id, d);
+    });
+    return m;
+  }, [drivers]);
+
+  const entityMaps = useMemo(
+    () => ({
+      clients: clientsMap,
+      projects: projectsMap,
+      materials: materialsMap,
+      quarries: quarriesMap,
+      vehicles: vehiclesMap,
+      drivers: driversMap
+    }),
+    [clientsMap, projectsMap, materialsMap, quarriesMap, vehiclesMap, driversMap]
+  );
+
+  const systemUsersMap = useMemo(() => {
+    const map = new Map<string, SystemUser>();
+    systemUsers.forEach(u => {
+      map.set(u.email.toLowerCase(), u);
+      if (u.id) map.set(u.id, u);
+      if (u.uid) map.set(u.uid, u);
+    });
+    return map;
+  }, [systemUsers]);
 
   // Filter & Urutkan Data Transaksi Ritase (Riwayat Ritase)
   const filteredTransactions = useMemo(() => {
@@ -181,33 +248,39 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
       result = result.filter(tx => tx.status === statusFilter);
     }
 
-    // 3. Filter Jenis Material
+    // 3. Filter Jenis Material (Dynamic Name Match)
     if (materialFilter !== 'all') {
-      result = result.filter(tx => tx.materialName.toLowerCase() === materialFilter.toLowerCase());
-    }
-
-    // 4. Filter Klien
-    if (clientFilter !== 'all') {
       result = result.filter(tx => {
-        const cName = (tx.customerName || tx.clientName || '').toLowerCase();
-        return cName === clientFilter.toLowerCase();
+        const mat = resolveMaterialName(tx.materialId, tx.materialName, materialsMap);
+        return mat.name.toLowerCase() === materialFilter.toLowerCase();
       });
     }
 
-    // 5. Filter Pencarian Text
+    // 4. Filter Klien (Dynamic Name Match)
+    if (clientFilter !== 'all') {
+      result = result.filter(tx => {
+        const cli = resolveClientName(tx.clientId, tx.clientName || tx.customerName, clientsMap);
+        return cli.name.toLowerCase() === clientFilter.toLowerCase();
+      });
+    }
+
+    // 5. Filter Pencarian Text (Dynamic Entity Match)
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim();
-      result = result.filter(
-        tx =>
+      result = result.filter(tx => {
+        const ent = resolveTransactionEntities(tx, entityMaps);
+        return (
           tx.ticketNumber.toLowerCase().includes(q) ||
-          tx.truckPlate.toLowerCase().includes(q) ||
-          (tx.driverName && tx.driverName.toLowerCase().includes(q)) ||
-          (tx.customerName && tx.customerName.toLowerCase().includes(q)) ||
-          (tx.clientName && tx.clientName.toLowerCase().includes(q)) ||
-          (tx.quarryName && tx.quarryName.toLowerCase().includes(q)) ||
-          tx.materialName.toLowerCase().includes(q) ||
+          (tx.suratJalan && tx.suratJalan.toLowerCase().includes(q)) ||
+          ent.truck.name.toLowerCase().includes(q) ||
+          ent.driver.name.toLowerCase().includes(q) ||
+          ent.client.name.toLowerCase().includes(q) ||
+          ent.project.name.toLowerCase().includes(q) ||
+          ent.quarry.name.toLowerCase().includes(q) ||
+          ent.material.name.toLowerCase().includes(q) ||
           (tx.notes && tx.notes.toLowerCase().includes(q))
-      );
+        );
+      });
     }
 
     // 6. Sorting Multi-Opsi
@@ -233,7 +306,7 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
     });
 
     return result;
-  }, [transactions, timeRangeFilter, statusFilter, materialFilter, clientFilter, searchQuery, sortOption]);
+  }, [transactions, timeRangeFilter, statusFilter, materialFilter, clientFilter, searchQuery, sortOption, entityMaps, materialsMap, clientsMap]);
 
   // Kalkulasi Ringkasan Finansial Riwayat Ritase yang Difilter
   const ritaseMetrics = useMemo(() => {
@@ -692,43 +765,76 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
                   )}
                   <th className="py-2.5 px-3 w-[85px] min-w-[85px] text-center whitespace-nowrap">Status</th>
                   <th className="py-2.5 px-3 w-[180px] min-w-[180px] whitespace-nowrap">Catatan Ritase</th>
+                  <th className="py-2.5 px-3 w-[105px] min-w-[105px] whitespace-nowrap">Dibuat Oleh</th>
                   <th className="py-2.5 px-3 w-[60px] min-w-[60px] text-right whitespace-nowrap">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#eaeaea]">
                 {filteredTransactions.length === 0 ? (
                   <tr>
-                    <td colSpan={isDispatcherUser ? 15 : 17} className="py-10 text-center text-xs text-[#888888] whitespace-nowrap">
+                    <td colSpan={isDispatcherUser ? 16 : 18} className="py-10 text-center text-xs text-[#888888] whitespace-nowrap">
                       {isLoading ? 'Memuat riwayat ritase...' : 'Tidak ada data ritase yang sesuai filter.'}
                     </td>
                   </tr>
                 ) : (
-                  filteredTransactions.map(tx => (
-                    <tr key={tx.id} className="hover:bg-[#fafafa] transition-colors">
-                      <td className="py-2.5 px-3 font-mono font-bold text-[#111111] whitespace-nowrap w-[140px] align-middle">
-                        {tx.ticketNumber}
-                      </td>
-                      <td className="py-2.5 px-3 font-mono text-[#555555] whitespace-nowrap w-[105px] align-middle">
-                        {tx.deliveryDate}
-                      </td>
-                      <td className="py-2.5 px-3 font-mono font-bold text-[#111111] whitespace-nowrap w-[110px] align-middle">
-                        {tx.truckPlate}
-                      </td>
-                      <td className="py-2.5 px-3 text-[#444444] whitespace-nowrap w-[130px] align-middle">
-                        <RunningText text={tx.driverName} placeholder="-" className="text-[#444444]" />
-                      </td>
-                      <td className="py-2.5 px-3 text-[#444444] whitespace-nowrap w-[150px] align-middle">
-                        <RunningText text={tx.projectName} placeholder="-" className="text-[#444444]" />
-                      </td>
-                      <td className="py-2.5 px-3 font-medium text-[#111111] whitespace-nowrap w-[160px] align-middle">
-                        <RunningText text={tx.customerName || tx.clientName} className="font-medium text-[#111111]" />
-                      </td>
-                      <td className="py-2.5 px-3 text-[#555555] whitespace-nowrap w-[130px] align-middle">
-                        <RunningText text={tx.quarryName} placeholder="-" className="text-[#555555]" />
-                      </td>
-                      <td className="py-2.5 px-3 text-[#555555] whitespace-nowrap w-[140px] align-middle">
-                        {tx.materialName}
-                      </td>
+                  filteredTransactions.map(tx => {
+                    const ent = resolveTransactionEntities(tx, entityMaps);
+                    return (
+                      <tr key={tx.id} className="hover:bg-[#fafafa] transition-colors">
+                        <td className="py-2.5 px-3 font-mono font-bold text-[#111111] whitespace-nowrap w-[140px] align-middle">
+                          {tx.ticketNumber}
+                        </td>
+                        <td className="py-2.5 px-3 font-mono text-[#555555] whitespace-nowrap w-[105px] align-middle">
+                          {tx.deliveryDate}
+                        </td>
+                        <td className="py-2.5 px-3 whitespace-nowrap w-[110px] align-middle">
+                          <DynamicEntityText
+                            name={ent.truck.name}
+                            isOrphan={ent.truck.isOrphan}
+                            tooltipText={ent.truck.tooltipText}
+                            className="font-mono font-bold text-[#111111]"
+                          />
+                        </td>
+                        <td className="py-2.5 px-3 whitespace-nowrap w-[130px] align-middle">
+                          <DynamicEntityText
+                            name={ent.driver.name}
+                            isOrphan={ent.driver.isOrphan}
+                            tooltipText={ent.driver.tooltipText}
+                            className="text-[#444444]"
+                          />
+                        </td>
+                        <td className="py-2.5 px-3 whitespace-nowrap w-[150px] align-middle">
+                          <DynamicEntityText
+                            name={ent.project.name}
+                            isOrphan={ent.project.isOrphan}
+                            tooltipText={ent.project.tooltipText}
+                            className="text-[#444444]"
+                          />
+                        </td>
+                        <td className="py-2.5 px-3 whitespace-nowrap w-[160px] align-middle">
+                          <DynamicEntityText
+                            name={ent.client.name}
+                            isOrphan={ent.client.isOrphan}
+                            tooltipText={ent.client.tooltipText}
+                            className="font-medium text-[#111111]"
+                          />
+                        </td>
+                        <td className="py-2.5 px-3 whitespace-nowrap w-[130px] align-middle">
+                          <DynamicEntityText
+                            name={ent.quarry.name}
+                            isOrphan={ent.quarry.isOrphan}
+                            tooltipText={ent.quarry.tooltipText}
+                            className="text-[#555555]"
+                          />
+                        </td>
+                        <td className="py-2.5 px-3 whitespace-nowrap w-[140px] align-middle">
+                          <DynamicEntityText
+                            name={ent.material.name}
+                            isOrphan={ent.material.isOrphan}
+                            tooltipText={ent.material.tooltipText}
+                            className="text-[#555555]"
+                          />
+                        </td>
                       <td className="py-2.5 px-3 font-bold tracking-tight text-[#111111] whitespace-nowrap w-[90px] align-middle">
                         {tx.quantity} {tx.unit}
                       </td>
@@ -765,6 +871,9 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
                       <td className="py-2.5 px-3 text-[#666666] whitespace-nowrap w-[180px] align-middle">
                         <RunningText text={tx.notes} placeholder="-" className="text-[#666666]" />
                       </td>
+                      <td className="py-2.5 px-3 font-medium text-[#111111] whitespace-nowrap w-[105px] align-middle">
+                        {resolveCreatorName(tx.createdBy, systemUsersMap)}
+                      </td>
                       <td className="py-2.5 px-3 text-right whitespace-nowrap w-[60px] align-middle">
                         <div className="flex items-center justify-end">
                           <TableActionMenu
@@ -796,7 +905,8 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
                         </div>
                       </td>
                     </tr>
-                  ))
+                    );
+                  })
                 )}
               </tbody>
             </table>
@@ -988,6 +1098,7 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
           transaction={selectedEditTx}
           materials={materials}
           clients={clients}
+          quarries={quarries}
           onSave={handleUpdateRitase}
           onClose={() => setSelectedEditTx(null)}
         />
@@ -998,6 +1109,7 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
         <DispatchDetailModal
           transaction={selectedDetailTx}
           onClose={() => setSelectedDetailTx(null)}
+          entityMaps={entityMaps}
         />
       )}
 

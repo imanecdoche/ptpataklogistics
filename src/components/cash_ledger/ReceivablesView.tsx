@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { DispatchTransaction, Project } from '@/types/database';
+import { resolveCreatorName } from '@/lib/entityResolver';
 import { RecordProjectPaymentModal } from './RecordProjectPaymentModal';
 import { settleSingleTicket } from '@/lib/cashLedgerService';
 
@@ -241,13 +242,14 @@ export function ReceivablesView({
                 <th className="py-2.5 px-3 w-[160px] whitespace-nowrap">Material / Plat</th>
                 <th className="py-2.5 px-3 w-[130px] text-right whitespace-nowrap">Nilai Tagihan</th>
                 <th className="py-2.5 px-3 w-[100px] text-center whitespace-nowrap">Status</th>
+                <th className="py-2.5 px-3 w-[105px] whitespace-nowrap">Dibuat Oleh</th>
                 <th className="py-2.5 px-3 w-[110px] text-right whitespace-nowrap">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#eaeaea]">
               {filteredTransactions.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-10 text-center text-xs text-[#888888]">
+                  <td colSpan={8} className="py-10 text-center text-xs text-[#888888]">
                     Tidak ada tiket ritase piutang yang ditemukan.
                   </td>
                 </tr>
@@ -296,6 +298,9 @@ export function ReceivablesView({
                       >
                         {tx.status}
                       </span>
+                    </td>
+                    <td className="py-2.5 px-3 font-medium text-[#111111] whitespace-nowrap align-middle">
+                      {resolveCreatorName(tx.createdBy)}
                     </td>
                     <td className="py-2.5 px-3 text-right whitespace-nowrap align-middle">
                       {tx.status === 'TEMPO' ? (

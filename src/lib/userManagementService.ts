@@ -92,6 +92,23 @@ export async function seedInitialUsers(): Promise<void> {
         lastLoginAt: new Date().toISOString()
       });
     }
+
+    // 4. Akun Investor Bpk. Yadi
+    const yadiDocRef = doc(colRef, 'usr-yadi-patak-id');
+    const yadiSnap = await getDoc(yadiDocRef);
+    if (!yadiSnap.exists()) {
+      await setDoc(yadiDocRef, {
+        id: 'usr-yadi-patak-id',
+        name: 'Bpk Yadi',
+        email: 'yadi@patak.id',
+        role: 'investor',
+        status: 'ACTIVE',
+        investorId: 'inv-bpk-yadi',
+        createdAt: new Date().toISOString(),
+        approvedAt: new Date().toISOString(),
+        approvedBy: DEVELOPER_EMAIL
+      });
+    }
   } catch (err) {
     console.warn('Gagal seed initial users:', err);
   }
