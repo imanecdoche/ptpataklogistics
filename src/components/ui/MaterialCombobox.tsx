@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { MaterialItem } from '@/types/database';
-import { getMaterialIconSrc } from '@/lib/materialIcons';
 
 interface MaterialComboboxProps {
   materials: MaterialItem[];
@@ -140,9 +139,9 @@ export function MaterialCombobox({
         {/* Material Icon Preview */}
         <div className="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none flex items-center">
           <img
-            src={getMaterialIconSrc(query || 'Material')}
+            src="/icons/material-cube.png"
             alt="Material"
-            className="w-4 h-4 object-contain opacity-80"
+            className="w-4 h-4 object-contain"
           />
         </div>
 
@@ -202,7 +201,7 @@ export function MaterialCombobox({
               >
                 <div className="flex items-center gap-2.5 min-w-0">
                   <img
-                    src={getMaterialIconSrc(m.name)}
+                    src="/icons/material-cube.png"
                     alt={m.name}
                     className="w-5 h-5 object-contain flex-shrink-0"
                   />
