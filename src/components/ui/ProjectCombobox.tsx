@@ -83,6 +83,29 @@ export function ProjectCombobox({
     inputRef.current?.focus();
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>): void => {
+    if (e.key === 'Tab') {
+      if (isOpen && filteredProjects.length > 0) {
+        const top = filteredProjects[0];
+        if (top) {
+          handleSelect(top);
+        }
+      }
+    } else if (e.key === 'Enter') {
+      if (isOpen && filteredProjects.length > 0) {
+        e.preventDefault();
+        const top = filteredProjects[0];
+        if (top) {
+          handleSelect(top);
+        }
+      }
+    } else if (e.key === 'Escape') {
+      setIsOpen(false);
+    } else if (e.key === 'ArrowDown' && !isOpen) {
+      setIsOpen(true);
+    }
+  };
+
   const isSolidWhite = variant === 'solid-white';
 
   return (
@@ -117,6 +140,7 @@ export function ProjectCombobox({
               setQuery(e.target.value);
               if (!isOpen) setIsOpen(true);
             }}
+            onKeyDown={handleKeyDown}
             onFocus={() => {
               if (!disabled) setIsOpen(true);
             }}

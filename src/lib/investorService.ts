@@ -7,10 +7,11 @@ import {
   deleteDoc,
   query,
   orderBy,
-  onSnapshot
+  onSnapshot,
+  where
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { Investor } from '@/types/database';
+import { Investor, InvestorProjectLink } from '@/types/database';
 import { formatPhoneNumber } from '@/lib/phoneUtils';
 import { formatEntityName } from '@/lib/nameUtils';
 
@@ -39,7 +40,8 @@ export function subscribeInvestors(callback: (investors: Investor[]) => void): (
 }
 
 /**
- * Menyimpan investor baru atau memperbarui data investor yang sudah ada
+ * Menyimpan investor baru atau memperbarui data investor yang sudah ada,
+ * sekaligus menyinkronkan penugasan proyek, alokasi modal, dan profit share.
  */
 export async function saveInvestor(
   payload: {
@@ -47,6 +49,8 @@ export async function saveInvestor(
     phoneNumber?: string;
     bankAccount?: string;
     initialCapital?: number;
+    profitSharePercentage?: number;
+    linkedProjects?: InvestorProjectLink[];
     notes?: string;
   },
   existingId?: string
@@ -57,33 +61,74 @@ export async function saveInvestor(
   }
 
   const colRef = collection(db, INVESTORS_COLLECTION);
+  let finalId = existingId;
 
-  if (existingId) {
-    const docRef = doc(colRef, existingId);
+  if (finalId) {
+    const docRef = doc(colRef, finalId);
     await updateDoc(docRef, {
       name: cleanName,
       phoneNumber: payload.phoneNumber ? formatPhoneNumber(payload.phoneNumber) : '',
       bankAccount: payload.bankAccount?.trim() || '',
       initialCapital: Number(payload.initialCapital) || 0,
+      profitSharePercentage: Number(payload.profitSharePercentage) || 0,
+      linkedProjects: payload.linkedProjects || [],
       notes: payload.notes?.trim() || ''
     });
-    return existingId;
+  } else {
+    const slug = cleanName.toLowerCase().replace(/[^a-z0-9]/g, '-').slice(0, 30);
+    finalId = `inv-${slug}-${Date.now().toString().slice(-4)}`;
+    const newInvestor: Investor = {
+      id: finalId,
+      name: cleanName,
+      phoneNumber: payload.phoneNumber ? formatPhoneNumber(payload.phoneNumber) : '',
+      bankAccount: payload.bankAccount?.trim() || '',
+      initialCapital: Number(payload.initialCapital) || 0,
+      profitSharePercentage: Number(payload.profitSharePercentage) || 0,
+      linkedProjects: payload.linkedProjects || [],
+      notes: payload.notes?.trim() || '',
+      createdAt: new Date().toISOString()
+    };
+
+    await setDoc(doc(colRef, finalId), newInvestor);
   }
 
-  const slug = cleanName.toLowerCase().replace(/[^a-z0-9]/g, '-').slice(0, 30);
-  const docId = `inv-${slug}-${Date.now().toString().slice(-4)}`;
-  const newInvestor: Investor = {
-    id: docId,
-    name: cleanName,
-    phoneNumber: payload.phoneNumber ? formatPhoneNumber(payload.phoneNumber) : '',
-    bankAccount: payload.bankAccount?.trim() || '',
-    initialCapital: Number(payload.initialCapital) || 0,
-    notes: payload.notes?.trim() || '',
-    createdAt: new Date().toISOString()
-  };
+  // Sinkronisasi Dua Arah dengan Koleksi Proyek (projects)
+  try {
+    const projectsCol = collection(db, 'projects');
+    const linkedProjectIds = new Set((payload.linkedProjects || []).map(p => p.projectId));
 
-  await setDoc(doc(colRef, docId), newInvestor);
-  return docId;
+    // 1. Cari proyek yang sebelumnya terhubung ke investor ini
+    const prevLinkedQuery = query(projectsCol, where('investorId', '==', finalId));
+    const prevSnap = await getDocs(prevLinkedQuery);
+
+    for (const d of prevSnap.docs) {
+      if (!linkedProjectIds.has(d.id)) {
+        // Proyek dilepas dari investor ini
+        await updateDoc(doc(db, 'projects', d.id), {
+          investorId: '',
+          investorName: ''
+        });
+      }
+    }
+
+    // 2. Perbarui proyek yang terhubung saat ini dengan data alokasi dan profit share
+    if (payload.linkedProjects && payload.linkedProjects.length > 0) {
+      for (const link of payload.linkedProjects) {
+        if (!link.projectId) continue;
+        const pRef = doc(db, 'projects', link.projectId);
+        await updateDoc(pRef, {
+          investorId: finalId,
+          investorName: cleanName,
+          initialDeposit: Number(link.capitalAllocation) || 0,
+          profitSharePercentage: Number(link.profitSharePercentage) || 0
+        });
+      }
+    }
+  } catch (syncErr) {
+    console.warn('Gagal menyinkronkan proyek terkait investor:', syncErr);
+  }
+
+  return finalId;
 }
 
 /**
@@ -95,11 +140,26 @@ export async function updateInvestor(id: string, data: Partial<Investor>): Promi
 }
 
 /**
- * Menghapus investor dari sistem secara permanen
+ * Menghapus investor dari sistem secara permanen dan melepaskan ikatan pada proyek
  */
 export async function deleteInvestor(id: string): Promise<void> {
   const docRef = doc(db, INVESTORS_COLLECTION, id);
   await deleteDoc(docRef);
+
+  // Unlink semua proyek yang sebelumnya terhubung
+  try {
+    const projectsCol = collection(db, 'projects');
+    const q = query(projectsCol, where('investorId', '==', id));
+    const snap = await getDocs(q);
+    for (const d of snap.docs) {
+      await updateDoc(doc(db, 'projects', d.id), {
+        investorId: '',
+        investorName: ''
+      });
+    }
+  } catch (err) {
+    console.warn('Gagal melepaskan kaitan proyek dari investor yang dihapus:', err);
+  }
 }
 
 /**
@@ -118,7 +178,8 @@ export async function seedDefaultInvestors(): Promise<void> {
       name: 'Bpk. Yadi',
       phoneNumber: '+62 812-3456-7890',
       bankAccount: 'BCA - Rekening Investor Bpk. Yadi',
-      initialCapital: 30000000,
+      initialCapital: 26500000,
+      profitSharePercentage: 50,
       notes: 'Investor Tunggal Aktif PT Patak Abadi Jaya (Mendanai Proyek Situ Cikedal & Proyek Irigasi Cipeucang)',
       createdAt: new Date().toISOString()
     };
@@ -128,4 +189,3 @@ export async function seedDefaultInvestors(): Promise<void> {
     console.warn('Gagal melakukan seed default investors:', err);
   }
 }
-

@@ -58,6 +58,11 @@ const TAB_TITLES: Record<NavigationTab, { title: string; mobileTitle?: string; s
     mobileTitle: 'Kas & Piutang',
     subtitle: ''
   },
+  hok_labor: {
+    title: 'HOK Tukang Lapangan',
+    mobileTitle: 'HOK Tukang',
+    subtitle: ''
+  },
   recap: {
     title: 'Rekapitulasi Periode',
     mobileTitle: 'Rekapitulasi',

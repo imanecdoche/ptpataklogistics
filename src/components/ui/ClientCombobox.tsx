@@ -11,6 +11,7 @@ interface ClientComboboxProps {
   onSelect: (client: Client | null) => void;
   required?: boolean;
   disabled?: boolean;
+  placeholder?: string;
   variant?: 'default' | 'solid-white';
 }
 
@@ -21,6 +22,7 @@ export function ClientCombobox({
   onSelect,
   required = false,
   disabled = false,
+  placeholder,
   variant = 'default'
 }: ClientComboboxProps): React.JSX.Element {
   const [query, setQuery] = useState(selectedClientName || '');
@@ -93,6 +95,29 @@ export function ClientCombobox({
     onSelect(c);
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>): void => {
+    if (e.key === 'Tab') {
+      if (isOpen && filteredClients.length > 0) {
+        const topClient = filteredClients[0];
+        if (topClient) {
+          handleSelectClient(topClient);
+        }
+      }
+    } else if (e.key === 'Enter') {
+      if (isOpen && filteredClients.length > 0) {
+        e.preventDefault();
+        const topClient = filteredClients[0];
+        if (topClient) {
+          handleSelectClient(topClient);
+        }
+      }
+    } else if (e.key === 'Escape') {
+      setIsOpen(false);
+    } else if (e.key === 'ArrowDown' && !isOpen) {
+      setIsOpen(true);
+    }
+  };
+
   const handleOpenRegister = (prefillName: string): void => {
     setModalInitialName(formatClientName(prefillName));
     setIsModalOpen(true);
@@ -124,9 +149,10 @@ export function ClientCombobox({
           type="text"
           required={required}
           disabled={disabled}
-          placeholder="Cari atau pilih nama klien / pembeli..."
+          placeholder={placeholder || "Cari atau pilih nama klien / pembeli..."}
           value={query}
           onChange={handleInputChange}
+          onKeyDown={handleKeyDown}
           onBlur={handleInputBlur}
           onFocus={() => setIsOpen(true)}
           className={`w-full bg-transparent outline-none border-none py-2 pl-9 pr-3 text-xs ${

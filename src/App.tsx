@@ -15,6 +15,8 @@ import { InvestorsPage } from '@/components/investors/InvestorsPage';
 import { QuarriesPage } from '@/components/quarries/QuarriesPage';
 import { ClientsPage } from '@/components/clients/ClientsPage';
 import { RecapPage } from '@/components/recap/RecapPage';
+import { CashLedgerPage } from '@/components/cash_ledger/CashLedgerPage';
+import { LaborPage } from '@/components/labor/LaborPage';
 import { DevPage } from '@/components/dev/DevPage';
 import { OfflineOverlay } from '@/components/ui/OfflineOverlay';
 import { isDeveloperEmail } from '@/lib/userManagementService';
@@ -32,7 +34,7 @@ function AuthenticatedApp({ user, onLogout }: AuthenticatedAppProps): React.JSX.
 
   // Keamanan Route Protection: dispatcher otomatis diarahkan ke 'dispatcher' dan dicegah membuka dashboard, investors, atau cash_ledger
   useEffect(() => {
-    if (isDispatcherUser && (currentTab === 'dashboard' || currentTab === 'investors' || currentTab === 'cash_ledger')) {
+    if (isDispatcherUser && (currentTab === 'dashboard' || currentTab === 'investors' || currentTab === 'cash_ledger' || currentTab === 'hok_labor')) {
       setCurrentTab('dispatcher');
       setCurrentSubTab('new_ticket');
     }
@@ -46,8 +48,8 @@ function AuthenticatedApp({ user, onLogout }: AuthenticatedAppProps): React.JSX.
       return;
     }
 
-    // Keamanan RBAC: dispatcher tidak boleh mengakses dashboard, investors, atau cash_ledger
-    if (isDispatcherUser && (tab === 'dashboard' || tab === 'investors' || tab === 'cash_ledger')) {
+    // Keamanan RBAC: dispatcher tidak boleh mengakses dashboard, investors, cash_ledger, atau hok_labor
+    if (isDispatcherUser && (tab === 'dashboard' || tab === 'investors' || tab === 'cash_ledger' || tab === 'hok_labor')) {
       setCurrentTab('dispatcher');
       setCurrentSubTab('new_ticket');
       return;
@@ -65,12 +67,16 @@ function AuthenticatedApp({ user, onLogout }: AuthenticatedAppProps): React.JSX.
       window.dispatchEvent(new CustomEvent('patak:close-dispatch-drawer'));
     } else if (tab === 'recap') {
       setCurrentSubTab('volume');
+    } else if (tab === 'cash_ledger') {
+      setCurrentSubTab('cash_flow');
+    } else if (tab === 'hok_labor') {
+      setCurrentSubTab('payments');
     }
   };
 
   const handleSelectSubTab = (tab: NavigationTab, subTabId?: string): void => {
-    // Keamanan RBAC: dispatcher tidak boleh mengakses dashboard, investors, atau cash_ledger
-    if (isDispatcherUser && (tab === 'dashboard' || tab === 'investors' || tab === 'cash_ledger')) {
+    // Keamanan RBAC
+    if (isDispatcherUser && (tab === 'dashboard' || tab === 'investors' || tab === 'cash_ledger' || tab === 'hok_labor')) {
       setCurrentTab('dispatcher');
       setCurrentSubTab('new_ticket');
       return;
@@ -142,41 +148,28 @@ function AuthenticatedApp({ user, onLogout }: AuthenticatedAppProps): React.JSX.
         <ClientsPage userEmail={user?.email || 'admin@patak.id'} />
       )}
 
-      {currentTab === 'recap' && (
-        <RecapPage
+      {currentTab === 'cash_ledger' && (
+        <CashLedgerPage
           userEmail={user?.email || 'admin@patak.id'}
           activeSubTab={currentSubTab}
           onNavigateSubTab={handleSelectSubTab}
         />
       )}
 
-      {currentTab !== 'dashboard' &&
-        currentTab !== 'dispatcher' &&
-        currentTab !== 'database' &&
-        currentTab !== 'dev' &&
-        currentTab !== 'materials' &&
-        currentTab !== 'projects' &&
-        currentTab !== 'investors' &&
-        currentTab !== 'quarries' &&
-        currentTab !== 'clients' &&
-        currentTab !== 'recap' && (
-        <div className="bg-white rounded-[10px] p-6 space-y-4">
-          <div className="space-y-1">
-            <h2 className="text-sm font-semibold text-[#111111]">
-              {currentTab === 'cash_ledger' && 'Buku Kas & Piutang Tempo'}
-            </h2>
-            <p className="text-xs text-[#666666]">
-              Sistem terhubung ke database <span className="font-mono text-[#111111]">pataklogisticdb</span> di zona <span className="font-mono text-[#111111]">asia-southeast2</span>.
-            </p>
-          </div>
+      {currentTab === 'hok_labor' && (
+        <LaborPage
+          userEmail={user?.email || 'admin@patak.id'}
+          activeSubTab={currentSubTab}
+          onNavigateSubTab={handleSelectSubTab}
+        />
+      )}
 
-          <div className="border-t border-[#eaeaea] pt-4 text-xs text-[#666666]">
-            Menu aktif saat ini:{' '}
-            <span className="font-medium text-[#111111]">
-              {currentTab === 'cash_ledger' && 'Kas & Piutang Tempo'}
-            </span>
-          </div>
-        </div>
+      {currentTab === 'recap' && (
+        <RecapPage
+          userEmail={user?.email || 'admin@patak.id'}
+          activeSubTab={currentSubTab}
+          onNavigateSubTab={handleSelectSubTab}
+        />
       )}
     </AppShell>
   );

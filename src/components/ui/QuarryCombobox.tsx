@@ -79,6 +79,29 @@ export function QuarryCombobox({
     inputRef.current?.focus();
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>): void => {
+    if (e.key === 'Tab') {
+      if (isOpen && filteredQuarries.length > 0) {
+        const top = filteredQuarries[0];
+        if (top) {
+          handleSelect(top);
+        }
+      }
+    } else if (e.key === 'Enter') {
+      if (isOpen && filteredQuarries.length > 0) {
+        e.preventDefault();
+        const top = filteredQuarries[0];
+        if (top) {
+          handleSelect(top);
+        }
+      }
+    } else if (e.key === 'Escape') {
+      setIsOpen(false);
+    } else if (e.key === 'ArrowDown' && !isOpen) {
+      setIsOpen(true);
+    }
+  };
+
   const handleQuickCreate = async (): Promise<void> => {
     const clean = query.trim();
     if (!clean) return;
@@ -121,6 +144,7 @@ export function QuarryCombobox({
               onSelect(null);
             }
           }}
+          onKeyDown={handleKeyDown}
           onFocus={() => setIsOpen(true)}
           placeholder={placeholder}
           required={required}

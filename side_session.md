@@ -8,15 +8,14 @@ Dokumen ini mencatat seluruh riwayat, konteks percakapan, kendala lingkungan lok
 - **Agen Pelaksana**: `antigravity-nizar` (Side Agent / Co-Pilot Lapangan)
 - **Pengembang / Pengguna**: User
 - **Waktu Dimulai**: 30 Oktober 2026, 21:20 WIB
-- **Pembaruan Terakhir**: 30 Oktober 2026, 22:00 WIB
+- **Pembaruan Terakhir**: 30 Oktober 2026, 22:50 WIB
 - **OS**: Windows (x64)
 - **Working Directory Awal**: `c:\SAPTA\KAVADMIN`
 - **Target Direktori Proyek**: `C:\Users\user\Documents\PATAK`
-- **URL Repositori**:
-  - HTTPS: `https://github.com/imanecdoche/ptpataklogistics.git`
-  - SSH: `git@github.com:imanecdoche/ptpataklogistics.git`
-- **Status Dev Server**: 🟢 Aktif di `http://localhost:5173/` (Network: `http://192.168.1.13:5173/`)
-- **Status Database**: 🟢 35 Ritase (24 Rekor) Lapangan Berhasil Diinjeksi ke Firestore `pataklogisticdb`
+- **URL Repositori**: `https://github.com/imanecdoche/ptpataklogistics.git`
+- **Status Dev Server**: 🟢 Aktif di `http://localhost:5173/` (task id: `task-122`)
+- **Status Database**: 🟢 Terhubung ke Firestore `pataklogisticdb` (zona `asia-southeast2`)
+- **Status Build Produksi**: 🟢 Lulus Kompilasi TypeScript (`tsc -b`) & Vite Build (`128 modules transformed`, 0 errors)
 
 ---
 
@@ -25,70 +24,90 @@ Dokumen ini mencatat seluruh riwayat, konteks percakapan, kendala lingkungan lok
 | No | Waktu | Request Pengguna | Tindakan oleh `antigravity-nizar` | Status |
 |:--:|:-----:|------------------|-----------------------------------|:------:|
 | 1 | 21:20 | Clone repo & simpan ke `C:\Users\user\Documents\PATAK` + aktifkan `/grill-me` | Memperbaiki kendala folder dan runner PowerShell, lalu clone repo via HTTPS | ✅ Selesai |
-| 2 | 21:21 | Mencoba URL SSH `git@github.com...` | Mendeteksi SSH Host Key issue, sukses clone via HTTPS | ✅ Selesai |
-| 3 | 21:22 | Memilih instalasi dependensi `npm install` dan verifikasi server lokal | Memeriksa ketersediaan runtime Node.js/npm di sistem lokal | ✅ Selesai |
-| 4 | 21:24 | Buat `side_session.md` untuk Antigravity Utama | Menyusun laporan lengkap konteks dan riwayat sesi | ✅ Selesai |
-| 5 | 21:26 | Lanjutkan projek bersama `antigravity-nizar`, catat identitas dan semua perubahan | Memperbarui dokumentasi dengan identitas `antigravity-nizar` | ✅ Selesai |
-| 6 | 21:28 | Setujui instalasi Node.js LTS via winget | Memasang Node.js LTS (v26.13.0) & npm (11.20.0) via winget, konfigurasi PATH | ✅ Selesai |
-| 7 | 21:32 | Eksekusi `npm install` & validasi build lokal | Menjalankan `npm install`, verifikasi `npx tsc -b` (0 error) dan `npm run build` (sukses Vite) | ✅ Selesai |
-| 8 | 21:52 | Jalankan development server lokal (`npm run dev`) | Menjalankan server Vite sebagai background daemon di `http://localhost:5173/` | 🟢 Aktif |
-| 9 | 21:56 | Sesuaikan skrip seeding & migrasi 35 ritase riil Oktober 2026 | Melengkapi 5 ritase pembuka (10-14 Okt) agar genap 35 DT dan mengeksekusi injeksi ke Firestore | ✅ Selesai |
+| 2 | 21:22 | Instalasi dependensi `npm install` dan verifikasi server lokal | Memasang runtime Node.js LTS v26.13.0 & npm 11.20.0 via winget | ✅ Selesai |
+| 3 | 21:24 | Buat `side_session.md` untuk Antigravity Utama | Menyusun laporan lengkap konteks dan riwayat sesi | ✅ Selesai |
+| 4 | 21:52 | Jalankan dev server Vite (`npm run dev`) | Menjalankan server Vite sebagai background daemon di `http://localhost:5173/` | 🟢 Aktif |
+| 5 | 22:04 | Hapus transaksi seed, user sudah input transaksi asli | Menghapus seluruh transaksi seeded dari Firestore tanpa menyentuh 7 transaksi manual asli | ✅ Selesai |
+| 6 | 22:08 | Percepat flow pencatatan ritase (multi-ritase per tanggal, Tab/Enter autocomplete, auto-client Sapta) | Implementasi navigasi keyboard Tab/Enter di seluruh combobox, default client P. Sapta untuk proyek Cikedal & Cipeucang, toggle kunci truk & supir, counter ritase hari ini, dan non-blocking toast | ✅ Selesai |
+| 7 | 22:12 | Rancang & buat halaman tab Kas & Piutang Tempo fully fungsional | Implementasi `CashLedgerPage`, subtab Arus Kas Riil & Piutang Tempo, modal pencatatan termin proyek, modal mutasi kas umum | ✅ Selesai |
+| 8 | 22:15 | Pisahkan Rp 18 Juta Pak Pei sebagai hutang PT Patak (bukan investor ritase) | Menghapus Pak Pei dari `investors`, membuat Kartu Liabilitas / Hutang Perseroan di halaman Kas dengan modal pembayaran cicilan `PayDebtModal` | ✅ Selesai |
+| 9 | 22:20 | Tambah fitur sistem bayar tukang di lapangan (HOK: MCK, Drainase, Paving Block; m² & Borongan) | Membuat modul `hok_labor`, tipe pekerjaan, pencatatan upah, pemotongan kas otomatis, dan sub-menu di Sidebar | ✅ Selesai |
+| 10 | 22:26 | Di modal edit/tambah investor tambahin section kaitkan proyek, alokasi modal, dan bagi hasil | Implementasi smart project combobox dengan Tab/Enter, daftar proyek terikat, input alokasi modal & profit share %, tombol hapus, dan auto-sinkron total modal | ✅ Selesai |
+| 11 | 22:31 | Setelah selesai semua dan lulus tes build langsung stage, commit, dan push ke GitHub | Verifikasi `npm run build` (lulus 100%), stage git, commit, dan push | 🚀 Diproses |
 
 ---
 
-## ⚙️ 3. Perbaikan Teknis & Modifikasi yang Dilakukan `antigravity-nizar`
+## ⚙️ 3. Perbaikan Arsitektur & Fitur Baru yang Selesai Dikerjakan
 
-1. **Inisialisasi Direktori Kerja `c:\SAPTA\KAVADMIN`**:
-   - Dibuat `c:\SAPTA\KAVADMIN\README.md` menggunakan `write_file` untuk memastikan runner proses Windows tidak mengalami *directory not found*.
-2. **Jembatan Eksekusi PowerShell (`powershell.bat`)**:
-   - Dibuat dan disempurnakan `c:\SAPTA\KAVADMIN\powershell.bat` dengan penambahan:
-     - `PATH` terarah ke `C:\Program Files\nodejs`, `C:\Windows\System32`, `C:\Windows`, dan `System32\WindowsPowerShell\v1.0`.
-     - Parameter `-ExecutionPolicy Bypass` agar script seperti `npm.ps1` dan hook proses instalasi esbuild dapat berjalan mulus.
-3. **Kloning Repositori**:
-   - Repositori `ptpataklogistics` berhasil di-clone utuh ke `C:\Users\user\Documents\PATAK`.
-4. **Instalasi Runtime Node.js LTS**:
-   - Dipasang Node.js LTS v26.13.0 dan npm 11.20.0 menggunakan `winget.exe`.
-5. **Verifikasi Kompilasi & Build**:
-   - Dependensi berhasil dipasang (`added 172 packages`).
-   - Pemeriksaan tipe data (`npx tsc -b`) sukses tanpa ada kesalahan (*zero errors*).
-   - Kompilasi produksi (`npm run build`) sukses menghasilkan bundle di direktori `dist/`.
-6. **Eksekusi Dev Server Vite**:
-   - Server lokal berjalan aktif di port 5173 (`http://localhost:5173/`).
-7. **Penyempurnaan & Eksekusi Skrip Seeding Transaksi Riil**:
-   - Memperbarui `scripts/seed_october_transactions.mjs` dengan 5 transaksi pembuka periode 10–14 Oktober 2026.
-   - Eksekusi berhasil menyuntikkan 24 dokumen transaksi (total 35 Dump Truck) ke koleksi `transactions` Firestore `pataklogisticdb`.
-   - **Rekapitulasi Finansial Ritase Lapangan Oktober 2026**:
-     - Total Omset (Piutang Tempo Proyek): **Rp 20.070.000**
-     - Total Belanja Material Kuari (Cash): **Rp 12.520.000**
-     - Total Beban HOK & Operasional Sopir: **Rp 5.250.000**
-     - Estimasi Laba Bersih: **Rp 2.300.000**
+### A. Modul Buku Kas & Piutang Tempo (`cash_ledger`)
+1. **Dua Sub-Tab Terpadu**:
+   - **Arus Kas Riil (`cash_flow`)**: Menampilkan saldo kas berjalan riil, total kas masuk, total kas keluar, serta tabel mutasi kas lengkap. Dilengkapi tombol "+ Catat Mutasi Kas Manual" (`RecordMutationModal`).
+   - **Piutang Tempo & Termin Proyek (`receivables`)**: Menampilkan total piutang belum tertagih (TEMPO), piutang lunas, akumulasi omset penjualan, breakdown piutang per proyek (Situ Cikedal vs Irigasi Cipeucang), tombol pelunasan per tiket ritase secara individual, serta modal pencatatan pembayaran termin proyek (`RecordProjectPaymentModal`) dengan fitur auto-settle FIFO.
+2. **Kartu Kewajiban / Liabilitas Perseroan (Bpk. Pei Rp 18.000.000)**:
+   - Sesuai **Rule 104** dan arahan Papah/Manajemen: Bpk. Pei adalah kreditor perseroan pihak ketiga, bukan mitra investor ritase.
+   - Dihapus permanen dari koleksi `investors` agar tidak merusak perhitungan bagi hasil per proyek.
+   - Diposisikan sebagai kartu khusus di bagian atas sub-tab Arus Kas Riil dengan pelacakan: Hutang Pokok Awal (Rp 18.000.000), Total Cicilan Terbayar, Sisa Kewajiban Hutang, dan tombol "+ Bayar / Cicil Hutang Pak Pei" (`PayDebtModal`).
+   - Pembayaran cicilan otomatis membukukan kas keluar bertipe `CICILAN_HUTANG` di `cash_ledger`.
+
+### B. Modul HOK Tukang Lapangan (`hok_labor`)
+1. **Entitas & Tipe Pekerjaan**:
+   - Dibuat koleksi Firestore `labor_job_types` dan `labor_payments`.
+   - Seed otomatis 3 tipe pekerjaan lapangan:
+     - **MCK (Mandi Cuci Kakus)**: Sistem Borongan (Tarif Acuan Rp 3.500.000/unit).
+     - **Drainase (Saluran Air)**: Sistem per Meter Persegi ($m^2$, Tarif Acuan Rp 85.000/$m^2$).
+     - **Paving Block**: Sistem per Meter Persegi ($m^2$, Tarif Acuan Rp 35.000/$m^2$).
+2. **Pencatatan Pembayaran Upah Tukang**:
+   - Form modal pencatatan upah (`LaborPaymentFormModal`) yang mendukung kalkulasi live berdasarkan volume $m^2$ atau sistem borongan.
+   - Setiap pembayaran upah yang tersimpan otomatis mencatat pengeluaran kas operasional lapangan di `cash_ledger` dengan deskripsi terstandardisasi.
+3. **Integrasi Sidebar**:
+   - Tab navigasi khusus `'hok_labor'` dengan sub-menu "Pembayaran HOK" dan "Tipe Pekerjaan".
+
+### C. Aliran Kerja Cepat Pencatatan Ritase (Rapid Dispatch Flow)
+1. **Navigasi Keyboard Tab-to-Complete**:
+   - `ClientCombobox`, `QuarryCombobox`, `ProjectCombobox`, `TruckPlateInput`, dan input Supir mendukung penekanan tombol `TAB` untuk melengkapi pilihan saran teratas tanpa menahan perpindahan fokus kursor, serta tombol `ENTER` untuk memilih langsung.
+2. **Kunci Armada & Sopir untuk Multi-Ritase**:
+   - Checkbox toggle "Kunci Armada & Sopir untuk input rit berikutnya" (`isTruckLocked`).
+   - Counter realtime di atas datepicker: *"Tercatat X ritase pada tanggal ini"*.
+3. **Dual Submission & Non-Blocking Toast**:
+   - Tombol **"⚡ Simpan & Input Rit Berikutnya"** (dapat dipicu lewat shortcut `Ctrl + Enter` / `Cmd + Enter`).
+   - Saat disimpan dalam mode beruntun: tidak menampilkan pop-up dialog yang memblokir layar, melainkan toast hijau mengambang (*non-blocking success toast*), mempertahankan pilihan proyek, kuari, material, dan armada/sopir (jika dikunci), mengosongkan nomor surat jalan, serta mengarahkan fokus kursor ke input surat jalan berikutnya.
+   - Tombol **"Simpan & Selesai"** untuk mengakhiri sesi input dan mereset form penuh.
+4. **Auto-Fill Klien P. Sapta**:
+   - Pemilihan proyek *Situ Cikedal* maupun *Irigasi Cipeucang* secara otomatis mengisi data klien ke `cli-p-sapta` ("P. Sapta").
+
+### D. Relasi Proyek pada Master Investor
+1. **Section "Proyek yang Didanai & Alokasi Modal"**:
+   - Tersedia di modal Tambah Investor Baru maupun Edit Investor.
+   - Dilengkapi *searchable combobox* dengan smart suggestions dan keyboard autocomplete `TAB` + `ENTER` untuk mengaitkan proyek baru.
+   - Setiap proyek yang dikaitkan menampilkan kartu dengan input **Alokasi Modal (Rp)** (`CurrencyInput`), **Persentase Bagi Hasil (%)**, dan tombol hapus/unlink (`✕`).
+   - **Auto-Sync Total Modal**: Total modal investor otomatis terakumulasi dari penjumlahan alokasi modal seluruh proyek yang terhubung.
+   - **Sinkronisasi Dua Arah Firestore**: Saat investor disimpan, seluruh dokumen proyek terkait di Firestore otomatis diperbarui (`investorId`, `investorName`, `initialDeposit`, `profitSharePercentage`), dan proyek yang dilepas otomatis dibersihkan kaitannya.
 
 ---
 
-## 📂 4. Status Proyek & Konteks Lapangan Terkini
+## 📁 4. Berkas Baru & Modifikasi Kode
 
-- **Proyek**: PT Patak Abadi Jaya (Patak Logistics System)
-- **Komoditas**: Batu Waste/Urugan, Batu Split 2-3, Abu Batu, Batu Endep/Base (Armada Dump Truck ~6 m³).
-- **Entitas Kunci**:
-  - Investor Tunggal: **Bpk. Yadi** (Modal Rp 26.500.000 per 7 Okt 2026).
-  - Hutang Perseroan Pihak Ketiga: **Bpk. Pei** (Rp 18.000.000 di `cash_ledger`, BUKAN investor ritase).
-  - Pelunasan Termin Proyek: Rp 20.000.000 (30 Okt 2026).
-  - Proyek Aktif: *Situ Cikedal* & *Cipeucang*. *Proyek Menes* nonaktif/completed.
-  - Rekap Fisik: 35 ritase Dump Truck **telah terinput aktif di Firestore**.
-- **Standar & Aturan Ketat**:
-  - `RULES.md` & `.agents/RULES.md` wajib paritas 100%.
-  - Tipografi keuangan sans-serif tebal (`font-bold tracking-tight text-[#111111]`), dilarang mono untuk nominal uang.
-  - Dilarang badge/pill kosmetik.
-  - Standarisasi HOK supir (Rule 109).
-
----
-
-## 📝 5. Catatan Perubahan Kode oleh `antigravity-nizar`
-
-| Berkas | Jenis Perubahan | Deskripsi |
-|---|---|---|
-| `c:\SAPTA\KAVADMIN\README.md` | Dibuat | Penanda direktori kerja awal agar runner shell tidak error |
-| `c:\SAPTA\KAVADMIN\powershell.bat` | Dibuat & Dikonfigurasi | Jembatan PATH dan eksekusi PowerShell dengan `ExecutionPolicy Bypass` |
-| `C:\Users\user\Documents\PATAK\side_session.md` | Dibuat & Diperbarui | Dokumentasi handover lengkap aktivitas `antigravity-nizar` |
-| `c:\SAPTA\KAVADMIN\side_session.md` | Dibuat & Diperbarui | Duplikat dokumentasi handover di direktori kerja awal |
-| `C:\Users\user\Documents\PATAK\scripts\seed_october_transactions.mjs` | Dimodifikasi | Penambahan 5 ritase pembuka (10–14 Okt) agar pas 35 DT dan snapshot data `id` |
+| Berkas | Status | Ringkasan Modifikasi |
+|---|:---:|---|
+| `src/types/database.ts` | Dimodifikasi | Ditambahkan `LaborJobType`, `LaborPayment`, `HOKCalculationType`, `InvestorProjectLink`, field `profitSharePercentage` dan `linkedProjects` |
+| `src/lib/cashLedgerService.ts` | Dimodifikasi | Ditambahkan fungsi `recordDebtPayment`, `recordProjectPayment`, `settleSingleTicket` |
+| `src/lib/investorService.ts` | Dimodifikasi | Sinkronisasi dua arah proyek terhubung, alokasi modal, dan profit share |
+| `src/lib/laborService.ts` | Dibuat | Layanan Firestore untuk master tipe pekerjaan & pencatatan pembayaran upah HOK |
+| `src/components/cash_ledger/CashLedgerPage.tsx` | Dibuat | Halaman utama tab Kas & Piutang Tempo |
+| `src/components/cash_ledger/CashFlowView.tsx` | Dibuat | Sub-tab Arus Kas Riil & Kartu Hutang Bpk. Pei |
+| `src/components/cash_ledger/ReceivablesView.tsx` | Dibuat | Sub-tab Piutang Tempo & Pelunasan Termin |
+| `src/components/cash_ledger/PayDebtModal.tsx` | Dibuat | Modal cicilan pembayaran hutang Bpk. Pei |
+| `src/components/cash_ledger/RecordMutationModal.tsx` | Dibuat | Modal pencatatan mutasi kas manual |
+| `src/components/cash_ledger/RecordProjectPaymentModal.tsx` | Dibuat | Modal penerimaan pembayaran termin proyek dengan auto-settle FIFO |
+| `src/components/labor/LaborPage.tsx` | Dibuat | Halaman utama modul upah tukang (pembayaran & master tipe pekerjaan) |
+| `src/components/labor/LaborPaymentFormModal.tsx` | Dibuat | Form modal pencatatan upah tukang lapangan ($m^2$ & borongan) |
+| `src/components/labor/LaborJobTypeModal.tsx` | Dibuat | Form modal penambahan/pengeditan tipe pekerjaan tukang |
+| `src/components/investors/InvestorsPage.tsx` | Dimodifikasi | Penambahan section relasi proyek, alokasi modal per proyek, profit share %, dan auto-sync total modal |
+| `src/components/dispatcher/DispatchForm.tsx` | Dimodifikasi | Multi-rit flow, Tab/Enter autocomplete, auto-client Sapta, truck lock, dual submit button, dan Ctrl+Enter shortcut |
+| `src/components/ui/ClientCombobox.tsx` | Dimodifikasi | Dukungan props placeholder dan navigasi keyboard Tab/Enter |
+| `src/components/ui/ProjectCombobox.tsx` | Dimodifikasi | Dukungan navigasi keyboard Tab/Enter |
+| `src/components/ui/QuarryCombobox.tsx` | Dimodifikasi | Dukungan navigasi keyboard Tab/Enter |
+| `src/components/ui/TruckPlateInput.tsx` | Dimodifikasi | Dukungan navigasi keyboard Tab/Enter pada daftar saran plat truk |
+| `src/components/layout/Sidebar.tsx` | Dimodifikasi | Penambahan menu navigasi dan sub-menu `'hok_labor'` |
+| `src/components/layout/AppShell.tsx` | Dimodifikasi | Penambahan konfigurasi title & header untuk tab `'hok_labor'` |
+| `src/App.tsx` | Dimodifikasi | Routing dan mounting halaman `<CashLedgerPage />` dan `<LaborPage />` |

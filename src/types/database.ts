@@ -117,6 +117,14 @@ export interface MasterQuarry {
   createdAt: string;
 }
 
+// Relasi Investor dengan Proyek & Alokasi Modal
+export interface InvestorProjectLink {
+  projectId: string;
+  projectName: string;
+  capitalAllocation: number;        // Alokasi modal investor khusus proyek ini (Rp)
+  profitSharePercentage?: number;   // Persentase bagi hasil / profit share (%)
+}
+
 // 7. Koleksi: investors (Daftar Investor & Permodalan)
 export interface Investor {
   id: string;                // e.g. "inv-haji-sulaiman-..."
@@ -124,6 +132,8 @@ export interface Investor {
   phoneNumber?: string;      // No HP / WhatsApp
   bankAccount?: string;      // Informasi Bank & Rekening (e.g. "BCA 1234567890 a.n. Fatih")
   initialCapital?: number;   // Nominal Modal / Investasi Awal (Rp)
+  profitSharePercentage?: number; // Persentase bagi hasil default/global (%)
+  linkedProjects?: InvestorProjectLink[]; // Daftar proyek yang didanai dan alokasi modalnya
   notes?: string;
   createdAt: string;
 }
@@ -139,6 +149,7 @@ export interface Project {
   clientName: string;        // Snapshot nama klien
   initialDeposit: number;    // Modal awal disetor investor untuk proyek ini
   currentBalance: number;    // Saldo kas berjalan proyek ini (bisa dipotong/ditambah)
+  profitSharePercentage?: number; // Persentase bagi hasil investor untuk proyek ini (%)
   status: 'ACTIVE' | 'COMPLETED' | 'ON_HOLD';
   notes?: string;
   createdAt: string;
@@ -178,6 +189,38 @@ export interface SystemUser {
   approvedAt?: string | null;  // ISO Timestamp saat di-ACC oleh developer
   approvedBy?: string | null;  // Email developer yang menyetujui
   inactiveReason?: string | null; // Alasan penonaktifan (e.g. "Tidak ada aktivitas selama 30 hari")
+}
+
+// 11. Koleksi: labor_job_types & labor_payments (HOK Tukang Lapangan)
+export type HOKCalculationType = 'PER_M2' | 'BORONGAN';
+
+export interface LaborJobType {
+  id: string;                  // e.g. "job-mck", "job-drainase", "job-paving-block"
+  name: string;                // e.g. "MCK", "Drainase", "Paving Block"
+  unit: 'm²' | 'Borongan';
+  defaultRate: number;         // Tarif acuan rupiah per m2 atau estimasi borongan
+  description?: string;
+  createdAt: string;
+}
+
+export interface LaborPayment {
+  id: string;
+  paymentDate: string;         // YYYY-MM-DD
+  projectId: string;
+  projectName: string;
+  workerName: string;          // Nama kepala tukang / mandor
+  workerPhone?: string;
+  jobTypeId: string;
+  jobTypeName: string;
+  calculationType: HOKCalculationType;
+  areaSquareMeter?: number;    // Luas m2 jika perhitungan per meter persegi
+  ratePerUnit: number;         // Tarif per m2 atau nominal borongan
+  totalAmount: number;         // Total pembayaran rupiah
+  notes?: string;              // Titik lokasi kerja / keterangan progres
+  status: 'LUNAS' | 'PANJAR';  // Status pelunasan upah
+  referenceId?: string;
+  createdByName: string;
+  createdAt: string;
 }
 
 // 12. Re-export Tipe Master Material & Matriks Rute Operasional 3 Titik

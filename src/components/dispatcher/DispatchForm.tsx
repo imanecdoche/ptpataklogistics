@@ -38,10 +38,15 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
 
   const [deliveryDate, setDeliveryDate] = useState<string>(getTodayString());
   const [suratJalan, setSuratJalan] = useState('');
+  const suratJalanInputRef = useRef<HTMLInputElement>(null);
   const [truckPlate, setTruckPlate] = useState('');
   const [isPlateInvalid, setIsPlateInvalid] = useState(false);
   const plateInputRef = useRef<HTMLInputElement>(null);
   const [driverName, setDriverName] = useState('');
+  const [isTruckLocked, setIsTruckLocked] = useState<boolean>(true);
+
+  // Success Toast State (Non-blocking untuk Fast Flow)
+  const [successToast, setSuccessToast] = useState<{ show: boolean; message: string } | null>(null);
 
   // Master Klien State
   const [clients, setClients] = useState<Client[]>([]);
@@ -67,6 +72,11 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
   const [matchedRate, setMatchedRate] = useState<QuarryMaterialRate | null>(null);
   const [matchedRoute, setMatchedRoute] = useState<RouteOperatingTariff | null>(null);
 
+  // Hitung jumlah ritase pada tanggal terpilih
+  const todayRitaseCount = useMemo(() => {
+    return transactions.filter(t => t.deliveryDate === deliveryDate).length;
+  }, [transactions, deliveryDate]);
+
   // Sinkronisasi dengan filter global proyek di header (hanya jika aktif)
   useEffect(() => {
     if (globalProjectId && globalProjectId !== 'ALL' && activeProjects.length > 0) {
@@ -74,20 +84,37 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
       if (p) {
         setFormProjectId(p.id);
         setFormProjectName(p.name);
-        setSelectedClientId(p.clientId);
-        setSelectedClientName(p.clientName);
-        setCustomerName(p.clientName);
+        const isSapta = p.name.toLowerCase().includes('cikedal') || p.name.toLowerCase().includes('cipeucang');
+        const sapta = clients.find(c => c.id === 'cli-p-sapta') || clients.find(c => c.name.toLowerCase().includes('sapta'));
+        if (isSapta && sapta) {
+          setSelectedClientId(sapta.id);
+          setSelectedClientName(sapta.name);
+          setCustomerName(sapta.name);
+        } else {
+          setSelectedClientId(p.clientId || '');
+          setSelectedClientName(p.clientName || '');
+          setCustomerName(p.clientName || '');
+        }
       }
     }
-  }, [globalProjectId, activeProjects]);
+  }, [globalProjectId, activeProjects, clients]);
 
   const handleSelectProject = (project: Project | null) => {
     if (project) {
       setFormProjectId(project.id);
       setFormProjectName(project.name);
-      setSelectedClientId(project.clientId);
-      setSelectedClientName(project.clientName);
-      setCustomerName(project.clientName);
+      // Auto-set client ke P. Sapta jika proyek Cikedal atau Cipeucang
+      const isSapta = project.name.toLowerCase().includes('cikedal') || project.name.toLowerCase().includes('cipeucang');
+      const sapta = clients.find(c => c.id === 'cli-p-sapta') || clients.find(c => c.name.toLowerCase().includes('sapta'));
+      if (isSapta && sapta) {
+        setSelectedClientId(sapta.id);
+        setSelectedClientName(sapta.name);
+        setCustomerName(sapta.name);
+      } else {
+        setSelectedClientId(project.clientId || '');
+        setSelectedClientName(project.clientName || '');
+        setCustomerName(project.clientName || '');
+      }
     } else {
       setFormProjectId('');
       setFormProjectName('');
@@ -107,6 +134,7 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
   const [knownTrucks, setKnownTrucks] = useState<KnownTruck[]>([]);
   const [knownDrivers, setKnownDrivers] = useState<KnownDriver[]>([]);
   const [isDriverDropdownOpen, setIsDriverDropdownOpen] = useState(false);
+  const [driverHighlightedIndex, setDriverHighlightedIndex] = useState(0);
   const formRef = useRef<HTMLFormElement>(null);
   const [isNegativeConfirmOpen, setIsNegativeConfirmOpen] = useState(false);
   const [isShaking, setIsShaking] = useState(false);
@@ -120,102 +148,72 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
     return () => unsubscribe();
   }, []);
 
-  // Subscribe daftar riwayat armada truk unik yang pernah tersimpan di transaksi
-  useEffect(() => {
-    const unsubTrucks = subscribeKnownTrucks(loaded => {
-      setKnownTrucks(loaded);
-    });
-    return () => unsubTrucks();
-  }, []);
-
-  // Subscribe daftar supir gabungan dari master_drivers dan transaksi
-  useEffect(() => {
-    const unsubDrivers = subscribeKnownDrivers(loaded => {
-      setKnownDrivers(loaded);
-    });
-    return () => unsubDrivers();
-  }, []);
-
   // Subscribe daftar master kuari asal dari Firestore
   useEffect(() => {
-    const unsubQuarries = subscribeMasterQuarries(loaded => {
+    const unsubscribe = subscribeMasterQuarries(loaded => {
       setQuarries(loaded);
     });
-    return () => unsubQuarries();
+    return () => unsubscribe();
   }, []);
 
-  // Subscribe matriks harga kuari & biaya rute dari Firestore
+  // Subscribe matriks harga kuari & tarif rute jalan
   useEffect(() => {
-    const unsubRates = subscribeQuarryRates(loaded => {
-      setQuarryRates(loaded);
-    });
-    const unsubRoutes = subscribeRouteTariffs(loaded => {
-      setRouteTariffs(loaded);
-    });
+    const unsubRates = subscribeQuarryRates(setQuarryRates);
+    const unsubRoutes = subscribeRouteTariffs(setRouteTariffs);
     return () => {
       unsubRates();
       unsubRoutes();
     };
   }, []);
 
-  // Material aktif yang dipilih
-  const selectedMat = materials.find(m => m.id === selectedMaterialId);
-
-  // Auto-fill rekomendasi Harga Tebus Cash Kuari dan Harga Jual ketika Kuari dan Material dipilih
+  // Subscribe daftar armada truk & sopir yang pernah beroperasi
   useEffect(() => {
-    if (selectedQuarryId && selectedMaterialId) {
-      const found = quarryRates.find(
-        r =>
-          r.quarryId === selectedQuarryId &&
-          (r.materialId === selectedMaterialId ||
-            (selectedMat && r.materialName.toLowerCase() === selectedMat.name.toLowerCase()))
-      );
-      if (found) {
-        setMatchedRate(found);
-        setBuyPricePerUnit(found.buyPriceCash);
-        if (found.sellPrice) {
-          setSellPricePerUnit(found.sellPrice);
-        } else if (selectedMat) {
-          setSellPricePerUnit(selectedMat.defaultSellPrice || 0);
-        }
-      } else {
-        setMatchedRate(null);
-        if (selectedMat) {
-          setBuyPricePerUnit(selectedMat.defaultBuyPrice || 0);
-          setSellPricePerUnit(selectedMat.defaultSellPrice || 0);
-        }
-      }
-    } else {
+    const unsubTrucks = subscribeKnownTrucks(setKnownTrucks);
+    const unsubDrivers = subscribeKnownDrivers(setKnownDrivers);
+    return () => {
+      unsubTrucks();
+      unsubDrivers();
+    };
+  }, []);
+
+  // Matriks Harga Otomatis: Saat materialId atau quarryId berubah
+  useEffect(() => {
+    if (!selectedMaterialId || !selectedQuarryId) {
       setMatchedRate(null);
-      if (selectedMat) {
-        setBuyPricePerUnit(selectedMat.defaultBuyPrice || 0);
-        setSellPricePerUnit(selectedMat.defaultSellPrice || 0);
-      }
+      return;
     }
-  }, [selectedQuarryId, selectedMaterialId, quarryRates, selectedMat]);
+    const found = quarryRates.find(
+      r => r.materialId === selectedMaterialId && r.quarryId === selectedQuarryId
+    );
+    setMatchedRate(found || null);
 
-  // Auto-fill rekomendasi Biaya Jalan Armada ketika Kuari Asal dan Proyek Tujuan dipilih
+    if (found) {
+      setBuyPricePerUnit(found.buyPriceCash);
+      setSellPricePerUnit(found.sellPrice);
+    }
+  }, [selectedMaterialId, selectedQuarryId, quarryRates]);
+
+  // Matriks Biaya Jalan Otomatis: Saat quarryId atau formProjectId berubah
   useEffect(() => {
-    if (selectedQuarryId && formProjectId) {
-      const found = routeTariffs.find(
-        r => r.quarryId === selectedQuarryId && r.projectId === formProjectId
-      );
-      if (found) {
-        setMatchedRoute(found);
-        setOperationalCost(found.standardOperationalCost);
-      } else {
-        setMatchedRoute(null);
-      }
-    } else {
+    if (!selectedQuarryId || !formProjectId) {
       setMatchedRoute(null);
+      return;
+    }
+    const found = routeTariffs.find(
+      r => r.quarryId === selectedQuarryId && r.projectId === formProjectId
+    );
+    setMatchedRoute(found || null);
+
+    if (found) {
+      setOperationalCost(found.standardOperationalCost);
     }
   }, [selectedQuarryId, formProjectId, routeTariffs]);
 
-  const handleSelectClient = (c: Client | null): void => {
-    if (c) {
-      setSelectedClientId(c.id);
-      setSelectedClientName(c.name);
-      setCustomerName(c.name);
+  const handleSelectClient = (client: Client | null) => {
+    if (client) {
+      setSelectedClientId(client.id);
+      setSelectedClientName(client.name);
+      setCustomerName(client.name);
     } else {
       setSelectedClientId('');
       setSelectedClientName('');
@@ -223,10 +221,10 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
     }
   };
 
-  const handleSelectQuarry = (q: MasterQuarry | null): void => {
-    if (q) {
-      setSelectedQuarryId(q.id);
-      setSelectedQuarryName(q.name);
+  const handleSelectQuarry = (quarry: MasterQuarry | null) => {
+    if (quarry) {
+      setSelectedQuarryId(quarry.id);
+      setSelectedQuarryName(quarry.name);
     } else {
       setSelectedQuarryId('');
       setSelectedQuarryName('');
@@ -252,8 +250,6 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
     setBuyPricePerUnit(m.defaultBuyPrice);
     setSellPricePerUnit(m.defaultSellPrice);
   };
-
-
 
   // Handler Volume: Mengizinkan field kosong saat diedit/dihapus, dan baru mengisi '0' saat unfocused
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
@@ -323,12 +319,26 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
     isDateValid;
 
   const handleNotesSubmitShortcut = (): void => {
-    if (isFormValid && !isSubmitting && formRef.current) {
-      formRef.current.requestSubmit();
+    if (isFormValid && !isSubmitting) {
+      handleActionSubmit(true);
     }
   };
 
-  const executeSave = async (): Promise<void> => {
+  // Global Keyboard Shortcut: Ctrl + Enter / Cmd + Enter untuk simpan cepat & lanjut rit berikutnya
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        if (isFormValid && !isSubmitting) {
+          e.preventDefault();
+          handleActionSubmit(true);
+        }
+      }
+    };
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+  }, [isFormValid, isSubmitting]);
+
+  const executeSave = async (continueNextRit: boolean = false): Promise<void> => {
     const effectiveClientName = selectedClientName.trim() || customerName.trim();
     const selectedMat = materials.find(m => m.id === selectedMaterialId);
     const materialName = selectedMat ? selectedMat.name : 'Material Alam';
@@ -361,29 +371,55 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
 
       await createDispatchTransaction(payload, userEmail);
 
-      // Reset form
-      setSuratJalan('');
-      setTruckPlate('');
-      setDriverName('');
-      setSelectedClientId('');
-      setSelectedClientName('');
-      setCustomerName('');
-      setSelectedQuarryId('');
-      setSelectedQuarryName('');
-      if (globalProjectId === 'ALL') {
-        setFormProjectId('');
-        setFormProjectName('');
-      }
-      setNotes('');
-      setQuantity(1);
-      setQuantityInput('1');
-      setIsNegativeConfirmOpen(false);
+      if (continueNextRit) {
+        // Mode Fast Flow: Tetap simpan proyek, kuari, material, dan harga.
+        // Bersihkan surat jalan & catatan.
+        setSuratJalan('');
+        setNotes('');
+        setIsNegativeConfirmOpen(false);
 
-      dialog.showAlert({
-        title: 'Ritase Berhasil Dicatat',
-        message: `Tiket ritase untuk armada ${payload.truckPlate} berhasil disimpan. Mutasi pengeluaran kas telah otomatis dibukukan.`,
-        confirmText: 'Selesai'
-      });
+        // Jika armada tidak dikunci, bersihkan plat & sopir
+        if (!isTruckLocked) {
+          setTruckPlate('');
+          setDriverName('');
+          setTimeout(() => plateInputRef.current?.focus(), 50);
+        } else {
+          setTimeout(() => suratJalanInputRef.current?.focus(), 50);
+        }
+
+        // Tampilkan Non-blocking green toast
+        setSuccessToast({
+          show: true,
+          message: `Ritase armada ${payload.truckPlate} berhasil disimpan!`
+        });
+        setTimeout(() => {
+          setSuccessToast(null);
+        }, 3000);
+      } else {
+        // Mode Selesai: Bersihkan seluruh form & tampilkan modal alert selesai
+        setSuratJalan('');
+        setTruckPlate('');
+        setDriverName('');
+        setSelectedClientId('');
+        setSelectedClientName('');
+        setCustomerName('');
+        setSelectedQuarryId('');
+        setSelectedQuarryName('');
+        if (globalProjectId === 'ALL') {
+          setFormProjectId('');
+          setFormProjectName('');
+        }
+        setNotes('');
+        setQuantity(1);
+        setQuantityInput('1');
+        setIsNegativeConfirmOpen(false);
+
+        dialog.showAlert({
+          title: 'Ritase Berhasil Dicatat',
+          message: `Tiket ritase untuk armada ${payload.truckPlate} berhasil disimpan. Mutasi pengeluaran kas telah otomatis dibukukan.`,
+          confirmText: 'Selesai'
+        });
+      }
 
       if (onSuccess) {
         onSuccess();
@@ -400,9 +436,7 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent): Promise<void> => {
-    e.preventDefault();
-
+  const handleActionSubmit = async (continueNextRit: boolean): Promise<void> => {
     const region = extractRegionCode(truckPlate);
     if (!truckPlate.trim()) {
       dialog.showAlert({
@@ -457,11 +491,32 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
       return;
     }
 
-    await executeSave();
+    await executeSave(continueNextRit);
   };
 
+  const handleSubmit = async (e: React.FormEvent): Promise<void> => {
+    e.preventDefault();
+    await handleActionSubmit(false);
+  };
+
+  // Filter list supir untuk smart dropdown & tab autocomplete
+  const driverFiltered = useMemo(() => {
+    const q = driverName.trim().toLowerCase();
+    return knownDrivers
+      .filter(d => !q || d.name.toLowerCase().includes(q))
+      .slice(0, 5);
+  }, [knownDrivers, driverName]);
+
   return (
-    <div className="bg-[#f5f5f5] rounded-[10px] p-4 md:p-6 select-none pb-20 md:pb-6">
+    <div className="bg-[#f5f5f5] rounded-[10px] p-4 md:p-6 select-none pb-20 md:pb-6 relative">
+      {/* Floating Success Toast (Non-blocking) */}
+      {successToast?.show && (
+        <div className="fixed top-5 right-5 z-50 bg-[#111111] text-white px-4 py-3 rounded-[8px] shadow-2xl flex items-center gap-2.5 text-xs animate-in slide-in-from-top-4 duration-200">
+          <span className="text-emerald-400 font-bold text-sm">✓</span>
+          <span className="font-semibold">{successToast.message}</span>
+        </div>
+      )}
+
       <div className="hidden md:block pb-4 border-b border-[#e5e5e5]">
         <h2 className="text-sm font-semibold text-[#111111]">
           Catat Ritase Baru
@@ -478,11 +533,16 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
             Waktu & Armada Truk
           </div>
 
-          {/* Row 0: Tanggal Ritase (Jalan) */}
+          {/* Row 0: Tanggal Ritase (Jalan) & Counter Hari Ini */}
           <div>
-            <label className="block text-[#666666] font-medium mb-1">
-              Tanggal Ritase (Jalan) <span className="text-red-500">*</span>
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-[#666666] font-medium">
+                Tanggal Ritase (Jalan) <span className="text-red-500">*</span>
+              </label>
+              <span className="text-[11px] font-bold text-[#111111] bg-white px-2 py-0.5 rounded border border-[#e5e5e5]">
+                Tercatat {todayRitaseCount} ritase pada tanggal ini
+              </span>
+            </div>
             <CustomDatePicker
               value={deliveryDate}
               onChange={setDeliveryDate}
@@ -527,56 +587,91 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
                 type="text"
                 placeholder="Pak Joko"
                 value={driverName}
-                onFocus={() => setIsDriverDropdownOpen(true)}
+                onFocus={() => {
+                  setIsDriverDropdownOpen(true);
+                  setDriverHighlightedIndex(0);
+                }}
                 onBlur={() => {
                   setTimeout(() => setIsDriverDropdownOpen(false), 200);
                 }}
                 onChange={e => {
                   setDriverName(formatPersonNameLive(e.target.value));
                   setIsDriverDropdownOpen(true);
+                  setDriverHighlightedIndex(0);
+                }}
+                onKeyDown={e => {
+                  if (driverFiltered.length === 0) return;
+                  if (e.key === 'Tab') {
+                    const top = driverFiltered[driverHighlightedIndex] || driverFiltered[0];
+                    if (top) {
+                      setDriverName(top.name);
+                      if (!truckPlate && top.defaultPlate) {
+                        setTruckPlate(top.defaultPlate);
+                      }
+                    }
+                  } else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    setDriverHighlightedIndex(prev => (prev + 1) % driverFiltered.length);
+                  } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    setDriverHighlightedIndex(prev => (prev - 1 + driverFiltered.length) % driverFiltered.length);
+                  } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const top = driverFiltered[driverHighlightedIndex] || driverFiltered[0];
+                    if (top) {
+                      setDriverName(top.name);
+                      if (!truckPlate && top.defaultPlate) {
+                        setTruckPlate(top.defaultPlate);
+                      }
+                      setIsDriverDropdownOpen(false);
+                    }
+                  }
                 }}
                 className="w-full bg-white border-none outline-none focus:outline-none focus:ring-0 rounded-[6px] px-3 py-2 text-xs text-black font-semibold placeholder:text-[#888888] transition-colors"
               />
 
               {/* Dropdown Autocomplete Suggestions Supir */}
-              {isDriverDropdownOpen && (
-                (() => {
-                  const q = driverName.trim().toLowerCase();
-                  const filtered = knownDrivers
-                    .filter(d => !q || d.name.toLowerCase().includes(q))
-                    .slice(0, 5);
-
-                  if (filtered.length === 0) return null;
-
-                  return (
-                    <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-[#eaeaea] rounded-[6px] shadow-lg max-h-48 overflow-y-auto z-30 divide-y divide-[#f5f5f5]">
-                      {filtered.map((driver, idx) => (
-                        <button
-                          key={`${driver.name}-${idx}`}
-                          type="button"
-                          onMouseDown={() => {
-                            setDriverName(driver.name);
-                            // Auto-fill plat armada jika masih kosong dan supir punya defaultPlate
-                            if (!truckPlate && driver.defaultPlate) {
-                              setTruckPlate(driver.defaultPlate);
-                            }
-                            setIsDriverDropdownOpen(false);
-                          }}
-                          className="w-full text-left px-3 py-2 text-xs hover:bg-[#f9f9f9] flex items-center justify-between cursor-pointer transition-colors"
-                        >
-                          <span className="font-medium text-[#111111]">{driver.name}</span>
-                          {driver.defaultPlate && (
-                            <span className="font-mono text-[10px] text-[#666666] bg-[#f0f0f0] px-1.5 py-0.5 rounded-[4px]">
-                              {driver.defaultPlate}
-                            </span>
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  );
-                })()
+              {isDriverDropdownOpen && driverFiltered.length > 0 && (
+                <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-[#eaeaea] rounded-[6px] shadow-lg max-h-48 overflow-y-auto z-30 divide-y divide-[#f5f5f5]">
+                  {driverFiltered.map((driver, idx) => (
+                    <button
+                      key={`${driver.name}-${idx}`}
+                      type="button"
+                      onMouseDown={() => {
+                        setDriverName(driver.name);
+                        if (!truckPlate && driver.defaultPlate) {
+                          setTruckPlate(driver.defaultPlate);
+                        }
+                        setIsDriverDropdownOpen(false);
+                      }}
+                      className={`w-full text-left px-3 py-2 text-xs flex items-center justify-between cursor-pointer transition-colors ${
+                        idx === driverHighlightedIndex ? 'bg-[#f0f0f0]' : 'hover:bg-[#f9f9f9]'
+                      }`}
+                    >
+                      <span className="font-medium text-[#111111]">{driver.name}</span>
+                      {driver.defaultPlate && (
+                        <span className="font-mono text-[10px] text-[#666666] bg-[#f0f0f0] px-1.5 py-0.5 rounded-[4px]">
+                          {driver.defaultPlate}
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
               )}
             </div>
+
+            {/* Checkbox Kunci Armada & Sopir untuk multi-ritase cepat */}
+            <label className="col-span-2 flex items-center gap-2 text-xs text-[#444444] cursor-pointer mt-0.5 select-none">
+              <input
+                type="checkbox"
+                checked={isTruckLocked}
+                onChange={e => setIsTruckLocked(e.target.checked)}
+                className="rounded border-[#d1d5db] text-[#111111] focus:ring-0 cursor-pointer"
+              />
+              <span className="font-semibold text-[#111111]">
+                Kunci Armada & Sopir untuk input rit berikutnya
+              </span>
+            </label>
           </div>
 
           {/* Row 2: No. Surat Jalan Fisik */}
@@ -585,6 +680,7 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
               No. Surat Jalan (Opsional)
             </label>
             <input
+              ref={suratJalanInputRef}
               type="text"
               placeholder="Contoh: SJ-00123"
               value={suratJalan}
@@ -618,187 +714,160 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
             />
           </div>
 
-          {/* Row 2: Master Klien & Kuari Asal */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-[#666666] font-medium mb-1">
-                Nama PT / Pembeli Proyek <span className="text-red-500">*</span>
-              </label>
-              <ClientCombobox
-                clients={clients}
-                selectedClientId={selectedClientId}
-                selectedClientName={selectedClientName || customerName}
-                onSelect={handleSelectClient}
-                required
-                variant="solid-white"
-              />
-            </div>
-
-            <div>
-              <label className="block text-[#666666] font-medium mb-1">
-                Kuari Asal / Tambang
-              </label>
-              <QuarryCombobox
-                quarries={quarries}
-                selectedQuarryId={selectedQuarryId}
-                selectedQuarryName={selectedQuarryName}
-                onSelect={handleSelectQuarry}
-                placeholder="Pilih atau ketik kuari asal..."
-                variant="solid-white"
-              />
-            </div>
+          {/* Row 2: Klien / Perusahaan Kontraktor */}
+          <div>
+            <label className="block text-[#666666] font-medium mb-1">
+              Klien / Perusahaan Pembeli <span className="text-red-500">*</span>
+            </label>
+            <ClientCombobox
+              clients={clients}
+              selectedClientId={selectedClientId}
+              selectedClientName={selectedClientName || customerName}
+              onSelect={handleSelectClient}
+              placeholder="Cari atau ketik nama klien..."
+              variant="solid-white"
+            />
           </div>
 
-          {/* Row 2.5: Baris Akhir Section Lokasi & Mitra (Informasi Investor Terhubung) */}
-          {!isDispatcherUser && (
-            <div className="pt-0.5">
-              <span className="block text-[#666666] font-medium mb-1">
-                Investor
-              </span>
-              <div className="text-xs">
-                {selectedProject?.investorName ? (
-                  <span className="text-black font-bold">
-                    {selectedProject.investorName}
-                  </span>
-                ) : (
-                  <span className="text-[#888888] italic">
-                    — (Pilih proyek tujuan terlebih dahulu)
-                  </span>
-                )}
-              </div>
-            </div>
-          )}
+          {/* Row 3: Kuari Asal Material */}
+          <div>
+            <label className="block text-[#666666] font-medium mb-1">
+              Kuari Asal / Tambang
+            </label>
+            <QuarryCombobox
+              quarries={quarries}
+              selectedQuarryId={selectedQuarryId}
+              selectedQuarryName={selectedQuarryName}
+              onSelect={handleSelectQuarry}
+              placeholder="Pilih kuari asal..."
+              variant="solid-white"
+            />
+          </div>
         </div>
 
-        {/* Section 3: Komoditas & Volume */}
+        {/* Section 3: Material & Volume */}
         <div className="border-t border-[#e5e5e5] pt-3.5 space-y-3.5">
           <div className="text-[11px] font-bold text-[#888888] uppercase tracking-wider">
-            Komoditas & Volume
+            Material & Volume
           </div>
 
-          {/* Row 3: Material & Volume */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="sm:col-span-2">
-              <label className="block text-[#666666] font-medium mb-1">
-                Jenis Material <span className="text-red-500">*</span>
-              </label>
-              {/* Custom Trigger Button Modal Picker */}
-              <button
-                type="button"
-                onClick={() => setIsMaterialPickerOpen(true)}
-                className="w-full bg-white border-none outline-none focus:outline-none focus:ring-0 rounded-[6px] px-3 py-2 text-xs text-black font-semibold hover:bg-white/90 transition-colors flex items-center justify-between cursor-pointer"
-              >
-                <div className="flex items-center gap-2.5 truncate">
-                  {selectedMat && (
-                    <img
-                      src={getMaterialIconSrc(selectedMat.name)}
-                      alt=""
-                      className="w-6 h-6 rounded-[4px] object-cover flex-shrink-0 bg-[#ebebeb]"
-                    />
-                  )}
-                  <span className="font-semibold truncate">
-                    {selectedMat ? selectedMat.name : 'Pilih Jenis Material'}
-                  </span>
-                  {selectedMat && (
-                    <span className="px-1.5 py-0.5 rounded-[4px] bg-black text-white font-mono text-[10px] font-semibold select-none">
-                      {selectedMat.unit}
-                    </span>
-                  )}
-                </div>
-
-                {/* Chevron Down Icon */}
-                <svg
-                  className="w-3.5 h-3.5 text-black flex-shrink-0 ml-2"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
+          {/* Row 1: Pilih Material */}
+          <div>
+            <label className="block text-[#666666] font-medium mb-1">
+              Jenis Material <span className="text-red-500">*</span>
+            </label>
+            {(() => {
+              const selectedMat = materials.find(m => m.id === selectedMaterialId);
+              return (
+                <button
+                  type="button"
+                  onClick={() => setIsMaterialPickerOpen(true)}
+                  className="w-full flex items-center justify-between p-2.5 bg-white rounded-[6px] hover:bg-[#fafafa] transition-colors border-none text-left cursor-pointer"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
+                  <div className="flex items-center space-x-2.5 min-w-0">
+                    <img
+                      src={getMaterialIconSrc(selectedMat?.name || 'Material')}
+                      alt={selectedMat?.name || 'Material'}
+                      className="w-6 h-6 object-contain flex-shrink-0"
+                    />
+                    <div className="min-w-0">
+                      <span className="block font-semibold text-xs text-[#111111] truncate">
+                        {selectedMat?.name || 'Pilih Jenis Material'}
+                      </span>
+                      {selectedMat && (
+                        <span className="block text-[10px] text-[#888888] font-mono mt-0.5">
+                          Acuan: Beli {formatRupiah(selectedMat.defaultBuyPrice)} • Jual {formatRupiah(selectedMat.defaultSellPrice)} / {selectedMat.unit}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <span className="text-xs font-medium text-[#111111] flex-shrink-0 ml-2">
+                    Ubah
+                  </span>
+                </button>
+              );
+            })()}
+          </div>
+
+          {/* Row 2: Satuan & Volume */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[#666666] font-medium mb-1">Satuan</label>
+              <div className="w-full bg-[#f0f0f0] rounded-[6px] px-3 py-2 text-xs font-semibold text-[#111111]">
+                {unit === 'DT' ? 'Dump Truck (DT)' : 'Tonase (Ton)'}
+              </div>
             </div>
 
             <div>
               <label className="block text-[#666666] font-medium mb-1">
-                Volume <span className="text-red-500">*</span>
+                Volume Ritase <span className="text-red-500">*</span>
               </label>
-              <div className="relative flex items-center bg-white border-none rounded-[6px]">
-                <input
-                  type="number"
-                  step="any"
-                  min="0.1"
-                  required
-                  placeholder="0"
-                  value={quantityInput}
-                  onChange={handleQuantityChange}
-                  onFocus={handleQuantityFocus}
-                  onBlur={handleQuantityBlur}
-                  className="w-full bg-transparent outline-none border-none py-2 pl-3 pr-2 text-xs font-mono font-semibold text-black"
-                />
-                <span className="pr-3 pl-1 text-xs font-mono font-semibold text-black select-none pointer-events-none">
-                  {unit}
-                </span>
-              </div>
+              <input
+                type="number"
+                step="any"
+                min="0.01"
+                placeholder="1"
+                value={quantityInput}
+                onChange={handleQuantityChange}
+                onFocus={handleQuantityFocus}
+                onBlur={handleQuantityBlur}
+                className="w-full bg-white border-none outline-none focus:outline-none focus:ring-0 rounded-[6px] px-3 py-2 text-xs font-bold text-black text-right transition-colors"
+              />
             </div>
           </div>
         </div>
 
-        {/* Section 4: Finansial & Operasional */}
+        {/* Section 4: Penetapan Harga & Biaya Operasional */}
         <div className="border-t border-[#e5e5e5] pt-3.5 space-y-3.5">
           <div className="text-[11px] font-bold text-[#888888] uppercase tracking-wider">
-            Finansial & Operasional
+            Penetapan Harga & HOK
           </div>
 
-          {/* Row 4: Harga Beli (Cash Kuari) & Harga Jual (Tempo Proyek) */}
-          <div className={`grid grid-cols-1 ${isDispatcherUser ? '' : 'sm:grid-cols-2'} gap-3`}>
+          {/* Row 1: Harga Beli & Harga Jual */}
+          <div className="grid grid-cols-2 gap-3">
             {!isDispatcherUser && (
               <div>
-                <label className="block text-[#666666] font-medium mb-1 whitespace-nowrap">
-                  Beli Kuari / {unit} (Cash)
+                <label className="block text-[#666666] font-medium mb-1">
+                  Harga Beli Kuari / {unit} (Cash)
                 </label>
                 <CurrencyInput
-                  required
                   value={buyPricePerUnit}
                   onChange={setBuyPricePerUnit}
+                  placeholder="0"
                   variant="solid-white"
                 />
-                {matchedRate && (
-                  <div className="text-[10px] text-[#666666] mt-1 truncate">
-                    Acuan Kuari: <span className="font-semibold text-[#111111]">{matchedRate.qualityGrade}</span>
-                  </div>
-                )}
               </div>
             )}
 
-            <div>
-              <label className="block text-[#666666] font-medium mb-1 whitespace-nowrap">
-                Jual Proyek / {unit} (Tempo)
+            <div className={isDispatcherUser ? 'col-span-2' : ''}>
+              <label className="block text-[#666666] font-medium mb-1">
+                Harga Jual Konsumen / {unit} (Tempo) <span className="text-red-500">*</span>
               </label>
               <CurrencyInput
-                required
                 value={sellPricePerUnit}
                 onChange={setSellPricePerUnit}
+                placeholder="0"
                 variant="solid-white"
               />
-              {matchedRate && Boolean(matchedRate.sellPrice) && (
-                <div className="text-[10px] text-[#666666] mt-1 truncate">
-                  Acuan Jual: <span className="font-semibold text-[#111111]">{formatRupiah(matchedRate.sellPrice)}</span>
-                </div>
-              )}
             </div>
           </div>
 
-          {/* Row 5: Operasional Lapangan (Solar, Uang Jalan, HOK, Portal) */}
+          {/* Row 2: Biaya Operasional & HOK */}
           <div>
             <label className="block text-[#666666] font-medium mb-1">
               Beban Operasional & HOK (Uang Jalan / Supir / Solar)
             </label>
             <CurrencyInput
-              required
               value={operationalCost}
               onChange={setOperationalCost}
+              placeholder="0"
               variant="solid-white"
             />
+            {matchedRate && (
+              <div className="col-span-2 text-[10px] text-[#666666] pt-1">
+                Acuan Matriks Kuari: <span className="font-semibold text-[#111111]">{matchedRate.quarryName}</span> ({matchedRate.qualityGrade})
+              </div>
+            )}
             {matchedRoute && (
               <div className="space-y-0.5 mt-1">
                 <div className="text-[10px] text-[#666666] truncate">
@@ -835,7 +904,7 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
           </div>
         </div>
 
-        {/* Live Calculation Box (Sesuai Formula PRD & Proteksi RBAC Margin) */}
+        {/* Live Calculation Box */}
         <div className="bg-[#ebebeb] rounded-[8px] p-3.5 space-y-1.5 mt-2">
           {!isDispatcherUser && formProjectId && (
             <div className="flex justify-between items-center text-[11px] text-[#666666]">
@@ -894,14 +963,27 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
           )}
         </div>
 
-        {/* Tombol Simpan (Disabled by Default sampai seluruh form 100% Valid) */}
-        <button
-          type="submit"
-          disabled={!isFormValid || isSubmitting}
-          className="w-full py-2.5 px-4 bg-[#171717] hover:bg-[#333333] active:scale-[0.99] text-white rounded-[6px] font-medium text-xs transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-[#171717] disabled:active:scale-100 mt-2 border-none cursor-pointer"
-        >
-          {isSubmitting ? 'Menyimpan Tiket Ritase...' : 'Simpan Tiket Ritase'}
-        </button>
+        {/* Dual Tombol Simpan (Cepat Lanjut Ritase vs Selesai) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+          <button
+            type="button"
+            onClick={() => handleActionSubmit(true)}
+            disabled={!isFormValid || isSubmitting}
+            className="py-2.5 px-4 bg-[#111111] hover:bg-black active:scale-[0.99] text-white rounded-[6px] font-semibold text-xs transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
+          >
+            <span>⚡ Simpan & Input Rit Berikutnya</span>
+            <span className="text-[10px] text-[#888888] font-normal">(Ctrl+Enter)</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleActionSubmit(false)}
+            disabled={!isFormValid || isSubmitting}
+            className="py-2.5 px-4 bg-white hover:bg-[#fafafa] border border-[#d1d5db] text-[#111111] rounded-[6px] font-medium text-xs transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+          >
+            {isSubmitting ? 'Menyimpan...' : 'Simpan & Selesai'}
+          </button>
+        </div>
       </form>
 
       {/* Custom Material Picker Modal */}
@@ -918,7 +1000,7 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
       <NegativeProfitConfirmModal
         isOpen={isNegativeConfirmOpen}
         onClose={() => setIsNegativeConfirmOpen(false)}
-        onConfirm={executeSave}
+        onConfirm={() => executeSave(false)}
         totalBuyCost={totalBuyCost}
         totalOperational={totalOperational}
         totalRevenue={totalRevenue}

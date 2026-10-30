@@ -236,6 +236,27 @@ export function TruckPlateInput({
     if (onValidationChange) onValidationChange(true);
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>): void => {
+    if (e.key === 'Tab') {
+      if (isOpen && filteredSuggestions.length > 0) {
+        const top = filteredSuggestions[0];
+        if (top) {
+          handleSelectSuggestion(top);
+        }
+      }
+    } else if (e.key === 'Enter') {
+      if (isOpen && filteredSuggestions.length > 0) {
+        e.preventDefault();
+        const top = filteredSuggestions[0];
+        if (top) {
+          handleSelectSuggestion(top);
+        }
+      }
+    } else if (e.key === 'Escape') {
+      setIsOpen(false);
+    }
+  };
+
   return (
     <div ref={containerRef} className="relative w-full">
       {/* Toast Merah Filled Teks Hitam di Atas Layar */}
@@ -269,6 +290,7 @@ export function TruckPlateInput({
         placeholder="B 9123 PDA"
         value={value}
         onChange={handleChange}
+        onKeyDown={handleKeyDown}
         onFocus={() => setIsOpen(true)}
         onBlur={handleBlur}
         className={`w-full outline-none rounded-[6px] px-3 py-2 text-xs font-mono font-medium uppercase tracking-wide transition-colors ${

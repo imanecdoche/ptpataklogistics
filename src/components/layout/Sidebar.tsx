@@ -14,6 +14,7 @@ export type NavigationTab =
   | 'clients'
   | 'materials'
   | 'cash_ledger'
+  | 'hok_labor'
   | 'recap'
   | 'database'
   | 'dev';
@@ -71,6 +72,11 @@ const MENU_ITEMS: SidebarItem[] = [
     iconSrc: '/icons/wallet.png'
   },
   {
+    id: 'hok_labor',
+    label: 'HOK Tukang Lapangan',
+    iconSrc: '/icons/layers.png'
+  },
+  {
     id: 'recap',
     label: 'Rekapitulasi Periode',
     iconSrc: '/icons/chart.png'
@@ -108,6 +114,10 @@ export const SUB_MENU_ITEMS: Record<NavigationTab, SubTabItem[]> = {
   cash_ledger: [
     { id: 'cash_flow', label: 'Arus Kas Riil' },
     { id: 'receivables', label: 'Piutang Tempo' }
+  ],
+  hok_labor: [
+    { id: 'payments', label: 'Pembayaran HOK' },
+    { id: 'job_types', label: 'Tipe Pekerjaan' }
   ],
   recap: [
     { id: 'volume', label: 'Volume Muatan' },
