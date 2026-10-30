@@ -1015,4 +1015,14 @@ Dokumen ini adalah hukum tertinggi operasional sistem. Kegagalan mematuhi aturan
     - **Susunan Vertikal Terstruktur**:
       * Kontainer formulir Catat Ritase Baru diletakkan di bagian atas, dan kontainer Tabel Riwayat Ritase Armada diposisikan tepat secara vertikal (**stacked**) di bawah formulir ritase dengan pembatas dan spasi yang proporsional.
 
+94. **Standar Penggunaan Logo Resmi Perusahaan (Official PT Patak Logo Asset)**:
+    - **Aset Logo Resmi**:
+      * Logo resmi PT Patak Abadi Jaya menggunakan aset gambar asli `assets/PT LOGO.png` yang disajikan melalui path web `/icons/pt-logo.png` (`public/icons/pt-logo.png`).
+    - **Penempatan Logo Konsisten**:
+      * Digunakan secara konsisten pada:
+        1. Header Sidebar Kiri Desktop (`Sidebar.tsx`)
+        2. Header Mobile Navbar (`AppShell.tsx`)
+        3. Header Kartu Sesi Halaman Login (`LoginPage.tsx`)
+
+
 

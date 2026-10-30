@@ -56,7 +56,7 @@ export function OfflineOverlay(): React.JSX.Element {
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 3500);
-      const res = await fetch(`/icons/logo-box.png?probe=${Date.now()}`, {
+      const res = await fetch(`/icons/pt-logo.png?probe=${Date.now()}`, {
         method: 'HEAD',
         cache: 'no-store',
         signal: controller.signal

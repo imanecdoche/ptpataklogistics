@@ -228,7 +228,7 @@ export function Sidebar({
       <div className="h-16 px-4 md:h-20 md:px-5 flex items-center justify-between border-b border-[#eaeaea]">
         <div className="flex items-center space-x-2.5 md:space-x-3.5 min-w-0">
           <img
-            src="/icons/logo-box.png"
+            src="/icons/pt-logo.png"
             alt="PT Patak Abadi Jaya"
             className="w-5 h-5 md:w-7 md:h-7 object-contain flex-shrink-0"
           />

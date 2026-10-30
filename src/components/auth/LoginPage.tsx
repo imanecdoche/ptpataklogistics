@@ -128,7 +128,7 @@ export function LoginPage({ user }: LoginPageProps): React.JSX.Element {
         <div className="w-full max-w-md bg-white rounded-[10px] p-8 space-y-6">
           <div className="flex items-center space-x-3 pb-4 border-b border-[#eaeaea]">
             <img
-              src="/icons/logo-box.png"
+              src="/icons/pt-logo.png"
               alt="PT Patak Abadi Jaya"
               className="w-8 h-8 object-contain flex-shrink-0"
             />

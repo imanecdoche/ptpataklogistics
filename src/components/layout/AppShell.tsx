@@ -180,7 +180,7 @@ export function AppShell({
 
             <div className="flex items-center space-x-2">
               <img
-                src="/icons/logo-box.png"
+                src="/icons/pt-logo.png"
                 alt="PT Patak Abadi Jaya"
                 className="w-5 h-5 object-contain"
               />
