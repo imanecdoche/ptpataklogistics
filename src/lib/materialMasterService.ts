@@ -9,8 +9,15 @@ import {
   onSnapshot
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { QuarryMaterialRate, RouteOperatingTariff } from '@/types/materialMaster';
+import {
+  QuarryMaterialRate,
+  RouteOperatingTariff,
+  getQuarryRateId,
+  getRouteTariffId,
+  getMaterialId
+} from '@/types/materialMaster';
 import { MaterialItem, UnitType } from '@/types/database';
+import { formatEntityName } from '@/lib/nameUtils';
 
 const QUARRY_RATES_COLLECTION = 'quarry_material_rates';
 const ROUTE_TARIFFS_COLLECTION = 'route_tariffs';
@@ -83,7 +90,7 @@ export function subscribeCommodities(callback: (commodities: MaterialItem[]) => 
 }
 
 /**
- * Simpan atau perbarui data Harga & Mutu Kuari
+ * Simpan atau perbarui data Harga & Mutu Kuari (Deterministik ID)
  */
 export async function saveQuarryRate(payload: {
   id?: string;
@@ -94,19 +101,21 @@ export async function saveQuarryRate(payload: {
   qualityGrade: string;
   unit: UnitType;
   buyPriceCash: number;
+  sellPrice: number;
   notes?: string;
 }): Promise<string> {
-  const rateId = payload.id || `RATE-${Date.now()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+  const rateId = payload.id || getQuarryRateId(payload.quarryId, payload.materialId);
   const docRef = doc(db, QUARRY_RATES_COLLECTION, rateId);
 
   const data: Omit<QuarryMaterialRate, 'id'> = {
     materialId: payload.materialId,
-    materialName: payload.materialName,
+    materialName: formatEntityName(payload.materialName),
     quarryId: payload.quarryId,
-    quarryName: payload.quarryName,
-    qualityGrade: payload.qualityGrade,
+    quarryName: formatEntityName(payload.quarryName),
+    qualityGrade: payload.qualityGrade || 'Standar',
     unit: payload.unit,
-    buyPriceCash: payload.buyPriceCash,
+    buyPriceCash: Number(payload.buyPriceCash) || 0,
+    sellPrice: Number(payload.sellPrice) || 0,
     notes: payload.notes || '',
     updatedAt: new Date().toISOString()
   };
@@ -124,7 +133,7 @@ export async function deleteQuarryRate(id: string): Promise<void> {
 }
 
 /**
- * Simpan atau perbarui data Biaya Jalan Rute
+ * Simpan atau perbarui data Biaya Jalan Rute (Deterministik ID)
  */
 export async function saveRouteTariff(payload: {
   id?: string;
@@ -136,17 +145,17 @@ export async function saveRouteTariff(payload: {
   standardOperationalCost: number;
   standardTripDurationHours?: number;
 }): Promise<string> {
-  const routeId = payload.id || `RTE-${Date.now()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+  const routeId = payload.id || getRouteTariffId(payload.quarryId, payload.projectId);
   const docRef = doc(db, ROUTE_TARIFFS_COLLECTION, routeId);
 
   const data: Omit<RouteOperatingTariff, 'id'> = {
     quarryId: payload.quarryId,
-    quarryName: payload.quarryName,
+    quarryName: formatEntityName(payload.quarryName),
     projectId: payload.projectId,
-    projectName: payload.projectName,
-    distanceKm: payload.distanceKm,
-    standardOperationalCost: payload.standardOperationalCost,
-    standardTripDurationHours: payload.standardTripDurationHours || 1,
+    projectName: formatEntityName(payload.projectName),
+    distanceKm: Number(payload.distanceKm) || 0,
+    standardOperationalCost: Number(payload.standardOperationalCost) || 0,
+    standardTripDurationHours: Number(payload.standardTripDurationHours) || 1,
     updatedAt: new Date().toISOString()
   };
 
@@ -163,7 +172,7 @@ export async function deleteRouteTariff(id: string): Promise<void> {
 }
 
 /**
- * Simpan atau perbarui data Komoditas Material
+ * Simpan atau perbarui data Komoditas Material Baku (Deterministik ID)
  */
 export async function saveCommodity(payload: {
   id?: string;
@@ -172,14 +181,15 @@ export async function saveCommodity(payload: {
   defaultBuyPrice: number;
   defaultSellPrice: number;
 }): Promise<string> {
-  const matId = payload.id || `MAT-${payload.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${Date.now().toString().slice(-4)}`;
+  const cleanName = formatEntityName(payload.name);
+  const matId = payload.id || getMaterialId(cleanName);
   const docRef = doc(db, MATERIALS_COLLECTION, matId);
 
   const data = {
-    name: payload.name,
+    name: cleanName,
     unit: payload.unit,
-    defaultBuyPrice: payload.defaultBuyPrice,
-    defaultSellPrice: payload.defaultSellPrice,
+    defaultBuyPrice: Number(payload.defaultBuyPrice) || 0,
+    defaultSellPrice: Number(payload.defaultSellPrice) || 0,
     createdAt: new Date().toISOString()
   };
 
@@ -196,134 +206,177 @@ export async function deleteCommodity(id: string): Promise<void> {
 }
 
 /**
- * Inisialisasi seeding data acuan awal (jika database quarry_material_rates atau route_tariffs kosong)
+ * 4 Komoditas Baku Utama PT Patak Abadi Jaya
+ */
+export const STANDARD_COMMODITIES = [
+  {
+    id: 'mat-batu-belah',
+    name: 'Batu Belah (Pondasi)',
+    unit: 'DT' as UnitType,
+    defaultBuyPrice: 600000,
+    defaultSellPrice: 850000
+  },
+  {
+    id: 'mat-pasir-extra',
+    name: 'Pasir Extra Beton',
+    unit: 'DT' as UnitType,
+    defaultBuyPrice: 750000,
+    defaultSellPrice: 1050000
+  },
+  {
+    id: 'mat-abu-batu',
+    name: 'Abu Batu Screen',
+    unit: 'DT' as UnitType,
+    defaultBuyPrice: 480000,
+    defaultSellPrice: 720000
+  },
+  {
+    id: 'mat-makadam',
+    name: 'Makadam Base Course',
+    unit: 'DT' as UnitType,
+    defaultBuyPrice: 540000,
+    defaultSellPrice: 800000
+  }
+];
+
+/**
+ * Inisialisasi seeding data acuan awal (jika database materials, quarry_material_rates, atau route_tariffs kosong)
  */
 export async function seedInitialMaterialData(): Promise<void> {
   try {
+    // 1. Seed 4 Komoditas Standar jika belum ada
+    const matSnap = await getDocs(collection(db, MATERIALS_COLLECTION));
+    if (matSnap.empty) {
+      for (const item of STANDARD_COMMODITIES) {
+        await setDoc(doc(db, MATERIALS_COLLECTION, item.id), {
+          name: item.name,
+          unit: item.unit,
+          defaultBuyPrice: item.defaultBuyPrice,
+          defaultSellPrice: item.defaultSellPrice,
+          createdAt: new Date().toISOString()
+        });
+      }
+    }
+
+    // 2. Seed Tarif Kuari Standar jika belum ada
     const ratesSnap = await getDocs(collection(db, QUARRY_RATES_COLLECTION));
     if (ratesSnap.empty) {
-      const defaultRates: Array<Omit<QuarryMaterialRate, 'id'>> = [
+      const defaultRates = [
         {
+          id: 'rate_qry-batu-mandiri_mat-batu-belah',
           materialId: 'mat-batu-belah',
           materialName: 'Batu Belah (Pondasi)',
           quarryId: 'qry-batu-mandiri',
           quarryName: 'PT Tambang Batu Mandiri',
           qualityGrade: 'Grade A — Hitam Padat Keras',
-          unit: 'DT',
+          unit: 'DT' as UnitType,
           buyPriceCash: 600000,
-          notes: 'Mutu standar pondasi gedung & jembatan',
+          sellPrice: 850000,
+          notes: 'Mutu standar pondasi gedung & bendungan',
           updatedAt: new Date().toISOString()
         },
         {
+          id: 'rate_qry-pasir-sakti_mat-batu-belah',
           materialId: 'mat-batu-belah',
           materialName: 'Batu Belah (Pondasi)',
           quarryId: 'qry-pasir-sakti',
           quarryName: 'PT Kuari Pasir Sakti',
           qualityGrade: 'Grade B — Batu Campur Kali',
-          unit: 'DT',
+          unit: 'DT' as UnitType,
           buyPriceCash: 520000,
+          sellPrice: 780000,
           notes: 'Untuk urukan dasar dan talud ringan',
           updatedAt: new Date().toISOString()
         },
         {
+          id: 'rate_qry-pasir-sakti_mat-pasir-extra',
           materialId: 'mat-pasir-extra',
           materialName: 'Pasir Extra Beton',
           quarryId: 'qry-pasir-sakti',
           quarryName: 'PT Kuari Pasir Sakti',
           qualityGrade: 'Ayakan Halus Bebas Lumpur',
-          unit: 'DT',
+          unit: 'DT' as UnitType,
           buyPriceCash: 750000,
+          sellPrice: 1050000,
           notes: 'Kadar lumpur di bawah 3%',
           updatedAt: new Date().toISOString()
         },
         {
+          id: 'rate_qry-batu-mandiri_mat-makadam',
           materialId: 'mat-makadam',
           materialName: 'Makadam Base Course',
           quarryId: 'qry-batu-mandiri',
           quarryName: 'PT Tambang Batu Mandiri',
           qualityGrade: 'Ukuran 5/7 Standar Jalan',
-          unit: 'DT',
+          unit: 'DT' as UnitType,
           buyPriceCash: 540000,
-          notes: 'Pengerasan badan jalan',
+          sellPrice: 800000,
+          notes: 'Pengerasan badan jalan dan sub-base',
           updatedAt: new Date().toISOString()
         },
         {
+          id: 'rate_qry-batu-mandiri_mat-abu-batu',
           materialId: 'mat-abu-batu',
           materialName: 'Abu Batu Screen',
           quarryId: 'qry-batu-mandiri',
           quarryName: 'PT Tambang Batu Mandiri',
           qualityGrade: 'Screening Halus Kering',
-          unit: 'DT',
+          unit: 'DT' as UnitType,
           buyPriceCash: 480000,
+          sellPrice: 720000,
           notes: 'Lapisan perata paving & aspal',
           updatedAt: new Date().toISOString()
         }
       ];
 
       for (const rate of defaultRates) {
-        const id = `RATE-${Date.now()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
-        await setDoc(doc(db, QUARRY_RATES_COLLECTION, id), rate);
+        await setDoc(doc(db, QUARRY_RATES_COLLECTION, rate.id), rate);
       }
     }
 
+    // 3. Seed Tarif Rute Standar ke 2 Proyek Aktif jika belum ada
     const routesSnap = await getDocs(collection(db, ROUTE_TARIFFS_COLLECTION));
     if (routesSnap.empty) {
-      const defaultRoutes: Array<Omit<RouteOperatingTariff, 'id'>> = [
+      const defaultRoutes = [
         {
+          id: 'rte_qry-batu-mandiri_prj-situ-cikedal',
           quarryId: 'qry-batu-mandiri',
           quarryName: 'PT Tambang Batu Mandiri',
           projectId: 'prj-situ-cikedal',
-          projectName: 'Proyek Situ Cikedal',
+          projectName: 'Proyek Konservasi Situ Cikedal',
           distanceKm: 18,
           standardOperationalCost: 150000,
           standardTripDurationHours: 1,
           updatedAt: new Date().toISOString()
         },
         {
-          quarryId: 'qry-batu-mandiri',
-          quarryName: 'PT Tambang Batu Mandiri',
-          projectId: 'prj-menes',
-          projectName: 'Proyek Menes',
-          distanceKm: 25,
-          standardOperationalCost: 190000,
-          standardTripDurationHours: 1.5,
-          updatedAt: new Date().toISOString()
-        },
-        {
+          id: 'rte_qry-batu-mandiri_prj-cipeucang',
           quarryId: 'qry-batu-mandiri',
           quarryName: 'PT Tambang Batu Mandiri',
           projectId: 'prj-cipeucang',
-          projectName: 'Proyek Cipeucang',
+          projectName: 'Proyek Irigasi Cipeucang',
           distanceKm: 32,
           standardOperationalCost: 230000,
           standardTripDurationHours: 2,
           updatedAt: new Date().toISOString()
         },
         {
+          id: 'rte_qry-pasir-sakti_prj-situ-cikedal',
           quarryId: 'qry-pasir-sakti',
           quarryName: 'PT Kuari Pasir Sakti',
           projectId: 'prj-situ-cikedal',
-          projectName: 'Proyek Situ Cikedal',
+          projectName: 'Proyek Konservasi Situ Cikedal',
           distanceKm: 38,
           standardOperationalCost: 260000,
           standardTripDurationHours: 2.5,
           updatedAt: new Date().toISOString()
         },
         {
-          quarryId: 'qry-pasir-sakti',
-          quarryName: 'PT Kuari Pasir Sakti',
-          projectId: 'prj-menes',
-          projectName: 'Proyek Menes',
-          distanceKm: 30,
-          standardOperationalCost: 220000,
-          standardTripDurationHours: 2,
-          updatedAt: new Date().toISOString()
-        },
-        {
+          id: 'rte_qry-pasir-sakti_prj-cipeucang',
           quarryId: 'qry-pasir-sakti',
           quarryName: 'PT Kuari Pasir Sakti',
           projectId: 'prj-cipeucang',
-          projectName: 'Proyek Cipeucang',
+          projectName: 'Proyek Irigasi Cipeucang',
           distanceKm: 45,
           standardOperationalCost: 290000,
           standardTripDurationHours: 3,
@@ -332,11 +385,11 @@ export async function seedInitialMaterialData(): Promise<void> {
       ];
 
       for (const route of defaultRoutes) {
-        const id = `RTE-${Date.now()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
-        await setDoc(doc(db, ROUTE_TARIFFS_COLLECTION, id), route);
+        await setDoc(doc(db, ROUTE_TARIFFS_COLLECTION, route.id), route);
       }
     }
   } catch (err) {
     console.warn('Gagal men-seed data acuan material awal:', err);
   }
 }
+

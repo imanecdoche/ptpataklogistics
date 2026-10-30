@@ -101,9 +101,9 @@ export const SUB_MENU_ITEMS: Record<NavigationTab, SubTabItem[]> = {
   quarries: [],
   clients: [],
   materials: [
+    { id: 'catalog', label: 'Katalog Komoditas' },
     { id: 'pricing', label: 'Harga & Mutu Kuari' },
-    { id: 'routes', label: 'Biaya Jalan Rute' },
-    { id: 'catalog', label: 'Katalog Komoditas' }
+    { id: 'routes', label: 'Biaya Jalan Rute' }
   ],
   cash_ledger: [
     { id: 'cash_flow', label: 'Arus Kas Riil' },

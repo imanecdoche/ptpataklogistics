@@ -161,7 +161,7 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
   // Material aktif yang dipilih
   const selectedMat = materials.find(m => m.id === selectedMaterialId);
 
-  // Auto-fill rekomendasi Harga Tebus Cash Kuari ketika Kuari dan Material dipilih
+  // Auto-fill rekomendasi Harga Tebus Cash Kuari dan Harga Jual ketika Kuari dan Material dipilih
   useEffect(() => {
     if (selectedQuarryId && selectedMaterialId) {
       const found = quarryRates.find(
@@ -173,16 +173,23 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
       if (found) {
         setMatchedRate(found);
         setBuyPricePerUnit(found.buyPriceCash);
+        if (found.sellPrice) {
+          setSellPricePerUnit(found.sellPrice);
+        } else if (selectedMat) {
+          setSellPricePerUnit(selectedMat.defaultSellPrice || 0);
+        }
       } else {
         setMatchedRate(null);
         if (selectedMat) {
           setBuyPricePerUnit(selectedMat.defaultBuyPrice || 0);
+          setSellPricePerUnit(selectedMat.defaultSellPrice || 0);
         }
       }
     } else {
       setMatchedRate(null);
       if (selectedMat) {
         setBuyPricePerUnit(selectedMat.defaultBuyPrice || 0);
+        setSellPricePerUnit(selectedMat.defaultSellPrice || 0);
       }
     }
   }, [selectedQuarryId, selectedMaterialId, quarryRates, selectedMat]);
@@ -756,7 +763,7 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
                   variant="solid-white"
                 />
                 {matchedRate && (
-                  <div className="text-[10px] text-[#666666] mt-1 font-mono truncate">
+                  <div className="text-[10px] text-[#666666] mt-1 truncate">
                     Acuan Kuari: <span className="font-semibold text-[#111111]">{matchedRate.qualityGrade}</span>
                   </div>
                 )}
@@ -773,6 +780,11 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
                 onChange={setSellPricePerUnit}
                 variant="solid-white"
               />
+              {matchedRate && Boolean(matchedRate.sellPrice) && (
+                <div className="text-[10px] text-[#666666] mt-1 truncate">
+                  Acuan Jual: <span className="font-semibold text-[#111111]">{formatRupiah(matchedRate.sellPrice)}</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -788,7 +800,7 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
               variant="solid-white"
             />
             {matchedRoute && (
-              <div className="text-[10px] text-[#666666] mt-1 font-mono truncate">
+              <div className="text-[10px] text-[#666666] mt-1 truncate">
                 Acuan Rute ({matchedRoute.distanceKm} km): <span className="font-semibold text-[#111111]">{matchedRoute.quarryName} → {matchedRoute.projectName}</span>
               </div>
             )}

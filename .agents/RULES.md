@@ -1187,4 +1187,26 @@ Dokumen ini adalah hukum tertinggi operasional sistem. Kegagalan mematuhi aturan
       * Operator lapangan / akun dengan role `dispatcher` hanya berhak mengakses formulir ritase dan **Jurnal Transaksi Operasional** (nomor surat jalan, nopol truk, nama supir, komoditas, kuari asal, proyek tujuan, kubikasi/tonase, tanggal) dengan filter periode 2 mingguan dan 2 bulanan.
       * Seluruh data dapur finansial (tab Investor, nominal bagi hasil, saldo modal investor, margin keuntungan PT, dan tab Kas Perseroan) tertutup rapat dan hanya dapat diakses oleh peran Manajemen (`founder`, `developer`, `admin`).
 
+105. **Standar Entitas Database Material Terpusat & Sinkronisasi Tarif Kuari-Rute (Single Source of Truth)**:
+    - **Arsitektur Entitas Terpusat (Bebas Kode Acak & Duplikasi)**:
+      * Seluruh data material di dalam aplikasi wajib mengacu pada satu entitas database terpusat (*Single Source of Truth*). Dilarang keras membuat entitas duplikat, variasi nama manual, atau kode acak (`Math.random()` / `Date.now()`).
+      * Format ID Entitas Baku:
+        - **Komoditas Dasar**: Berformat `MAT-[NAMA_SLUG]` (contoh: `MAT-BATU-BELAH`, `MAT-PASIR-EXTRA`, `MAT-ABU-BATU`, `MAT-MAKADAM`).
+        - **Tarif Material per Kuari**: Berformat deterministik `RATE-[QUARRY_ID]-[MATERIAL_ID]` (contoh: `RATE-qry-batu-mandiri-MAT-BATU-BELAH`). Tidak boleh ada tarif ganda untuk kuari dan material yang sama.
+        - **Tarif Biaya Jalan Rute**: Berformat deterministik `RTE-[QUARRY_ID]-[PROJECT_ID]` (contoh: `RTE-qry-batu-mandiri-prj-situ-cikedal`).
+    - **Harga Beli & Harga Jual Berbasis Kuari**:
+      * Setiap relasi material dengan kuari asal wajib menyimpan dua parameter finansial:
+        1. **Harga Beli Tebus Kuari (`buyPriceCash`)**: Biaya tebus tunai di mulut tambang per satuan (`DT` / `Ton`).
+        2. **Harga Jual Standar (`sellPrice`)**: Standar harga penagihan ke proyek/klien per satuan.
+      * Sistem otomatis menghitung margin kotor (`sellPrice - buyPriceCash`).
+    - **Struktur Halaman `MasterMaterialPage.tsx`**:
+      * Menggunakan 3 sub-tab terstruktur secara hierarkis:
+        1. `catalog` (Katalog Komoditas Material): Kelola komoditas material baku, satuan standar, dan harga acuan dasar.
+        2. `pricing` (Harga & Mutu Kuari): Hubungkan material ke kuari asal dengan harga beli dan harga jual.
+        3. `routes` (Biaya Jalan Rute): Tarif standar uang jalan rute Kuari -> Proyek.
+    - **Otomasi Form Ritase Dispatcher (`DispatchForm.tsx` & `EditDispatchModal.tsx`)**:
+      * Saat Kuari Asal dan Material dipilih, sistem WAJIB otomatis menarik (`auto-fill`) **Harga Beli** dan **Harga Jual** dari `quarry_material_rates` yang cocok. Jika belum diset khusus, sistem otomatis menggunakan harga dasar komoditas (`defaultBuyPrice` dan `defaultSellPrice`).
+      * Saat Kuari Asal dan Proyek Tujuan dipilih, sistem WAJIB otomatis menarik acuan uang jalan rute dari `route_tariffs`.
+
+
 

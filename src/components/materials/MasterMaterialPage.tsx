@@ -24,7 +24,7 @@ import { useDialog } from '@/context/DialogContext';
 import { useProjectFilter } from '@/context/ProjectFilterContext';
 import { formatEntityNameLive } from '@/lib/nameUtils';
 
-export type MaterialSubTab = 'pricing' | 'routes' | 'catalog';
+export type MaterialSubTab = 'catalog' | 'pricing' | 'routes';
 
 interface MasterMaterialPageProps {
   userEmail: string;
@@ -34,7 +34,7 @@ interface MasterMaterialPageProps {
 
 export function MasterMaterialPage({
   userEmail: _userEmail,
-  activeSubTab = 'pricing',
+  activeSubTab = 'catalog',
   onNavigateSubTab
 }: MasterMaterialPageProps): React.JSX.Element {
   const dialog = useDialog();
@@ -43,20 +43,20 @@ export function MasterMaterialPage({
   // Active Sub-Tab State
   const [currentSubTab, setCurrentSubTab] = useState<MaterialSubTab>(() => {
     if (isDispatcherUser) {
-      return activeSubTab === 'catalog' ? 'catalog' : 'routes';
+      return activeSubTab === 'routes' ? 'routes' : 'catalog';
     }
-    if (activeSubTab === 'routes' || activeSubTab === 'catalog') {
+    if (activeSubTab === 'pricing' || activeSubTab === 'routes' || activeSubTab === 'catalog') {
       return activeSubTab;
     }
-    return 'pricing';
+    return 'catalog';
   });
 
   useEffect(() => {
     if (isDispatcherUser) {
-      if (activeSubTab === 'catalog') {
-        setCurrentSubTab('catalog');
-      } else {
+      if (activeSubTab === 'routes') {
         setCurrentSubTab('routes');
+      } else {
+        setCurrentSubTab('catalog');
       }
       return;
     }
@@ -67,7 +67,7 @@ export function MasterMaterialPage({
 
   const handleSubTabChange = (tab: MaterialSubTab) => {
     if (isDispatcherUser && tab === 'pricing') {
-      tab = 'routes';
+      tab = 'catalog';
     }
     setCurrentSubTab(tab);
     if (onNavigateSubTab) {
@@ -104,6 +104,7 @@ export function MasterMaterialPage({
   const [rateQualityGrade, setRateQualityGrade] = useState('');
   const [rateUnit, setRateUnit] = useState<UnitType>('DT');
   const [rateBuyPrice, setRateBuyPrice] = useState<number>(600000);
+  const [rateSellPrice, setRateSellPrice] = useState<number>(850000);
   const [rateNotes, setRateNotes] = useState('');
 
   // Route Form Inputs
@@ -211,13 +212,15 @@ export function MasterMaterialPage({
 
   // Helper Reset Rate Form
   const resetRateForm = () => {
-    setRateMaterialId(commodities[0]?.id || '');
-    setRateMaterialName(commodities[0]?.name || '');
+    const firstComm = commodities[0];
+    setRateMaterialId(firstComm?.id || '');
+    setRateMaterialName(firstComm?.name || '');
     setRateQuarryId(quarries[0]?.id || '');
     setRateQuarryName(quarries[0]?.name || '');
     setRateQualityGrade('');
-    setRateUnit('DT');
-    setRateBuyPrice(600000);
+    setRateUnit(firstComm?.unit || 'DT');
+    setRateBuyPrice(firstComm?.defaultBuyPrice || 600000);
+    setRateSellPrice(firstComm?.defaultSellPrice || 850000);
     setRateNotes('');
     setEditRateTarget(null);
   };
@@ -258,6 +261,8 @@ export function MasterMaterialPage({
     setRateQualityGrade(rate.qualityGrade);
     setRateUnit(rate.unit);
     setRateBuyPrice(rate.buyPriceCash);
+    const comm = commodities.find(c => c.id === rate.materialId);
+    setRateSellPrice(rate.sellPrice || comm?.defaultSellPrice || 850000);
     setRateNotes(rate.notes || '');
     setIsRateModalOpen(true);
   };
@@ -278,7 +283,7 @@ export function MasterMaterialPage({
       setPinModalConfig({
         isOpen: true,
         title: 'Konfirmasi Perubahan Harga Kuari',
-        description: 'Perubahan harga tebus tambang akan mempengaruhi acuan ritase berikutnya. Masukkan PIN otorisasi:',
+        description: 'Perubahan harga tebus tambang dan harga jual akan mempengaruhi acuan ritase berikutnya. Masukkan PIN otorisasi:',
         targetLabel: `${rateMaterialName} — ${rateQuarryName} (${rateQualityGrade})`,
         isDestructive: false,
         confirmText: 'Simpan Perubahan',
@@ -292,13 +297,14 @@ export function MasterMaterialPage({
             qualityGrade: rateQualityGrade,
             unit: rateUnit,
             buyPriceCash: rateBuyPrice,
+            sellPrice: rateSellPrice,
             notes: rateNotes
           });
           setIsRateModalOpen(false);
           resetRateForm();
           dialog.showAlert({
             title: 'Berhasil Disimpan',
-            message: 'Harga tebus kuari berhasil diperbarui.',
+            message: 'Harga tebus & jual kuari berhasil diperbarui.',
             confirmText: 'Tutup'
           });
         }
@@ -314,6 +320,7 @@ export function MasterMaterialPage({
           qualityGrade: rateQualityGrade,
           unit: rateUnit,
           buyPriceCash: rateBuyPrice,
+          sellPrice: rateSellPrice,
           notes: rateNotes
         });
         setIsRateModalOpen(false);
@@ -559,6 +566,17 @@ export function MasterMaterialPage({
       {/* Sub-Tab Navigation Bar (Monochromatic clean per Rule 66) */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#eaeaea] pb-3">
         <div className="flex items-center gap-1.5 p-1 bg-[#f5f5f5] rounded-[8px]">
+          <button
+            type="button"
+            onClick={() => handleSubTabChange('catalog')}
+            className={`px-3.5 py-1.5 text-xs font-semibold rounded-[6px] transition-colors ${
+              currentSubTab === 'catalog'
+                ? 'bg-[#111111] text-white'
+                : 'text-[#666666] hover:text-[#111111] hover:bg-[#ebebeb]'
+            }`}
+          >
+            Katalog Komoditas
+          </button>
           {!isDispatcherUser && (
             <button
               type="button"
@@ -583,17 +601,6 @@ export function MasterMaterialPage({
           >
             Biaya Jalan Rute
           </button>
-          <button
-            type="button"
-            onClick={() => handleSubTabChange('catalog')}
-            className={`px-3.5 py-1.5 text-xs font-semibold rounded-[6px] transition-colors ${
-              currentSubTab === 'catalog'
-                ? 'bg-[#111111] text-white'
-                : 'text-[#666666] hover:text-[#111111] hover:bg-[#ebebeb]'
-            }`}
-          >
-            Katalog Komoditas
-          </button>
         </div>
 
         {/* Global Search Bar per sub-tab (Rule 98: Universal Search Icon) */}
@@ -608,23 +615,23 @@ export function MasterMaterialPage({
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             placeholder={
-              currentSubTab === 'pricing'
+              currentSubTab === 'catalog'
+                ? 'Cari komoditas...'
+                : currentSubTab === 'pricing'
                 ? 'Cari kuari, mutu, material...'
-                : currentSubTab === 'routes'
-                ? 'Cari rute kuari atau proyek...'
-                : 'Cari komoditas...'
+                : 'Cari rute kuari atau proyek...'
             }
             className="w-full bg-[#f9f9f9] border border-[#dcdcdc] rounded-[8px] pl-9 pr-3 py-1.5 text-xs text-[#111111] placeholder:text-[#888888] outline-none focus:border-[#111111] transition-colors"
           />
         </div>
       </div>
 
-      {/* SUB-TAB 1: HARGA & MUTU KUARI */}
+      {/* SUB-TAB 2: HARGA & MUTU KUARI */}
       {currentSubTab === 'pricing' && !isDispatcherUser && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-[#666666]">
-              Katalog Tebus Tambang ({filteredRates.length} Konfigurasi)
+              Katalog Tebus Tambang & Harga Jual ({filteredRates.length} Konfigurasi)
             </span>
             <button
               type="button"
@@ -638,72 +645,84 @@ export function MasterMaterialPage({
 
           <div className="border border-[#eaeaea] rounded-[10px] bg-white overflow-hidden">
             <div className="w-full overflow-x-auto">
-              <table className="w-full table-fixed text-left text-xs border-collapse min-w-[700px]">
+              <table className="w-full table-fixed text-left text-xs border-collapse min-w-[860px]">
                 <thead className="sticky top-0 bg-[#f9f9f9] border-b border-[#eaeaea] text-[11px] font-semibold text-[#555555] uppercase tracking-wider select-none z-10">
                   <tr>
-                    <th className="py-2.5 px-3 w-[22%]">Jenis Material</th>
-                    <th className="py-2.5 px-3 w-[24%]">PT Tambang (Titik Muat)</th>
-                    <th className="py-2.5 px-3 w-[24%]">Mutu / Kualitas</th>
-                    <th className="py-2.5 px-3 w-[10%]">Satuan</th>
-                    <th className="py-2.5 px-3 w-[12%] text-right">Tebus Cash</th>
+                    <th className="py-2.5 px-3 w-[18%]">Jenis Material</th>
+                    <th className="py-2.5 px-3 w-[18%]">PT Tambang (Titik Muat)</th>
+                    <th className="py-2.5 px-3 w-[16%]">Mutu / Kualitas</th>
+                    <th className="py-2.5 px-3 w-[8%]">Satuan</th>
+                    <th className="py-2.5 px-3 w-[13%] text-right">Tebus Cash</th>
+                    <th className="py-2.5 px-3 w-[13%] text-right">Jual Standar</th>
+                    <th className="py-2.5 px-3 w-[14%] text-right">Margin Kotor</th>
                     <th className="py-2.5 px-3 w-[8%] text-center">Aksi</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#eaeaea]">
                   {isLoading ? (
                     <tr>
-                      <td colSpan={6} className="py-8 text-center text-xs text-[#888888]">
+                      <td colSpan={8} className="py-8 text-center text-xs text-[#888888]">
                         Memuat data harga kuari...
                       </td>
                     </tr>
                   ) : filteredRates.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="py-8 text-center text-xs text-[#888888]">
+                      <td colSpan={8} className="py-8 text-center text-xs text-[#888888]">
                         Belum ada konfigurasi harga kuari. Klik "+ Atur Harga Kuari" untuk menambahkan.
                       </td>
                     </tr>
                   ) : (
-                    filteredRates.map(rate => (
-                      <tr key={rate.id} className="hover:bg-[#fafafa] transition-colors">
-                        <td className="py-2.5 px-3 font-semibold text-[#111111] truncate">
-                          {rate.materialName}
-                        </td>
-                        <td className="py-2.5 px-3 text-[#333333] truncate">
-                          {rate.quarryName}
-                        </td>
-                        <td className="py-2.5 px-3 text-[#555555] truncate">
-                          {rate.qualityGrade}
-                          {rate.notes && (
-                            <span className="block text-[10px] text-[#888888] truncate">{rate.notes}</span>
-                          )}
-                        </td>
-                        <td className="py-2.5 px-3 text-[#555555] font-mono whitespace-nowrap">
-                          {rate.unit === 'DT' ? 'DT (6 m³)' : 'Ton'}
-                        </td>
-                        <td className="py-2.5 px-3 text-right font-mono font-bold text-[#111111] whitespace-nowrap">
-                          {formatRupiah(rate.buyPriceCash)}
-                        </td>
-                        <td className="py-2.5 px-3 text-center whitespace-nowrap">
-                          <div className="flex items-center justify-center gap-1.5">
-                            <button
-                              type="button"
-                              onClick={() => handleOpenEditRate(rate)}
-                              className="text-[11px] font-semibold text-[#111111] hover:underline px-1 py-0.5"
-                            >
-                              Ubah
-                            </button>
-                            <span className="text-[#dcdcdc]">|</span>
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteRate(rate)}
-                              className="text-[11px] font-semibold text-red-600 hover:underline px-1 py-0.5"
-                            >
-                              Hapus
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
+                    filteredRates.map(rate => {
+                      const sell = rate.sellPrice || 0;
+                      const margin = sell - rate.buyPriceCash;
+                      return (
+                        <tr key={rate.id} className="hover:bg-[#fafafa] transition-colors">
+                          <td className="py-2.5 px-3 font-semibold text-[#111111] truncate">
+                            {rate.materialName}
+                          </td>
+                          <td className="py-2.5 px-3 text-[#333333] truncate">
+                            {rate.quarryName}
+                          </td>
+                          <td className="py-2.5 px-3 text-[#555555] truncate">
+                            {rate.qualityGrade}
+                            {rate.notes && (
+                              <span className="block text-[10px] text-[#888888] truncate">{rate.notes}</span>
+                            )}
+                          </td>
+                          <td className="py-2.5 px-3 text-[#555555] whitespace-nowrap">
+                            {rate.unit === 'DT' ? 'DT (6 m³)' : 'Ton'}
+                          </td>
+                          <td className="py-2.5 px-3 text-right font-bold tracking-tight text-[#111111] whitespace-nowrap">
+                            {formatRupiah(rate.buyPriceCash)}
+                          </td>
+                          <td className="py-2.5 px-3 text-right font-bold tracking-tight text-[#111111] whitespace-nowrap">
+                            {formatRupiah(sell)}
+                          </td>
+                          <td className="py-2.5 px-3 text-right font-bold tracking-tight text-emerald-700 whitespace-nowrap">
+                            +{formatRupiah(margin)}
+                          </td>
+                          <td className="py-2.5 px-3 text-center whitespace-nowrap">
+                            <div className="flex items-center justify-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => handleOpenEditRate(rate)}
+                                className="text-[11px] font-semibold text-[#111111] hover:underline px-1 py-0.5"
+                              >
+                                Ubah
+                              </button>
+                              <span className="text-[#dcdcdc]">|</span>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteRate(rate)}
+                                className="text-[11px] font-semibold text-red-600 hover:underline px-1 py-0.5"
+                              >
+                                Hapus
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
                   )}
                 </tbody>
               </table>
@@ -763,15 +782,15 @@ export function MasterMaterialPage({
                         <td className="py-2.5 px-3 text-[#333333] truncate">
                           {route.projectName}
                         </td>
-                        <td className="py-2.5 px-3 text-right font-mono text-[#555555] whitespace-nowrap">
-                          {route.distanceKm} km
+                        <td className="py-2.5 px-3 text-right text-[#555555] whitespace-nowrap">
+                          <span className="font-bold tracking-tight text-[#111111]">{route.distanceKm}</span> km
                           {route.standardTripDurationHours && (
                             <span className="text-[10px] text-[#888888] ml-1 font-sans">
                               (~{route.standardTripDurationHours} jam)
                             </span>
                           )}
                         </td>
-                        <td className="py-2.5 px-3 text-right font-mono font-bold text-[#111111] whitespace-nowrap">
+                        <td className="py-2.5 px-3 text-right font-bold tracking-tight text-[#111111] whitespace-nowrap">
                           {formatRupiah(route.standardOperationalCost)}
                         </td>
                         <td className="py-2.5 px-3 text-center whitespace-nowrap">
@@ -825,9 +844,9 @@ export function MasterMaterialPage({
               <table className="w-full table-fixed text-left text-xs border-collapse min-w-[700px]">
                 <thead className="sticky top-0 bg-[#f9f9f9] border-b border-[#eaeaea] text-[11px] font-semibold text-[#555555] uppercase tracking-wider select-none z-10">
                   <tr>
-                    <th className="py-2.5 px-3 w-[15%]">Kode</th>
-                    <th className="py-2.5 px-3 w-[35%]">Nama Komoditas</th>
-                    <th className="py-2.5 px-3 w-[12%]">Satuan Acuan</th>
+                    <th className="py-2.5 px-3 w-[18%]">Kode Unik</th>
+                    <th className="py-2.5 px-3 w-[32%]">Nama Komoditas</th>
+                    <th className="py-2.5 px-3 w-[14%]">Satuan Acuan</th>
                     {!isDispatcherUser && (
                       <th className="py-2.5 px-3 w-[18%] text-right">Harga Beli Dasar</th>
                     )}
@@ -851,21 +870,21 @@ export function MasterMaterialPage({
                   ) : (
                     filteredCommodities.map((item, idx) => (
                       <tr key={item.id} className="hover:bg-[#fafafa] transition-colors">
-                        <td className="py-2.5 px-3 font-mono font-bold text-[#555555] whitespace-nowrap">
-                          MAT-{String(idx + 1).padStart(2, '0')}
+                        <td className="py-2.5 px-3 font-semibold text-[#555555] whitespace-nowrap">
+                          {item.id.startsWith('mat-') ? item.id.toUpperCase() : `MAT-${String(idx + 1).padStart(2, '0')}`}
                         </td>
                         <td className="py-2.5 px-3 font-semibold text-[#111111] truncate">
                           {item.name}
                         </td>
-                        <td className="py-2.5 px-3 text-[#555555] font-mono whitespace-nowrap">
+                        <td className="py-2.5 px-3 text-[#555555] whitespace-nowrap">
                           {item.unit === 'DT' ? 'DT (6 m³)' : 'Ton'}
                         </td>
                         {!isDispatcherUser && (
-                          <td className="py-2.5 px-3 text-right font-mono text-[#333333] whitespace-nowrap">
+                          <td className="py-2.5 px-3 text-right font-bold tracking-tight text-[#333333] whitespace-nowrap">
                             {formatRupiah(item.defaultBuyPrice)}
                           </td>
                         )}
-                        <td className="py-2.5 px-3 text-right font-mono font-bold text-[#111111] whitespace-nowrap">
+                        <td className="py-2.5 px-3 text-right font-bold tracking-tight text-[#111111] whitespace-nowrap">
                           {formatRupiah(item.defaultSellPrice)}
                         </td>
                         <td className="py-2.5 px-3 text-center whitespace-nowrap">
@@ -929,6 +948,10 @@ export function MasterMaterialPage({
                     if (found) {
                       setRateMaterialName(found.name);
                       setRateUnit(found.unit);
+                      if (!editRateTarget) {
+                        setRateBuyPrice(found.defaultBuyPrice || 600000);
+                        setRateSellPrice(found.defaultSellPrice || 850000);
+                      }
                     }
                   }}
                   placeholder="Pilih material..."
@@ -1008,6 +1031,29 @@ export function MasterMaterialPage({
                   value={rateBuyPrice}
                   onChange={setRateBuyPrice}
                 />
+              </div>
+
+              {/* Harga Jual Standar Proyek */}
+              <div>
+                <label className="block text-[#666666] font-medium mb-1">
+                  Harga Jual Standar Proyek / {rateUnit} <span className="text-red-500">*</span>
+                </label>
+                <CurrencyInput
+                  required
+                  value={rateSellPrice}
+                  onChange={setRateSellPrice}
+                />
+              </div>
+
+              {/* Kalkulasi Margin Kotor (Est.) */}
+              <div className="p-3 bg-[#f9f9f9] rounded-[8px] border border-[#eaeaea] flex items-center justify-between">
+                <div>
+                  <span className="text-[11px] font-medium text-[#666666] block">Estimasi Margin Kotor</span>
+                  <span className="text-[10px] text-[#888888]">Selisih Jual Standar − Tebus Kuari</span>
+                </div>
+                <span className="text-xs font-bold tracking-tight text-[#111111]">
+                  {formatRupiah(rateSellPrice - rateBuyPrice)} / {rateUnit}
+                </span>
               </div>
 
               {/* Catatan */}
