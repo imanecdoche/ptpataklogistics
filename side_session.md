@@ -130,3 +130,13 @@ Dokumen ini mencatat seluruh riwayat, konteks percakapan, kendala lingkungan lok
 | `src/components/layout/Sidebar.tsx` | Dimodifikasi | Penambahan menu navigasi dan sub-menu `'hok_labor'` |
 | `src/components/layout/AppShell.tsx` | Dimodifikasi | Penambahan konfigurasi title & header untuk tab `'hok_labor'` |
 | `src/App.tsx` | Dimodifikasi | Routing dan mounting halaman `<CashLedgerPage />` dan `<LaborPage />` |
+
+
+| `src/components/dispatcher/EditDispatchModal.tsx` | Dimodifikasi | Perbaikan preloading 100% field data ritase yang diedit (tanggal, proyek, klien, material, kuari, volume, harga, biaya), volume step=1, select-all on focus |
+| `src/components/database/DatabasePage.tsx` | Dimodifikasi | Penambahan `key={selectedEditTx.id}` pada `EditDispatchModal` agar instance modal ter-remount bersih |
+| `src/components/ui/MaterialCombobox.tsx` | Dibuat | Combobox material alam dengan icon pratinjau, autocomplete Tab/Enter, navigasi panah, dan select-all on focus |
+| `public/icons/lightning.png` | Dibuat | Aset ikon petir baru pengganti emoji petir pada tombol Simpan Cepat |
+| `src/components/ui/CustomDatePicker.tsx` | Dimodifikasi | Navigasi keyboard mundur/maju 1 hari dengan `ArrowLeft` / `ArrowRight` saat fokus, dukungan `triggerRef` dan `onKeyDown` |
+| `src/components/dispatcher/DispatchForm.tsx` | Dimodifikasi | Reorder Kuari tepat di bawah Material, penggantian tombol material dengan `MaterialCombobox`, urutan strict Tab traversal (skip checkbox & buttons), shortcut `Ctrl+Enter` langsung kembali ke Date Picker, skip Proyek & Klien saat filter bukan 'ALL' |
+| `src/components/ui/FlexibleTextarea.tsx` | Dimodifikasi | Dukungan `tabIndex` dan `onFocus` |
+| `src/components/ui/CurrencyInput.tsx` | Dimodifikasi | Dukungan `inputRef`, `onKeyDown`, dan select-all on focus |
