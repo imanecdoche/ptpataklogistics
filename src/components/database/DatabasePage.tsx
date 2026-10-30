@@ -580,30 +580,7 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
           </span>
         </button>
 
-        {/* Tab 2: Master Proyek */}
-        <button
-          type="button"
-          onClick={() => {
-            setActiveSubTab('projects');
-            setSearchQuery('');
-          }}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-[8px] text-xs font-medium transition-colors whitespace-nowrap cursor-pointer ${
-            activeSubTab === 'projects'
-              ? 'bg-[#111111] text-white'
-              : 'text-[#666666] hover:bg-[#f5f5f5] hover:text-[#111111]'
-          }`}
-        >
-          <span>Master Proyek</span>
-          <span
-            className={`text-[11px] font-mono px-1.5 py-0.2 rounded ${
-              activeSubTab === 'projects' ? 'bg-white/20 text-white' : 'bg-[#f0f0f0] text-[#777777]'
-            }`}
-          >
-            {projects.length}
-          </span>
-        </button>
-
-        {/* Tab 3: Armada & Plat Nomor */}
+        {/* Tab 2: Armada & Plat Nomor */}
         <button
           type="button"
           onClick={() => {
@@ -626,7 +603,7 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
           </span>
         </button>
 
-        {/* Tab 4: Daftar Supir */}
+        {/* Tab 3: Daftar Supir */}
         <button
           type="button"
           onClick={() => {
@@ -649,7 +626,7 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
           </span>
         </button>
 
-        {/* Tab 5: Klien / Pelanggan */}
+        {/* Tab 4: Klien / Pelanggan */}
         <button
           type="button"
           onClick={() => {
@@ -671,52 +648,6 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
             {clients.length}
           </span>
         </button>
-
-        {/* Tab 6: Kuari Asal */}
-        <button
-          type="button"
-          onClick={() => {
-            setActiveSubTab('quarries');
-            setSearchQuery('');
-          }}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-[8px] text-xs font-medium transition-colors whitespace-nowrap cursor-pointer ${
-            activeSubTab === 'quarries'
-              ? 'bg-[#111111] text-white'
-              : 'text-[#666666] hover:bg-[#f5f5f5] hover:text-[#111111]'
-          }`}
-        >
-          <span>Kuari Asal</span>
-          <span
-            className={`text-[11px] font-mono px-1.5 py-0.2 rounded ${
-              activeSubTab === 'quarries' ? 'bg-white/20 text-white' : 'bg-[#f0f0f0] text-[#777777]'
-            }`}
-          >
-            {quarries.length}
-          </span>
-        </button>
-
-        {/* Tab 7: Investor & Permodalan */}
-        <button
-          type="button"
-          onClick={() => {
-            setActiveSubTab('investors');
-            setSearchQuery('');
-          }}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-[8px] text-xs font-medium transition-colors whitespace-nowrap cursor-pointer ${
-            activeSubTab === 'investors'
-              ? 'bg-[#111111] text-white'
-              : 'text-[#666666] hover:bg-[#f5f5f5] hover:text-[#111111]'
-          }`}
-        >
-          <span>Investor</span>
-          <span
-            className={`text-[11px] font-mono px-1.5 py-0.2 rounded ${
-              activeSubTab === 'investors' ? 'bg-white/20 text-white' : 'bg-[#f0f0f0] text-[#777777]'
-            }`}
-          >
-            {investors.length}
-          </span>
-        </button>
       </div>
 
       {/* 2. KONTROL FILTER & SEARCH BAR */}
@@ -731,37 +662,17 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
               placeholder={
                 activeSubTab === 'ritase'
                   ? 'Cari tiket, plat nomor, supir, klien, material, catatan...'
-                  : activeSubTab === 'projects'
-                  ? 'Cari nama proyek, lokasi, investor, atau klien...'
                   : activeSubTab === 'vehicles'
                   ? 'Cari plat nomor atau nama supir...'
                   : activeSubTab === 'drivers'
                   ? 'Cari nama atau nomor HP supir...'
-                  : activeSubTab === 'clients'
-                  ? 'Cari nama klien / perusahaan...'
-                  : activeSubTab === 'quarries'
-                  ? 'Cari nama kuari atau lokasi tambang...'
-                  : 'Cari nama investor, kontak, atau rekening...'
+                  : 'Cari nama klien / perusahaan...'
               }
               className="w-full bg-[#fafafa] border border-[#eaeaea] rounded-[8px] px-3.5 py-2 text-xs text-[#111111] placeholder-[#888888] focus:outline-none focus:border-[#111111] focus:bg-white transition-colors"
             />
           </div>
 
           <div className="flex items-center gap-2">
-            {activeSubTab === 'projects' && (
-              <button
-                type="button"
-                onClick={() => {
-                  if (investors.length > 0 && investors[0]) setInputProjectInvestorId(investors[0].id);
-                  if (clients.length > 0 && clients[0]) setInputProjectClientId(clients[0].id);
-                  setIsProjectModalOpen(true);
-                }}
-                className="w-full sm:w-auto px-4 py-2 bg-[#111111] hover:bg-black text-white text-xs font-medium rounded-[8px] transition-colors cursor-pointer flex items-center justify-center gap-1.5"
-              >
-                <span>+ Tambah Proyek Baru</span>
-              </button>
-            )}
-
             {activeSubTab === 'vehicles' && (
               <button
                 type="button"
@@ -789,26 +700,6 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
                 className="w-full sm:w-auto px-4 py-2 bg-[#111111] hover:bg-black text-white text-xs font-medium rounded-[8px] transition-colors cursor-pointer flex items-center justify-center gap-1.5"
               >
                 <span>+ Tambah Klien Baru</span>
-              </button>
-            )}
-
-            {activeSubTab === 'quarries' && (
-              <button
-                type="button"
-                onClick={() => setIsQuarryModalOpen(true)}
-                className="w-full sm:w-auto px-4 py-2 bg-[#111111] hover:bg-black text-white text-xs font-medium rounded-[8px] transition-colors cursor-pointer flex items-center justify-center gap-1.5"
-              >
-                <span>+ Tambah Kuari Baru</span>
-              </button>
-            )}
-
-            {activeSubTab === 'investors' && (
-              <button
-                type="button"
-                onClick={() => setIsInvestorModalOpen(true)}
-                className="w-full sm:w-auto px-4 py-2 bg-[#111111] hover:bg-black text-white text-xs font-medium rounded-[8px] transition-colors cursor-pointer flex items-center justify-center gap-1.5"
-              >
-                <span>+ Tambah Investor Baru</span>
               </button>
             )}
           </div>

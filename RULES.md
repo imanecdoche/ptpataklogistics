@@ -983,14 +983,14 @@ Dokumen ini adalah hukum tertinggi operasional sistem. Kegagalan mematuhi aturan
       * Di seluruh elemen pemilih/picker proyek di setiap halaman (`ProjectCombobox`, dropdown switcher header, modal transfer kas, modal edit ritase, dsb.), teks opsi WAJIB HANYA memuat **nama proyek saja (`p.name`)**.
       * DILARANG KERAS memunculkan alamat lengkap, lokasi, atau sub-label alamat (`p.location`) pada dropdown maupun item pemilih proyek di seluruh halaman aplikasi.
 
-90. **Standar Styling Input Form Pembuatan Ritase Baru (Bold Black Stroke & Solid White Fill)**:
-    - **High-Contrast Solid White Inputs with Black Stroke**:
+90. **Standar Styling Input Form Pembuatan Ritase Baru (Pure White Fill #ffffff Tanpa Outline Stroke)**:
+    - **High-Contrast Pure White Solid Fill (#ffffff)**:
       * Seluruh elemen input pada formulir Catat Ritase Baru (`DispatchForm`):
-        * Background: `bg-white` (filled putih pekat).
-        * Border / Outline: `border-2 border-black` (outline stroke hitam inside agak tebal).
-        * Teks input: `text-black font-semibold` (teks hitam pekat).
+        * Background: `bg-white` / `bg-[#ffffff]` (filled putih murni).
+        * Outline / Border: Outline stroke tebal hitam dihapus total, menggunakan batas visual subtle bersih (`border border-[#eaeaea] focus:border-[#111111]`) yang selaras dengan seluruh form sistem.
+        * Teks input: `text-black font-semibold` (teks hitam pekat kontras tinggi).
         * Sudut: `rounded-[6px]`.
-      * Berlaku untuk seluruh elemen input di form ritase: pemilih tanggal, nomor plat truk, nama supir, pemilih proyek tujuan, nama PT klien, pemilih kuari asal, tombol trigger pemilih jenis material, volume ritase, harga beli cash kuari, harga jual tempo proyek, beban operasional armada, dan textarea catatan tambahan.
+      * Berlaku untuk seluruh elemen input di form ritase: pemilih tanggal (`CustomDatePicker`), nomor plat truk (`TruckPlateInput`), nama supir, pemilih proyek tujuan (`ProjectCombobox`), nama PT klien (`ClientCombobox`), pemilih kuari asal (`QuarryCombobox`), tombol trigger pemilih jenis material, volume ritase, harga beli cash kuari (`CurrencyInput`), harga jual tempo proyek (`CurrencyInput`), beban operasional armada (`CurrencyInput`), dan textarea catatan tambahan (`FlexibleTextarea`).
 
 91. **Standar Pemisah Isian Form Pembuatan Ritase Baru (Section Dividers & Logical Grouping)**:
     - **Pemisah Garis Horizontal Antar-Jenis Isian**:
@@ -1023,6 +1023,32 @@ Dokumen ini adalah hukum tertinggi operasional sistem. Kegagalan mematuhi aturan
         1. Header Sidebar Kiri Desktop (`Sidebar.tsx`)
         2. Header Mobile Navbar (`AppShell.tsx`)
         3. Header Kartu Sesi Halaman Login (`LoginPage.tsx`)
+
+95. **Standar Tab Mandiri Sidepanel untuk Proyek, Investor, dan Kuari / Suplier (Dedicated Sidepanel Tabs)**:
+    - **Daftar & Urutan Menu Sidepanel (Tepat 10 Menu)**:
+      1. `dashboard`: "Dashboard" (`/icons/dashboard.png`)
+      2. `dispatcher`: "Dispatcher & Ritase" (`/icons/truck.png`)
+      3. `projects`: "Proyek" (`/icons/project.png`)
+      4. `investors`: "Investor" (`/icons/investor.png`)
+      5. `quarries`: "Kuari / Suplier" (`/icons/quarry.png`)
+      6. `materials`: "Master Material" (`/icons/layers.png`)
+      7. `cash_ledger`: "Kas & Piutang Tempo" (`/icons/wallet.png`)
+      8. `recap`: "Rekapitulasi Periode" (`/icons/chart.png`)
+      9. `database`: "Database" (`/icons/database.png`)
+      10. `dev`: "Dev Console" (`/icons/dev-terminal.png`)
+    - **Pembersihan Redundansi Sub-Tab Database**:
+      * Sub-tab `projects`, `investors`, dan `quarries` di dalam halaman Database dihapus agar tidak terjadi duplikasi pengelolaan.
+      * Halaman Master Database murni mengelola 4 entitas teknis operasional: `ritase` (Riwayat Ritase), `vehicles` (Armada & Plat Nomor), `drivers` (Daftar Supir), dan `clients` (Klien / Pelanggan).
+    - **Format Halaman Mandiri (Single View Efisien)**:
+      * Ketiga halaman baru tampil sebagai single-view tanpa sub-tab bersarang di sidepanel.
+      * Header halaman hanya judul tanpa deskripsi (Rule 88).
+      * Dilengkapi kartu metrik ringkasan, search box instan, filter status cepat di atas tabel, dan form modal tambah/edit yang diproteksi PIN `2008005`.
+      * Seluruh input nominal uang wajib menggunakan `CurrencyInput` (Rule 92) dan seluruh pemilih menggunakan Custom UI (Rule 87).
+    - **Kebijakan RBAC Sidepanel**:
+      * Manajemen (`admin`, `founder`, `developer`): Akses penuh ke seluruh 10 tab.
+      * `investor`: Terisolasi pada Dashboard dan tab Proyek miliknya serta info investasinya di tab Investor (tanpa akses ke Kuari/Suplier, Dispatcher, dan Kas talangan).
+      * `dispatcher`: Mengakses Dispatcher, Proyek, Kuari/Suplier, Master Material, dan Database (tanpa akses ke tab Investor).
+
 
 
 

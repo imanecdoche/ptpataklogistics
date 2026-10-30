@@ -1,0 +1,458 @@
+import React, { useState, useEffect, useMemo } from 'react';
+import { MasterQuarry } from '@/types/database';
+import {
+  subscribeMasterQuarries,
+  saveMasterQuarry,
+  deleteMasterQuarry
+} from '@/lib/databaseMasterService';
+import { RunningText } from '@/components/ui/RunningText';
+import { TableActionMenu } from '@/components/ui/TableActionMenu';
+import { PinAuthModal } from '@/components/ui/PinAuthModal';
+import { useProjectFilter } from '@/context/ProjectFilterContext';
+
+interface QuarriesPageProps {
+  userEmail: string;
+}
+
+export function QuarriesPage({ userEmail: _userEmail }: QuarriesPageProps): React.JSX.Element {
+  const { isInvestorUser } = useProjectFilter();
+  const [quarries, setQuarries] = useState<MasterQuarry[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Modal State Tambah Kuari
+  const [isAddOpen, setIsAddOpen] = useState(false);
+  const [name, setName] = useState('');
+  const [location, setLocation] = useState('');
+  const [contactPerson, setContactPerson] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+
+  // Modal State Edit Kuari
+  const [editTarget, setEditTarget] = useState<MasterQuarry | null>(null);
+
+  // Pin Auth Modal State
+  const [isPinModalOpen, setIsPinModalOpen] = useState(false);
+  const [pendingAction, setPendingAction] = useState<(() => Promise<void>) | null>(null);
+  const [pinTargetLabel, setPinTargetLabel] = useState('');
+
+  useEffect(() => {
+    const unsub = subscribeMasterQuarries(list => {
+      setQuarries(list);
+      setIsLoading(false);
+    });
+
+    return () => unsub();
+  }, []);
+
+  // Filter Kuari
+  const filteredQuarries = useMemo(() => {
+    let result = [...quarries];
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      result = result.filter(
+        item =>
+          item.name.toLowerCase().includes(q) ||
+          (item.location && item.location.toLowerCase().includes(q)) ||
+          (item.contactPerson && item.contactPerson.toLowerCase().includes(q)) ||
+          (item.phoneNumber && item.phoneNumber.includes(q)) ||
+          item.id.toLowerCase().includes(q)
+      );
+    }
+
+    return result;
+  }, [quarries, searchQuery]);
+
+  // Statistik Ringkasan
+  const uniqueLocationsCount = useMemo(() => {
+    const setLoc = new Set(quarries.map(q => q.location?.trim()).filter(Boolean));
+    return setLoc.size;
+  }, [quarries]);
+
+  // Otorisasi Aksi Tambah Kuari
+  const handleOpenAdd = () => {
+    setName('');
+    setLocation('');
+    setContactPerson('');
+    setPhoneNumber('');
+    setIsAddOpen(true);
+  };
+
+  const handleInitiateAdd = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim()) return;
+
+    setPinTargetLabel(`Tambah Kuari: ${name}`);
+    setPendingAction(() => async () => {
+      await saveMasterQuarry(
+        name.trim(),
+        location.trim(),
+        contactPerson.trim(),
+        phoneNumber.trim()
+      );
+
+      setIsAddOpen(false);
+    });
+    setIsPinModalOpen(true);
+  };
+
+  // Otorisasi Aksi Edit Kuari
+  const handleInitiateEdit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editTarget) return;
+
+    setPinTargetLabel(`Ubah Kuari: ${editTarget.name}`);
+    setPendingAction(() => async () => {
+      await saveMasterQuarry(
+        editTarget.name.trim(),
+        editTarget.location?.trim(),
+        editTarget.contactPerson?.trim(),
+        editTarget.phoneNumber?.trim(),
+        editTarget.notes?.trim(),
+        editTarget.id
+      );
+
+      setEditTarget(null);
+    });
+    setIsPinModalOpen(true);
+  };
+
+  // Otorisasi Aksi Hapus Kuari
+  const handleDeleteQuarry = (q: MasterQuarry) => {
+    setPinTargetLabel(`Hapus Kuari: ${q.name}`);
+    setPendingAction(() => async () => {
+      await deleteMasterQuarry(q.id);
+    });
+    setIsPinModalOpen(true);
+  };
+
+  const handlePinSuccess = async () => {
+    if (!pendingAction) return;
+    try {
+      await pendingAction();
+    } catch (err) {
+      console.error('Gagal menjalankan aksi kuari:', err);
+    } finally {
+      setIsPinModalOpen(false);
+      setPendingAction(null);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* 1. Metric Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="bg-white border border-[#eaeaea] rounded-[8px] p-3.5">
+          <span className="text-[11px] text-[#888888] font-medium block">Total Mitra Tambang</span>
+          <span className="text-xl font-bold font-mono text-[#111111] block mt-1">
+            {filteredQuarries.length} Kuari Terdaftar
+          </span>
+        </div>
+
+        <div className="bg-white border border-[#eaeaea] rounded-[8px] p-3.5">
+          <span className="text-[11px] text-[#888888] font-medium block">Lokasi Titik Muat Tersebar</span>
+          <span className="text-xl font-bold font-mono text-[#111111] block mt-1">
+            {uniqueLocationsCount} Wilayah / Titik
+          </span>
+        </div>
+
+        <div className="bg-white border border-[#eaeaea] rounded-[8px] p-3.5">
+          <span className="text-[11px] text-[#888888] font-medium block">Status Operasional Mitra</span>
+          <span className="text-xl font-bold font-mono text-[#008060] block mt-1">
+            100% Siap Suplai
+          </span>
+        </div>
+      </div>
+
+      {/* 2. Main Content Card */}
+      <div className="bg-white border border-[#eaeaea] rounded-[10px] overflow-hidden">
+        {/* Toolbar Baris Atas */}
+        <div className="p-3.5 border-b border-[#eaeaea] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-[#fafafa]">
+          <div className="text-xs text-[#666666]">
+            Daftar PT Tambang & Kuari resmi sebagai titik muat armada material alam.
+          </div>
+
+          <div className="flex items-center gap-2">
+            {/* Search Input */}
+            <div className="relative flex-1 sm:w-64">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder="Cari kuari, lokasi, kontak..."
+                className="w-full bg-white border border-[#eaeaea] rounded-[6px] px-3 py-1.5 text-xs text-[#111111] placeholder:text-[#999999] outline-none focus:border-[#111111] transition-colors"
+              />
+            </div>
+
+            {!isInvestorUser && (
+              <button
+                type="button"
+                onClick={handleOpenAdd}
+                className="px-3 py-1.5 bg-[#111111] hover:bg-[#2b2b2b] text-white text-xs font-semibold rounded-[6px] transition-colors cursor-pointer whitespace-nowrap"
+              >
+                + Tambah Kuari
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Tabel Master Kuari (Rule 66) */}
+        <div className="overflow-x-auto select-text">
+          <table className="w-full min-w-[900px] table-fixed text-left text-xs border-collapse">
+            <thead className="sticky top-0 z-10 bg-[#f9f9f9] border-b border-[#eaeaea] text-[#666666] font-medium text-[11px]">
+              <tr>
+                <th className="py-2.5 px-4 w-[240px] min-w-[240px] whitespace-nowrap">Nama PT Tambang / Kuari</th>
+                <th className="py-2.5 px-4 w-[200px] min-w-[200px] whitespace-nowrap">Lokasi Tambang (Titik Muat)</th>
+                <th className="py-2.5 px-4 w-[160px] min-w-[160px] whitespace-nowrap">Kontak Person (PIC)</th>
+                <th className="py-2.5 px-4 w-[150px] min-w-[150px] whitespace-nowrap">Nomor Telepon</th>
+                <th className="py-2.5 px-4 w-[120px] min-w-[120px] whitespace-nowrap">Status Mitra</th>
+                {!isInvestorUser && (
+                  <th className="py-2.5 px-4 w-[60px] min-w-[60px] text-right whitespace-nowrap">Aksi</th>
+                )}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#eaeaea]">
+              {isLoading ? (
+                <tr>
+                  <td colSpan={isInvestorUser ? 5 : 6} className="py-8 text-center text-[#888888] whitespace-nowrap">
+                    Memuat data kuari tambang...
+                  </td>
+                </tr>
+              ) : filteredQuarries.length === 0 ? (
+                <tr>
+                  <td colSpan={isInvestorUser ? 5 : 6} className="py-8 text-center text-[#888888] whitespace-nowrap">
+                    Tidak ada data kuari yang sesuai.
+                  </td>
+                </tr>
+              ) : (
+                filteredQuarries.map(q => (
+                  <tr key={q.id} className="hover:bg-[#fafafa] transition-colors">
+                    <td className="py-3 px-4 whitespace-nowrap w-[240px] align-middle">
+                      <span className="font-bold text-[#111111] block truncate">{q.name}</span>
+                      <span className="text-[10px] font-mono text-[#888888] block">{q.id}</span>
+                    </td>
+                    <td className="py-3 px-4 text-[#444444] whitespace-nowrap w-[200px] align-middle">
+                      <RunningText text={q.location} placeholder="-" className="text-[#444444]" />
+                    </td>
+                    <td className="py-3 px-4 text-[#111111] whitespace-nowrap w-[160px] align-middle font-medium">
+                      <RunningText text={q.contactPerson} placeholder="-" className="text-[#111111]" />
+                    </td>
+                    <td className="py-3 px-4 font-mono text-[#444444] whitespace-nowrap w-[150px] align-middle">
+                      {q.phoneNumber || '-'}
+                    </td>
+                    <td className="py-3 px-4 whitespace-nowrap w-[120px] align-middle">
+                      <span className="text-[11px] font-bold text-[#166534]">
+                        AKTIF
+                      </span>
+                    </td>
+                    {!isInvestorUser && (
+                      <td className="py-3 px-4 text-right whitespace-nowrap w-[60px] align-middle">
+                        <div className="flex items-center justify-end">
+                          <TableActionMenu
+                            items={[
+                              {
+                                label: 'Edit Data Kuari',
+                                onClick: () => setEditTarget(q)
+                              },
+                              {
+                                label: 'Salin ID Kuari',
+                                onClick: () => navigator.clipboard.writeText(q.id)
+                              },
+                              {
+                                label: 'Hapus Kuari',
+                                variant: 'danger',
+                                onClick: () => handleDeleteQuarry(q)
+                              }
+                            ]}
+                          />
+                        </div>
+                      </td>
+                    )}
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Modal Tambah Kuari Baru */}
+      {isAddOpen && (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+          <div className="bg-white rounded-[10px] w-full max-w-lg p-5 space-y-4 shadow-xl">
+            <div className="flex items-center justify-between pb-3 border-b border-[#eaeaea]">
+              <h3 className="text-sm font-bold text-[#111111]">Tambah Kuari / Suplier Baru</h3>
+              <button
+                type="button"
+                onClick={() => setIsAddOpen(false)}
+                className="text-[#888888] hover:text-[#111111] text-sm"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleInitiateAdd} className="space-y-3 text-xs">
+              <div>
+                <label className="block text-[#666666] font-medium mb-1">
+                  Nama PT / Kuari Tambang <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  placeholder="Contoh: PT Tambang Batu Mandiri"
+                  className="w-full bg-white border border-[#eaeaea] rounded-[6px] px-3 py-2 text-xs text-[#111111] outline-none focus:border-[#111111]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[#666666] font-medium mb-1">Lokasi Tambang (Titik Muat)</label>
+                <input
+                  type="text"
+                  value={location}
+                  onChange={e => setLocation(e.target.value)}
+                  placeholder="Contoh: Rangkasbitung / Bojonegara"
+                  className="w-full bg-white border border-[#eaeaea] rounded-[6px] px-3 py-2 text-xs text-[#111111] outline-none focus:border-[#111111]"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[#666666] font-medium mb-1">Kontak Person (PIC)</label>
+                  <input
+                    type="text"
+                    value={contactPerson}
+                    onChange={e => setContactPerson(e.target.value)}
+                    placeholder="Contoh: Bpk. Dani"
+                    className="w-full bg-white border border-[#eaeaea] rounded-[6px] px-3 py-2 text-xs text-[#111111] outline-none focus:border-[#111111]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[#666666] font-medium mb-1">Nomor Telepon / WhatsApp</label>
+                  <input
+                    type="text"
+                    value={phoneNumber}
+                    onChange={e => setPhoneNumber(e.target.value)}
+                    placeholder="Contoh: 08123456789"
+                    className="w-full bg-white border border-[#eaeaea] rounded-[6px] px-3 py-2 text-xs text-[#111111] outline-none focus:border-[#111111]"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-[#eaeaea] flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsAddOpen(false)}
+                  className="px-3 py-1.5 text-xs text-[#666666] bg-white border border-[#eaeaea] rounded-[6px] hover:bg-[#f5f5f5]"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-3 py-1.5 text-xs font-semibold text-white bg-[#111111] hover:bg-[#2b2b2b] rounded-[6px]"
+                >
+                  Lanjut Otorisasi
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Edit Kuari */}
+      {editTarget && (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+          <div className="bg-white rounded-[10px] w-full max-w-lg p-5 space-y-4 shadow-xl">
+            <div className="flex items-center justify-between pb-3 border-b border-[#eaeaea]">
+              <h3 className="text-sm font-bold text-[#111111]">Edit Kuari ({editTarget.id})</h3>
+              <button
+                type="button"
+                onClick={() => setEditTarget(null)}
+                className="text-[#888888] hover:text-[#111111] text-sm"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleInitiateEdit} className="space-y-3 text-xs">
+              <div>
+                <label className="block text-[#666666] font-medium mb-1">Nama PT / Kuari Tambang</label>
+                <input
+                  type="text"
+                  required
+                  value={editTarget.name}
+                  onChange={e => setEditTarget({ ...editTarget, name: e.target.value })}
+                  className="w-full bg-white border border-[#eaeaea] rounded-[6px] px-3 py-2 text-xs text-[#111111] outline-none focus:border-[#111111]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[#666666] font-medium mb-1">Lokasi Tambang</label>
+                <input
+                  type="text"
+                  value={editTarget.location || ''}
+                  onChange={e => setEditTarget({ ...editTarget, location: e.target.value })}
+                  className="w-full bg-white border border-[#eaeaea] rounded-[6px] px-3 py-2 text-xs text-[#111111] outline-none focus:border-[#111111]"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[#666666] font-medium mb-1">Kontak Person (PIC)</label>
+                  <input
+                    type="text"
+                    value={editTarget.contactPerson || ''}
+                    onChange={e => setEditTarget({ ...editTarget, contactPerson: e.target.value })}
+                    className="w-full bg-white border border-[#eaeaea] rounded-[6px] px-3 py-2 text-xs text-[#111111] outline-none focus:border-[#111111]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[#666666] font-medium mb-1">Nomor Telepon / WhatsApp</label>
+                  <input
+                    type="text"
+                    value={editTarget.phoneNumber || ''}
+                    onChange={e => setEditTarget({ ...editTarget, phoneNumber: e.target.value })}
+                    className="w-full bg-white border border-[#eaeaea] rounded-[6px] px-3 py-2 text-xs text-[#111111] outline-none focus:border-[#111111]"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-[#eaeaea] flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setEditTarget(null)}
+                  className="px-3 py-1.5 text-xs text-[#666666] bg-white border border-[#eaeaea] rounded-[6px] hover:bg-[#f5f5f5]"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-3 py-1.5 text-xs font-semibold text-white bg-[#111111] hover:bg-[#2b2b2b] rounded-[6px]"
+                >
+                  Simpan Perubahan
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Pin Authorization Modal */}
+      <PinAuthModal
+        isOpen={isPinModalOpen}
+        title="Otorisasi Manajemen Kuari"
+        description="Masukkan PIN otorisasi default (2008005) untuk memverifikasi tindakan pada data kuari tambang."
+        targetLabel={pinTargetLabel}
+        confirmText="Otorisasi Tindakan"
+        onSuccess={handlePinSuccess}
+        onClose={() => {
+          setIsPinModalOpen(false);
+          setPendingAction(null);
+        }}
+      />
+    </div>
+  );
+}

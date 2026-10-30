@@ -10,6 +10,9 @@ import { DashboardPage } from '@/components/dashboard/DashboardPage';
 import { DispatcherPage } from '@/components/dispatcher/DispatcherPage';
 import { DatabasePage } from '@/components/database/DatabasePage';
 import { MasterMaterialPage } from '@/components/materials/MasterMaterialPage';
+import { ProjectsPage } from '@/components/projects/ProjectsPage';
+import { InvestorsPage } from '@/components/investors/InvestorsPage';
+import { QuarriesPage } from '@/components/quarries/QuarriesPage';
 import { DevPage } from '@/components/dev/DevPage';
 import { OfflineOverlay } from '@/components/ui/OfflineOverlay';
 import { isDeveloperEmail } from '@/lib/userManagementService';
@@ -174,7 +177,26 @@ export default function App(): React.JSX.Element {
             />
           )}
 
-          {currentTab !== 'dashboard' && currentTab !== 'dispatcher' && currentTab !== 'database' && currentTab !== 'dev' && currentTab !== 'materials' && (
+          {currentTab === 'projects' && (
+            <ProjectsPage userEmail={user?.email || 'admin@patak.id'} />
+          )}
+
+          {currentTab === 'investors' && (
+            <InvestorsPage userEmail={user?.email || 'admin@patak.id'} />
+          )}
+
+          {currentTab === 'quarries' && (
+            <QuarriesPage userEmail={user?.email || 'admin@patak.id'} />
+          )}
+
+          {currentTab !== 'dashboard' &&
+            currentTab !== 'dispatcher' &&
+            currentTab !== 'database' &&
+            currentTab !== 'dev' &&
+            currentTab !== 'materials' &&
+            currentTab !== 'projects' &&
+            currentTab !== 'investors' &&
+            currentTab !== 'quarries' && (
             <div className="bg-white rounded-[10px] p-6 space-y-4">
               <div className="space-y-1">
                 <h2 className="text-sm font-semibold text-[#111111]">

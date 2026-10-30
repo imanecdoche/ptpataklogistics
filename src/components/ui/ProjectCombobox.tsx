@@ -91,7 +91,7 @@ export function ProjectCombobox({
         }}
         className={`flex items-center justify-between w-full rounded-[6px] px-3 py-2 text-xs transition-colors cursor-pointer ${
           isSolidWhite
-            ? 'bg-white border-2 border-black text-black font-semibold'
+            ? 'bg-white border border-[#eaeaea] focus-within:border-[#111111] text-black font-semibold'
             : 'bg-[#f5f5f5] hover:bg-[#ebebeb] focus-within:bg-[#ebebeb] text-[#111111] border border-transparent focus-within:border-[#111111]'
         } ${disabled ? 'opacity-60 cursor-not-allowed' : ''}`}
       >

@@ -530,7 +530,7 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
                   setDriverName(formatTitleCaseAndEntity(e.target.value));
                   setIsDriverDropdownOpen(true);
                 }}
-                className="w-full bg-white border-2 border-black rounded-[6px] px-3 py-2 text-xs text-black font-semibold placeholder:text-[#888888] outline-none transition-colors"
+                className="w-full bg-white border border-[#eaeaea] focus:border-[#111111] rounded-[6px] px-3 py-2 text-xs text-black font-semibold placeholder:text-[#888888] outline-none transition-colors"
               />
 
               {/* Dropdown Autocomplete Suggestions Supir */}
@@ -644,7 +644,7 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
               <button
                 type="button"
                 onClick={() => setIsMaterialPickerOpen(true)}
-                className="w-full bg-white border-2 border-black rounded-[6px] px-3 py-2 text-xs text-black font-semibold hover:bg-[#fafafa] transition-colors flex items-center justify-between cursor-pointer outline-none"
+                className="w-full bg-white border border-[#eaeaea] focus:border-[#111111] rounded-[6px] px-3 py-2 text-xs text-black font-semibold hover:bg-[#fafafa] transition-colors flex items-center justify-between cursor-pointer outline-none"
               >
                 <div className="flex items-center gap-2.5 truncate">
                   {selectedMat && (
@@ -680,7 +680,7 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
               <label className="block text-[#666666] font-medium mb-1">
                 Volume <span className="text-red-500">*</span>
               </label>
-              <div className="relative flex items-center bg-white border-2 border-black rounded-[6px]">
+              <div className="relative flex items-center bg-white border border-[#eaeaea] focus-within:border-[#111111] rounded-[6px]">
                 <input
                   type="number"
                   step="any"

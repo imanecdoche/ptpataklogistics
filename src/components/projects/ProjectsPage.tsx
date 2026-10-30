@@ -1,0 +1,647 @@
+import React, { useState, useEffect, useMemo } from 'react';
+import { Project, Investor, Client } from '@/types/database';
+import {
+  subscribeProjects,
+  saveProject,
+  deleteProject
+} from '@/lib/projectService';
+import { subscribeInvestors } from '@/lib/investorService';
+import { subscribeClients } from '@/lib/clientService';
+const formatRupiah = (val: number): string =>
+  'Rp ' + Math.round(val).toLocaleString('id-ID');
+import { RunningText } from '@/components/ui/RunningText';
+import { TableActionMenu } from '@/components/ui/TableActionMenu';
+import { PinAuthModal } from '@/components/ui/PinAuthModal';
+import { CurrencyInput } from '@/components/ui/CurrencyInput';
+import { useProjectFilter } from '@/context/ProjectFilterContext';
+
+interface ProjectsPageProps {
+  userEmail: string;
+}
+
+export function ProjectsPage({ userEmail: _userEmail }: ProjectsPageProps): React.JSX.Element {
+  const { isInvestorUser, selectedProjectId } = useProjectFilter();
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [investors, setInvestors] = useState<Investor[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'ON_HOLD' | 'COMPLETED'>('ALL');
+
+  // Modal State Tambah Proyek
+  const [isAddOpen, setIsAddOpen] = useState(false);
+  const [name, setName] = useState('');
+  const [location, setLocation] = useState('');
+  const [investorId, setInvestorId] = useState('');
+  const [clientId, setClientId] = useState('');
+  const [initialDeposit, setInitialDeposit] = useState<number>(0);
+  const [notes, setNotes] = useState('');
+
+  // Modal State Edit Proyek
+  const [editTarget, setEditTarget] = useState<Project | null>(null);
+
+  // Pin Auth Modal State
+  const [isPinModalOpen, setIsPinModalOpen] = useState(false);
+  const [pendingAction, setPendingAction] = useState<(() => Promise<void>) | null>(null);
+  const [pinTargetLabel, setPinTargetLabel] = useState('');
+
+  useEffect(() => {
+    const unsubProjects = subscribeProjects(list => {
+      setProjects(list);
+      setIsLoading(false);
+    });
+    const unsubInvestors = subscribeInvestors(list => {
+      setInvestors(list);
+    });
+    const unsubClients = subscribeClients(list => {
+      setClients(list);
+    });
+
+    return () => {
+      unsubProjects();
+      unsubInvestors();
+      unsubClients();
+    };
+  }, []);
+
+  // Filter projects berdasarkan RBAC investor & search & status
+  const filteredProjects = useMemo(() => {
+    let result = [...projects];
+
+    // Jika role investor, batasi hanya pada proyek miliknya
+    if (isInvestorUser && selectedProjectId && selectedProjectId !== 'ALL') {
+      result = result.filter(p => p.id === selectedProjectId);
+    }
+
+    if (statusFilter !== 'ALL') {
+      result = result.filter(p => p.status === statusFilter);
+    }
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      result = result.filter(
+        p =>
+          p.name.toLowerCase().includes(q) ||
+          p.location.toLowerCase().includes(q) ||
+          p.investorName.toLowerCase().includes(q) ||
+          p.clientName.toLowerCase().includes(q) ||
+          p.id.toLowerCase().includes(q)
+      );
+    }
+
+    return result;
+  }, [projects, isInvestorUser, selectedProjectId, statusFilter, searchQuery]);
+
+  // Statistik Ringkasan
+  const totalDeposit = useMemo(() => {
+    return filteredProjects.reduce((acc, p) => acc + (p.initialDeposit || 0), 0);
+  }, [filteredProjects]);
+
+  const totalCurrentBalance = useMemo(() => {
+    return filteredProjects.reduce((acc, p) => acc + (p.currentBalance || 0), 0);
+  }, [filteredProjects]);
+
+  const activeProjectsCount = useMemo(() => {
+    return filteredProjects.filter(p => p.status === 'ACTIVE').length;
+  }, [filteredProjects]);
+
+  // Otorisasi Aksi Simpan Proyek Baru
+  const handleOpenAdd = () => {
+    setName('');
+    setLocation('');
+    setInvestorId(investors[0]?.id || '');
+    setClientId(clients[0]?.id || '');
+    setInitialDeposit(0);
+    setNotes('');
+    setIsAddOpen(true);
+  };
+
+  const handleInitiateAdd = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim()) return;
+
+    setPinTargetLabel(`Tambah Proyek: ${name}`);
+    setPendingAction(() => async () => {
+      const inv = investors.find(i => i.id === investorId);
+      const cli = clients.find(c => c.id === clientId);
+      await saveProject({
+        name: name.trim(),
+        location: location.trim(),
+        investorId: investorId || 'INV-UMUM',
+        investorName: inv?.name || 'Investor Umum',
+        clientId: clientId || 'CLI-UMUM',
+        clientName: cli?.name || 'Klien Umum',
+        initialDeposit,
+        currentBalance: initialDeposit,
+        status: 'ACTIVE',
+        notes: notes.trim()
+      });
+
+      setIsAddOpen(false);
+    });
+    setIsPinModalOpen(true);
+  };
+
+  // Otorisasi Aksi Edit Proyek
+  const handleInitiateEdit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editTarget) return;
+
+    setPinTargetLabel(`Ubah Proyek: ${editTarget.name}`);
+    setPendingAction(() => async () => {
+      const inv = investors.find(i => i.id === editTarget.investorId);
+      const cli = clients.find(c => c.id === editTarget.clientId);
+
+      await saveProject(
+        {
+          name: editTarget.name.trim(),
+          location: editTarget.location.trim(),
+          investorId: editTarget.investorId,
+          investorName: inv?.name || editTarget.investorName,
+          clientId: editTarget.clientId,
+          clientName: cli?.name || editTarget.clientName,
+          initialDeposit: editTarget.initialDeposit,
+          currentBalance: editTarget.currentBalance,
+          status: editTarget.status,
+          notes: editTarget.notes?.trim()
+        },
+        editTarget.id
+      );
+
+      setEditTarget(null);
+    });
+    setIsPinModalOpen(true);
+  };
+
+  // Otorisasi Aksi Hapus Proyek
+  const handleDeleteProject = (proj: Project) => {
+    setPinTargetLabel(`Hapus Proyek: ${proj.name}`);
+    setPendingAction(() => async () => {
+      await deleteProject(proj.id);
+    });
+    setIsPinModalOpen(true);
+  };
+
+  const handlePinSuccess = async () => {
+    if (!pendingAction) return;
+    try {
+      await pendingAction();
+    } catch (err) {
+      console.error('Gagal menjalankan aksi proyek:', err);
+    } finally {
+      setIsPinModalOpen(false);
+      setPendingAction(null);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* 1. Metric Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="bg-white border border-[#eaeaea] rounded-[8px] p-3.5">
+          <span className="text-[11px] text-[#888888] font-medium block">Total Proyek Terdaftar</span>
+          <div className="flex items-baseline gap-1.5 mt-1">
+            <span className="text-xl font-bold font-mono text-[#111111]">{filteredProjects.length}</span>
+            <span className="text-xs text-[#666666]">({activeProjectsCount} Aktif)</span>
+          </div>
+        </div>
+
+        <div className="bg-white border border-[#eaeaea] rounded-[8px] p-3.5">
+          <span className="text-[11px] text-[#888888] font-medium block">Total Modal Disetor</span>
+          <span className="text-xl font-bold font-mono text-[#111111] block mt-1 whitespace-nowrap">
+            {formatRupiah(totalDeposit)}
+          </span>
+        </div>
+
+        <div className="bg-white border border-[#eaeaea] rounded-[8px] p-3.5">
+          <span className="text-[11px] text-[#888888] font-medium block">Total Saldo Kas Berjalan</span>
+          <span
+            className={`text-xl font-bold font-mono block mt-1 whitespace-nowrap ${
+              totalCurrentBalance < 0 ? 'text-[#cf1124]' : 'text-[#008060]'
+            }`}
+          >
+            {formatRupiah(totalCurrentBalance)}
+          </span>
+        </div>
+      </div>
+
+      {/* 2. Main Content Card */}
+      <div className="bg-white border border-[#eaeaea] rounded-[10px] overflow-hidden">
+        {/* Toolbar Baris Atas */}
+        <div className="p-3.5 border-b border-[#eaeaea] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-[#fafafa]">
+          {/* Status Filter Buttons */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <button
+              type="button"
+              onClick={() => setStatusFilter('ALL')}
+              className={`px-2.5 py-1 text-xs rounded-[6px] font-medium transition-colors cursor-pointer ${
+                statusFilter === 'ALL'
+                  ? 'bg-[#111111] text-white'
+                  : 'bg-white border border-[#eaeaea] text-[#666666] hover:bg-[#f0f0f0]'
+              }`}
+            >
+              Semua ({projects.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setStatusFilter('ACTIVE')}
+              className={`px-2.5 py-1 text-xs rounded-[6px] font-medium transition-colors cursor-pointer ${
+                statusFilter === 'ACTIVE'
+                  ? 'bg-[#111111] text-white'
+                  : 'bg-white border border-[#eaeaea] text-[#666666] hover:bg-[#f0f0f0]'
+              }`}
+            >
+              Aktif
+            </button>
+            <button
+              type="button"
+              onClick={() => setStatusFilter('ON_HOLD')}
+              className={`px-2.5 py-1 text-xs rounded-[6px] font-medium transition-colors cursor-pointer ${
+                statusFilter === 'ON_HOLD'
+                  ? 'bg-[#111111] text-white'
+                  : 'bg-white border border-[#eaeaea] text-[#666666] hover:bg-[#f0f0f0]'
+              }`}
+            >
+              Hold
+            </button>
+            <button
+              type="button"
+              onClick={() => setStatusFilter('COMPLETED')}
+              className={`px-2.5 py-1 text-xs rounded-[6px] font-medium transition-colors cursor-pointer ${
+                statusFilter === 'COMPLETED'
+                  ? 'bg-[#111111] text-white'
+                  : 'bg-white border border-[#eaeaea] text-[#666666] hover:bg-[#f0f0f0]'
+              }`}
+            >
+              Selesai
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {/* Search Input */}
+            <div className="relative flex-1 sm:w-64">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder="Cari proyek, lokasi, investor..."
+                className="w-full bg-white border border-[#eaeaea] rounded-[6px] px-3 py-1.5 text-xs text-[#111111] placeholder:text-[#999999] outline-none focus:border-[#111111] transition-colors"
+              />
+            </div>
+
+            {!isInvestorUser && (
+              <button
+                type="button"
+                onClick={handleOpenAdd}
+                className="px-3 py-1.5 bg-[#111111] hover:bg-[#2b2b2b] text-white text-xs font-semibold rounded-[6px] transition-colors cursor-pointer whitespace-nowrap"
+              >
+                + Tambah Proyek
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Tabel Master Proyek (Rule 66: Table-fixed, zero-wrap, sticky header) */}
+        <div className="overflow-x-auto select-text">
+          <table className="w-full min-w-[1070px] table-fixed text-left text-xs border-collapse">
+            <thead className="sticky top-0 z-10 bg-[#f9f9f9] border-b border-[#eaeaea] text-[#666666] font-medium text-[11px]">
+              <tr>
+                <th className="py-2.5 px-4 w-[200px] min-w-[200px] whitespace-nowrap">Nama Proyek</th>
+                <th className="py-2.5 px-4 w-[160px] min-w-[160px] whitespace-nowrap">Lokasi</th>
+                <th className="py-2.5 px-4 w-[160px] min-w-[160px] whitespace-nowrap">Investor Pendana</th>
+                <th className="py-2.5 px-4 w-[160px] min-w-[160px] whitespace-nowrap">Klien / Pemilik</th>
+                <th className="py-2.5 px-4 w-[140px] min-w-[140px] text-right whitespace-nowrap">Modal Awal Disetor</th>
+                <th className="py-2.5 px-4 w-[140px] min-w-[140px] text-right whitespace-nowrap">Saldo Kas Berjalan</th>
+                <th className="py-2.5 px-4 w-[90px] min-w-[90px] text-center whitespace-nowrap">Status</th>
+                {!isInvestorUser && (
+                  <th className="py-2.5 px-4 w-[60px] min-w-[60px] text-right whitespace-nowrap">Aksi</th>
+                )}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#eaeaea]">
+              {isLoading ? (
+                <tr>
+                  <td colSpan={isInvestorUser ? 7 : 8} className="py-8 text-center text-[#888888] whitespace-nowrap">
+                    Memuat data master proyek...
+                  </td>
+                </tr>
+              ) : filteredProjects.length === 0 ? (
+                <tr>
+                  <td colSpan={isInvestorUser ? 7 : 8} className="py-8 text-center text-[#888888] whitespace-nowrap">
+                    Tidak ada data proyek yang sesuai.
+                  </td>
+                </tr>
+              ) : (
+                filteredProjects.map(proj => (
+                  <tr key={proj.id} className="hover:bg-[#fafafa] transition-colors">
+                    <td className="py-3 px-4 whitespace-nowrap w-[200px] align-middle">
+                      <span className="font-bold text-[#111111] block truncate">{proj.name}</span>
+                      <span className="text-[10px] font-mono text-[#888888] block">{proj.id}</span>
+                    </td>
+                    <td className="py-3 px-4 text-[#444444] whitespace-nowrap w-[160px] align-middle">
+                      <RunningText text={proj.location} placeholder="-" className="text-[#444444]" />
+                    </td>
+                    <td className="py-3 px-4 text-[#111111] whitespace-nowrap w-[160px] align-middle font-medium">
+                      <RunningText text={proj.investorName} placeholder="Umum" className="text-[#111111]" />
+                    </td>
+                    <td className="py-3 px-4 text-[#444444] whitespace-nowrap w-[160px] align-middle">
+                      <RunningText text={proj.clientName} placeholder="Umum" className="text-[#444444]" />
+                    </td>
+                    <td className="py-3 px-4 font-mono font-medium text-[#111111] text-right whitespace-nowrap w-[140px] align-middle">
+                      {formatRupiah(proj.initialDeposit || 0)}
+                    </td>
+                    <td
+                      className={`py-3 px-4 font-mono font-bold text-right whitespace-nowrap w-[140px] align-middle ${
+                        (proj.currentBalance || 0) < 0 ? 'text-[#cf1124]' : 'text-[#008060]'
+                      }`}
+                    >
+                      {formatRupiah(proj.currentBalance || 0)}
+                    </td>
+                    <td className="py-3 px-4 text-center whitespace-nowrap w-[90px] align-middle">
+                      <span
+                        className={`text-[11px] font-bold px-2 py-0.5 rounded ${
+                          proj.status === 'COMPLETED'
+                            ? 'bg-[#f0fdf4] text-[#166534]'
+                            : proj.status === 'ON_HOLD'
+                            ? 'bg-[#fefce8] text-[#854d0e]'
+                            : 'bg-[#eff6ff] text-[#1e40af]'
+                        }`}
+                      >
+                        {proj.status === 'COMPLETED' ? 'SELESAI' : proj.status === 'ON_HOLD' ? 'HOLD' : 'AKTIF'}
+                      </span>
+                    </td>
+                    {!isInvestorUser && (
+                      <td className="py-3 px-4 text-right whitespace-nowrap w-[60px] align-middle">
+                        <div className="flex items-center justify-end">
+                          <TableActionMenu
+                            items={[
+                              {
+                                label: 'Edit Data Proyek',
+                                onClick: () => setEditTarget(proj)
+                              },
+                              {
+                                label: 'Salin ID Proyek',
+                                onClick: () => navigator.clipboard.writeText(proj.id)
+                              },
+                              {
+                                label: 'Hapus Proyek',
+                                variant: 'danger',
+                                onClick: () => handleDeleteProject(proj)
+                              }
+                            ]}
+                          />
+                        </div>
+                      </td>
+                    )}
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Modal Tambah Proyek Baru */}
+      {isAddOpen && (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+          <div className="bg-white rounded-[10px] w-full max-w-lg p-5 space-y-4 shadow-xl">
+            <div className="flex items-center justify-between pb-3 border-b border-[#eaeaea]">
+              <h3 className="text-sm font-bold text-[#111111]">Tambah Proyek Baru</h3>
+              <button
+                type="button"
+                onClick={() => setIsAddOpen(false)}
+                className="text-[#888888] hover:text-[#111111] text-sm"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleInitiateAdd} className="space-y-3 text-xs">
+              <div>
+                <label className="block text-[#666666] font-medium mb-1">
+                  Nama Proyek <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  placeholder="Contoh: Proyek Situ Cikedal"
+                  className="w-full bg-white border border-[#eaeaea] rounded-[6px] px-3 py-2 text-xs text-[#111111] outline-none focus:border-[#111111]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[#666666] font-medium mb-1">Lokasi Proyek</label>
+                <input
+                  type="text"
+                  value={location}
+                  onChange={e => setLocation(e.target.value)}
+                  placeholder="Contoh: Cikedal, Pandeglang"
+                  className="w-full bg-white border border-[#eaeaea] rounded-[6px] px-3 py-2 text-xs text-[#111111] outline-none focus:border-[#111111]"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[#666666] font-medium mb-1">Investor Pendana</label>
+                  <select
+                    value={investorId}
+                    onChange={e => setInvestorId(e.target.value)}
+                    className="w-full bg-white border border-[#eaeaea] rounded-[6px] px-3 py-2 text-xs text-[#111111] outline-none focus:border-[#111111]"
+                  >
+                    {investors.map(inv => (
+                      <option key={inv.id} value={inv.id}>
+                        {inv.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[#666666] font-medium mb-1">Klien / Pemilik Proyek</label>
+                  <select
+                    value={clientId}
+                    onChange={e => setClientId(e.target.value)}
+                    className="w-full bg-white border border-[#eaeaea] rounded-[6px] px-3 py-2 text-xs text-[#111111] outline-none focus:border-[#111111]"
+                  >
+                    {clients.map(cli => (
+                      <option key={cli.id} value={cli.id}>
+                        {cli.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[#666666] font-medium mb-1">Modal Awal Disetor (Rp)</label>
+                <CurrencyInput
+                  value={initialDeposit}
+                  onChange={setInitialDeposit}
+                  placeholder="0"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[#666666] font-medium mb-1">Catatan Proyek</label>
+                <input
+                  type="text"
+                  value={notes}
+                  onChange={e => setNotes(e.target.value)}
+                  placeholder="Catatan penagihan atau termin..."
+                  className="w-full bg-white border border-[#eaeaea] rounded-[6px] px-3 py-2 text-xs text-[#111111] outline-none focus:border-[#111111]"
+                />
+              </div>
+
+              <div className="pt-3 border-t border-[#eaeaea] flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsAddOpen(false)}
+                  className="px-3 py-1.5 text-xs text-[#666666] bg-white border border-[#eaeaea] rounded-[6px] hover:bg-[#f5f5f5]"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-3 py-1.5 text-xs font-semibold text-white bg-[#111111] hover:bg-[#2b2b2b] rounded-[6px]"
+                >
+                  Lanjut Otorisasi
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Edit Proyek */}
+      {editTarget && (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+          <div className="bg-white rounded-[10px] w-full max-w-lg p-5 space-y-4 shadow-xl">
+            <div className="flex items-center justify-between pb-3 border-b border-[#eaeaea]">
+              <h3 className="text-sm font-bold text-[#111111]">Edit Proyek ({editTarget.id})</h3>
+              <button
+                type="button"
+                onClick={() => setEditTarget(null)}
+                className="text-[#888888] hover:text-[#111111] text-sm"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleInitiateEdit} className="space-y-3 text-xs">
+              <div>
+                <label className="block text-[#666666] font-medium mb-1">Nama Proyek</label>
+                <input
+                  type="text"
+                  required
+                  value={editTarget.name}
+                  onChange={e => setEditTarget({ ...editTarget, name: e.target.value })}
+                  className="w-full bg-white border border-[#eaeaea] rounded-[6px] px-3 py-2 text-xs text-[#111111] outline-none focus:border-[#111111]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[#666666] font-medium mb-1">Lokasi Proyek</label>
+                <input
+                  type="text"
+                  value={editTarget.location}
+                  onChange={e => setEditTarget({ ...editTarget, location: e.target.value })}
+                  className="w-full bg-white border border-[#eaeaea] rounded-[6px] px-3 py-2 text-xs text-[#111111] outline-none focus:border-[#111111]"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[#666666] font-medium mb-1">Investor Pendana</label>
+                  <select
+                    value={editTarget.investorId}
+                    onChange={e => setEditTarget({ ...editTarget, investorId: e.target.value })}
+                    className="w-full bg-white border border-[#eaeaea] rounded-[6px] px-3 py-2 text-xs text-[#111111] outline-none focus:border-[#111111]"
+                  >
+                    {investors.map(inv => (
+                      <option key={inv.id} value={inv.id}>
+                        {inv.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[#666666] font-medium mb-1">Klien / Pemilik Proyek</label>
+                  <select
+                    value={editTarget.clientId}
+                    onChange={e => setEditTarget({ ...editTarget, clientId: e.target.value })}
+                    className="w-full bg-white border border-[#eaeaea] rounded-[6px] px-3 py-2 text-xs text-[#111111] outline-none focus:border-[#111111]"
+                  >
+                    {clients.map(cli => (
+                      <option key={cli.id} value={cli.id}>
+                        {cli.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[#666666] font-medium mb-1">Modal Awal Disetor (Rp)</label>
+                <CurrencyInput
+                  value={editTarget.initialDeposit || 0}
+                  onChange={val => setEditTarget({ ...editTarget, initialDeposit: val })}
+                />
+              </div>
+
+              <div>
+                <label className="block text-[#666666] font-medium mb-1">Status Proyek</label>
+                <select
+                  value={editTarget.status}
+                  onChange={e =>
+                    setEditTarget({
+                      ...editTarget,
+                      status: e.target.value as 'ACTIVE' | 'ON_HOLD' | 'COMPLETED'
+                    })
+                  }
+                  className="w-full bg-white border border-[#eaeaea] rounded-[6px] px-3 py-2 text-xs text-[#111111] outline-none focus:border-[#111111]"
+                >
+                  <option value="ACTIVE">AKTIF</option>
+                  <option value="ON_HOLD">HOLD</option>
+                  <option value="COMPLETED">SELESAI</option>
+                </select>
+              </div>
+
+              <div className="pt-3 border-t border-[#eaeaea] flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setEditTarget(null)}
+                  className="px-3 py-1.5 text-xs text-[#666666] bg-white border border-[#eaeaea] rounded-[6px] hover:bg-[#f5f5f5]"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-3 py-1.5 text-xs font-semibold text-white bg-[#111111] hover:bg-[#2b2b2b] rounded-[6px]"
+                >
+                  Simpan Perubahan
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Pin Authorization Modal */}
+      <PinAuthModal
+        isOpen={isPinModalOpen}
+        title="Otorisasi Manajemen Proyek"
+        description="Masukkan PIN otorisasi default (2008005) untuk memverifikasi tindakan pada data proyek."
+        targetLabel={pinTargetLabel}
+        confirmText="Otorisasi Tindakan"
+        onSuccess={handlePinSuccess}
+        onClose={() => {
+          setIsPinModalOpen(false);
+          setPendingAction(null);
+        }}
+      />
+    </div>
+  );
+}

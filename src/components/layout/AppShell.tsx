@@ -20,35 +20,53 @@ interface AppShellProps {
 const TAB_TITLES: Record<NavigationTab, { title: string; mobileTitle?: string; subtitle: string }> = {
   dashboard: {
     title: 'Dashboard Operasional',
-    mobileTitle: 'Dashboard Logistik',
-    subtitle: 'Ringkasan metrik ritase harian, estimasi finansial, dan arus kas armada'
+    mobileTitle: 'Dashboard',
+    subtitle: ''
   },
   dispatcher: {
     title: 'Dispatcher & Ritase',
-    mobileTitle: 'Catat Ritase Baru',
-    subtitle: 'Pencatatan ritase keluar-masuk armada dan verifikasi tiket muatan'
+    mobileTitle: 'Catat Ritase',
+    subtitle: ''
   },
-  cash_ledger: {
-    title: 'Kas & Piutang Tempo',
-    subtitle: 'Arus kas riil beli tunai vs jual tempo dan status pelunasan'
+  projects: {
+    title: 'Master Proyek',
+    mobileTitle: 'Proyek',
+    subtitle: ''
   },
-  recap: {
-    title: 'Rekapitulasi Periode',
-    subtitle: 'Laporan volume muatan material dan akumulasi finansial'
+  investors: {
+    title: 'Investor & Permodalan',
+    mobileTitle: 'Investor',
+    subtitle: ''
+  },
+  quarries: {
+    title: 'Kuari & Suplier Tambang',
+    mobileTitle: 'Kuari / Suplier',
+    subtitle: ''
   },
   materials: {
     title: 'Master Material',
-    subtitle: 'Katalog komoditas alam, satuan acuan, dan standar harga'
+    mobileTitle: 'Material',
+    subtitle: ''
+  },
+  cash_ledger: {
+    title: 'Kas & Piutang Tempo',
+    mobileTitle: 'Kas & Piutang',
+    subtitle: ''
+  },
+  recap: {
+    title: 'Rekapitulasi Periode',
+    mobileTitle: 'Rekapitulasi',
+    subtitle: ''
   },
   database: {
-    title: 'Master Database & Entitas',
-    mobileTitle: 'Database & Entitas',
-    subtitle: 'Kelola master armada plat nomor, supir, klien, dan kuari untuk menjaga kebersihan data'
+    title: 'Master Database',
+    mobileTitle: 'Database',
+    subtitle: ''
   },
   dev: {
     title: 'Developer Console',
     mobileTitle: 'Dev Console',
-    subtitle: 'Manajemen kredensial, hak akses akun, dan sesi pengguna sistem'
+    subtitle: ''
   }
 };
 

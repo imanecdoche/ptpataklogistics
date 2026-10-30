@@ -193,7 +193,7 @@ export function CustomDatePicker({
             : 'px-3 py-1.5'
         } ${
           variant === 'solid-white'
-            ? 'bg-white border-2 border-black text-black font-semibold hover:bg-[#fafafa]'
+            ? 'bg-white border border-[#eaeaea] hover:border-[#cccccc] text-black font-semibold hover:bg-[#fafafa]'
             : 'bg-[#f5f5f5] hover:bg-[#ebebeb] active:bg-[#e5e5e5] text-[#111111] border-none'
         } outline-none rounded-[6px] text-xs font-mono font-medium transition-colors flex items-center gap-2 select-none`}
       >

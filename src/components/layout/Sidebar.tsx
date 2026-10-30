@@ -3,8 +3,19 @@ import { signOut, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { CustomDialog } from '@/components/ui/CustomDialog';
 import { isDeveloperEmail } from '@/lib/userManagementService';
+import { useProjectFilter } from '@/context/ProjectFilterContext';
 
-export type NavigationTab = 'dashboard' | 'dispatcher' | 'cash_ledger' | 'recap' | 'materials' | 'database' | 'dev';
+export type NavigationTab =
+  | 'dashboard'
+  | 'dispatcher'
+  | 'projects'
+  | 'investors'
+  | 'quarries'
+  | 'materials'
+  | 'cash_ledger'
+  | 'recap'
+  | 'database'
+  | 'dev';
 
 export interface SubTabItem {
   id: string;
@@ -29,6 +40,26 @@ const MENU_ITEMS: SidebarItem[] = [
     iconSrc: '/icons/truck.png'
   },
   {
+    id: 'projects',
+    label: 'Proyek',
+    iconSrc: '/icons/project.png'
+  },
+  {
+    id: 'investors',
+    label: 'Investor',
+    iconSrc: '/icons/investor.png'
+  },
+  {
+    id: 'quarries',
+    label: 'Kuari / Suplier',
+    iconSrc: '/icons/quarry.png'
+  },
+  {
+    id: 'materials',
+    label: 'Master Material',
+    iconSrc: '/icons/layers.png'
+  },
+  {
     id: 'cash_ledger',
     label: 'Kas & Piutang Tempo',
     iconSrc: '/icons/wallet.png'
@@ -37,11 +68,6 @@ const MENU_ITEMS: SidebarItem[] = [
     id: 'recap',
     label: 'Rekapitulasi Periode',
     iconSrc: '/icons/chart.png'
-  },
-  {
-    id: 'materials',
-    label: 'Master Material',
-    iconSrc: '/icons/layers.png'
   },
   {
     id: 'database',
@@ -64,6 +90,14 @@ export const SUB_MENU_ITEMS: Record<NavigationTab, SubTabItem[]> = {
     { id: 'new_ticket', label: 'Catat Ritase Baru' },
     { id: 'history', label: 'Riwayat Ritase Armada' }
   ],
+  projects: [],
+  investors: [],
+  quarries: [],
+  materials: [
+    { id: 'pricing', label: 'Harga & Mutu Kuari' },
+    { id: 'routes', label: 'Biaya Jalan Rute' },
+    { id: 'catalog', label: 'Katalog Komoditas' }
+  ],
   cash_ledger: [
     { id: 'cash_flow', label: 'Arus Kas Riil' },
     { id: 'receivables', label: 'Piutang Tempo' }
@@ -72,19 +106,11 @@ export const SUB_MENU_ITEMS: Record<NavigationTab, SubTabItem[]> = {
     { id: 'volume', label: 'Volume Muatan' },
     { id: 'financial', label: 'Laba & Finansial' }
   ],
-  materials: [
-    { id: 'pricing', label: 'Harga & Mutu Kuari' },
-    { id: 'routes', label: 'Biaya Jalan Rute' },
-    { id: 'catalog', label: 'Katalog Komoditas' }
-  ],
   database: [
     { id: 'ritase', label: 'Riwayat Ritase' },
-    { id: 'projects', label: 'Master Proyek' },
     { id: 'vehicles', label: 'Armada & Plat Nomor' },
     { id: 'drivers', label: 'Daftar Supir' },
-    { id: 'clients', label: 'Klien / Pelanggan' },
-    { id: 'quarries', label: 'Kuari Asal' },
-    { id: 'investors', label: 'Investor & Permodalan' }
+    { id: 'clients', label: 'Klien / Pelanggan' }
   ],
   dev: [
     { id: 'all', label: 'Semua Akun' },
@@ -117,6 +143,7 @@ export function Sidebar({
   onOpenSettings,
   onLogout
 }: SidebarProps): React.JSX.Element {
+  const { isInvestorUser, isDispatcherUser } = useProjectFilter();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -264,6 +291,14 @@ export function Sidebar({
         {MENU_ITEMS.map(item => {
           // Khusus menu 'dev': 100% tersembunyi jika akun bukan developer fatih@patak.dev
           if (item.id === 'dev' && !isDeveloperEmail(user?.email)) {
+            return null;
+          }
+
+          // RBAC Sidepanel Policy per Rule 95
+          if (isInvestorUser && !['dashboard', 'projects', 'investors'].includes(item.id)) {
+            return null;
+          }
+          if (isDispatcherUser && !['dispatcher', 'projects', 'quarries', 'materials', 'database'].includes(item.id)) {
             return null;
           }
 
