@@ -456,8 +456,8 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
   };
 
   return (
-    <div className="bg-transparent md:bg-white rounded-none md:rounded-[10px] p-0 md:p-6 select-none pb-20 md:pb-6">
-      <div className="hidden md:block pb-4 border-b border-[#eaeaea]">
+    <div className="bg-[#f5f5f5] rounded-[10px] p-4 md:p-6 select-none pb-20 md:pb-6">
+      <div className="hidden md:block pb-4 border-b border-[#e5e5e5]">
         <h2 className="text-sm font-semibold text-[#111111]">
           Catat Ritase Baru
         </h2>
@@ -530,7 +530,7 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
                   setDriverName(formatTitleCaseAndEntity(e.target.value));
                   setIsDriverDropdownOpen(true);
                 }}
-                className="w-full bg-white border border-[#eaeaea] focus:border-[#111111] rounded-[6px] px-3 py-2 text-xs text-black font-semibold placeholder:text-[#888888] outline-none transition-colors"
+                className="w-full bg-white border-none outline-none focus:outline-none focus:ring-0 rounded-[6px] px-3 py-2 text-xs text-black font-semibold placeholder:text-[#888888] transition-colors"
               />
 
               {/* Dropdown Autocomplete Suggestions Supir */}
@@ -576,7 +576,7 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
         </div>
 
         {/* Section 2: Lokasi & Mitra */}
-        <div className="border-t border-[#eaeaea] pt-3.5 space-y-3.5">
+        <div className="border-t border-[#e5e5e5] pt-3.5 space-y-3.5">
           <div className="text-[11px] font-bold text-[#888888] uppercase tracking-wider">
             Lokasi & Mitra
           </div>
@@ -629,7 +629,7 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
         </div>
 
         {/* Section 3: Komoditas & Volume */}
-        <div className="border-t border-[#eaeaea] pt-3.5 space-y-3.5">
+        <div className="border-t border-[#e5e5e5] pt-3.5 space-y-3.5">
           <div className="text-[11px] font-bold text-[#888888] uppercase tracking-wider">
             Komoditas & Volume
           </div>
@@ -644,7 +644,7 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
               <button
                 type="button"
                 onClick={() => setIsMaterialPickerOpen(true)}
-                className="w-full bg-white border border-[#eaeaea] focus:border-[#111111] rounded-[6px] px-3 py-2 text-xs text-black font-semibold hover:bg-[#fafafa] transition-colors flex items-center justify-between cursor-pointer outline-none"
+                className="w-full bg-white border-none outline-none focus:outline-none focus:ring-0 rounded-[6px] px-3 py-2 text-xs text-black font-semibold hover:bg-white/90 transition-colors flex items-center justify-between cursor-pointer"
               >
                 <div className="flex items-center gap-2.5 truncate">
                   {selectedMat && (
@@ -680,7 +680,7 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
               <label className="block text-[#666666] font-medium mb-1">
                 Volume <span className="text-red-500">*</span>
               </label>
-              <div className="relative flex items-center bg-white border border-[#eaeaea] focus-within:border-[#111111] rounded-[6px]">
+              <div className="relative flex items-center bg-white border-none rounded-[6px]">
                 <input
                   type="number"
                   step="any"
@@ -702,7 +702,7 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
         </div>
 
         {/* Section 4: Finansial & Operasional */}
-        <div className="border-t border-[#eaeaea] pt-3.5 space-y-3.5">
+        <div className="border-t border-[#e5e5e5] pt-3.5 space-y-3.5">
           <div className="text-[11px] font-bold text-[#888888] uppercase tracking-wider">
             Finansial & Operasional
           </div>
@@ -759,7 +759,7 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
         </div>
 
         {/* Section 5: Catatan & Otorisasi */}
-        <div className="border-t border-[#eaeaea] pt-3.5 space-y-3.5">
+        <div className="border-t border-[#e5e5e5] pt-3.5 space-y-3.5">
           <div className="text-[11px] font-bold text-[#888888] uppercase tracking-wider">
             Catatan & Otorisasi
           </div>
@@ -780,7 +780,7 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
         </div>
 
         {/* Live Calculation Box (Sesuai Formula PRD & Proteksi RBAC Margin) */}
-        <div className="bg-[#fafafa] rounded-[8px] p-3.5 space-y-1.5 mt-2">
+        <div className="bg-[#ebebeb] rounded-[8px] p-3.5 space-y-1.5 mt-2">
           {!isDispatcherUser && (
             <div className="flex justify-between items-center text-[11px] text-[#666666]">
               <span>Belanja Tunai Kuari:</span>
@@ -800,7 +800,7 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
 
           {!isDispatcherUser && (
             <div
-              className={`flex justify-between items-center text-xs pt-1.5 border-t border-[#eaeaea] transition-colors ${
+              className={`flex justify-between items-center text-xs pt-1.5 border-t border-[#dddddd] transition-colors ${
                 netProfit < 0 ? 'text-[#cf1124]' : 'text-[#111111]'
               } ${isShaking ? 'animate-horizontal-shake' : ''}`}
             >

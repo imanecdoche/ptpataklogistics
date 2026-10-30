@@ -74,7 +74,7 @@ export function CurrencyInput({
     <div
       className={`relative flex items-center rounded-[6px] transition-colors ${
         variant === 'solid-white'
-          ? 'bg-white border border-[#eaeaea] focus-within:border-[#111111] text-black font-semibold'
+          ? 'bg-white border-none text-black font-semibold'
           : 'bg-[#f5f5f5] focus-within:bg-[#ebebeb]'
       } ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}`}
     >

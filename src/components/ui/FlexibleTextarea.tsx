@@ -122,7 +122,7 @@ export function FlexibleTextarea({
       ref={containerRef}
       className={`relative w-full rounded-[6px] transition-colors flex flex-col group ${
         variant === 'solid-white'
-          ? 'bg-white border border-[#eaeaea] focus-within:border-[#111111]'
+          ? 'bg-white border-none'
           : 'bg-[#f5f5f5] focus-within:bg-[#ebebeb]'
       }`}
     >

@@ -275,7 +275,7 @@ export function TruckPlateInput({
           isInvalid
             ? 'bg-[#fef2f2] text-red-600 ring-2 ring-inset ring-red-500 font-bold placeholder:text-red-300'
             : variant === 'solid-white'
-              ? 'bg-white border border-[#eaeaea] focus:border-[#111111] text-black font-semibold placeholder:text-[#888888]'
+              ? 'bg-white border-none text-black font-semibold placeholder:text-[#888888]'
               : 'bg-[#f5f5f5] focus:bg-[#ebebeb] text-[#111111] placeholder:text-[#999999]'
         }`}
       />

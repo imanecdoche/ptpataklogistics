@@ -109,7 +109,7 @@ export function ClientCombobox({
       <div
         className={`relative flex items-center rounded-[6px] transition-colors ${
           variant === 'solid-white'
-            ? 'bg-white border border-[#eaeaea] focus-within:border-[#111111]'
+            ? 'bg-white border-none'
             : 'bg-[#f5f5f5] focus-within:bg-[#ebebeb]'
         }`}
       >

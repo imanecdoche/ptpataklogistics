@@ -983,13 +983,14 @@ Dokumen ini adalah hukum tertinggi operasional sistem. Kegagalan mematuhi aturan
       * Di seluruh elemen pemilih/picker proyek di setiap halaman (`ProjectCombobox`, dropdown switcher header, modal transfer kas, modal edit ritase, dsb.), teks opsi WAJIB HANYA memuat **nama proyek saja (`p.name`)**.
       * DILARANG KERAS memunculkan alamat lengkap, lokasi, atau sub-label alamat (`p.location`) pada dropdown maupun item pemilih proyek di seluruh halaman aplikasi.
 
-90. **Standar Styling Input Form Pembuatan Ritase Baru (Pure White Fill #ffffff Tanpa Outline Stroke)**:
-    - **High-Contrast Pure White Solid Fill (#ffffff)**:
+90. **Standar Styling Input Form Pembuatan Ritase Baru (Pure White Fill #ffffff Murni Borderless Tanpa Outline Stroke)**:
+    - **High-Contrast Pure White Solid Fill (#ffffff) & Zero Outline Stroke**:
       * Seluruh elemen input pada formulir Catat Ritase Baru (`DispatchForm`):
-        * Background: `bg-white` / `bg-[#ffffff]` (filled putih murni).
-        * Outline / Border: Outline stroke tebal hitam dihapus total, menggunakan batas visual subtle bersih (`border border-[#eaeaea] focus:border-[#111111]`) yang selaras dengan seluruh form sistem.
+        * Background: `bg-white` / `bg-[#ffffff]` (filled warna putih murni).
+        * Outline / Border: Outline stroke dihapus total (`border-none` / `border-0`, `outline-none focus:outline-none focus:ring-0`). Murni mengandalkan solid filled surface putih murni di atas kontainer tonal `#f5f5f5` tanpa garis tepi.
         * Teks input: `text-black font-semibold` (teks hitam pekat kontras tinggi).
         * Sudut: `rounded-[6px]`.
+      * Kontainer form pembuatan ritase baru menggunakan surface tonal `#f5f5f5` (`bg-[#f5f5f5] rounded-[10px]`) borderless agar seluruh input field putih murni `#ffffff` tampak kontras, tegas, dan mudah dibedakan tanpa memerlukan garis tepi border.
       * Berlaku untuk seluruh elemen input di form ritase: pemilih tanggal (`CustomDatePicker`), nomor plat truk (`TruckPlateInput`), nama supir, pemilih proyek tujuan (`ProjectCombobox`), nama PT klien (`ClientCombobox`), pemilih kuari asal (`QuarryCombobox`), tombol trigger pemilih jenis material, volume ritase, harga beli cash kuari (`CurrencyInput`), harga jual tempo proyek (`CurrencyInput`), beban operasional armada (`CurrencyInput`), dan textarea catatan tambahan (`FlexibleTextarea`).
 
 91. **Standar Pemisah Isian Form Pembuatan Ritase Baru (Section Dividers & Logical Grouping)**:

@@ -121,7 +121,7 @@ export function QuarryCombobox({
           required={required}
           className={`w-full rounded-[6px] pl-3.5 pr-8 py-2 text-xs transition-colors disabled:bg-[#f9f9f9] disabled:cursor-not-allowed ${
             variant === 'solid-white'
-              ? 'bg-white border border-[#eaeaea] text-black font-semibold placeholder-[#888888] focus:outline-none focus:border-[#111111]'
+              ? 'bg-white border-none text-black font-semibold placeholder-[#888888] focus:outline-none'
               : 'bg-white border border-[#eaeaea] text-[#111111] placeholder-[#888888] focus:outline-none focus:border-[#111111]'
           }`}
         />
