@@ -83,11 +83,32 @@ Dokumen ini mencatat seluruh riwayat, konteks percakapan, kendala lingkungan lok
    - **Auto-Sync Total Modal**: Total modal investor otomatis terakumulasi dari penjumlahan alokasi modal seluruh proyek yang terhubung.
    - **Sinkronisasi Dua Arah Firestore**: Saat investor disimpan, seluruh dokumen proyek terkait di Firestore otomatis diperbarui (`investorId`, `investorName`, `initialDeposit`, `profitSharePercentage`), dan proyek yang dilepas otomatis dibersihkan kaitannya.
 
+### E. Arsitektur Kas Terpusat & Rekap Ekuitas Investor (Buku Kas Utama Pool)
+1. **Buku Kas Utama (`cash_ledger`) Sebagai Wadah Sentral (Single Pool of Funds)**:
+   - Seluruh modal masuk (investor), pelunasan termin/piutang klien, dan pinjaman bermuara ke **Buku Kas Utama**.
+   - Seluruh pengeluaran operasional ritase (belanja material kuari tunai + beban operasional uang jalan supir/solar) ditarik dari **Buku Kas Utama**, bukan memotong tabungan satu investor secara mikro.
+   - Pengecekan kecukupan saldo di `DispatchForm` diarahkan ke ketersediaan saldo Kas Utama PT Patak.
+2. **Kartu Rekap Mutasi Pemodal Pribadi (`InvestorLedgerModal.tsx`)**:
+   - Modal investor berstatus ekuitas tetap.
+   - Menampilkan transparansi perputaran modal, proyek yang didanai, akumulasi laba bersih yang dihasilkan ritase proyek, hak bagi hasil investor (% profit share), dan riwayat penarikan laba (*Payout Dividen*).
+   - Form penyerahan bagi hasil (*Payout*) yang langsung membukukan kas keluar di Kas Utama.
+3. **Fitur Transfer & Realokasi Modal Antar-Investor (`InvestorTransferModal.tsx`)**:
+   - Pencatatan subsidi silang, talangan operasional, pengembalian hutang, dan migrasi modal antar-investor.
+   - Dilengkapi filter status (*Semua*, *Belum Lunas/Talangan Aktif*, *Lunas*) dan tombol cepat pelunasan talangan yang dilindungi verifikasi PIN.
+
 ---
 
 ## 📁 4. Berkas Baru & Modifikasi Kode
 
 | Berkas | Status | Ringkasan Modifikasi |
+|---|:---:|---|
+| `src/types/database.ts` | Dimodifikasi | Ditambahkan `InvestorPayout`, `InvestorTransferLog`, `InvestorTransferCategory`, update `CashFlowType` |
+| `src/lib/investorService.ts` | Dimodifikasi | Layanan transfer dana antar-investor, pelunasan talangan, dan penyerahan bagi hasil |
+| `src/components/investors/InvestorLedgerModal.tsx` | Dibuat | Modal Buku Kas & Rekap Ekuitas pribadi per investor (proyek, ritase, laba, dividen) |
+| `src/components/investors/InvestorTransferModal.tsx` | Dibuat | Modal Transfer & Realokasi Dana Antar-Investor dengan proteksi PIN |
+| `src/components/investors/InvestorsPage.tsx` | Dimodifikasi | Penambahan tombol ⇄ Transfer, tombol Buku Kas per investor, kolom Hak Bagi Hasil, dan tabel riwayat transfer |
+| `src/components/dispatcher/DispatchForm.tsx` | Dimodifikasi | Penyelarasan kontrol saldo ke Kas Utama PT Patak |
+| `src/components/cash_ledger/RecordMutationModal.tsx` | Dimodifikasi | Penambahan opsi mutasi bagi hasil dan transfer investor |
 |---|:---:|---|
 | `src/types/database.ts` | Dimodifikasi | Ditambahkan `LaborJobType`, `LaborPayment`, `HOKCalculationType`, `InvestorProjectLink`, field `profitSharePercentage` dan `linkedProjects` |
 | `src/lib/cashLedgerService.ts` | Dimodifikasi | Ditambahkan fungsi `recordDebtPayment`, `recordProjectPayment`, `settleSingleTicket` |

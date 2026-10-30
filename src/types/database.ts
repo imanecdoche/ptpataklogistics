@@ -7,7 +7,9 @@ export type CashFlowType =
   | 'BIAYA_OPERASIONAL'
   | 'PELUNASAN_PIUTANG'
   | 'HUTANG_PIHAK_KETIGA'
-  | 'CICILAN_HUTANG';
+  | 'CICILAN_HUTANG'
+  | 'BAGI_HASIL_INVESTOR'
+  | 'TRANSFER_INVESTOR';
 
 export type ClientType = 'PT' | 'CV' | 'UD' | 'PERORANGAN';
 
@@ -135,6 +137,48 @@ export interface Investor {
   profitSharePercentage?: number; // Persentase bagi hasil default/global (%)
   linkedProjects?: InvestorProjectLink[]; // Daftar proyek yang didanai dan alokasi modalnya
   notes?: string;
+  createdAt: string;
+}
+
+// Catatan Penyerahan Bagi Hasil / Dividen Investor
+export interface InvestorPayout {
+  id: string;
+  investorId: string;
+  investorName: string;
+  projectId?: string;
+  projectName?: string;
+  date: string;
+  amount: number;
+  note: string;
+  createdByName: string;
+  createdAt: string;
+}
+
+// Kategori & Log Transfer / Realokasi Modal Antar-Investor
+export type InvestorTransferCategory =
+  | 'TALANGAN_OPERASIONAL'
+  | 'PENGEMBALIAN_TALANGAN'
+  | 'MIGRASI_MODAL'
+  | 'BAGI_HASIL_PROYEK'
+  | 'LAINNYA';
+
+export interface InvestorTransferLog {
+  id: string;
+  date: string;
+  fromInvestorId: string;
+  fromInvestorName: string;
+  fromProjectId?: string;
+  fromProjectName?: string;
+  toInvestorId: string;
+  toInvestorName: string;
+  toProjectId?: string;
+  toProjectName?: string;
+  amount: number;
+  category: InvestorTransferCategory;
+  status: 'LUNAS' | 'BELUM_LUNAS';
+  note: string;
+  createdByName: string;
+  settledAt?: string;
   createdAt: string;
 }
 

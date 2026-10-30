@@ -1,11 +1,25 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Investor, Project, InvestorProjectLink } from '@/types/database';
+import {
+  Investor,
+  Project,
+  InvestorProjectLink,
+  DispatchTransaction,
+  InvestorPayout,
+  InvestorTransferLog,
+  InvestorTransferCategory
+} from '@/types/database';
 import {
   subscribeInvestors,
   saveInvestor,
-  deleteInvestor
+  deleteInvestor,
+  subscribeInvestorTransfers,
+  createInvestorTransfer,
+  settleInvestorTransfer,
+  subscribeInvestorPayouts,
+  recordInvestorPayout
 } from '@/lib/investorService';
 import { subscribeProjects } from '@/lib/projectService';
+import { subscribeAllTransactions } from '@/lib/dispatcherService';
 import { RunningText } from '@/components/ui/RunningText';
 import { TableActionMenu } from '@/components/ui/TableActionMenu';
 import { PinAuthModal } from '@/components/ui/PinAuthModal';
@@ -16,20 +30,32 @@ import { PhoneInput } from '@/components/ui/PhoneInput';
 import { formatPhoneNumber } from '@/lib/phoneUtils';
 import { formatEntityNameLive } from '@/lib/nameUtils';
 import { MobileTitlebarAction } from '@/components/ui/MobileTitlebarAction';
+import { InvestorLedgerModal } from './InvestorLedgerModal';
+import { InvestorTransferModal } from './InvestorTransferModal';
 
 const formatRupiah = (val: number): string =>
   'Rp ' + Math.round(val).toLocaleString('id-ID');
 
 interface InvestorsPageProps {
-  userEmail: string;
+  userEmail?: string;
 }
 
-export function InvestorsPage({ userEmail: _userEmail }: InvestorsPageProps): React.JSX.Element {
+export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPageProps): React.JSX.Element {
   const { isInvestorUser, selectedProjectId, projects: allProjects } = useProjectFilter();
   const [investors, setInvestors] = useState<Investor[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [transactions, setTransactions] = useState<DispatchTransaction[]>([]);
+  const [transfers, setTransfers] = useState<InvestorTransferLog[]>([]);
+  const [payouts, setPayouts] = useState<InvestorPayout[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [transferFilter, setTransferFilter] = useState<'ALL' | 'BELUM_LUNAS' | 'LUNAS'>('ALL');
+
+  // Modal State Detail Buku Kas Investor
+  const [selectedLedgerInvestor, setSelectedLedgerInvestor] = useState<Investor | null>(null);
+
+  // Modal State Transfer Antar Investor
+  const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
 
   // Modal State Tambah Investor
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -65,10 +91,22 @@ export function InvestorsPage({ userEmail: _userEmail }: InvestorsPageProps): Re
     const unsubProjects = subscribeProjects(list => {
       setProjects(list);
     });
+    const unsubTx = subscribeAllTransactions(list => {
+      setTransactions(list);
+    });
+    const unsubTransfers = subscribeInvestorTransfers(list => {
+      setTransfers(list);
+    });
+    const unsubPayouts = subscribeInvestorPayouts(list => {
+      setPayouts(list);
+    });
 
     return () => {
       unsubInvestors();
       unsubProjects();
+      unsubTx();
+      unsubTransfers();
+      unsubPayouts();
     };
   }, []);
 
@@ -76,7 +114,6 @@ export function InvestorsPage({ userEmail: _userEmail }: InvestorsPageProps): Re
   const filteredInvestors = useMemo(() => {
     let result = [...investors];
 
-    // Jika role investor, cari investor terkait dari selectedProject
     if (isInvestorUser && selectedProjectId && selectedProjectId !== 'ALL') {
       const currentProj = allProjects.find(p => p.id === selectedProjectId);
       if (currentProj && currentProj.investorId) {
@@ -117,12 +154,52 @@ export function InvestorsPage({ userEmail: _userEmail }: InvestorsPageProps): Re
     return map;
   }, [projects]);
 
-  const totalProjectsBalance = useMemo(() => {
-    return filteredInvestors.reduce((acc, inv) => {
-      const stats = investorProjectsMap.get(inv.id);
-      return acc + (stats?.balance || 0);
-    }, 0);
-  }, [filteredInvestors, investorProjectsMap]);
+  // Hitung estimasi hak bagi hasil akumulasi per investor
+  const investorProfitShareMap = useMemo(() => {
+    const map = new Map<string, number>();
+
+    investors.forEach(inv => {
+      const fundedProjects = projects.filter(p => p.investorId === inv.id);
+      let totalEarned = 0;
+
+      fundedProjects.forEach(proj => {
+        const projTxs = transactions.filter(t => t.projectId === proj.id);
+        const projRev = projTxs.reduce((acc, t) => acc + (t.totalRevenue || 0), 0);
+        const projExp = projTxs.reduce((acc, t) => acc + (t.totalBuyCost || 0) + (t.operationalCost || 0), 0);
+        const projNet = projRev - projExp;
+        const sharePct = proj.profitSharePercentage || inv.profitSharePercentage || 50;
+        if (projNet > 0) {
+          totalEarned += projNet * (sharePct / 100);
+        }
+      });
+
+      const withdrawn = payouts
+        .filter(p => p.investorId === inv.id)
+        .reduce((acc, p) => acc + (p.amount || 0), 0);
+
+      map.set(inv.id, Math.max(0, totalEarned - withdrawn));
+    });
+
+    return map;
+  }, [investors, projects, transactions, payouts]);
+
+  // Total talangan aktif yang belum lunas
+  const totalUnsettledTalangan = useMemo(() => {
+    return transfers
+      .filter(t => t.status === 'BELUM_LUNAS')
+      .reduce((acc, t) => acc + (t.amount || 0), 0);
+  }, [transfers]);
+
+  // Filter daftar riwayat transfer
+  const filteredTransfers = useMemo(() => {
+    if (transferFilter === 'BELUM_LUNAS') {
+      return transfers.filter(t => t.status === 'BELUM_LUNAS');
+    }
+    if (transferFilter === 'LUNAS') {
+      return transfers.filter(t => t.status === 'LUNAS');
+    }
+    return transfers;
+  }, [transfers, transferFilter]);
 
   // Otorisasi Aksi Tambah Investor
   const handleOpenAdd = () => {
@@ -137,7 +214,6 @@ export function InvestorsPage({ userEmail: _userEmail }: InvestorsPageProps): Re
     setIsAddOpen(true);
   };
 
-  // Helper untuk smart suggestions proyek (yang belum dikaitkan)
   const availableProjectsForAdd = useMemo(() => {
     const linkedIds = new Set(addLinkedProjects.map(p => p.projectId));
     const list = projects.filter(p => !linkedIds.has(p.id));
@@ -167,7 +243,6 @@ export function InvestorsPage({ userEmail: _userEmail }: InvestorsPageProps): Re
     setAddLinkedProjects(updated);
     setAddProjectQuery('');
     setIsAddComboboxOpen(false);
-    // Sinkronisasi otomatis total modal
     const sum = updated.reduce((acc, cur) => acc + (cur.capitalAllocation || 0), 0);
     setInitialCapital(sum);
   };
@@ -197,19 +272,16 @@ export function InvestorsPage({ userEmail: _userEmail }: InvestorsPageProps): Re
 
   const handleInitiateAdd = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return;
-
     setPinTargetLabel(`Tambah Investor: ${name}`);
     setPendingAction(() => async () => {
       await saveInvestor({
         name: name.trim(),
         phoneNumber: phoneNumber.trim(),
         bankAccount: bankAccount.trim(),
-        initialCapital,
+        initialCapital: initialCapital || 0,
         linkedProjects: addLinkedProjects,
         notes: notes.trim()
       });
-
       setIsAddOpen(false);
     });
     setIsPinModalOpen(true);
@@ -218,7 +290,6 @@ export function InvestorsPage({ userEmail: _userEmail }: InvestorsPageProps): Re
   // Otorisasi Aksi Edit Investor
   const handleOpenEdit = (inv: Investor) => {
     setEditTarget(inv);
-    // Inisialisasi daftar proyek terkait dari snapshot atau query projects
     const links: InvestorProjectLink[] = (inv.linkedProjects && inv.linkedProjects.length > 0)
       ? inv.linkedProjects
       : projects
@@ -297,7 +368,6 @@ export function InvestorsPage({ userEmail: _userEmail }: InvestorsPageProps): Re
         },
         editTarget.id
       );
-
       setEditTarget(null);
     });
     setIsPinModalOpen(true);
@@ -308,6 +378,58 @@ export function InvestorsPage({ userEmail: _userEmail }: InvestorsPageProps): Re
     setPinTargetLabel(`Hapus Investor: ${inv.name}`);
     setPendingAction(() => async () => {
       await deleteInvestor(inv.id);
+    });
+    setIsPinModalOpen(true);
+  };
+
+  // Otorisasi Aksi Transfer Antar-Investor
+  const handleInitiateTransfer = (payload: {
+    date: string;
+    fromInvestorId: string;
+    fromInvestorName: string;
+    fromProjectId?: string;
+    fromProjectName?: string;
+    toInvestorId: string;
+    toInvestorName: string;
+    toProjectId?: string;
+    toProjectName?: string;
+    amount: number;
+    category: InvestorTransferCategory;
+    note: string;
+  }) => {
+    setPinTargetLabel(`Transfer ${formatRupiah(payload.amount)}: ${payload.fromInvestorName} → ${payload.toInvestorName}`);
+    setPendingAction(() => async () => {
+      await createInvestorTransfer({
+        ...payload,
+        createdByName: userEmail
+      });
+      setIsTransferModalOpen(false);
+    });
+    setIsPinModalOpen(true);
+  };
+
+  // Otorisasi Aksi Pelunasan Talangan
+  const handleInitiateSettleTalangan = (trans: InvestorTransferLog) => {
+    setPinTargetLabel(`Lunasi Talangan ${formatRupiah(trans.amount)} (Ref: ${trans.id})`);
+    setPendingAction(() => async () => {
+      await settleInvestorTransfer(trans.id, userEmail);
+    });
+    setIsPinModalOpen(true);
+  };
+
+  // Eksekusi Payout Dividen
+  const handleRecordPayout = async (payload: { amount: number; note: string; date?: string }) => {
+    if (!selectedLedgerInvestor) return;
+    setPinTargetLabel(`Penyerahan Bagi Hasil ${formatRupiah(payload.amount)} ke ${selectedLedgerInvestor.name}`);
+    setPendingAction(() => async () => {
+      await recordInvestorPayout({
+        investorId: selectedLedgerInvestor.id,
+        investorName: selectedLedgerInvestor.name,
+        amount: payload.amount,
+        note: payload.note,
+        date: payload.date,
+        createdByName: userEmail
+      });
     });
     setIsPinModalOpen(true);
   };
@@ -326,16 +448,25 @@ export function InvestorsPage({ userEmail: _userEmail }: InvestorsPageProps): Re
 
   return (
     <div className="space-y-4">
-      {/* Mobile Titlebar Action Button (Rule 108) */}
+      {/* Mobile Titlebar Action Button */}
       {!isInvestorUser && (
         <MobileTitlebarAction>
-          <button
-            type="button"
-            onClick={handleOpenAdd}
-            className="px-2.5 py-1 bg-[#111111] hover:bg-[#2b2b2b] text-white text-xs font-semibold rounded-[6px] transition-colors cursor-pointer whitespace-nowrap"
-          >
-            + Tambah Investor
-          </button>
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => setIsTransferModalOpen(true)}
+              className="px-2 py-1 bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-[11px] font-semibold rounded transition-colors cursor-pointer whitespace-nowrap"
+            >
+              ⇄ Transfer
+            </button>
+            <button
+              type="button"
+              onClick={handleOpenAdd}
+              className="px-2 py-1 bg-[#111111] hover:bg-[#2b2b2b] text-white text-[11px] font-semibold rounded transition-colors cursor-pointer whitespace-nowrap"
+            >
+              + Investor
+            </button>
+          </div>
         </MobileTitlebarAction>
       )}
 
@@ -346,6 +477,9 @@ export function InvestorsPage({ userEmail: _userEmail }: InvestorsPageProps): Re
           <span className="text-xl font-bold tracking-tight text-[#111111] block mt-1">
             {filteredInvestors.length} Mitra Pendana
           </span>
+          <span className="text-[10px] text-[#666666] block mt-0.5">
+            Ekuitas pemodal di Kas Utama
+          </span>
         </div>
 
         <div className="bg-white border border-[#eaeaea] rounded-[8px] p-3.5">
@@ -353,26 +487,32 @@ export function InvestorsPage({ userEmail: _userEmail }: InvestorsPageProps): Re
           <div className="mt-1">
             <MetricCardCurrency amount={totalCapital} size="lg" />
           </div>
+          <span className="text-[10px] text-[#666666] block mt-0.5">
+            Komitmen modal masuk perusahaan
+          </span>
         </div>
 
         <div className="bg-white border border-[#eaeaea] rounded-[8px] p-3.5">
-          <span className="text-[11px] text-[#888888] font-medium block">Total Saldo Kas Berjalan Proyek</span>
+          <span className="text-[11px] text-[#888888] font-medium block">Talangan Operasional Aktif</span>
           <div className="mt-1">
             <MetricCardCurrency
-              amount={totalProjectsBalance}
+              amount={totalUnsettledTalangan}
               size="lg"
-              colorClassName={totalProjectsBalance < 0 ? 'text-[#cf1124]' : 'text-[#008060]'}
+              colorClassName={totalUnsettledTalangan > 0 ? 'text-amber-600' : 'text-[#888888]'}
             />
           </div>
+          <span className="text-[10px] text-[#666666] block mt-0.5">
+            Pinjaman silang belum lunas
+          </span>
         </div>
       </div>
 
-      {/* 2. Main Content Card */}
+      {/* 2. Main Content Card: Tabel Investor */}
       <div className="bg-white border border-[#eaeaea] rounded-[10px] overflow-hidden">
         {/* Toolbar Baris Atas */}
         <div className="p-3.5 border-b border-[#eaeaea] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-[#fafafa]">
           <div className="text-xs text-[#666666]">
-            Daftar profil pemodal dan ringkasan perputaran dana per proyek operasional.
+            Daftar profil pemodal tetap. Operasional ritase dibiayai terpusat melalui <span className="font-semibold text-[#111111]">Buku Kas Utama</span>.
           </div>
 
           <div className="flex items-center gap-2">
@@ -393,43 +533,50 @@ export function InvestorsPage({ userEmail: _userEmail }: InvestorsPageProps): Re
             </div>
 
             {!isInvestorUser && (
-              <button
-                type="button"
-                onClick={handleOpenAdd}
-                className="hidden md:inline-flex px-3 py-1.5 bg-[#111111] hover:bg-[#2b2b2b] text-white text-xs font-semibold rounded-[6px] transition-colors cursor-pointer whitespace-nowrap"
-              >
-                + Tambah Investor
-              </button>
+              <div className="hidden md:flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsTransferModalOpen(true)}
+                  className="px-3 py-1.5 bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-xs font-semibold rounded-[6px] transition-colors cursor-pointer whitespace-nowrap"
+                >
+                  ⇄ Transfer Antar-Investor
+                </button>
+                <button
+                  type="button"
+                  onClick={handleOpenAdd}
+                  className="px-3 py-1.5 bg-[#111111] hover:bg-[#2b2b2b] text-white text-xs font-semibold rounded-[6px] transition-colors cursor-pointer whitespace-nowrap"
+                >
+                  + Tambah Investor
+                </button>
+              </div>
             )}
           </div>
         </div>
 
-        {/* Tabel Master Investor (Rule 66) */}
+        {/* Tabel Master Investor */}
         <div className="overflow-x-auto select-text">
-          <table className="w-full min-w-[1050px] table-fixed text-left text-xs border-collapse">
+          <table className="w-full min-w-[1100px] table-fixed text-left text-xs border-collapse">
             <thead className="sticky top-0 z-10 bg-[#f9f9f9] border-b border-[#eaeaea] text-[#555555] font-semibold text-[11px] uppercase tracking-wider select-none">
               <tr>
                 <th className="py-2.5 px-3 w-[200px] min-w-[200px] whitespace-nowrap">Nama Investor</th>
                 <th className="py-2.5 px-3 w-[150px] min-w-[150px] whitespace-nowrap">No. WhatsApp / HP</th>
-                <th className="py-2.5 px-3 w-[180px] min-w-[180px] whitespace-nowrap">Rekening Bank</th>
-                <th className="py-2.5 px-3 w-[200px] min-w-[200px] whitespace-nowrap">Proyek Terkait & Profit Share</th>
+                <th className="py-2.5 px-3 w-[170px] min-w-[170px] whitespace-nowrap">Rekening Bank</th>
+                <th className="py-2.5 px-3 w-[210px] min-w-[210px] whitespace-nowrap">Proyek Terkait & Profit Share</th>
                 <th className="py-2.5 px-3 w-[130px] min-w-[130px] text-right whitespace-nowrap">Modal Disetor</th>
-                <th className="py-2.5 px-3 w-[130px] min-w-[130px] text-right whitespace-nowrap">Kas Berjalan</th>
-                {!isInvestorUser && (
-                  <th className="py-2.5 px-3 w-[60px] min-w-[60px] text-right whitespace-nowrap">Aksi</th>
-                )}
+                <th className="py-2.5 px-3 w-[140px] min-w-[140px] text-right whitespace-nowrap">Hak Bagi Hasil</th>
+                <th className="py-2.5 px-3 w-[100px] min-w-[100px] text-right whitespace-nowrap">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#eaeaea]">
               {isLoading ? (
                 <tr>
-                  <td colSpan={isInvestorUser ? 6 : 7} className="py-10 text-center text-xs text-[#888888] whitespace-nowrap">
+                  <td colSpan={7} className="py-10 text-center text-xs text-[#888888] whitespace-nowrap">
                     Memuat data master investor...
                   </td>
                 </tr>
               ) : filteredInvestors.length === 0 ? (
                 <tr>
-                  <td colSpan={isInvestorUser ? 6 : 7} className="py-10 text-center text-xs text-[#888888] whitespace-nowrap">
+                  <td colSpan={7} className="py-10 text-center text-xs text-[#888888] whitespace-nowrap">
                     Tidak ada data investor yang sesuai.
                   </td>
                 </tr>
@@ -437,7 +584,7 @@ export function InvestorsPage({ userEmail: _userEmail }: InvestorsPageProps): Re
                 filteredInvestors.map(inv => {
                   const invStats = investorProjectsMap.get(inv.id);
                   const linkedProjects = invStats?.projects || [];
-                  const currentBalance = invStats?.balance || 0;
+                  const profitShareRemaining = investorProfitShareMap.get(inv.id) || 0;
 
                   return (
                     <tr key={inv.id} className="hover:bg-[#fafafa] transition-colors">
@@ -448,10 +595,10 @@ export function InvestorsPage({ userEmail: _userEmail }: InvestorsPageProps): Re
                       <td className="py-2.5 px-3 font-mono text-[#444444] whitespace-nowrap w-[150px] align-middle">
                         {inv.phoneNumber ? formatPhoneNumber(inv.phoneNumber) : '-'}
                       </td>
-                      <td className="py-2.5 px-3 text-[#444444] whitespace-nowrap w-[180px] align-middle">
+                      <td className="py-2.5 px-3 text-[#444444] whitespace-nowrap w-[170px] align-middle">
                         <RunningText text={inv.bankAccount} placeholder="-" className="text-[#444444]" />
                       </td>
-                      <td className="py-2.5 px-3 text-[#111111] whitespace-nowrap w-[200px] align-middle">
+                      <td className="py-2.5 px-3 text-[#111111] whitespace-nowrap w-[210px] align-middle">
                         {linkedProjects.length > 0 ? (
                           <div className="flex flex-col gap-1">
                             {linkedProjects.map(p => (
@@ -459,7 +606,7 @@ export function InvestorsPage({ userEmail: _userEmail }: InvestorsPageProps): Re
                                 <span className="font-semibold text-[#111111]">{p.name}</span>
                                 {p.profitSharePercentage ? (
                                   <span className="ml-1.5 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1 py-0.5 rounded border border-emerald-200">
-                                    {p.profitSharePercentage}% Share
+                                    {p.profitSharePercentage}%
                                   </span>
                                 ) : null}
                               </div>
@@ -472,18 +619,26 @@ export function InvestorsPage({ userEmail: _userEmail }: InvestorsPageProps): Re
                       <td className="py-2.5 px-3 font-bold tracking-tight text-[#111111] text-right whitespace-nowrap w-[130px] align-middle">
                         {formatRupiah(inv.initialCapital || 0)}
                       </td>
-                      <td
-                        className={`py-2.5 px-3 font-bold tracking-tight text-right whitespace-nowrap w-[130px] align-middle ${
-                          currentBalance < 0 ? 'text-[#cf1124]' : 'text-emerald-700'
-                        }`}
-                      >
-                        {formatRupiah(currentBalance)}
+                      <td className="py-2.5 px-3 font-bold tracking-tight text-right whitespace-nowrap w-[140px] align-middle text-[#008060]">
+                        {formatRupiah(profitShareRemaining)}
                       </td>
-                      {!isInvestorUser && (
-                        <td className="py-2.5 px-3 text-right whitespace-nowrap w-[60px] align-middle">
-                          <div className="flex items-center justify-end">
+                      <td className="py-2.5 px-3 text-right whitespace-nowrap w-[100px] align-middle">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedLedgerInvestor(inv)}
+                            className="px-2 py-1 bg-[#f0fdf4] hover:bg-[#dcfce7] text-[#166534] border border-[#bbf7d0] rounded text-[11px] font-semibold cursor-pointer"
+                            title="Buku Kas & Rekap Ekuitas"
+                          >
+                            Buku Kas
+                          </button>
+                          {!isInvestorUser && (
                             <TableActionMenu
                               items={[
+                                {
+                                  label: 'Buku Kas & Rekap Ekuitas',
+                                  onClick: () => setSelectedLedgerInvestor(inv)
+                                },
                                 {
                                   label: 'Edit Data Investor',
                                   onClick: () => handleOpenEdit(inv)
@@ -499,12 +654,156 @@ export function InvestorsPage({ userEmail: _userEmail }: InvestorsPageProps): Re
                                 }
                               ]}
                             />
-                          </div>
-                        </td>
-                      )}
+                          )}
+                        </div>
+                      </td>
                     </tr>
                   );
                 })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* 3. Section Riwayat Transfer & Talangan Antar-Investor */}
+      <div className="bg-white border border-[#eaeaea] rounded-[10px] overflow-hidden">
+        <div className="p-3.5 border-b border-[#eaeaea] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-[#fafafa]">
+          <div>
+            <h4 className="text-xs font-bold text-[#111111]">
+              Riwayat Transfer & Talangan Antar-Investor
+            </h4>
+            <p className="text-[11px] text-[#666666] mt-0.5">
+              Catatan subsidi silang, talangan operasional lapangan, dan realokasi modal antar mitra
+            </p>
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => setTransferFilter('ALL')}
+              className={`px-2.5 py-1 text-xs font-semibold rounded transition-colors cursor-pointer ${
+                transferFilter === 'ALL'
+                  ? 'bg-[#111111] text-white'
+                  : 'bg-white border border-[#eaeaea] text-[#666666] hover:bg-[#f5f5f5]'
+              }`}
+            >
+              Semua ({transfers.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setTransferFilter('BELUM_LUNAS')}
+              className={`px-2.5 py-1 text-xs font-semibold rounded transition-colors cursor-pointer ${
+                transferFilter === 'BELUM_LUNAS'
+                  ? 'bg-amber-600 text-white'
+                  : 'bg-white border border-[#eaeaea] text-amber-700 hover:bg-amber-50'
+              }`}
+            >
+              Talangan Aktif ({transfers.filter(t => t.status === 'BELUM_LUNAS').length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setTransferFilter('LUNAS')}
+              className={`px-2.5 py-1 text-xs font-semibold rounded transition-colors cursor-pointer ${
+                transferFilter === 'LUNAS'
+                  ? 'bg-emerald-700 text-white'
+                  : 'bg-white border border-[#eaeaea] text-emerald-700 hover:bg-emerald-50'
+              }`}
+            >
+              Lunas ({transfers.filter(t => t.status === 'LUNAS').length})
+            </button>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto select-text">
+          <table className="w-full min-w-[950px] text-left text-xs border-collapse">
+            <thead className="bg-[#f9f9f9] border-b border-[#eaeaea] text-[#555555] font-semibold text-[10px] uppercase">
+              <tr>
+                <th className="py-2.5 px-3">Tanggal / ID</th>
+                <th className="py-2.5 px-3">Dari (Pengirim)</th>
+                <th className="py-2.5 px-3">Ke (Penerima)</th>
+                <th className="py-2.5 px-3">Kategori Mutasi</th>
+                <th className="py-2.5 px-3 text-right">Nominal</th>
+                <th className="py-2.5 px-3 text-center">Status</th>
+                <th className="py-2.5 px-3">Catatan</th>
+                {!isInvestorUser && (
+                  <th className="py-2.5 px-3 text-right">Aksi</th>
+                )}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#eaeaea]">
+              {filteredTransfers.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="py-8 text-center text-[#888888]">
+                    Belum ada riwayat transfer atau talangan antar-investor.
+                  </td>
+                </tr>
+              ) : (
+                filteredTransfers.map(tr => (
+                  <tr key={tr.id} className="hover:bg-[#fafafa]">
+                    <td className="py-2.5 px-3 whitespace-nowrap">
+                      <span className="font-semibold text-[#111111] block">{tr.date}</span>
+                      <span className="text-[10px] font-mono text-[#888888] block">{tr.id}</span>
+                    </td>
+                    <td className="py-2.5 px-3">
+                      <span className="font-bold text-[#111111] block">{tr.fromInvestorName}</span>
+                      {tr.fromProjectName && (
+                        <span className="text-[10px] text-[#666666] block">{tr.fromProjectName}</span>
+                      )}
+                    </td>
+                    <td className="py-2.5 px-3">
+                      <span className="font-bold text-[#111111] block">{tr.toInvestorName}</span>
+                      {tr.toProjectName && (
+                        <span className="text-[10px] text-[#666666] block">{tr.toProjectName}</span>
+                      )}
+                    </td>
+                    <td className="py-2.5 px-3 whitespace-nowrap">
+                      <span className="text-[11px] font-medium text-[#333333]">
+                        {tr.category === 'TALANGAN_OPERASIONAL'
+                          ? 'Talangan Operasional'
+                          : tr.category === 'PENGEMBALIAN_TALANGAN'
+                          ? 'Pengembalian Talangan'
+                          : tr.category === 'MIGRASI_MODAL'
+                          ? 'Migrasi Modal'
+                          : tr.category === 'BAGI_HASIL_PROYEK'
+                          ? 'Bagi Hasil Proyek'
+                          : 'Lainnya'}
+                      </span>
+                    </td>
+                    <td className="py-2.5 px-3 text-right font-bold tracking-tight text-[#111111] whitespace-nowrap">
+                      {formatRupiah(tr.amount)}
+                    </td>
+                    <td className="py-2.5 px-3 text-center whitespace-nowrap">
+                      {tr.status === 'BELUM_LUNAS' ? (
+                        <span className="text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded">
+                          Belum Lunas
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded">
+                          Lunas
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-2.5 px-3 text-[#666666] max-w-[180px] truncate">
+                      {tr.note || '-'}
+                    </td>
+                    {!isInvestorUser && (
+                      <td className="py-2.5 px-3 text-right whitespace-nowrap">
+                        {tr.status === 'BELUM_LUNAS' ? (
+                          <button
+                            type="button"
+                            onClick={() => handleInitiateSettleTalangan(tr)}
+                            className="px-2.5 py-1 bg-[#111111] hover:bg-[#2b2b2b] text-white text-[11px] font-semibold rounded cursor-pointer"
+                          >
+                            Lunasi
+                          </button>
+                        ) : (
+                          <span className="text-[11px] text-[#888888]">-</span>
+                        )}
+                      </td>
+                    )}
+                  </tr>
+                ))
               )}
             </tbody>
           </table>
@@ -519,7 +818,7 @@ export function InvestorsPage({ userEmail: _userEmail }: InvestorsPageProps): Re
               <div>
                 <h3 className="text-sm font-bold text-[#111111]">Tambah Investor Baru</h3>
                 <p className="text-[11px] text-[#666666] mt-0.5">
-                  Daftarkan mitra pemodal dan kaitkan proyek operasional yang didanai
+                  Daftarkan profil mitra pemodal tetap dan kaitkan alokasi proyek
                 </p>
               </div>
               <button
@@ -541,7 +840,7 @@ export function InvestorsPage({ userEmail: _userEmail }: InvestorsPageProps): Re
                   required
                   value={name}
                   onChange={e => setName(formatEntityNameLive(e.target.value))}
-                  placeholder="Contoh: Bpk Yadi / PT Investama Mandiri"
+                  placeholder="Contoh: Bpk. Yadi atau PT Mitra Sejahtera"
                   className="w-full bg-white border border-[#eaeaea] rounded-[6px] px-3 py-2 text-xs text-[#111111] outline-none focus:border-[#111111]"
                 />
               </div>
@@ -549,10 +848,7 @@ export function InvestorsPage({ userEmail: _userEmail }: InvestorsPageProps): Re
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[#333333] font-semibold mb-1">Nomor Telepon / WhatsApp</label>
-                  <PhoneInput
-                    value={phoneNumber}
-                    onChange={setPhoneNumber}
-                  />
+                  <PhoneInput value={phoneNumber} onChange={setPhoneNumber} />
                 </div>
 
                 <div>
@@ -561,7 +857,7 @@ export function InvestorsPage({ userEmail: _userEmail }: InvestorsPageProps): Re
                     type="text"
                     value={bankAccount}
                     onChange={e => setBankAccount(e.target.value)}
-                    placeholder="Contoh: BCA 1234567890 a.n Yadi"
+                    placeholder="BCA 1234567890 a.n. Yadi"
                     className="w-full bg-white border border-[#eaeaea] rounded-[6px] px-3 py-2 text-xs text-[#111111] outline-none focus:border-[#111111]"
                   />
                 </div>
@@ -580,7 +876,6 @@ export function InvestorsPage({ userEmail: _userEmail }: InvestorsPageProps): Re
                   </div>
                 </div>
 
-                {/* Combobox Search Proyek */}
                 <div className="relative" ref={addComboboxRef}>
                   <div className="relative">
                     <img
@@ -600,7 +895,6 @@ export function InvestorsPage({ userEmail: _userEmail }: InvestorsPageProps): Re
                       onKeyDown={e => {
                         if (availableProjectsForAdd.length === 0) return;
                         if (e.key === 'Tab') {
-                          // Autocomplete top item
                           const top = availableProjectsForAdd[addHighlightedIndex] || availableProjectsForAdd[0];
                           if (top) {
                             setAddProjectQuery(top.name);
@@ -645,7 +939,6 @@ export function InvestorsPage({ userEmail: _userEmail }: InvestorsPageProps): Re
                   )}
                 </div>
 
-                {/* List Proyek Terkait */}
                 {addLinkedProjects.length === 0 ? (
                   <div className="py-3 text-center text-[11px] text-[#999999] border border-dashed border-[#e5e5e5] rounded-[6px]">
                     Belum ada proyek yang dikaitkan ke investor ini.
@@ -687,16 +980,16 @@ export function InvestorsPage({ userEmail: _userEmail }: InvestorsPageProps): Re
                               min="0"
                               max="100"
                               value={link.profitSharePercentage ?? 50}
-                              onChange={e => handleUpdateAddProjectProfitShare(link.projectId, Number(e.target.value))}
-                              className="w-full text-xs font-bold text-[#111111] px-2 py-1 border border-[#eaeaea] rounded text-center outline-none focus:border-[#111111]"
+                              onChange={e => handleUpdateAddProjectProfitShare(link.projectId, Number(e.target.value) || 0)}
+                              className="w-full text-xs font-bold text-center px-2 py-1 border border-[#eaeaea] rounded outline-none focus:border-[#111111]"
                             />
                           </div>
 
                           <button
                             type="button"
                             onClick={() => handleRemoveAddProjectLink(link.projectId)}
-                            className="mt-3.5 p-1 text-[#888888] hover:text-red-600 cursor-pointer rounded transition-colors"
-                            title="Hapus kaitan proyek"
+                            className="text-[#cf1124] hover:bg-red-50 p-1.5 rounded transition-colors cursor-pointer text-xs self-end sm:self-center"
+                            title="Hapus Kaitan Proyek"
                           >
                             ✕
                           </button>
@@ -707,7 +1000,7 @@ export function InvestorsPage({ userEmail: _userEmail }: InvestorsPageProps): Re
                 )}
               </div>
 
-              {/* Total Modal / Investasi Awal (Otomatis Tersinkron) */}
+              {/* Total Modal Disetor */}
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <label className="block text-[#333333] font-semibold">
@@ -720,7 +1013,6 @@ export function InvestorsPage({ userEmail: _userEmail }: InvestorsPageProps): Re
                 <CurrencyInput
                   value={initialCapital}
                   onChange={setInitialCapital}
-                  placeholder="0"
                   className="w-full text-sm font-bold tracking-tight text-[#111111]"
                 />
               </div>
@@ -731,7 +1023,7 @@ export function InvestorsPage({ userEmail: _userEmail }: InvestorsPageProps): Re
                   type="text"
                   value={notes}
                   onChange={e => setNotes(e.target.value)}
-                  placeholder="Contoh: Pemodal pengadaan unit armada atau proyek tertentu"
+                  placeholder="Keterangan kontrak / perjanjian kemitraan..."
                   className="w-full bg-white border border-[#eaeaea] rounded-[6px] px-3 py-2 text-xs text-[#111111] outline-none focus:border-[#111111]"
                 />
               </div>
@@ -748,7 +1040,7 @@ export function InvestorsPage({ userEmail: _userEmail }: InvestorsPageProps): Re
                   type="submit"
                   className="px-4 py-1.5 text-xs font-semibold text-white bg-[#111111] hover:bg-[#2b2b2b] rounded-[6px] cursor-pointer"
                 >
-                  Lanjut Otorisasi
+                  Simpan Investor
                 </button>
               </div>
             </form>
@@ -821,7 +1113,6 @@ export function InvestorsPage({ userEmail: _userEmail }: InvestorsPageProps): Re
                   </div>
                 </div>
 
-                {/* Combobox Search Proyek */}
                 <div className="relative" ref={editComboboxRef}>
                   <div className="relative">
                     <img
@@ -885,7 +1176,6 @@ export function InvestorsPage({ userEmail: _userEmail }: InvestorsPageProps): Re
                   )}
                 </div>
 
-                {/* List Proyek Terkait */}
                 {editLinkedProjects.length === 0 ? (
                   <div className="py-3 text-center text-[11px] text-[#999999] border border-dashed border-[#e5e5e5] rounded-[6px]">
                     Belum ada proyek yang dikaitkan ke investor ini.
@@ -927,16 +1217,16 @@ export function InvestorsPage({ userEmail: _userEmail }: InvestorsPageProps): Re
                               min="0"
                               max="100"
                               value={link.profitSharePercentage ?? 50}
-                              onChange={e => handleUpdateEditProjectProfitShare(link.projectId, Number(e.target.value))}
-                              className="w-full text-xs font-bold text-[#111111] px-2 py-1 border border-[#eaeaea] rounded text-center outline-none focus:border-[#111111]"
+                              onChange={e => handleUpdateEditProjectProfitShare(link.projectId, Number(e.target.value) || 0)}
+                              className="w-full text-xs font-bold text-center px-2 py-1 border border-[#eaeaea] rounded outline-none focus:border-[#111111]"
                             />
                           </div>
 
                           <button
                             type="button"
                             onClick={() => handleRemoveEditProjectLink(link.projectId)}
-                            className="mt-3.5 p-1 text-[#888888] hover:text-red-600 cursor-pointer rounded transition-colors"
-                            title="Hapus kaitan proyek"
+                            className="text-[#cf1124] hover:bg-red-50 p-1.5 rounded transition-colors cursor-pointer text-xs self-end sm:self-center"
+                            title="Hapus Kaitan Proyek"
                           >
                             ✕
                           </button>
@@ -992,6 +1282,29 @@ export function InvestorsPage({ userEmail: _userEmail }: InvestorsPageProps): Re
             </form>
           </div>
         </div>
+      )}
+
+      {/* Modal Buku Kas & Rekap Ekuitas Investor */}
+      {selectedLedgerInvestor && (
+        <InvestorLedgerModal
+          investor={selectedLedgerInvestor}
+          projects={projects}
+          transactions={transactions}
+          payouts={payouts}
+          onClose={() => setSelectedLedgerInvestor(null)}
+          onRecordPayout={handleRecordPayout}
+          isInvestorUser={isInvestorUser}
+        />
+      )}
+
+      {/* Modal Transfer Antar-Investor */}
+      {isTransferModalOpen && (
+        <InvestorTransferModal
+          investors={investors}
+          projects={projects}
+          onClose={() => setIsTransferModalOpen(false)}
+          onSubmitTransfer={handleInitiateTransfer}
+        />
       )}
 
       {/* Pin Authorization Modal */}

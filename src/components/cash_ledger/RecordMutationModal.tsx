@@ -16,7 +16,9 @@ const MUTATION_TYPES: { id: CashFlowType; label: string; isCredit: boolean }[] =
   { id: 'PELUNASAN_PIUTANG', label: 'Penerimaan Pelunasan Piutang (Kas Masuk)', isCredit: true },
   { id: 'BIAYA_OPERASIONAL', label: 'Biaya Operasional Umum / Kantor (Kas Keluar)', isCredit: false },
   { id: 'BELI_MATERIAL', label: 'Belanja Material Non-Ritase (Kas Keluar)', isCredit: false },
-  { id: 'CICILAN_HUTANG', label: 'Pembayaran Cicilan Hutang Lain (Kas Keluar)', isCredit: false }
+  { id: 'CICILAN_HUTANG', label: 'Pembayaran Cicilan Hutang Lain (Kas Keluar)', isCredit: false },
+  { id: 'BAGI_HASIL_INVESTOR', label: 'Penyerahan Bagi Hasil / Dividen Investor (Kas Keluar)', isCredit: false },
+  { id: 'TRANSFER_INVESTOR', label: 'Transfer / Realokasi Dana Internal (Kas Keluar)', isCredit: false }
 ];
 
 export function RecordMutationModal({

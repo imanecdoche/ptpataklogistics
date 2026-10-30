@@ -1,0 +1,505 @@
+import React, { useState, useMemo } from 'react';
+import { Investor, Project, DispatchTransaction, InvestorPayout } from '@/types/database';
+import { CurrencyInput } from '@/components/ui/CurrencyInput';
+
+interface InvestorLedgerModalProps {
+  investor: Investor;
+  projects: Project[];
+  transactions: DispatchTransaction[];
+  payouts: InvestorPayout[];
+  onClose: () => void;
+  onRecordPayout: (payload: { amount: number; note: string; date?: string }) => Promise<void>;
+  isInvestorUser?: boolean;
+}
+
+export function InvestorLedgerModal({
+  investor,
+  projects,
+  transactions,
+  payouts,
+  onClose,
+  onRecordPayout,
+  isInvestorUser = false
+}: InvestorLedgerModalProps): React.JSX.Element {
+  const [activeTab, setActiveTab] = useState<'ringkasan' | 'ritase' | 'payout'>('ringkasan');
+  const [isPayoutFormOpen, setIsPayoutFormOpen] = useState(false);
+  const [payoutAmount, setPayoutAmount] = useState<number>(0);
+  const [payoutNote, setPayoutNote] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Proyek yang didanai investor ini
+  const linkedProjects = useMemo(() => {
+    return projects.filter(p => p.investorId === investor.id);
+  }, [projects, investor.id]);
+
+  const linkedProjectIds = useMemo(() => {
+    return new Set(linkedProjects.map(p => p.id));
+  }, [linkedProjects]);
+
+  // Seluruh transaksi ritase proyek yang didanai investor ini
+  const investorTransactions = useMemo(() => {
+    return transactions.filter(tx => tx.projectId && linkedProjectIds.has(tx.projectId));
+  }, [transactions, linkedProjectIds]);
+
+  // Transaksi penyerahan dividen / payout untuk investor ini
+  const investorPayouts = useMemo(() => {
+    return payouts.filter(p => p.investorId === investor.id);
+  }, [payouts, investor.id]);
+
+  // Kalkulasi Finansial & Bagi Hasil
+  const financialSummary = useMemo(() => {
+    let totalRevenue = 0;
+    let totalBuyCost = 0;
+    let totalOperationalCost = 0;
+    let totalVolume = 0;
+
+    investorTransactions.forEach(tx => {
+      totalRevenue += tx.totalRevenue || 0;
+      totalBuyCost += tx.totalBuyCost || 0;
+      totalOperationalCost += tx.operationalCost || 0;
+      totalVolume += tx.quantity || 0;
+    });
+
+    const totalExpense = totalBuyCost + totalOperationalCost;
+    const netProfitTotal = totalRevenue - totalExpense;
+
+    // Kalkulasi bagi hasil per proyek
+    let totalProfitShareEarned = 0;
+    linkedProjects.forEach(proj => {
+      const projTxs = investorTransactions.filter(tx => tx.projectId === proj.id);
+      const projRev = projTxs.reduce((acc, t) => acc + (t.totalRevenue || 0), 0);
+      const projExp = projTxs.reduce((acc, t) => acc + (t.totalBuyCost || 0) + (t.operationalCost || 0), 0);
+      const projNet = projRev - projExp;
+      const sharePct = proj.profitSharePercentage || investor.profitSharePercentage || 50;
+      if (projNet > 0) {
+        totalProfitShareEarned += projNet * (sharePct / 100);
+      }
+    });
+
+    const totalPayoutWithdrawn = investorPayouts.reduce((acc, p) => acc + (p.amount || 0), 0);
+    const remainingProfitShare = Math.max(0, totalProfitShareEarned - totalPayoutWithdrawn);
+
+    return {
+      totalTrips: investorTransactions.length,
+      totalVolume,
+      totalRevenue,
+      totalBuyCost,
+      totalOperationalCost,
+      totalExpense,
+      netProfitTotal,
+      totalProfitShareEarned,
+      totalPayoutWithdrawn,
+      remainingProfitShare
+    };
+  }, [investorTransactions, linkedProjects, investorPayouts, investor.profitSharePercentage]);
+
+  const formatRupiah = (val: number): string => {
+    return 'Rp ' + Math.round(val).toLocaleString('id-ID');
+  };
+
+  const handlePayoutSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!payoutAmount || payoutAmount <= 0) return;
+    setIsSubmitting(true);
+    try {
+      await onRecordPayout({
+        amount: payoutAmount,
+        note: payoutNote.trim() || 'Penyerahan Bagi Hasil Proyek'
+      });
+      setPayoutAmount(0);
+      setPayoutNote('');
+      setIsPayoutFormOpen(false);
+    } catch (err) {
+      console.error('Gagal mencatat payout:', err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200">
+      <div className="bg-white rounded-[12px] w-full max-w-4xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
+        {/* Header Modal */}
+        <div className="p-4 sm:p-5 border-b border-[#eaeaea] flex items-center justify-between bg-[#fafafa]">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-semibold bg-[#111111] text-white px-2 py-0.5 rounded">
+                KARTU REKAP PEMODAL
+              </span>
+              <span className="text-[11px] font-mono text-[#888888]">{investor.id}</span>
+            </div>
+            <h2 className="text-base sm:text-lg font-bold text-[#111111] mt-1">
+              Buku Kas & Rekap Ekuitas: {investor.name}
+            </h2>
+            <p className="text-xs text-[#666666] mt-0.5">
+              Transparansi perputaran modal, performa ritase proyek yang didanai, dan riwayat penyerahan bagi hasil.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-8 h-8 rounded-full flex items-center justify-center text-[#888888] hover:text-[#111111] hover:bg-[#eaeaea] transition-colors cursor-pointer text-lg"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* 4 Kartu Metrik Utama */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 p-4 sm:p-5 border-b border-[#eaeaea] bg-white">
+          <div className="p-3 bg-[#fcfcfc] border border-[#eaeaea] rounded-[8px]">
+            <span className="text-[10px] text-[#888888] uppercase font-semibold block">Modal Awal Disetor</span>
+            <span className="text-sm sm:text-base font-bold tracking-tight text-[#111111] block mt-1">
+              {formatRupiah(investor.initialCapital || 0)}
+            </span>
+            <span className="text-[10px] text-[#666666] block mt-0.5">
+              {linkedProjects.length} Proyek Didanai
+            </span>
+          </div>
+
+          <div className="p-3 bg-[#fcfcfc] border border-[#eaeaea] rounded-[8px]">
+            <span className="text-[10px] text-[#888888] uppercase font-semibold block">Total Ritase Jalan</span>
+            <span className="text-sm sm:text-base font-bold tracking-tight text-[#111111] block mt-1">
+              {financialSummary.totalTrips} Rit ({financialSummary.totalVolume} DT)
+            </span>
+            <span className="text-[10px] text-[#666666] block mt-0.5">
+              Omzet: {formatRupiah(financialSummary.totalRevenue)}
+            </span>
+          </div>
+
+          <div className="p-3 bg-[#fcfcfc] border border-[#eaeaea] rounded-[8px]">
+            <span className="text-[10px] text-[#888888] uppercase font-semibold block">Hak Bagi Hasil Akumulasi</span>
+            <span className="text-sm sm:text-base font-bold tracking-tight text-[#008060] block mt-1">
+              {formatRupiah(financialSummary.totalProfitShareEarned)}
+            </span>
+            <span className="text-[10px] text-[#666666] block mt-0.5">
+              Dari Laba Bersih Proyek
+            </span>
+          </div>
+
+          <div className="p-3 bg-[#fcfcfc] border border-[#eaeaea] rounded-[8px]">
+            <span className="text-[10px] text-[#888888] uppercase font-semibold block">Sisa Bagi Hasil Belum Ditarik</span>
+            <span className={`text-sm sm:text-base font-bold tracking-tight block mt-1 ${
+              financialSummary.remainingProfitShare > 0 ? 'text-[#008060]' : 'text-[#888888]'
+            }`}>
+              {formatRupiah(financialSummary.remainingProfitShare)}
+            </span>
+            <span className="text-[10px] text-[#666666] block mt-0.5">
+              Sudah Ditarik: {formatRupiah(financialSummary.totalPayoutWithdrawn)}
+            </span>
+          </div>
+        </div>
+
+        {/* Tab Navigasi */}
+        <div className="flex items-center gap-2 px-4 sm:px-5 border-b border-[#eaeaea] bg-[#fafafa]">
+          <button
+            type="button"
+            onClick={() => setActiveTab('ringkasan')}
+            className={`py-2.5 px-3 text-xs font-semibold border-b-2 transition-colors cursor-pointer ${
+              activeTab === 'ringkasan'
+                ? 'border-[#111111] text-[#111111]'
+                : 'border-transparent text-[#666666] hover:text-[#111111]'
+            }`}
+          >
+            Ringkasan Proyek & Alokasi
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('ritase')}
+            className={`py-2.5 px-3 text-xs font-semibold border-b-2 transition-colors cursor-pointer ${
+              activeTab === 'ritase'
+                ? 'border-[#111111] text-[#111111]'
+                : 'border-transparent text-[#666666] hover:text-[#111111]'
+            }`}
+          >
+            Riwayat Ritase ({financialSummary.totalTrips})
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('payout')}
+            className={`py-2.5 px-3 text-xs font-semibold border-b-2 transition-colors cursor-pointer ${
+              activeTab === 'payout'
+                ? 'border-[#111111] text-[#111111]'
+                : 'border-transparent text-[#666666] hover:text-[#111111]'
+            }`}
+          >
+            Penyerahan Bagi Hasil ({investorPayouts.length})
+          </button>
+        </div>
+
+        {/* Konten Tab */}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-5">
+          {activeTab === 'ringkasan' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-[#111111]">
+                  Daftar Proyek yang Didanai ({linkedProjects.length})
+                </span>
+                <span className="text-[11px] text-[#666666]">
+                  Biaya ritase diambil dari Kas Utama, laba dibagi sesuai persentase kontrak
+                </span>
+              </div>
+
+              {linkedProjects.length === 0 ? (
+                <div className="p-8 text-center text-xs text-[#888888] border border-dashed border-[#e5e5e5] rounded-[8px]">
+                  Belum ada proyek yang dikaitkan ke investor ini. Edit data investor untuk mengaitkan proyek.
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {linkedProjects.map(p => {
+                    const projTxs = investorTransactions.filter(tx => tx.projectId === p.id);
+                    const projRev = projTxs.reduce((acc, t) => acc + (t.totalRevenue || 0), 0);
+                    const projExp = projTxs.reduce((acc, t) => acc + (t.totalBuyCost || 0) + (t.operationalCost || 0), 0);
+                    const projNet = projRev - projExp;
+                    const sharePct = p.profitSharePercentage || investor.profitSharePercentage || 50;
+                    const investorShare = projNet > 0 ? projNet * (sharePct / 100) : 0;
+
+                    return (
+                      <div key={p.id} className="p-3.5 bg-white border border-[#eaeaea] rounded-[8px] space-y-2">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <span className="font-bold text-xs text-[#111111] block">{p.name}</span>
+                            <span className="text-[10px] text-[#888888] block">{p.location || 'Lokasi'}</span>
+                          </div>
+                          <span className="text-[10px] font-bold bg-[#f0fdf4] text-[#166534] border border-[#bbf7d0] px-1.5 py-0.5 rounded">
+                            Bagi Hasil: {sharePct}%
+                          </span>
+                        </div>
+
+                        <div className="pt-2 border-t border-[#f0f0f0] grid grid-cols-2 gap-2 text-[11px]">
+                          <div>
+                            <span className="text-[#888888] block text-[10px]">Alokasi Modal Pokok:</span>
+                            <span className="font-bold tracking-tight text-[#111111]">
+                              {formatRupiah(p.initialDeposit || 0)}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-[#888888] block text-[10px]">Total Ritase Berjalan:</span>
+                            <span className="font-bold tracking-tight text-[#111111]">
+                              {projTxs.length} Rit
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-[#888888] block text-[10px]">Laba Bersih Proyek:</span>
+                            <span className={`font-bold tracking-tight ${projNet >= 0 ? 'text-[#111111]' : 'text-red-600'}`}>
+                              {formatRupiah(projNet)}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-[#888888] block text-[10px]">Porsi Hak Investor:</span>
+                            <span className="font-bold tracking-tight text-[#008060]">
+                              {formatRupiah(investorShare)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'ritase' && (
+            <div className="space-y-3">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead className="bg-[#f9f9f9] border-b border-[#eaeaea] text-[#666666] font-semibold text-[10px] uppercase">
+                    <tr>
+                      <th className="py-2 px-2.5">No. Tiket / Tgl</th>
+                      <th className="py-2 px-2.5">Armada / Sopir</th>
+                      <th className="py-2 px-2.5">Proyek Tujuan</th>
+                      <th className="py-2 px-2.5">Material & Vol</th>
+                      <th className="py-2 px-2.5 text-right">Omzet (Tempo)</th>
+                      <th className="py-2 px-2.5 text-right">Biaya (Kas Utama)</th>
+                      <th className="py-2 px-2.5 text-right">Laba Bersih</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#eaeaea]">
+                    {investorTransactions.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} className="py-8 text-center text-[#888888]">
+                          Belum ada transaksi ritase untuk proyek yang didanai investor ini.
+                        </td>
+                      </tr>
+                    ) : (
+                      investorTransactions.map(tx => {
+                        const expense = (tx.totalBuyCost || 0) + (tx.operationalCost || 0);
+                        const profit = (tx.totalRevenue || 0) - expense;
+                        return (
+                          <tr key={tx.id} className="hover:bg-[#fafafa]">
+                            <td className="py-2 px-2.5">
+                              <span className="font-mono font-medium text-[#111111] block">{tx.ticketNumber}</span>
+                              <span className="text-[10px] text-[#888888] block">{tx.deliveryDate}</span>
+                            </td>
+                            <td className="py-2 px-2.5">
+                              <span className="font-bold text-[#111111] block">{tx.truckPlate}</span>
+                              <span className="text-[10px] text-[#888888] block">{tx.driverName || 'Supir'}</span>
+                            </td>
+                            <td className="py-2 px-2.5">
+                              <span className="text-[#111111] block font-medium truncate max-w-[140px]">{tx.projectName}</span>
+                              <span className="text-[10px] text-[#888888] block">{tx.clientName}</span>
+                            </td>
+                            <td className="py-2 px-2.5">
+                              <span className="text-[#111111] block font-medium">{tx.materialName}</span>
+                              <span className="text-[10px] text-[#888888] block">{tx.quantity} {tx.unit}</span>
+                            </td>
+                            <td className="py-2 px-2.5 text-right font-bold tracking-tight text-[#111111]">
+                              {formatRupiah(tx.totalRevenue || 0)}
+                            </td>
+                            <td className="py-2 px-2.5 text-right font-bold tracking-tight text-[#666666]">
+                              {formatRupiah(expense)}
+                            </td>
+                            <td className={`py-2 px-2.5 text-right font-bold tracking-tight ${profit >= 0 ? 'text-[#008060]' : 'text-red-600'}`}>
+                              {formatRupiah(profit)}
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'payout' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-bold text-[#111111] block">
+                    Riwayat Penyerahan Bagi Hasil / Dividen
+                  </span>
+                  <span className="text-[11px] text-[#666666] block">
+                    Setiap penyerahan bagi hasil otomatis memotong saldo Kas Utama PT Patak
+                  </span>
+                </div>
+
+                {!isInvestorUser && !isPayoutFormOpen && (
+                  <button
+                    type="button"
+                    onClick={() => setIsPayoutFormOpen(true)}
+                    className="px-3 py-1.5 bg-[#111111] hover:bg-[#2b2b2b] text-white text-xs font-semibold rounded-[6px] transition-colors cursor-pointer"
+                  >
+                    + Penyerahan Bagi Hasil
+                  </button>
+                )}
+              </div>
+
+              {/* Form Input Payout */}
+              {isPayoutFormOpen && (
+                <form onSubmit={handlePayoutSubmit} className="p-3.5 bg-[#fcfcfc] border border-[#eaeaea] rounded-[8px] space-y-3">
+                  <div className="flex items-center justify-between pb-2 border-b border-[#eaeaea]">
+                    <span className="text-xs font-bold text-[#111111]">Form Penyerahan Bagi Hasil</span>
+                    <button
+                      type="button"
+                      onClick={() => setIsPayoutFormOpen(false)}
+                      className="text-[#888888] hover:text-[#111111] text-xs cursor-pointer"
+                    >
+                      Batal
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <div>
+                      <label className="block text-[#333333] font-semibold mb-1">
+                        Nominal Bagi Hasil (Rp) <span className="text-red-500">*</span>
+                      </label>
+                      <CurrencyInput
+                        value={payoutAmount}
+                        onChange={setPayoutAmount}
+                        placeholder="0"
+                        variant="solid-white"
+                      />
+                      {financialSummary.remainingProfitShare > 0 && (
+                        <div className="text-[10px] text-[#666666] mt-1 flex justify-between">
+                          <span>Sisa Hak Belum Ditarik:</span>
+                          <button
+                            type="button"
+                            onClick={() => setPayoutAmount(financialSummary.remainingProfitShare)}
+                            className="font-bold text-[#008060] underline cursor-pointer"
+                          >
+                            Tarik Penuh ({formatRupiah(financialSummary.remainingProfitShare)})
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-[#333333] font-semibold mb-1">
+                        Catatan / Keterangan Penyerahan
+                      </label>
+                      <input
+                        type="text"
+                        value={payoutNote}
+                        onChange={e => setPayoutNote(e.target.value)}
+                        placeholder="Bagi hasil termin 1 proyek Cikedal via transfer BCA..."
+                        className="w-full bg-white border border-[#eaeaea] rounded-[6px] px-3 py-2 text-xs text-[#111111] outline-none focus:border-[#111111]"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end gap-2 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsPayoutFormOpen(false)}
+                      className="px-3 py-1.5 border border-[#eaeaea] text-[#666666] text-xs rounded cursor-pointer"
+                    >
+                      Batal
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isSubmitting || payoutAmount <= 0}
+                      className="px-3.5 py-1.5 bg-[#111111] hover:bg-[#2b2b2b] text-white text-xs font-semibold rounded cursor-pointer disabled:opacity-50"
+                    >
+                      {isSubmitting ? 'Menyimpan...' : 'Simpan & Potong Kas Utama'}
+                    </button>
+                  </div>
+                </form>
+              )}
+
+              {/* Tabel Riwayat Payout */}
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead className="bg-[#f9f9f9] border-b border-[#eaeaea] text-[#666666] font-semibold text-[10px] uppercase">
+                    <tr>
+                      <th className="py-2 px-3">Tanggal</th>
+                      <th className="py-2 px-3">Keterangan / Catatan</th>
+                      <th className="py-2 px-3">Dicatat Oleh</th>
+                      <th className="py-2 px-3 text-right">Nominal Payout (Kas Keluar)</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#eaeaea]">
+                    {investorPayouts.length === 0 ? (
+                      <tr>
+                        <td colSpan={4} className="py-6 text-center text-[#888888]">
+                          Belum ada riwayat penyerahan bagi hasil untuk investor ini.
+                        </td>
+                      </tr>
+                    ) : (
+                      investorPayouts.map(p => (
+                        <tr key={p.id} className="hover:bg-[#fafafa]">
+                          <td className="py-2.5 px-3 whitespace-nowrap font-medium text-[#111111]">
+                            {p.date}
+                          </td>
+                          <td className="py-2.5 px-3 text-[#333333]">
+                            {p.note}
+                          </td>
+                          <td className="py-2.5 px-3 text-[#666666] text-[11px]">
+                            {p.createdByName}
+                          </td>
+                          <td className="py-2.5 px-3 text-right font-bold tracking-tight text-[#cf1124] whitespace-nowrap">
+                            - {formatRupiah(p.amount)}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

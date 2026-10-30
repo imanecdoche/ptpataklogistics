@@ -11,9 +11,11 @@ import {
   where
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { Investor, InvestorProjectLink } from '@/types/database';
+import { Investor, InvestorProjectLink, InvestorPayout, InvestorTransferLog, InvestorTransferCategory } from '@/types/database';
 import { formatPhoneNumber } from '@/lib/phoneUtils';
 import { formatEntityName } from '@/lib/nameUtils';
+import { updateProjectBalance } from '@/lib/projectService';
+import { recordCashLedgerEntry } from '@/lib/cashLedgerService';
 
 const INVESTORS_COLLECTION = 'investors';
 
@@ -188,4 +190,204 @@ export async function seedDefaultInvestors(): Promise<void> {
   } catch (err) {
     console.warn('Gagal melakukan seed default investors:', err);
   }
+}
+
+const INVESTOR_TRANSFERS_COLLECTION = 'investor_transfers';
+const INVESTOR_PAYOUTS_COLLECTION = 'investor_payouts';
+
+/**
+ * Real-time listener seluruh riwayat transfer & realokasi dana antar-investor
+ */
+export function subscribeInvestorTransfers(
+  callback: (transfers: InvestorTransferLog[]) => void
+): () => void {
+  const colRef = collection(db, INVESTOR_TRANSFERS_COLLECTION);
+  const q = query(colRef, orderBy('createdAt', 'desc'));
+
+  return onSnapshot(
+    q,
+    snapshot => {
+      const list: InvestorTransferLog[] = snapshot.docs.map(d => ({
+        id: d.id,
+        ...(d.data() as Omit<InvestorTransferLog, 'id'>)
+      }));
+      callback(list);
+    },
+    err => {
+      console.warn('Gagal membaca data investor_transfers:', err);
+    }
+  );
+}
+
+/**
+ * Mencatat mutasi transfer / talangan dana antar-investor
+ */
+export async function createInvestorTransfer(payload: {
+  date: string;
+  fromInvestorId: string;
+  fromInvestorName: string;
+  fromProjectId?: string;
+  fromProjectName?: string;
+  toInvestorId: string;
+  toInvestorName: string;
+  toProjectId?: string;
+  toProjectName?: string;
+  amount: number;
+  category: InvestorTransferCategory;
+  note: string;
+  createdByName: string;
+}): Promise<string> {
+  const numAmount = Number(payload.amount);
+  if (!numAmount || numAmount <= 0) {
+    throw new Error('Nominal transfer harus lebih besar dari 0.');
+  }
+
+  if (payload.fromInvestorId === payload.toInvestorId && payload.fromProjectId === payload.toProjectId) {
+    throw new Error('Investor dan proyek sumber tidak boleh sama persis dengan tujuan.');
+  }
+
+  const colRef = collection(db, INVESTOR_TRANSFERS_COLLECTION);
+  const docId = `itf-${Date.now().toString().slice(-6)}`;
+  const isTalangan = payload.category === 'TALANGAN_OPERASIONAL';
+
+  const transferDoc: InvestorTransferLog = {
+    id: docId,
+    date: payload.date || new Date().toISOString().slice(0, 10),
+    fromInvestorId: payload.fromInvestorId,
+    fromInvestorName: payload.fromInvestorName,
+    fromProjectId: payload.fromProjectId || '',
+    fromProjectName: payload.fromProjectName || '',
+    toInvestorId: payload.toInvestorId,
+    toInvestorName: payload.toInvestorName,
+    toProjectId: payload.toProjectId || '',
+    toProjectName: payload.toProjectName || '',
+    amount: numAmount,
+    category: payload.category,
+    status: isTalangan ? 'BELUM_LUNAS' : 'LUNAS',
+    note: payload.note?.trim() || '',
+    createdByName: payload.createdByName,
+    createdAt: new Date().toISOString()
+  };
+
+  await setDoc(doc(colRef, docId), transferDoc);
+
+  // Jika mengaitkan proyek asal dan proyek tujuan, potong & tambah saldo proyek
+  if (payload.fromProjectId && payload.toProjectId && payload.fromProjectId !== payload.toProjectId) {
+    await updateProjectBalance(payload.fromProjectId, -numAmount);
+    await updateProjectBalance(payload.toProjectId, numAmount);
+  }
+
+  // Catat riwayat audit ke Buku Kas Utama
+  await recordCashLedgerEntry({
+    date: new Date().toISOString(),
+    type: 'TRANSFER_INVESTOR',
+    amount: numAmount,
+    isCredit: false,
+    description: `Transfer Antar-Investor: Dari ${payload.fromInvestorName} ke ${payload.toInvestorName} (${payload.category}) - ${payload.note || 'Internal'}`,
+    referenceId: docId,
+    createdByName: payload.createdByName
+  });
+
+  return docId;
+}
+
+/**
+ * Melunasi catatan talangan operasional antar-investor
+ */
+export async function settleInvestorTransfer(
+  transferId: string,
+  userEmail: string
+): Promise<void> {
+  const docRef = doc(db, INVESTOR_TRANSFERS_COLLECTION, transferId);
+  const now = new Date().toISOString();
+
+  await updateDoc(docRef, {
+    status: 'LUNAS',
+    settledAt: now
+  });
+
+  await recordCashLedgerEntry({
+    date: now,
+    type: 'TRANSFER_INVESTOR',
+    amount: 0,
+    isCredit: true,
+    description: `Pelunasan Talangan Antar-Investor (Ref: ${transferId})`,
+    referenceId: transferId,
+    createdByName: userEmail
+  });
+}
+
+/**
+ * Real-time listener seluruh riwayat penyerahan bagi hasil (payout) ke investor
+ */
+export function subscribeInvestorPayouts(
+  callback: (payouts: InvestorPayout[]) => void
+): () => void {
+  const colRef = collection(db, INVESTOR_PAYOUTS_COLLECTION);
+  const q = query(colRef, orderBy('createdAt', 'desc'));
+
+  return onSnapshot(
+    q,
+    snapshot => {
+      const list: InvestorPayout[] = snapshot.docs.map(d => ({
+        id: d.id,
+        ...(d.data() as Omit<InvestorPayout, 'id'>)
+      }));
+      callback(list);
+    },
+    err => {
+      console.warn('Gagal membaca data investor_payouts:', err);
+    }
+  );
+}
+
+/**
+ * Mencatat penyerahan bagi hasil / dividen ke investor (memotong Kas Utama)
+ */
+export async function recordInvestorPayout(payload: {
+  investorId: string;
+  investorName: string;
+  projectId?: string;
+  projectName?: string;
+  amount: number;
+  date?: string;
+  note?: string;
+  createdByName: string;
+}): Promise<string> {
+  const numAmount = Number(payload.amount);
+  if (!numAmount || numAmount <= 0) {
+    throw new Error('Nominal bagi hasil harus lebih besar dari 0.');
+  }
+
+  const colRef = collection(db, INVESTOR_PAYOUTS_COLLECTION);
+  const docId = `payout-${Date.now().toString().slice(-6)}`;
+  const date = payload.date || new Date().toISOString().slice(0, 10);
+
+  const newPayout: InvestorPayout = {
+    id: docId,
+    investorId: payload.investorId,
+    investorName: payload.investorName,
+    projectId: payload.projectId || '',
+    projectName: payload.projectName || '',
+    date,
+    amount: numAmount,
+    note: payload.note?.trim() || 'Penyerahan Bagi Hasil / Profit Share ke Investor',
+    createdByName: payload.createdByName,
+    createdAt: new Date().toISOString()
+  };
+
+  await setDoc(doc(colRef, docId), newPayout);
+
+  // Potong langsung dari Buku Kas Utama
+  await recordCashLedgerEntry({
+    date: new Date().toISOString(),
+    type: 'BAGI_HASIL_INVESTOR',
+    amount: numAmount,
+    isCredit: false,
+    description: `Penyerahan Bagi Hasil ke ${payload.investorName}: ${payload.note || 'Dividen Laba Proyek'}`,
+    referenceId: docId,
+    createdByName: payload.createdByName
+  });
+
+  return docId;
 }

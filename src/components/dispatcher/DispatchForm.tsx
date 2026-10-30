@@ -4,6 +4,7 @@ import { createDispatchTransaction, CreateDispatchPayload, subscribeKnownTrucks,
 import { subscribeClients } from '@/lib/clientService';
 import { subscribeMasterQuarries } from '@/lib/databaseMasterService';
 import { subscribeQuarryRates, subscribeRouteTariffs } from '@/lib/materialMasterService';
+import { subscribeCashLedger } from '@/lib/cashLedgerService';
 import { useDialog } from '@/context/DialogContext';
 import { CurrencyInput } from '@/components/ui/CurrencyInput';
 import { MaterialPickerModal } from '@/components/ui/MaterialPickerModal';
@@ -176,6 +177,17 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
     };
   }, []);
 
+  // Subscribe Saldo Kas Utama PT Patak
+  const [centralCashBalance, setCentralCashBalance] = useState<number>(0);
+  useEffect(() => {
+    const unsubLedger = subscribeCashLedger(entries => {
+      if (entries.length > 0 && typeof entries[0]?.runningBalance === 'number') {
+        setCentralCashBalance(entries[0].runningBalance);
+      }
+    }, 1);
+    return () => unsubLedger();
+  }, []);
+
   // Matriks Harga Otomatis: Saat materialId atau quarryId berubah
   useEffect(() => {
     if (!selectedMaterialId || !selectedQuarryId) {
@@ -278,11 +290,10 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
   const totalOperational = Number(operationalCost) || 0;
   const netProfit = totalRevenue - (totalBuyCost + totalOperational);
 
-  // Saldo Kas & Kontrol Kecukupan Dana Proyek (Khusus Akun Manajemen)
-  const projectCashBalance = selectedProject?.currentBalance ?? 0;
+  // Kontrol Kecukupan Dana Kas Utama (Khusus Akun Manajemen)
   const totalCashOutlay = totalBuyCost + totalOperational;
-  const remainingProjectBalance = projectCashBalance - totalCashOutlay;
-  const isCashDeficit = Boolean(formProjectId && projectCashBalance < totalCashOutlay);
+  const remainingCentralBalance = centralCashBalance - totalCashOutlay;
+  const isCashDeficit = Boolean(centralCashBalance < totalCashOutlay);
 
   const formatRupiah = (val: number): string => {
     return 'Rp ' + Math.round(val).toLocaleString('id-ID');
@@ -906,11 +917,11 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
 
         {/* Live Calculation Box */}
         <div className="bg-[#ebebeb] rounded-[8px] p-3.5 space-y-1.5 mt-2">
-          {!isDispatcherUser && formProjectId && (
+          {!isDispatcherUser && (
             <div className="flex justify-between items-center text-[11px] text-[#666666]">
-              <span>Saldo Kas Proyek Berjalan:</span>
-              <span className="font-mono font-medium text-[#111111]">
-                {formatRupiah(projectCashBalance)}
+              <span>Saldo Kas Utama PT Patak:</span>
+              <span className={`font-mono font-medium ${centralCashBalance < 0 ? 'text-[#cf1124]' : 'text-[#111111]'}`}>
+                {formatRupiah(centralCashBalance)}
               </span>
             </div>
           )}
@@ -932,20 +943,20 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
             <span className="font-mono font-medium text-[#111111]">{formatRupiah(totalRevenue)}</span>
           </div>
 
-          {!isDispatcherUser && formProjectId && (
+          {!isDispatcherUser && (
             <div className={`flex justify-between items-center text-[11px] pt-1.5 border-t border-[#dddddd] transition-colors ${
               isCashDeficit ? 'text-[#cf1124]' : 'text-[#666666]'
             }`}>
-              <span className="font-medium">Estimasi Sisa Saldo Kas:</span>
+              <span className="font-medium">Estimasi Sisa Kas Utama:</span>
               <span className="font-mono font-semibold">
-                {formatRupiah(remainingProjectBalance)}
+                {formatRupiah(remainingCentralBalance)}
               </span>
             </div>
           )}
 
           {!isDispatcherUser && isCashDeficit && (
             <div className="text-[10px] text-[#cf1124] font-medium pt-0.5 leading-snug">
-              ⚠️ Peringatan: Saldo kas proyek tidak mencukupi untuk belanja tunai kuari & uang jalan tiket ini.
+              ⚠️ Peringatan: Saldo Kas Utama menipis di bawah biaya tunai tiket ini. Tiket tetap dapat disimpan (Defisit Kas Lapangan).
             </div>
           )}
 
