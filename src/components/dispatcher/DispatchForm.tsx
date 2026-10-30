@@ -56,6 +56,7 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
   const { projects, selectedProjectId: globalProjectId, isDispatcherUser } = useProjectFilter();
   const [formProjectId, setFormProjectId] = useState<string>('');
   const [formProjectName, setFormProjectName] = useState<string>('');
+  const selectedProject = projects.find(p => p.id === formProjectId);
 
   // Master Material Rates & Route Tariffs State (Matriks 3 Titik)
   const [quarryRates, setQuarryRates] = useState<QuarryMaterialRate[]>([]);
@@ -286,6 +287,12 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
   const totalRevenue = (Number(quantity) || 0) * (Number(sellPricePerUnit) || 0);
   const totalOperational = Number(operationalCost) || 0;
   const netProfit = totalRevenue - (totalBuyCost + totalOperational);
+
+  // Saldo Kas & Kontrol Kecukupan Dana Proyek (Khusus Akun Manajemen)
+  const projectCashBalance = selectedProject?.currentBalance ?? 0;
+  const totalCashOutlay = totalBuyCost + totalOperational;
+  const remainingProjectBalance = projectCashBalance - totalCashOutlay;
+  const isCashDeficit = Boolean(formProjectId && projectCashBalance < totalCashOutlay);
 
   const formatRupiah = (val: number): string => {
     return 'Rp ' + Math.round(val).toLocaleString('id-ID');
@@ -626,6 +633,24 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
               />
             </div>
           </div>
+
+          {/* Row 2.5: Baris Akhir Section Lokasi & Mitra (Informasi Investor Terhubung) */}
+          <div className="pt-0.5">
+            <span className="block text-[#666666] font-medium mb-1">
+              Investor
+            </span>
+            <div className="text-xs">
+              {selectedProject?.investorName ? (
+                <span className="text-black font-bold">
+                  {selectedProject.investorName}
+                </span>
+              ) : (
+                <span className="text-[#888888] italic">
+                  — (Pilih proyek tujuan terlebih dahulu)
+                </span>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Section 3: Komoditas & Volume */}
@@ -781,6 +806,15 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
 
         {/* Live Calculation Box (Sesuai Formula PRD & Proteksi RBAC Margin) */}
         <div className="bg-[#ebebeb] rounded-[8px] p-3.5 space-y-1.5 mt-2">
+          {!isDispatcherUser && formProjectId && (
+            <div className="flex justify-between items-center text-[11px] text-[#666666]">
+              <span>Saldo Kas Proyek Berjalan:</span>
+              <span className="font-mono font-medium text-[#111111]">
+                {formatRupiah(projectCashBalance)}
+              </span>
+            </div>
+          )}
+
           {!isDispatcherUser && (
             <div className="flex justify-between items-center text-[11px] text-[#666666]">
               <span>Belanja Tunai Kuari:</span>
@@ -797,6 +831,23 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
             <span>Piutang Penjualan (Tempo):</span>
             <span className="font-mono font-medium text-[#111111]">{formatRupiah(totalRevenue)}</span>
           </div>
+
+          {!isDispatcherUser && formProjectId && (
+            <div className={`flex justify-between items-center text-[11px] pt-1.5 border-t border-[#dddddd] transition-colors ${
+              isCashDeficit ? 'text-[#cf1124]' : 'text-[#666666]'
+            }`}>
+              <span className="font-medium">Estimasi Sisa Saldo Kas:</span>
+              <span className="font-mono font-semibold">
+                {formatRupiah(remainingProjectBalance)}
+              </span>
+            </div>
+          )}
+
+          {!isDispatcherUser && isCashDeficit && (
+            <div className="text-[10px] text-[#cf1124] font-medium pt-0.5 leading-snug">
+              ⚠️ Peringatan: Saldo kas proyek tidak mencukupi untuk belanja tunai kuari & uang jalan tiket ini.
+            </div>
+          )}
 
           {!isDispatcherUser && (
             <div

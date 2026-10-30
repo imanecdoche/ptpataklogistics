@@ -1050,6 +1050,16 @@ Dokumen ini adalah hukum tertinggi operasional sistem. Kegagalan mematuhi aturan
       * `investor`: Terisolasi pada Dashboard dan tab Proyek miliknya serta info investasinya di tab Investor (tanpa akses ke Kuari/Suplier, Dispatcher, dan Kas talangan).
       * `dispatcher`: Mengakses Dispatcher, Proyek, Kuari/Suplier, Master Material, dan Database (tanpa akses ke tab Investor).
 
+96. **Standar Informasi Investor Terhubung & Kontrol Kecukupan Kas Proyek pada Form Ritase (Project Investor Reference & Cash Adequacy Control)**:
+    - **Baris Informasi Investor Terhubung pada Form Ritase (`DispatchForm`)**:
+      * Diletakkan di baris akhir selebar kontainer (full-width) pada Section 2 (*Lokasi & Mitra*) di formulir Catat Ritase Baru (`DispatchForm`).
+      * Menampilkan label `"Investor"` dan teks tebal nama investor penanggung jawab pendanaan proyek terkait (`selectedProject.investorName`).
+      * Jika pengguna mencatat ritase tanpa memilih proyek tujuan terlebih dahulu (order eceran/non-proyek), baris menampilkan teks placeholder halus `"— (Pilih proyek tujuan terlebih dahulu)"`.
+      * Terbuka untuk seluruh role pengguna (termasuk Dispatcher) sebagai referensi penanggung jawab pendanaan proyek.
+    - **Kontrol Kecukupan Saldo Kas Proyek Berjalan pada Live Calculation Box**:
+      * Khusus untuk akun manajemen (`!isDispatcherUser`), kotak kalkulasi ritase menampilkan baris `"Saldo Kas Proyek Berjalan"` dan baris kalkulasi `"Estimasi Sisa Saldo Kas"`.
+      * Jika total pengeluaran tunai tiket ritase (belanja tunai kuari + beban operasional jalan) melebihi saldo kas proyek berjalan, sistem menampilkan indikator peringatan visual teks merah bahwa saldo kas proyek tidak mencukupi untuk belanja kuari & operasional.
+
 
 
 
