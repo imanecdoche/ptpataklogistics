@@ -140,3 +140,7 @@ Dokumen ini mencatat seluruh riwayat, konteks percakapan, kendala lingkungan lok
 | `src/components/dispatcher/DispatchForm.tsx` | Dimodifikasi | Reorder Kuari tepat di bawah Material, penggantian tombol material dengan `MaterialCombobox`, urutan strict Tab traversal (skip checkbox & buttons), shortcut `Ctrl+Enter` langsung kembali ke Date Picker, skip Proyek & Klien saat filter bukan 'ALL' |
 | `src/components/ui/FlexibleTextarea.tsx` | Dimodifikasi | Dukungan `tabIndex` dan `onFocus` |
 | `src/components/ui/CurrencyInput.tsx` | Dimodifikasi | Dukungan `inputRef`, `onKeyDown`, dan select-all on focus |
+
+| `public/icons/material-cube.png` | Dibuat | Aset ikon kubus isometrik 3D baru pengganti thumbnail foto material |
+| `src/components/ui/MaterialCombobox.tsx` | Dimodifikasi | Menggunakan ikon kubus 3D isometrik pada preview input dan daftar autocomplete |
+| `src/lib/materialIcons.ts` | Dimodifikasi | Standardisasi return default ikon material ke `/icons/material-cube.png` |
