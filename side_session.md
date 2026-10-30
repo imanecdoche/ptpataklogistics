@@ -165,7 +165,7 @@ Kunci SSH Ed25519 baru telah digenerate pada mesin lokal:
 - **Lokasi Public Key**: `C:\Users\user\.ssh\id_ed25519.pub`
 - **Isi Public Key**:
 ```
-ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICtflpHh+XzAWdfhb0QyRQbYPwBtB06AtfVU6yD1cJ1f eraporsmk@gmail.com
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICtflpHh+XzAWdfhb0QyRQbYPwBtB06AtfVU6yD1cJ1f kazokuhairy@gmail.com
 ```
 
 ### Langkah Push ke GitHub:
