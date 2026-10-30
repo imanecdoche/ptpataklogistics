@@ -298,7 +298,7 @@ export function DashboardPage({
 
         <div className="overflow-x-auto select-text">
           <table className="w-full min-w-[1310px] table-fixed text-left text-xs border-collapse">
-            <thead className="sticky top-0 z-10 bg-[#f9f9f9] border-b border-[#eaeaea] text-[#666666] font-medium text-[11px]">
+            <thead className="sticky top-0 z-10 bg-[#f9f9f9] border-b border-[#eaeaea] text-[11px] font-semibold text-[#555555] uppercase tracking-wider select-none">
               <tr>
                 <th className="py-2.5 px-3 w-[125px] min-w-[125px] whitespace-nowrap">No. Tiket</th>
                 <th className="py-2.5 px-3 w-[115px] min-w-[115px] whitespace-nowrap">Tanggal Jalan</th>
@@ -319,7 +319,7 @@ export function DashboardPage({
             <tbody className="divide-y divide-[#eaeaea]">
               {filteredTransactions.length === 0 ? (
                 <tr>
-                  <td colSpan={hideMargin ? 11 : 12} className="py-8 text-center text-[#888888] whitespace-nowrap">
+                  <td colSpan={hideMargin ? 11 : 12} className="py-10 text-center text-[#888888] whitespace-nowrap">
                     {isLoading ? 'Memuat log aktivitas...' : 'Belum ada transaksi ritase tercatat.'}
                   </td>
                 </tr>
@@ -327,17 +327,17 @@ export function DashboardPage({
                 filteredTransactions.slice(0, 20).map(tx => (
                   <tr key={tx.id} className="hover:bg-[#fafafa] transition-colors">
                     {/* No. Tiket (Fixed 125px, Zero Wrap) */}
-                    <td className="py-3 px-3 font-mono font-medium text-[#111111] whitespace-nowrap w-[125px] align-middle">
+                    <td className="py-2.5 px-3 font-mono font-medium text-[#111111] whitespace-nowrap w-[125px] align-middle">
                       {tx.ticketNumber}
                     </td>
 
                     {/* Tanggal Jalan (Fixed 115px, Zero Wrap) */}
-                    <td className="py-3 px-3 font-mono text-[#666666] whitespace-nowrap w-[115px] align-middle">
+                    <td className="py-2.5 px-3 font-mono text-[#666666] whitespace-nowrap w-[115px] align-middle">
                       {tx.deliveryDate || (tx.date ? tx.date.slice(0, 10) : '-')}
                     </td>
 
                     {/* Armada & Supir (Fixed 130px, Zero Wrap) */}
-                    <td className="py-3 px-3 whitespace-nowrap w-[130px] align-middle">
+                    <td className="py-2.5 px-3 whitespace-nowrap w-[130px] align-middle">
                       <span className="font-mono font-bold text-[#111111] block">
                         {tx.truckPlate}
                       </span>
@@ -347,14 +347,14 @@ export function DashboardPage({
                     </td>
 
                     {/* Proyek Tujuan (Fixed 130px, Zero Wrap) */}
-                    <td className="py-3 px-3 whitespace-nowrap w-[130px] align-middle">
+                    <td className="py-2.5 px-3 whitespace-nowrap w-[130px] align-middle">
                       <span className="font-semibold text-[#111111] block truncate">
                         {tx.projectName || 'Proyek Umum'}
                       </span>
                     </td>
 
                     {/* Klien / Proyek (Fixed 140px, Zero Wrap, RunningText) */}
-                    <td className="py-3 px-3 whitespace-nowrap w-[140px] align-middle">
+                    <td className="py-2.5 px-3 whitespace-nowrap w-[140px] align-middle">
                       <RunningText
                         text={tx.clientName || tx.customerName}
                         className="font-medium text-[#111111]"
@@ -363,27 +363,28 @@ export function DashboardPage({
                     </td>
 
                     {/* Material (Fixed 125px, Zero Wrap) */}
-                    <td className="py-3 px-3 whitespace-nowrap w-[125px] align-middle">
+                    <td className="py-2.5 px-3 whitespace-nowrap w-[125px] align-middle">
                       <span className="font-medium text-[#111111]">
                         {tx.materialName}
                       </span>
                     </td>
 
                     {/* Volume (Fixed 90px, Zero Wrap) */}
-                    <td className="py-3 px-3 text-center font-mono font-semibold text-[#111111] whitespace-nowrap w-[90px] align-middle">
-                      {tx.quantity} {tx.unit}
+                    <td className="py-2.5 px-3 text-center whitespace-nowrap w-[90px] align-middle">
+                      <span className="font-bold tracking-tight text-[#111111]">{tx.quantity}</span>{' '}
+                      <span className="text-[#666666] text-[11px]">{tx.unit}</span>
                     </td>
 
                     {/* Nilai Jual (Fixed 130px, Zero Wrap) */}
-                    <td className="py-3 px-3 text-right font-mono font-medium text-[#111111] whitespace-nowrap w-[130px] align-middle">
+                    <td className="py-2.5 px-3 text-right font-bold tracking-tight text-[#111111] whitespace-nowrap w-[130px] align-middle">
                       {formatRupiah(tx.totalRevenue)}
                     </td>
 
                     {/* Laba Bersih (Fixed 130px, Zero Wrap) */}
                     {!hideMargin && (
                       <td
-                        className={`py-3 px-3 text-right font-mono font-semibold whitespace-nowrap w-[130px] align-middle ${
-                          tx.netProfit >= 0 ? 'text-[#0e9f6e]' : 'text-[#cf1124]'
+                        className={`py-2.5 px-3 text-right font-bold tracking-tight whitespace-nowrap w-[130px] align-middle ${
+                          tx.netProfit >= 0 ? 'text-emerald-700' : 'text-red-600'
                         }`}
                       >
                         {formatRupiah(tx.netProfit)}
@@ -391,7 +392,7 @@ export function DashboardPage({
                     )}
 
                     {/* Catatan Ritase (Fixed 185px, Zero Wrap, RunningText Marquee) */}
-                    <td className="py-3 px-3 whitespace-nowrap w-[185px] align-middle">
+                    <td className="py-2.5 px-3 whitespace-nowrap w-[185px] align-middle">
                       <RunningText
                         text={tx.notes}
                         className="text-[11px] text-[#666666]"
@@ -400,10 +401,10 @@ export function DashboardPage({
                     </td>
 
                     {/* Status (Fixed 80px, Zero Wrap, Tipografi Bersih) */}
-                    <td className="py-3 px-3 text-center whitespace-nowrap w-[80px] align-middle">
+                    <td className="py-2.5 px-3 text-center whitespace-nowrap w-[80px] align-middle">
                       <span
-                        className={`text-[11px] font-semibold tracking-wide ${
-                          tx.status === 'LUNAS' ? 'text-[#111111]' : 'text-[#888888]'
+                        className={`text-[11px] font-bold tracking-wide ${
+                          tx.status === 'LUNAS' ? 'text-emerald-700' : 'text-amber-700'
                         }`}
                       >
                         {tx.status === 'LUNAS' ? 'LUNAS' : 'TEMPO'}
@@ -411,7 +412,7 @@ export function DashboardPage({
                     </td>
 
                     {/* Aksi (Fixed 60px, Zero Wrap, Popover Context Menu) */}
-                    <td className="py-3 px-3 align-middle text-right whitespace-nowrap w-[60px]">
+                    <td className="py-2.5 px-3 align-middle text-right whitespace-nowrap w-[60px]">
                       <div className="flex items-center justify-end">
                         <TableActionMenu
                           items={[

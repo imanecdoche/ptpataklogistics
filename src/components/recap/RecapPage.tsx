@@ -548,21 +548,21 @@ export function RecapPage({
             /* TABEL LOGISTIK OPERASIONAL (Zero Margin Exposure)               */
             /* ============================================================== */
             <table className="w-full text-left border-collapse text-xs">
-              <thead className="bg-[#f5f5f5] text-[#666666] font-semibold text-[11px] uppercase tracking-wider border-b border-[#eaeaea] sticky top-0 z-10 select-none">
+              <thead className="sticky top-0 z-10 bg-[#f9f9f9] border-b border-[#eaeaea] text-[#555555] font-semibold text-[11px] uppercase tracking-wider select-none">
                 <tr>
-                  <th className="px-3.5 py-2.5 whitespace-nowrap min-w-[105px]">Tanggal Jalan</th>
-                  <th className="px-3.5 py-2.5 whitespace-nowrap min-w-[145px]">No. Tiket</th>
-                  <th className="px-3.5 py-2.5 whitespace-nowrap min-w-[125px]">No. Surat Jalan</th>
-                  <th className="px-3.5 py-2.5 whitespace-nowrap min-w-[105px]">Plat Truk</th>
-                  <th className="px-3.5 py-2.5 whitespace-nowrap min-w-[120px]">Supir</th>
-                  <th className="px-3.5 py-2.5 whitespace-nowrap min-w-[160px]">Proyek Tujuan</th>
-                  <th className="px-3.5 py-2.5 whitespace-nowrap min-w-[140px]">Kuari Asal</th>
-                  <th className="px-3.5 py-2.5 whitespace-nowrap min-w-[140px]">Material</th>
-                  <th className="px-3.5 py-2.5 whitespace-nowrap min-w-[95px] text-right">Volume</th>
-                  <th className="px-3.5 py-2.5 whitespace-nowrap min-w-[90px] text-center">Status</th>
+                  <th className="py-2.5 px-3 whitespace-nowrap min-w-[105px]">Tanggal Jalan</th>
+                  <th className="py-2.5 px-3 whitespace-nowrap min-w-[145px]">No. Tiket</th>
+                  <th className="py-2.5 px-3 whitespace-nowrap min-w-[125px]">No. Surat Jalan</th>
+                  <th className="py-2.5 px-3 whitespace-nowrap min-w-[105px]">Plat Truk</th>
+                  <th className="py-2.5 px-3 whitespace-nowrap min-w-[120px]">Supir</th>
+                  <th className="py-2.5 px-3 whitespace-nowrap min-w-[160px]">Proyek Tujuan</th>
+                  <th className="py-2.5 px-3 whitespace-nowrap min-w-[140px]">Kuari Asal</th>
+                  <th className="py-2.5 px-3 whitespace-nowrap min-w-[140px]">Material</th>
+                  <th className="py-2.5 px-3 whitespace-nowrap min-w-[95px] text-right">Volume</th>
+                  <th className="py-2.5 px-3 whitespace-nowrap min-w-[90px] text-center">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#f0f0f0]">
+              <tbody className="divide-y divide-[#eaeaea]">
                 {filteredTransactions.map(tx => (
                   <tr
                     key={tx.id}
@@ -570,61 +570,61 @@ export function RecapPage({
                     className="hover:bg-[#fafafa] transition-colors cursor-pointer group"
                   >
                     {/* 1. Tanggal Jalan */}
-                    <td className="px-3.5 py-2.5 whitespace-nowrap font-mono text-[#111111]">
+                    <td className="py-2.5 px-3 whitespace-nowrap font-mono text-[#555555]">
                       {tx.deliveryDate || (tx.date ? tx.date.slice(0, 10) : '—')}
                     </td>
 
                     {/* 2. No. Tiket */}
-                    <td className="px-3.5 py-2.5 whitespace-nowrap font-mono font-medium text-[#111111]">
+                    <td className="py-2.5 px-3 whitespace-nowrap font-mono font-medium text-[#111111]">
                       {tx.ticketNumber}
                     </td>
 
                     {/* 3. No. Surat Jalan */}
-                    <td className="px-3.5 py-2.5 whitespace-nowrap font-mono text-[#444444]">
+                    <td className="py-2.5 px-3 whitespace-nowrap font-mono text-[#555555]">
                       {tx.suratJalan ? tx.suratJalan : <span className="text-[#aaaaaa] font-sans">—</span>}
                     </td>
 
                     {/* 4. Plat Truk */}
-                    <td className="px-3.5 py-2.5 whitespace-nowrap font-mono font-semibold text-[#111111]">
+                    <td className="py-2.5 px-3 whitespace-nowrap font-mono font-semibold text-[#111111]">
                       {tx.truckPlate}
                     </td>
 
                     {/* 5. Supir */}
-                    <td className="px-3.5 py-2.5 whitespace-nowrap text-[#333333]">
+                    <td className="py-2.5 px-3 whitespace-nowrap text-[#333333]">
                       <RunningText text={tx.driverName || '—'} className="max-w-[120px]" />
                     </td>
 
                     {/* 6. Proyek Tujuan */}
-                    <td className="px-3.5 py-2.5 whitespace-nowrap font-medium text-[#111111]">
+                    <td className="py-2.5 px-3 whitespace-nowrap font-medium text-[#111111]">
                       <RunningText text={tx.projectName || 'Proyek Umum'} className="max-w-[160px]" />
                     </td>
 
                     {/* 7. Kuari Asal */}
-                    <td className="px-3.5 py-2.5 whitespace-nowrap text-[#444444]">
+                    <td className="py-2.5 px-3 whitespace-nowrap text-[#444444]">
                       <RunningText text={tx.quarryName || '—'} className="max-w-[140px]" />
                     </td>
 
                     {/* 8. Material */}
-                    <td className="px-3.5 py-2.5 whitespace-nowrap text-[#111111]">
+                    <td className="py-2.5 px-3 whitespace-nowrap text-[#111111]">
                       <RunningText text={tx.materialName} className="max-w-[140px]" />
                     </td>
 
                     {/* 9. Volume */}
-                    <td className="px-3.5 py-2.5 whitespace-nowrap text-right font-medium text-[#111111]">
+                    <td className="py-2.5 px-3 whitespace-nowrap text-right font-bold tracking-tight text-[#111111]">
                       {tx.quantity?.toLocaleString('id-ID')}{' '}
-                      <span className="text-[11px] text-[#777777]">{tx.unit}</span>
+                      <span className="text-[11px] font-normal text-[#777777]">{tx.unit}</span>
                     </td>
 
                     {/* 10. Status (Rule 4/24: Pure Typography, NO badges/pills/dots) */}
-                    <td className="px-3.5 py-2.5 whitespace-nowrap text-center font-semibold text-xs">
+                    <td className="py-2.5 px-3 whitespace-nowrap text-center">
                       <span
-                        className={
+                        className={`text-[11px] font-bold tracking-wide ${
                           tx.status === 'LUNAS'
-                            ? 'text-[#008060]'
-                            : 'text-[#888888]'
-                        }
+                            ? 'text-emerald-700'
+                            : 'text-amber-700'
+                        }`}
                       >
-                        {tx.status}
+                        {tx.status === 'LUNAS' ? 'LUNAS' : 'TEMPO'}
                       </span>
                     </td>
                   </tr>
@@ -636,21 +636,21 @@ export function RecapPage({
             /* TABEL FINANSIAL & MARGIN PERSEROAN (Khusus Manajemen)          */
             /* ============================================================== */
             <table className="w-full text-left border-collapse text-xs">
-              <thead className="bg-[#f5f5f5] text-[#666666] font-semibold text-[11px] uppercase tracking-wider border-b border-[#eaeaea] sticky top-0 z-10 select-none">
+              <thead className="sticky top-0 z-10 bg-[#f9f9f9] border-b border-[#eaeaea] text-[#555555] font-semibold text-[11px] uppercase tracking-wider select-none">
                 <tr>
-                  <th className="px-3.5 py-2.5 whitespace-nowrap min-w-[105px]">Tanggal</th>
-                  <th className="px-3.5 py-2.5 whitespace-nowrap min-w-[145px]">No. Tiket</th>
-                  <th className="px-3.5 py-2.5 whitespace-nowrap min-w-[125px]">No. Surat Jalan</th>
-                  <th className="px-3.5 py-2.5 whitespace-nowrap min-w-[150px]">Proyek / Klien</th>
-                  <th className="px-3.5 py-2.5 whitespace-nowrap min-w-[140px]">Komoditas & Vol</th>
-                  <th className="px-3.5 py-2.5 whitespace-nowrap min-w-[115px] text-right">Beli Kuari</th>
-                  <th className="px-3.5 py-2.5 whitespace-nowrap min-w-[115px] text-right">Operasional</th>
-                  <th className="px-3.5 py-2.5 whitespace-nowrap min-w-[120px] text-right">Omset Tempo</th>
-                  <th className="px-3.5 py-2.5 whitespace-nowrap min-w-[120px] text-right">Laba Bersih</th>
-                  <th className="px-3.5 py-2.5 whitespace-nowrap min-w-[90px] text-center">Status</th>
+                  <th className="py-2.5 px-3 whitespace-nowrap min-w-[105px]">Tanggal</th>
+                  <th className="py-2.5 px-3 whitespace-nowrap min-w-[145px]">No. Tiket</th>
+                  <th className="py-2.5 px-3 whitespace-nowrap min-w-[125px]">No. Surat Jalan</th>
+                  <th className="py-2.5 px-3 whitespace-nowrap min-w-[150px]">Proyek / Klien</th>
+                  <th className="py-2.5 px-3 whitespace-nowrap min-w-[140px]">Komoditas & Vol</th>
+                  <th className="py-2.5 px-3 whitespace-nowrap min-w-[115px] text-right">Beli Kuari</th>
+                  <th className="py-2.5 px-3 whitespace-nowrap min-w-[115px] text-right">Operasional</th>
+                  <th className="py-2.5 px-3 whitespace-nowrap min-w-[120px] text-right">Omset Tempo</th>
+                  <th className="py-2.5 px-3 whitespace-nowrap min-w-[120px] text-right">Laba Bersih</th>
+                  <th className="py-2.5 px-3 whitespace-nowrap min-w-[90px] text-center">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#f0f0f0]">
+              <tbody className="divide-y divide-[#eaeaea]">
                 {filteredTransactions.map(tx => (
                   <tr
                     key={tx.id}
@@ -658,22 +658,22 @@ export function RecapPage({
                     className="hover:bg-[#fafafa] transition-colors cursor-pointer group"
                   >
                     {/* Tanggal */}
-                    <td className="px-3.5 py-2.5 whitespace-nowrap font-mono text-[#111111]">
+                    <td className="py-2.5 px-3 whitespace-nowrap font-mono text-[#555555]">
                       {tx.deliveryDate || (tx.date ? tx.date.slice(0, 10) : '—')}
                     </td>
 
                     {/* No. Tiket */}
-                    <td className="px-3.5 py-2.5 whitespace-nowrap font-mono font-medium text-[#111111]">
+                    <td className="py-2.5 px-3 whitespace-nowrap font-mono font-medium text-[#111111]">
                       {tx.ticketNumber}
                     </td>
 
                     {/* No. Surat Jalan */}
-                    <td className="px-3.5 py-2.5 whitespace-nowrap font-mono text-[#444444]">
+                    <td className="py-2.5 px-3 whitespace-nowrap font-mono text-[#555555]">
                       {tx.suratJalan ? tx.suratJalan : <span className="text-[#aaaaaa] font-sans">—</span>}
                     </td>
 
                     {/* Proyek / Klien */}
-                    <td className="px-3.5 py-2.5 whitespace-nowrap text-[#111111]">
+                    <td className="py-2.5 px-3 whitespace-nowrap text-[#111111]">
                       <RunningText
                         text={tx.projectName || tx.clientName || tx.customerName}
                         className="max-w-[150px]"
@@ -681,7 +681,7 @@ export function RecapPage({
                     </td>
 
                     {/* Komoditas & Volume */}
-                    <td className="px-3.5 py-2.5 whitespace-nowrap text-[#111111]">
+                    <td className="py-2.5 px-3 whitespace-nowrap text-[#111111]">
                       <span className="font-medium">{tx.materialName}</span>{' '}
                       <span className="text-[11px] text-[#777777]">
                         ({tx.quantity?.toLocaleString('id-ID')} {tx.unit})
@@ -689,39 +689,39 @@ export function RecapPage({
                     </td>
 
                     {/* Beli Kuari */}
-                    <td className="px-3.5 py-2.5 whitespace-nowrap text-right font-mono text-[#111111]">
+                    <td className="py-2.5 px-3 whitespace-nowrap text-right font-bold tracking-tight text-[#111111]">
                       {formatRupiah(tx.totalBuyCost)}
                     </td>
 
                     {/* Operasional */}
-                    <td className="px-3.5 py-2.5 whitespace-nowrap text-right font-mono text-[#555555]">
+                    <td className="py-2.5 px-3 whitespace-nowrap text-right font-bold tracking-tight text-[#555555]">
                       {formatRupiah(tx.operationalCost)}
                     </td>
 
                     {/* Omset Penjualan */}
-                    <td className="px-3.5 py-2.5 whitespace-nowrap text-right font-mono font-semibold text-[#111111]">
+                    <td className="py-2.5 px-3 whitespace-nowrap text-right font-bold tracking-tight text-[#111111]">
                       {formatRupiah(tx.totalRevenue)}
                     </td>
 
                     {/* Laba Bersih Perseroan */}
                     <td
-                      className={`px-3.5 py-2.5 whitespace-nowrap text-right font-mono font-bold ${
-                        (tx.netProfit || 0) < 0 ? 'text-[#cf1124]' : 'text-[#008060]'
+                      className={`py-2.5 px-3 whitespace-nowrap text-right font-bold tracking-tight ${
+                        (tx.netProfit || 0) < 0 ? 'text-[#cf1124]' : 'text-emerald-700'
                       }`}
                     >
                       {formatRupiah(tx.netProfit)}
                     </td>
 
                     {/* Status (Rule 4/24: Pure Typography, NO badges/pills/dots) */}
-                    <td className="px-3.5 py-2.5 whitespace-nowrap text-center font-semibold text-xs">
+                    <td className="py-2.5 px-3 whitespace-nowrap text-center">
                       <span
-                        className={
+                        className={`text-[11px] font-bold tracking-wide ${
                           tx.status === 'LUNAS'
-                            ? 'text-[#008060]'
-                            : 'text-[#888888]'
-                        }
+                            ? 'text-emerald-700'
+                            : 'text-amber-700'
+                        }`}
                       >
-                        {tx.status}
+                        {tx.status === 'LUNAS' ? 'LUNAS' : 'TEMPO'}
                       </span>
                     </td>
                   </tr>

@@ -161,40 +161,39 @@ export function DispatchTable({
       </div>
 
       {/* Area Tabel Data */}
-      <div className="flex-1 overflow-x-auto overflow-y-auto mt-2 min-h-[280px]">
-        {isLoading ? (
-          <div className="h-48 flex items-center justify-center text-xs text-[#888888]">
-            Memuat data ritase...
-          </div>
-        ) : filteredTransactions.length === 0 ? (
-          <div className="h-48 flex flex-col items-center justify-center text-center p-4">
-            <span className="text-xs text-[#888888]">
-              Tidak ada catatan ritase pada tanggal ini ({selectedDate}).
-            </span>
-            <span className="text-[11px] text-[#aaaaaa] mt-1">
-              Gunakan formulir di samping untuk mencatat ritase baru.
-            </span>
-          </div>
-        ) : (
-          <table className="w-full min-w-[1295px] table-fixed text-left text-xs border-collapse">
-            <thead className="sticky top-0 z-10 bg-white border-b border-[#f0f0f0] text-[11px] font-medium text-[#888888]">
+      <div className="flex-1 overflow-x-auto overflow-y-auto mt-2 min-h-[280px] border border-[#eaeaea] rounded-[10px] bg-white">
+        <table className="w-full min-w-[1295px] table-fixed text-left text-xs border-collapse">
+          <thead className="sticky top-0 z-10 bg-[#f9f9f9] border-b border-[#eaeaea] text-[11px] font-semibold text-[#555555] uppercase tracking-wider select-none">
+            <tr>
+              <th className="py-2.5 px-3 w-[155px] min-w-[155px] whitespace-nowrap">Waktu & No. Tiket</th>
+              <th className="py-2.5 px-3 w-[130px] min-w-[130px] whitespace-nowrap">Armada / Sopir</th>
+              <th className="py-2.5 px-3 w-[130px] min-w-[130px] whitespace-nowrap">Proyek Tujuan</th>
+              <th className="py-2.5 px-3 w-[140px] min-w-[140px] whitespace-nowrap">Konsumen</th>
+              <th className="py-2.5 px-3 w-[130px] min-w-[130px] whitespace-nowrap">Kuari Asal</th>
+              <th className="py-2.5 px-3 w-[130px] min-w-[130px] whitespace-nowrap">Material & Muatan</th>
+              <th className="py-2.5 px-3 w-[190px] min-w-[190px] whitespace-nowrap">Catatan Ritase</th>
+              <th className="py-2.5 px-3 w-[140px] min-w-[140px] text-right whitespace-nowrap">
+                {hideMargin ? 'Nilai Tagihan' : 'Penjualan & Laba'}
+              </th>
+              <th className="py-2.5 px-3 w-[90px] min-w-[90px] text-center whitespace-nowrap">Status</th>
+              <th className="py-2.5 px-3 w-[60px] min-w-[60px] text-right whitespace-nowrap">Aksi</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[#eaeaea]">
+            {isLoading ? (
               <tr>
-                <th className="py-2.5 px-3 w-[155px] min-w-[155px] whitespace-nowrap">Waktu & No. Tiket</th>
-                <th className="py-2.5 px-3 w-[130px] min-w-[130px] whitespace-nowrap">Armada / Sopir</th>
-                <th className="py-2.5 px-3 w-[130px] min-w-[130px] whitespace-nowrap">Proyek Tujuan</th>
-                <th className="py-2.5 px-3 w-[140px] min-w-[140px] whitespace-nowrap">Konsumen</th>
-                <th className="py-2.5 px-3 w-[130px] min-w-[130px] whitespace-nowrap">Kuari Asal</th>
-                <th className="py-2.5 px-3 w-[130px] min-w-[130px] whitespace-nowrap">Material & Muatan</th>
-                <th className="py-2.5 px-3 w-[190px] min-w-[190px] whitespace-nowrap">Catatan Ritase</th>
-                <th className="py-2.5 px-3 w-[140px] min-w-[140px] text-right whitespace-nowrap">
-                  {hideMargin ? 'Nilai Tagihan' : 'Penjualan & Laba'}
-                </th>
-                <th className="py-2.5 px-3 w-[90px] min-w-[90px] text-center whitespace-nowrap">Status</th>
-                <th className="py-2.5 px-3 w-[60px] min-w-[60px] text-right whitespace-nowrap">Aksi</th>
+                <td colSpan={10} className="py-10 text-center text-xs text-[#888888] whitespace-nowrap">
+                  Memuat data ritase...
+                </td>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-[#f9f9f9]">
-              {filteredTransactions.map(tx => {
+            ) : filteredTransactions.length === 0 ? (
+              <tr>
+                <td colSpan={10} className="py-10 text-center text-xs text-[#888888] whitespace-nowrap">
+                  Tidak ada catatan ritase pada tanggal ini ({selectedDate}).
+                </td>
+              </tr>
+            ) : (
+              filteredTransactions.map(tx => {
                 const deliveryDateObj = tx.deliveryDate
                   ? new Date(tx.deliveryDate + 'T00:00:00')
                   : new Date(tx.createdAt || tx.date || '');
@@ -220,7 +219,7 @@ export function DispatchTable({
                     className="hover:bg-[#fafafa] transition-colors"
                   >
                     {/* Waktu & Tiket (Fixed 155px, Zero Wrap) */}
-                    <td className="py-3 px-3 align-middle whitespace-nowrap w-[155px]">
+                    <td className="py-2.5 px-3 align-middle whitespace-nowrap w-[155px]">
                       <div className="font-mono font-bold text-[#111111]">
                         {tx.ticketNumber}
                       </div>
@@ -233,7 +232,7 @@ export function DispatchTable({
                     </td>
 
                     {/* Truk & Sopir (Fixed 130px, Zero Wrap) */}
-                    <td className="py-3 px-3 align-middle whitespace-nowrap w-[130px]">
+                    <td className="py-2.5 px-3 align-middle whitespace-nowrap w-[130px]">
                       <div className="font-mono font-semibold text-[#111111]">
                         {tx.truckPlate}
                       </div>
@@ -243,7 +242,7 @@ export function DispatchTable({
                     </td>
 
                     {/* Proyek Tujuan (Fixed 130px, Zero Wrap, RunningText) */}
-                    <td className="py-3 px-3 align-middle whitespace-nowrap w-[130px]">
+                    <td className="py-2.5 px-3 align-middle whitespace-nowrap w-[130px]">
                       <RunningText
                         text={tx.projectName}
                         className="font-medium text-[#111111]"
@@ -252,7 +251,7 @@ export function DispatchTable({
                     </td>
 
                     {/* Konsumen (Fixed 140px, Zero Wrap, RunningText) */}
-                    <td className="py-3 px-3 align-middle whitespace-nowrap w-[140px]">
+                    <td className="py-2.5 px-3 align-middle whitespace-nowrap w-[140px]">
                       <RunningText
                         text={tx.clientName || tx.customerName}
                         className="font-medium text-[#111111]"
@@ -261,7 +260,7 @@ export function DispatchTable({
                     </td>
 
                     {/* Kuari Asal (Fixed 130px, Zero Wrap, RunningText) */}
-                    <td className="py-3 px-3 align-middle whitespace-nowrap w-[130px]">
+                    <td className="py-2.5 px-3 align-middle whitespace-nowrap w-[130px]">
                       <RunningText
                         text={tx.quarryName}
                         className="font-medium text-[#555555]"
@@ -270,17 +269,17 @@ export function DispatchTable({
                     </td>
 
                     {/* Material & Muatan (Fixed 130px, Zero Wrap) */}
-                    <td className="py-3 px-3 align-middle whitespace-nowrap w-[130px]">
+                    <td className="py-2.5 px-3 align-middle whitespace-nowrap w-[130px]">
                       <div className="font-medium text-[#111111]">
                         {tx.materialName}
                       </div>
-                      <div className="text-[11px] font-mono text-[#666666] mt-0.5">
-                        {tx.quantity} {tx.unit}
+                      <div className="text-[11px] text-[#666666] mt-0.5 whitespace-nowrap">
+                        <span className="font-bold tracking-tight text-[#111111]">{tx.quantity}</span> {tx.unit}
                       </div>
                     </td>
 
                     {/* Catatan Ritase (Fixed 190px, Zero Wrap, RunningText Marquee) */}
-                    <td className="py-3 px-3 align-middle whitespace-nowrap w-[190px]">
+                    <td className="py-2.5 px-3 align-middle whitespace-nowrap w-[190px]">
                       <RunningText
                         text={tx.notes}
                         className="text-[11px] text-[#666666]"
@@ -289,22 +288,22 @@ export function DispatchTable({
                     </td>
 
                     {/* Finansial (Fixed 140px, Zero Wrap) */}
-                    <td className="py-3 px-3 align-middle text-right whitespace-nowrap w-[140px]">
-                      <div className="font-mono font-medium text-[#111111]">
+                    <td className="py-2.5 px-3 align-middle text-right whitespace-nowrap w-[140px]">
+                      <div className="font-bold tracking-tight text-[#111111]">
                         {formatRupiah(tx.totalRevenue)}
                       </div>
                       {!hideMargin && (
-                        <div className="font-mono text-[11px] text-[#666666] mt-0.5">
+                        <div className="font-bold tracking-tight text-[11px] text-emerald-700 mt-0.5">
                           +{formatRupiah(tx.netProfit)}
                         </div>
                       )}
                     </td>
 
-                    {/* Status (Fixed 90px, Zero Wrap, Tipografi Bersih) */}
-                    <td className="py-3 px-3 align-middle text-center whitespace-nowrap w-[90px]">
+                    {/* Status (Fixed 90px, Zero Wrap, Tipografi Semantik Bersih) */}
+                    <td className="py-2.5 px-3 align-middle text-center whitespace-nowrap w-[90px]">
                       <span
-                        className={`text-[11px] font-semibold tracking-wide ${
-                          tx.status === 'LUNAS' ? 'text-[#111111]' : 'text-[#888888]'
+                        className={`text-[11px] font-bold tracking-wide ${
+                          tx.status === 'LUNAS' ? 'text-emerald-700' : 'text-amber-700'
                         }`}
                       >
                         {tx.status === 'LUNAS' ? 'LUNAS' : 'TEMPO'}
@@ -312,7 +311,7 @@ export function DispatchTable({
                     </td>
 
                     {/* Aksi (Fixed 60px, Zero Wrap, Popover Context Menu) */}
-                    <td className="py-3 px-3 align-middle text-right whitespace-nowrap w-[60px]">
+                    <td className="py-2.5 px-3 align-middle text-right whitespace-nowrap w-[60px]">
                       <div className="flex items-center justify-end">
                         <TableActionMenu
                           items={[
@@ -338,11 +337,10 @@ export function DispatchTable({
                     </td>
                   </tr>
                 );
-              })}
-            </tbody>
-          </table>
-
-        )}
+              })
+            )}
+          </tbody>
+        </table>
       </div>
 
       {/* Modal Detail Rincian Ritase */}

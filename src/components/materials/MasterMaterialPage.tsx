@@ -23,6 +23,8 @@ import { CurrencyInput } from '@/components/ui/CurrencyInput';
 import { useDialog } from '@/context/DialogContext';
 import { useProjectFilter } from '@/context/ProjectFilterContext';
 import { formatEntityNameLive } from '@/lib/nameUtils';
+import { TableActionMenu } from '@/components/ui/TableActionMenu';
+import { MobileTitlebarAction } from '@/components/ui/MobileTitlebarAction';
 
 export type MaterialSubTab = 'catalog' | 'pricing' | 'routes';
 
@@ -563,6 +565,37 @@ export function MasterMaterialPage({
 
   return (
     <div className="w-full space-y-4">
+      {/* Mobile Titlebar Action Button (Rule 108: Dynamic per Sub-Tab) */}
+      <MobileTitlebarAction>
+        {currentSubTab === 'catalog' && (
+          <button
+            type="button"
+            onClick={handleOpenAddCommodity}
+            className="px-2.5 py-1 bg-[#111111] hover:bg-[#2b2b2b] text-white text-xs font-semibold rounded-[6px] transition-colors cursor-pointer whitespace-nowrap"
+          >
+            + Komoditas Baru
+          </button>
+        )}
+        {currentSubTab === 'pricing' && !isDispatcherUser && (
+          <button
+            type="button"
+            onClick={handleOpenAddRate}
+            className="px-2.5 py-1 bg-[#111111] hover:bg-[#2b2b2b] text-white text-xs font-semibold rounded-[6px] transition-colors cursor-pointer whitespace-nowrap"
+          >
+            + Atur Harga
+          </button>
+        )}
+        {currentSubTab === 'routes' && (
+          <button
+            type="button"
+            onClick={handleOpenAddRoute}
+            className="px-2.5 py-1 bg-[#111111] hover:bg-[#2b2b2b] text-white text-xs font-semibold rounded-[6px] transition-colors cursor-pointer whitespace-nowrap"
+          >
+            + Tambah Rute
+          </button>
+        )}
+      </MobileTitlebarAction>
+
       {/* Sub-Tab Navigation Bar (Monochromatic clean per Rule 66) */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#eaeaea] pb-3">
         <div className="flex items-center gap-1.5 p-1 bg-[#f5f5f5] rounded-[8px]">
@@ -636,7 +669,7 @@ export function MasterMaterialPage({
             <button
               type="button"
               onClick={handleOpenAddRate}
-              className="px-3 py-1.5 bg-[#111111] hover:bg-[#222222] text-white rounded-[6px] text-xs font-semibold transition-colors flex items-center gap-1.5"
+              className="hidden md:flex px-3 py-1.5 bg-[#111111] hover:bg-[#222222] text-white rounded-[6px] text-xs font-semibold transition-colors items-center gap-1.5"
             >
               <span>+</span>
               <span>Atur Harga Kuari</span>
@@ -655,19 +688,19 @@ export function MasterMaterialPage({
                     <th className="py-2.5 px-3 w-[13%] text-right">Tebus Cash</th>
                     <th className="py-2.5 px-3 w-[13%] text-right">Jual Standar</th>
                     <th className="py-2.5 px-3 w-[14%] text-right">Margin Kotor</th>
-                    <th className="py-2.5 px-3 w-[8%] text-center">Aksi</th>
+                    <th className="py-2.5 px-3 w-[60px] text-right">Aksi</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#eaeaea]">
                   {isLoading ? (
                     <tr>
-                      <td colSpan={8} className="py-8 text-center text-xs text-[#888888]">
+                      <td colSpan={8} className="py-10 text-center text-xs text-[#888888] whitespace-nowrap">
                         Memuat data harga kuari...
                       </td>
                     </tr>
                   ) : filteredRates.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="py-8 text-center text-xs text-[#888888]">
+                      <td colSpan={8} className="py-10 text-center text-xs text-[#888888] whitespace-nowrap">
                         Belum ada konfigurasi harga kuari. Klik "+ Atur Harga Kuari" untuk menambahkan.
                       </td>
                     </tr>
@@ -708,23 +741,21 @@ export function MasterMaterialPage({
                               ? `-${formatRupiah(Math.abs(margin))}`
                               : formatRupiah(0)}
                           </td>
-                          <td className="py-2.5 px-3 text-center whitespace-nowrap">
-                            <div className="flex items-center justify-center gap-1.5">
-                              <button
-                                type="button"
-                                onClick={() => handleOpenEditRate(rate)}
-                                className="text-[11px] font-semibold text-[#111111] hover:underline px-1 py-0.5"
-                              >
-                                Ubah
-                              </button>
-                              <span className="text-[#dcdcdc]">|</span>
-                              <button
-                                type="button"
-                                onClick={() => handleDeleteRate(rate)}
-                                className="text-[11px] font-semibold text-red-600 hover:underline px-1 py-0.5"
-                              >
-                                Hapus
-                              </button>
+                          <td className="py-2.5 px-3 text-right whitespace-nowrap w-[60px]">
+                            <div className="flex items-center justify-end">
+                              <TableActionMenu
+                                items={[
+                                  {
+                                    label: 'Ubah Data Harga',
+                                    onClick: () => handleOpenEditRate(rate)
+                                  },
+                                  {
+                                    label: 'Hapus Harga',
+                                    variant: 'danger',
+                                    onClick: () => handleDeleteRate(rate)
+                                  }
+                                ]}
+                              />
                             </div>
                           </td>
                         </tr>
@@ -748,7 +779,7 @@ export function MasterMaterialPage({
             <button
               type="button"
               onClick={handleOpenAddRoute}
-              className="px-3 py-1.5 bg-[#111111] hover:bg-[#222222] text-white rounded-[6px] text-xs font-semibold transition-colors flex items-center gap-1.5"
+              className="hidden md:flex px-3 py-1.5 bg-[#111111] hover:bg-[#222222] text-white rounded-[6px] text-xs font-semibold transition-colors items-center gap-1.5"
             >
               <span>+</span>
               <span>Tambah Rute Acuan</span>
@@ -764,19 +795,19 @@ export function MasterMaterialPage({
                     <th className="py-2.5 px-3 w-[28%]">Titik Bongkar (Proyek Tujuan)</th>
                     <th className="py-2.5 px-3 w-[14%] text-right">Jarak Tempuh</th>
                     <th className="py-2.5 px-3 w-[18%] text-right">Biaya Jalan Acuan</th>
-                    <th className="py-2.5 px-3 w-[12%] text-center">Aksi</th>
+                    <th className="py-2.5 px-3 w-[60px] text-right">Aksi</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#eaeaea]">
                   {isLoading ? (
                     <tr>
-                      <td colSpan={5} className="py-8 text-center text-xs text-[#888888]">
+                      <td colSpan={5} className="py-10 text-center text-xs text-[#888888] whitespace-nowrap">
                         Memuat data rute operasional...
                       </td>
                     </tr>
                   ) : filteredRoutes.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="py-8 text-center text-xs text-[#888888]">
+                      <td colSpan={5} className="py-10 text-center text-xs text-[#888888] whitespace-nowrap">
                         Belum ada data rute acuan. Klik "+ Tambah Rute Acuan" untuk membuat baru.
                       </td>
                     </tr>
@@ -800,23 +831,21 @@ export function MasterMaterialPage({
                         <td className="py-2.5 px-3 text-right font-bold tracking-tight text-[#111111] whitespace-nowrap">
                           {formatRupiah(route.standardOperationalCost)}
                         </td>
-                        <td className="py-2.5 px-3 text-center whitespace-nowrap">
-                          <div className="flex items-center justify-center gap-1.5">
-                            <button
-                              type="button"
-                              onClick={() => handleOpenEditRoute(route)}
-                              className="text-[11px] font-semibold text-[#111111] hover:underline px-1 py-0.5"
-                            >
-                              Sesuaikan
-                            </button>
-                            <span className="text-[#dcdcdc]">|</span>
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteRoute(route)}
-                              className="text-[11px] font-semibold text-red-600 hover:underline px-1 py-0.5"
-                            >
-                              Hapus
-                            </button>
+                        <td className="py-2.5 px-3 text-right whitespace-nowrap w-[60px]">
+                          <div className="flex items-center justify-end">
+                            <TableActionMenu
+                              items={[
+                                {
+                                  label: 'Sesuaikan Rute',
+                                  onClick: () => handleOpenEditRoute(route)
+                                },
+                                {
+                                  label: 'Hapus Rute',
+                                  variant: 'danger',
+                                  onClick: () => handleDeleteRoute(route)
+                                }
+                              ]}
+                            />
                           </div>
                         </td>
                       </tr>
@@ -839,7 +868,7 @@ export function MasterMaterialPage({
             <button
               type="button"
               onClick={handleOpenAddCommodity}
-              className="px-3 py-1.5 bg-[#111111] hover:bg-[#222222] text-white rounded-[6px] text-xs font-semibold transition-colors flex items-center gap-1.5"
+              className="hidden md:flex px-3 py-1.5 bg-[#111111] hover:bg-[#222222] text-white rounded-[6px] text-xs font-semibold transition-colors items-center gap-1.5"
             >
               <span>+</span>
               <span>Komoditas Baru</span>
@@ -858,26 +887,26 @@ export function MasterMaterialPage({
                       <th className="py-2.5 px-3 w-[18%] text-right">Harga Beli Dasar</th>
                     )}
                     <th className={`py-2.5 px-3 ${isDispatcherUser ? 'w-[28%]' : 'w-[18%]'} text-right`}>Harga Jual Dasar</th>
-                    <th className="py-2.5 px-3 w-[10%] text-center">Aksi</th>
+                    <th className="py-2.5 px-3 w-[60px] text-right">Aksi</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#eaeaea]">
                   {isLoading ? (
                     <tr>
-                      <td colSpan={isDispatcherUser ? 5 : 6} className="py-8 text-center text-xs text-[#888888]">
+                      <td colSpan={isDispatcherUser ? 5 : 6} className="py-10 text-center text-xs text-[#888888] whitespace-nowrap">
                         Memuat data komoditas material...
                       </td>
                     </tr>
                   ) : filteredCommodities.length === 0 ? (
                     <tr>
-                      <td colSpan={isDispatcherUser ? 5 : 6} className="py-8 text-center text-xs text-[#888888]">
+                      <td colSpan={isDispatcherUser ? 5 : 6} className="py-10 text-center text-xs text-[#888888] whitespace-nowrap">
                         Belum ada komoditas material. Klik "+ Komoditas Baru" untuk menambahkan.
                       </td>
                     </tr>
                   ) : (
                     filteredCommodities.map((item, idx) => (
                       <tr key={item.id} className="hover:bg-[#fafafa] transition-colors">
-                        <td className="py-2.5 px-3 font-semibold text-[#555555] whitespace-nowrap">
+                        <td className="py-2.5 px-3 font-mono font-semibold text-[#555555] whitespace-nowrap">
                           {item.id.startsWith('mat-') ? item.id.toUpperCase() : `MAT-${String(idx + 1).padStart(2, '0')}`}
                         </td>
                         <td className="py-2.5 px-3 font-semibold text-[#111111] truncate">
@@ -894,23 +923,21 @@ export function MasterMaterialPage({
                         <td className="py-2.5 px-3 text-right font-bold tracking-tight text-[#111111] whitespace-nowrap">
                           {formatRupiah(item.defaultSellPrice)}
                         </td>
-                        <td className="py-2.5 px-3 text-center whitespace-nowrap">
-                          <div className="flex items-center justify-center gap-1.5">
-                            <button
-                              type="button"
-                              onClick={() => handleOpenEditCommodity(item)}
-                              className="text-[11px] font-semibold text-[#111111] hover:underline px-1 py-0.5"
-                            >
-                              Edit
-                            </button>
-                            <span className="text-[#dcdcdc]">|</span>
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteCommodity(item)}
-                              className="text-[11px] font-semibold text-red-600 hover:underline px-1 py-0.5"
-                            >
-                              Hapus
-                            </button>
+                        <td className="py-2.5 px-3 text-right whitespace-nowrap w-[60px]">
+                          <div className="flex items-center justify-end">
+                            <TableActionMenu
+                              items={[
+                                {
+                                  label: 'Edit Komoditas',
+                                  onClick: () => handleOpenEditCommodity(item)
+                                },
+                                {
+                                  label: 'Hapus Komoditas',
+                                  variant: 'danger',
+                                  onClick: () => handleDeleteCommodity(item)
+                                }
+                              ]}
+                            />
                           </div>
                         </td>
                       </tr>

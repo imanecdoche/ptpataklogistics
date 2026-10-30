@@ -115,6 +115,9 @@ export function AppShell({
     }
   };
 
+  const PROJECT_FILTER_SUPPORTED_TABS: NavigationTab[] = ['dashboard', 'dispatcher', 'recap'];
+  const showProjectFilter = PROJECT_FILTER_SUPPORTED_TABS.includes(activeTab);
+
   return (
     <div className="h-dvh max-h-dvh overflow-hidden bg-[#fafafa] flex flex-col md:flex-row font-sans text-[#171717]">
       {/* Sidebar Component */}
@@ -165,23 +168,25 @@ export function AppShell({
             </h1>
           </div>
 
-          {/* Global Project Switcher Dropdown (Custom UI per Rule 87) */}
-          <div className="flex items-center gap-2 w-72">
-            <span className="text-xs text-[#666666] font-medium whitespace-nowrap">Proyek:</span>
-            <div className="flex-1">
-              <CustomSelectCombobox
-                options={[
-                  ...(!isInvestorUser ? [{ id: 'ALL', label: 'Semua Proyek (Global)' }] : []),
-                  ...projects.map(p => ({ id: p.id, label: p.name }))
-                ]}
-                value={selectedProjectId}
-                onChange={val => setSelectedProjectId(val)}
-                disabled={isInvestorUser}
-                placeholder="Pilih Proyek..."
-                searchable={false}
-              />
+          {/* Global Project Switcher Dropdown (Contextual per Rule 107) */}
+          {showProjectFilter && (
+            <div className="flex items-center gap-2 w-72">
+              <span className="text-xs text-[#666666] font-medium whitespace-nowrap">Proyek:</span>
+              <div className="flex-1">
+                <CustomSelectCombobox
+                  options={[
+                    ...(!isInvestorUser ? [{ id: 'ALL', label: 'Semua Proyek (Global)' }] : []),
+                    ...projects.map(p => ({ id: p.id, label: p.name }))
+                  ]}
+                  value={selectedProjectId}
+                  onChange={val => setSelectedProjectId(val)}
+                  disabled={isInvestorUser}
+                  placeholder="Pilih Proyek..."
+                  searchable={false}
+                />
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Main Workspace Body & Mobile Natural Scrolling Flow */}
@@ -215,31 +220,34 @@ export function AppShell({
             <div className="w-8" aria-hidden="true" />
           </header>
 
-          {/* Mobile Page Title & Project Switcher (Hanya Title per Rule 88) */}
+          {/* Mobile Page Title & Action & Project Switcher (Rule 88 & Rule 108) */}
           <div className="md:hidden bg-white border-b border-[#eaeaea] px-4 py-2.5 flex flex-col gap-2 flex-shrink-0">
-            <div>
+            <div className="flex items-center justify-between gap-2 min-h-[30px]">
               <h1 className="text-base font-bold tracking-tight text-[#111111]">
                 {currentTabInfo.mobileTitle || currentTabInfo.title}
               </h1>
+              <div id="mobile-titlebar-action" className="flex items-center" />
             </div>
 
-            {/* Mobile Project Switcher (Custom UI per Rule 87) */}
-            <div className="flex items-center gap-2 pt-1 border-t border-[#f0f0f0]">
-              <span className="text-[11px] text-[#666666] font-medium whitespace-nowrap">Proyek:</span>
-              <div className="flex-1">
-                <CustomSelectCombobox
-                  options={[
-                    ...(!isInvestorUser ? [{ id: 'ALL', label: 'Semua Proyek (Global)' }] : []),
-                    ...projects.map(p => ({ id: p.id, label: p.name }))
-                  ]}
-                  value={selectedProjectId}
-                  onChange={val => setSelectedProjectId(val)}
-                  disabled={isInvestorUser}
-                  placeholder="Pilih Proyek..."
-                  searchable={false}
-                />
+            {/* Mobile Project Switcher (Contextual per Rule 107) */}
+            {showProjectFilter && (
+              <div className="flex items-center gap-2 pt-1 border-t border-[#f0f0f0]">
+                <span className="text-[11px] text-[#666666] font-medium whitespace-nowrap">Proyek:</span>
+                <div className="flex-1">
+                  <CustomSelectCombobox
+                    options={[
+                      ...(!isInvestorUser ? [{ id: 'ALL', label: 'Semua Proyek (Global)' }] : []),
+                      ...projects.map(p => ({ id: p.id, label: p.name }))
+                    ]}
+                    value={selectedProjectId}
+                    onChange={val => setSelectedProjectId(val)}
+                    disabled={isInvestorUser}
+                    placeholder="Pilih Proyek..."
+                    searchable={false}
+                  />
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Children Content Body */}

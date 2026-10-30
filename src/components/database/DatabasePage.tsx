@@ -670,104 +670,102 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
         {activeSubTab === 'ritase' && (
           <div className="overflow-x-auto select-text max-h-[640px]">
             <table className="w-full min-w-[1680px] table-fixed text-left text-xs border-collapse">
-              <thead className="sticky top-0 z-10 bg-[#f9f9f9] border-b border-[#eaeaea] text-[#666666] font-medium text-[11px]">
+              <thead className="sticky top-0 z-10 bg-[#f9f9f9] border-b border-[#eaeaea] text-[#555555] font-semibold text-[11px] uppercase tracking-wider select-none">
                 <tr>
-                  <th className="py-2.5 px-3.5 w-[140px] min-w-[140px] whitespace-nowrap">No. Tiket</th>
-                  <th className="py-2.5 px-3.5 w-[105px] min-w-[105px] whitespace-nowrap">Tanggal</th>
-                  <th className="py-2.5 px-3.5 w-[110px] min-w-[110px] whitespace-nowrap">No. Plat</th>
-                  <th className="py-2.5 px-3.5 w-[130px] min-w-[130px] whitespace-nowrap">Supir</th>
-                  <th className="py-2.5 px-3.5 w-[150px] min-w-[150px] whitespace-nowrap">Proyek Tujuan</th>
-                  <th className="py-2.5 px-3.5 w-[160px] min-w-[160px] whitespace-nowrap">Konsumen</th>
-                  <th className="py-2.5 px-3.5 w-[130px] min-w-[130px] whitespace-nowrap">Kuari Asal</th>
-                  <th className="py-2.5 px-3.5 w-[140px] min-w-[140px] whitespace-nowrap">Material</th>
-                  <th className="py-2.5 px-3.5 w-[90px] min-w-[90px] whitespace-nowrap">Vol</th>
-                  <th className="py-2.5 px-3.5 w-[110px] min-w-[110px] whitespace-nowrap">Harga Jual</th>
-                  <th className="py-2.5 px-3.5 w-[125px] min-w-[125px] whitespace-nowrap">Total Omset</th>
+                  <th className="py-2.5 px-3 w-[140px] min-w-[140px] whitespace-nowrap">No. Tiket</th>
+                  <th className="py-2.5 px-3 w-[105px] min-w-[105px] whitespace-nowrap">Tanggal</th>
+                  <th className="py-2.5 px-3 w-[110px] min-w-[110px] whitespace-nowrap">No. Plat</th>
+                  <th className="py-2.5 px-3 w-[130px] min-w-[130px] whitespace-nowrap">Supir</th>
+                  <th className="py-2.5 px-3 w-[150px] min-w-[150px] whitespace-nowrap">Proyek Tujuan</th>
+                  <th className="py-2.5 px-3 w-[160px] min-w-[160px] whitespace-nowrap">Konsumen</th>
+                  <th className="py-2.5 px-3 w-[130px] min-w-[130px] whitespace-nowrap">Kuari Asal</th>
+                  <th className="py-2.5 px-3 w-[140px] min-w-[140px] whitespace-nowrap">Material</th>
+                  <th className="py-2.5 px-3 w-[90px] min-w-[90px] whitespace-nowrap">Vol</th>
+                  <th className="py-2.5 px-3 w-[110px] min-w-[110px] whitespace-nowrap">Harga Jual</th>
+                  <th className="py-2.5 px-3 w-[125px] min-w-[125px] whitespace-nowrap">Total Omset</th>
                   {!isDispatcherUser && (
-                    <th className="py-2.5 px-3.5 w-[125px] min-w-[125px] whitespace-nowrap">Belanja Kuari</th>
+                    <th className="py-2.5 px-3 w-[125px] min-w-[125px] whitespace-nowrap">Belanja Kuari</th>
                   )}
-                  <th className="py-2.5 px-3.5 w-[110px] min-w-[110px] whitespace-nowrap">Beban Ops</th>
+                  <th className="py-2.5 px-3 w-[110px] min-w-[110px] whitespace-nowrap">Beban Ops</th>
                   {!isDispatcherUser && (
-                    <th className="py-2.5 px-3.5 w-[125px] min-w-[125px] whitespace-nowrap">Laba Bersih</th>
+                    <th className="py-2.5 px-3 w-[125px] min-w-[125px] whitespace-nowrap">Laba Bersih</th>
                   )}
-                  <th className="py-2.5 px-3.5 w-[85px] min-w-[85px] whitespace-nowrap">Status</th>
-                  <th className="py-2.5 px-3.5 w-[180px] min-w-[180px] whitespace-nowrap">Catatan Ritase</th>
-                  <th className="py-2.5 px-3.5 w-[60px] min-w-[60px] text-right whitespace-nowrap">Aksi</th>
+                  <th className="py-2.5 px-3 w-[85px] min-w-[85px] text-center whitespace-nowrap">Status</th>
+                  <th className="py-2.5 px-3 w-[180px] min-w-[180px] whitespace-nowrap">Catatan Ritase</th>
+                  <th className="py-2.5 px-3 w-[60px] min-w-[60px] text-right whitespace-nowrap">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#eaeaea]">
                 {filteredTransactions.length === 0 ? (
                   <tr>
-                    <td colSpan={isDispatcherUser ? 15 : 17} className="py-10 text-center text-[#888888] whitespace-nowrap">
+                    <td colSpan={isDispatcherUser ? 15 : 17} className="py-10 text-center text-xs text-[#888888] whitespace-nowrap">
                       {isLoading ? 'Memuat riwayat ritase...' : 'Tidak ada data ritase yang sesuai filter.'}
                     </td>
                   </tr>
                 ) : (
                   filteredTransactions.map(tx => (
                     <tr key={tx.id} className="hover:bg-[#fafafa] transition-colors">
-                      <td className="py-3 px-3.5 font-mono font-bold text-[#111111] whitespace-nowrap w-[140px] align-middle">
+                      <td className="py-2.5 px-3 font-mono font-bold text-[#111111] whitespace-nowrap w-[140px] align-middle">
                         {tx.ticketNumber}
                       </td>
-                      <td className="py-3 px-3.5 font-mono text-[#444444] whitespace-nowrap w-[105px] align-middle">
+                      <td className="py-2.5 px-3 font-mono text-[#555555] whitespace-nowrap w-[105px] align-middle">
                         {tx.deliveryDate}
                       </td>
-                      <td className="py-3 px-3.5 font-mono font-bold text-[#111111] whitespace-nowrap w-[110px] align-middle">
+                      <td className="py-2.5 px-3 font-mono font-bold text-[#111111] whitespace-nowrap w-[110px] align-middle">
                         {tx.truckPlate}
                       </td>
-                      <td className="py-3 px-3.5 text-[#444444] whitespace-nowrap w-[130px] align-middle">
+                      <td className="py-2.5 px-3 text-[#444444] whitespace-nowrap w-[130px] align-middle">
                         <RunningText text={tx.driverName} placeholder="-" className="text-[#444444]" />
                       </td>
-                      <td className="py-3 px-3.5 text-[#444444] whitespace-nowrap w-[150px] align-middle">
+                      <td className="py-2.5 px-3 text-[#444444] whitespace-nowrap w-[150px] align-middle">
                         <RunningText text={tx.projectName} placeholder="-" className="text-[#444444]" />
                       </td>
-                      <td className="py-3 px-3.5 font-medium text-[#111111] whitespace-nowrap w-[160px] align-middle">
+                      <td className="py-2.5 px-3 font-medium text-[#111111] whitespace-nowrap w-[160px] align-middle">
                         <RunningText text={tx.customerName || tx.clientName} className="font-medium text-[#111111]" />
                       </td>
-                      <td className="py-3 px-3.5 text-[#555555] whitespace-nowrap w-[130px] align-middle">
+                      <td className="py-2.5 px-3 text-[#555555] whitespace-nowrap w-[130px] align-middle">
                         <RunningText text={tx.quarryName} placeholder="-" className="text-[#555555]" />
                       </td>
-                      <td className="py-3 px-3.5 text-[#555555] whitespace-nowrap w-[140px] align-middle">
+                      <td className="py-2.5 px-3 text-[#555555] whitespace-nowrap w-[140px] align-middle">
                         {tx.materialName}
                       </td>
-                      <td className="py-3 px-3.5 font-mono text-[#111111] whitespace-nowrap w-[90px] align-middle">
+                      <td className="py-2.5 px-3 font-bold tracking-tight text-[#111111] whitespace-nowrap w-[90px] align-middle">
                         {tx.quantity} {tx.unit}
                       </td>
-                      <td className="py-3 px-3.5 font-mono text-[#444444] whitespace-nowrap w-[110px] align-middle">
+                      <td className="py-2.5 px-3 font-bold tracking-tight text-[#444444] whitespace-nowrap w-[110px] align-middle">
                         {formatRupiah(tx.sellPricePerUnit)}
                       </td>
-                      <td className="py-3 px-3.5 font-mono font-bold text-[#111111] whitespace-nowrap w-[125px] align-middle">
+                      <td className="py-2.5 px-3 font-bold tracking-tight text-[#111111] whitespace-nowrap w-[125px] align-middle">
                         {formatRupiah(tx.totalRevenue)}
                       </td>
                       {!isDispatcherUser && (
-                        <td className="py-3 px-3.5 font-mono text-[#555555] whitespace-nowrap w-[125px] align-middle">
+                        <td className="py-2.5 px-3 font-bold tracking-tight text-[#555555] whitespace-nowrap w-[125px] align-middle">
                           {formatRupiah(tx.totalBuyCost)}
                         </td>
                       )}
-                      <td className="py-3 px-3.5 font-mono text-[#555555] whitespace-nowrap w-[110px] align-middle">
+                      <td className="py-2.5 px-3 font-bold tracking-tight text-[#555555] whitespace-nowrap w-[110px] align-middle">
                         {formatRupiah(tx.operationalCost)}
                       </td>
                       {!isDispatcherUser && (
-                        <td className={`py-3 px-3.5 font-mono font-bold whitespace-nowrap w-[125px] align-middle ${
-                          tx.netProfit < 0 ? 'text-[#cf1124]' : 'text-[#008060]'
+                        <td className={`py-2.5 px-3 font-bold tracking-tight whitespace-nowrap w-[125px] align-middle ${
+                          tx.netProfit < 0 ? 'text-[#cf1124]' : 'text-emerald-700'
                         }`}>
                           {formatRupiah(tx.netProfit)}
                         </td>
                       )}
-                      <td className="py-3 px-3.5 whitespace-nowrap w-[85px] align-middle">
-                        {tx.status === 'LUNAS' ? (
-                          <span className="text-[11px] font-bold text-[#008060]">
-                            LUNAS
-                          </span>
-                        ) : (
-                          <span className="text-[11px] font-bold text-[#d97706]">
-                            TEMPO
-                          </span>
-                        )}
+                      <td className="py-2.5 px-3 whitespace-nowrap w-[85px] align-middle text-center">
+                        <span
+                          className={`text-[11px] font-bold tracking-wide ${
+                            tx.status === 'LUNAS' ? 'text-emerald-700' : 'text-amber-700'
+                          }`}
+                        >
+                          {tx.status === 'LUNAS' ? 'LUNAS' : 'TEMPO'}
+                        </span>
                       </td>
-                      <td className="py-3 px-3.5 text-[#666666] whitespace-nowrap w-[180px] align-middle">
+                      <td className="py-2.5 px-3 text-[#666666] whitespace-nowrap w-[180px] align-middle">
                         <RunningText text={tx.notes} placeholder="-" className="text-[#666666]" />
                       </td>
-                      <td className="py-3 px-3.5 text-right whitespace-nowrap w-[60px] align-middle">
+                      <td className="py-2.5 px-3 text-right whitespace-nowrap w-[60px] align-middle">
                         <div className="flex items-center justify-end">
                           <TableActionMenu
                             items={[
@@ -811,46 +809,46 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
         {activeSubTab === 'vehicles' && (
           <div className="overflow-x-auto select-text">
             <table className="w-full min-w-[780px] table-fixed text-left text-xs border-collapse">
-              <thead className="sticky top-0 z-10 bg-[#f9f9f9] border-b border-[#eaeaea] text-[#666666] font-medium text-[11px]">
+              <thead className="sticky top-0 z-10 bg-[#f9f9f9] border-b border-[#eaeaea] text-[#555555] font-semibold text-[11px] uppercase tracking-wider select-none">
                 <tr>
-                  <th className="py-2.5 px-4 w-[140px] min-w-[140px] whitespace-nowrap">No. Plat Truk</th>
-                  <th className="py-2.5 px-4 w-[180px] min-w-[180px] whitespace-nowrap">Supir Terakhir / Default</th>
-                  <th className="py-2.5 px-4 w-[130px] min-w-[130px] whitespace-nowrap">Tipe Armada</th>
-                  <th className="py-2.5 px-4 w-[110px] min-w-[110px] text-center whitespace-nowrap">Total Ritase</th>
-                  <th className="py-2.5 px-4 w-[160px] min-w-[160px] whitespace-nowrap">Sumber Data</th>
-                  <th className="py-2.5 px-4 w-[60px] min-w-[60px] text-right whitespace-nowrap">Aksi</th>
+                  <th className="py-2.5 px-3 w-[140px] min-w-[140px] whitespace-nowrap">No. Plat Truk</th>
+                  <th className="py-2.5 px-3 w-[180px] min-w-[180px] whitespace-nowrap">Supir Terakhir / Default</th>
+                  <th className="py-2.5 px-3 w-[130px] min-w-[130px] whitespace-nowrap">Tipe Armada</th>
+                  <th className="py-2.5 px-3 w-[110px] min-w-[110px] text-center whitespace-nowrap">Total Ritase</th>
+                  <th className="py-2.5 px-3 w-[160px] min-w-[160px] whitespace-nowrap">Sumber Data</th>
+                  <th className="py-2.5 px-3 w-[60px] min-w-[60px] text-right whitespace-nowrap">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#eaeaea]">
                 {filteredVehicles.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-8 text-center text-[#888888] whitespace-nowrap">
+                    <td colSpan={6} className="py-10 text-center text-xs text-[#888888] whitespace-nowrap">
                       {isLoading ? 'Memuat data armada...' : 'Belum ada data armada yang sesuai.'}
                     </td>
                   </tr>
                 ) : (
                   filteredVehicles.map(v => (
                     <tr key={v.id} className="hover:bg-[#fafafa] transition-colors">
-                      <td className="py-3 px-4 font-mono font-bold text-[#111111] whitespace-nowrap w-[140px] align-middle">
+                      <td className="py-2.5 px-3 font-mono font-bold text-[#111111] whitespace-nowrap w-[140px] align-middle">
                         {v.plateNumber}
                       </td>
-                      <td className="py-3 px-4 text-[#444444] whitespace-nowrap w-[180px] align-middle">
+                      <td className="py-2.5 px-3 text-[#444444] whitespace-nowrap w-[180px] align-middle">
                         <RunningText
                           text={v.driverName}
                           placeholder="Belum tercatat"
                           className="text-[#444444]"
                         />
                       </td>
-                      <td className="py-3 px-4 text-[#666666] whitespace-nowrap w-[130px] align-middle">
+                      <td className="py-2.5 px-3 text-[#666666] whitespace-nowrap w-[130px] align-middle">
                         {v.truckType || 'Dump Truck'}
                       </td>
-                      <td className="py-3 px-4 text-center font-mono font-medium text-[#111111] whitespace-nowrap w-[110px] align-middle">
+                      <td className="py-2.5 px-3 text-center font-bold tracking-tight text-[#111111] whitespace-nowrap w-[110px] align-middle">
                         {v.totalTrips || 0} trip
                       </td>
-                      <td className="py-3 px-4 text-[11px] text-[#777777] whitespace-nowrap w-[160px] align-middle">
+                      <td className="py-2.5 px-3 text-[11px] text-[#777777] whitespace-nowrap w-[160px] align-middle">
                         {v.source === 'MANUAL' ? 'Terdaftar Master' : 'Riwayat Ritase'}
                       </td>
-                      <td className="py-3 px-4 text-right whitespace-nowrap w-[60px] align-middle">
+                      <td className="py-2.5 px-3 text-right whitespace-nowrap w-[60px] align-middle">
                         <div className="flex items-center justify-end">
                           <TableActionMenu
                             items={[
@@ -896,38 +894,38 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
         {activeSubTab === 'drivers' && (
           <div className="overflow-x-auto select-text">
             <table className="w-full min-w-[780px] table-fixed text-left text-xs border-collapse">
-              <thead className="sticky top-0 z-10 bg-[#f9f9f9] border-b border-[#eaeaea] text-[#666666] font-medium text-[11px]">
+              <thead className="sticky top-0 z-10 bg-[#f9f9f9] border-b border-[#eaeaea] text-[#555555] font-semibold text-[11px] uppercase tracking-wider select-none">
                 <tr>
-                  <th className="py-2.5 px-4 w-[170px] min-w-[170px] whitespace-nowrap">Nama Supir</th>
-                  <th className="py-2.5 px-4 w-[150px] min-w-[150px] whitespace-nowrap">Nomor HP / WhatsApp</th>
-                  <th className="py-2.5 px-4 w-[140px] min-w-[140px] whitespace-nowrap">Default Plat Truk</th>
-                  <th className="py-2.5 px-4 w-[260px] min-w-[260px] whitespace-nowrap">Catatan</th>
-                  <th className="py-2.5 px-4 w-[60px] min-w-[60px] text-right whitespace-nowrap">Aksi</th>
+                  <th className="py-2.5 px-3 w-[170px] min-w-[170px] whitespace-nowrap">Nama Supir</th>
+                  <th className="py-2.5 px-3 w-[150px] min-w-[150px] whitespace-nowrap">Nomor HP / WhatsApp</th>
+                  <th className="py-2.5 px-3 w-[140px] min-w-[140px] whitespace-nowrap">Default Plat Truk</th>
+                  <th className="py-2.5 px-3 w-[260px] min-w-[260px] whitespace-nowrap">Catatan</th>
+                  <th className="py-2.5 px-3 w-[60px] min-w-[60px] text-right whitespace-nowrap">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#eaeaea]">
                 {filteredDrivers.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="py-8 text-center text-[#888888] whitespace-nowrap">
+                    <td colSpan={5} className="py-10 text-center text-xs text-[#888888] whitespace-nowrap">
                       {isLoading ? 'Memuat data supir...' : 'Belum ada data supir tersimpan.'}
                     </td>
                   </tr>
                 ) : (
                   filteredDrivers.map(d => (
                     <tr key={d.id} className="hover:bg-[#fafafa] transition-colors">
-                      <td className="py-3 px-4 font-semibold text-[#111111] whitespace-nowrap w-[170px] align-middle">
+                      <td className="py-2.5 px-3 font-semibold text-[#111111] whitespace-nowrap w-[170px] align-middle">
                         <RunningText text={d.name} className="font-semibold text-[#111111]" />
                       </td>
-                      <td className="py-3 px-4 font-mono text-[#444444] whitespace-nowrap w-[150px] align-middle">
+                      <td className="py-2.5 px-3 font-mono text-[#444444] whitespace-nowrap w-[150px] align-middle">
                         {d.phoneNumber ? formatPhoneNumber(d.phoneNumber) : '-'}
                       </td>
-                      <td className="py-3 px-4 font-mono font-medium text-[#111111] whitespace-nowrap w-[140px] align-middle">
+                      <td className="py-2.5 px-3 font-mono font-medium text-[#111111] whitespace-nowrap w-[140px] align-middle">
                         {d.defaultPlate || '-'}
                       </td>
-                      <td className="py-3 px-4 text-[#666666] whitespace-nowrap w-[260px] align-middle">
+                      <td className="py-2.5 px-3 text-[#666666] whitespace-nowrap w-[260px] align-middle">
                         <RunningText text={d.notes} placeholder="-" className="text-[#666666]" />
                       </td>
-                      <td className="py-3 px-4 text-right whitespace-nowrap w-[60px] align-middle">
+                      <td className="py-2.5 px-3 text-right whitespace-nowrap w-[60px] align-middle">
                         <div className="flex items-center justify-end">
                           <TableActionMenu
                             items={[

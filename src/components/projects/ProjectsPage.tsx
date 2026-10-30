@@ -17,6 +17,7 @@ import { useProjectFilter } from '@/context/ProjectFilterContext';
 import { MetricCardCurrency } from '@/components/ui/MetricCardCurrency';
 import { formatEntityNameLive } from '@/lib/nameUtils';
 import { CustomSelectCombobox, SelectOption } from '@/components/ui/CustomSelectCombobox';
+import { MobileTitlebarAction } from '@/components/ui/MobileTitlebarAction';
 
 const PROJECT_STATUS_OPTIONS: SelectOption[] = [
   { id: 'ACTIVE', label: 'AKTIF' },
@@ -225,6 +226,19 @@ export function ProjectsPage({ userEmail: _userEmail }: ProjectsPageProps): Reac
 
   return (
     <div className="space-y-4">
+      {/* Mobile Titlebar Action Button (Rule 108) */}
+      {!isInvestorUser && (
+        <MobileTitlebarAction>
+          <button
+            type="button"
+            onClick={handleOpenAdd}
+            className="px-2.5 py-1 bg-[#111111] hover:bg-[#2b2b2b] text-white text-xs font-semibold rounded-[6px] transition-colors cursor-pointer whitespace-nowrap"
+          >
+            + Tambah Proyek
+          </button>
+        </MobileTitlebarAction>
+      )}
+
       {/* 1. Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="bg-white border border-[#eaeaea] rounded-[8px] p-3.5">
@@ -350,7 +364,7 @@ export function ProjectsPage({ userEmail: _userEmail }: ProjectsPageProps): Reac
               <button
                 type="button"
                 onClick={handleOpenAdd}
-                className="px-3 py-1.5 bg-[#111111] hover:bg-[#2b2b2b] text-white text-xs font-semibold rounded-[6px] transition-colors cursor-pointer whitespace-nowrap"
+                className="hidden md:inline-flex px-3 py-1.5 bg-[#111111] hover:bg-[#2b2b2b] text-white text-xs font-semibold rounded-[6px] transition-colors cursor-pointer whitespace-nowrap"
               >
                 + Tambah Proyek
               </button>
@@ -361,78 +375,86 @@ export function ProjectsPage({ userEmail: _userEmail }: ProjectsPageProps): Reac
         {/* Tabel Master Proyek (Rule 66: Table-fixed, zero-wrap, sticky header) */}
         <div className="overflow-x-auto select-text">
           <table className={`w-full ${isDispatcherUser ? 'min-w-[700px]' : 'min-w-[1070px]'} table-fixed text-left text-xs border-collapse`}>
-            <thead className="sticky top-0 z-10 bg-[#f9f9f9] border-b border-[#eaeaea] text-[#666666] font-medium text-[11px]">
+            <thead className="sticky top-0 z-10 bg-[#f9f9f9] border-b border-[#eaeaea] text-[#555555] font-semibold text-[11px] uppercase tracking-wider select-none">
               <tr>
-                <th className="py-2.5 px-4 w-[200px] min-w-[200px] whitespace-nowrap">Nama Proyek</th>
-                <th className="py-2.5 px-4 w-[160px] min-w-[160px] whitespace-nowrap">Lokasi</th>
+                <th className="py-2.5 px-3 w-[200px] min-w-[200px] whitespace-nowrap">Nama Proyek</th>
+                <th className="py-2.5 px-3 w-[160px] min-w-[160px] whitespace-nowrap">Lokasi</th>
                 {!isDispatcherUser && (
-                  <th className="py-2.5 px-4 w-[160px] min-w-[160px] whitespace-nowrap">Investor Pendana</th>
+                  <th className="py-2.5 px-3 w-[160px] min-w-[160px] whitespace-nowrap">Investor Pendana</th>
                 )}
-                <th className="py-2.5 px-4 w-[160px] min-w-[160px] whitespace-nowrap">Klien / Pemilik</th>
+                <th className="py-2.5 px-3 w-[160px] min-w-[160px] whitespace-nowrap">Klien / Pemilik</th>
                 {!isDispatcherUser && (
-                  <th className="py-2.5 px-4 w-[140px] min-w-[140px] text-right whitespace-nowrap">Modal Awal Disetor</th>
+                  <th className="py-2.5 px-3 w-[140px] min-w-[140px] text-right whitespace-nowrap">Modal Awal Disetor</th>
                 )}
                 {!isDispatcherUser && (
-                  <th className="py-2.5 px-4 w-[140px] min-w-[140px] text-right whitespace-nowrap">Saldo Kas Berjalan</th>
+                  <th className="py-2.5 px-3 w-[140px] min-w-[140px] text-right whitespace-nowrap">Saldo Kas Berjalan</th>
                 )}
-                <th className="py-2.5 px-4 w-[90px] min-w-[90px] text-center whitespace-nowrap">Status</th>
+                <th className="py-2.5 px-3 w-[90px] min-w-[90px] text-center whitespace-nowrap">Status</th>
                 {!isInvestorUser && (
-                  <th className="py-2.5 px-4 w-[60px] min-w-[60px] text-right whitespace-nowrap">Aksi</th>
+                  <th className="py-2.5 px-3 w-[60px] min-w-[60px] text-right whitespace-nowrap">Aksi</th>
                 )}
               </tr>
             </thead>
             <tbody className="divide-y divide-[#eaeaea]">
               {isLoading ? (
                 <tr>
-                  <td colSpan={isDispatcherUser ? 5 : isInvestorUser ? 7 : 8} className="py-8 text-center text-[#888888] whitespace-nowrap">
+                  <td colSpan={isDispatcherUser ? 5 : isInvestorUser ? 7 : 8} className="py-10 text-center text-xs text-[#888888] whitespace-nowrap">
                     Memuat data master proyek...
                   </td>
                 </tr>
               ) : filteredProjects.length === 0 ? (
                 <tr>
-                  <td colSpan={isDispatcherUser ? 5 : isInvestorUser ? 7 : 8} className="py-8 text-center text-[#888888] whitespace-nowrap">
+                  <td colSpan={isDispatcherUser ? 5 : isInvestorUser ? 7 : 8} className="py-10 text-center text-xs text-[#888888] whitespace-nowrap">
                     Tidak ada data proyek yang sesuai.
                   </td>
                 </tr>
               ) : (
                 filteredProjects.map(proj => (
                   <tr key={proj.id} className="hover:bg-[#fafafa] transition-colors">
-                    <td className="py-3 px-4 whitespace-nowrap w-[200px] align-middle">
+                    <td className="py-2.5 px-3 whitespace-nowrap w-[200px] align-middle">
                       <span className="font-bold text-[#111111] block truncate">{proj.name}</span>
                       <span className="text-[10px] font-mono text-[#888888] block">{proj.id}</span>
                     </td>
-                    <td className="py-3 px-4 text-[#444444] whitespace-nowrap w-[160px] align-middle">
+                    <td className="py-2.5 px-3 text-[#444444] whitespace-nowrap w-[160px] align-middle">
                       <RunningText text={proj.location} placeholder="-" className="text-[#444444]" />
                     </td>
                     {!isDispatcherUser && (
-                      <td className="py-3 px-4 text-[#111111] whitespace-nowrap w-[160px] align-middle font-medium">
+                      <td className="py-2.5 px-3 text-[#111111] whitespace-nowrap w-[160px] align-middle font-medium">
                         <RunningText text={proj.investorName} placeholder="Umum" className="text-[#111111]" />
                       </td>
                     )}
-                    <td className="py-3 px-4 text-[#444444] whitespace-nowrap w-[160px] align-middle">
+                    <td className="py-2.5 px-3 text-[#444444] whitespace-nowrap w-[160px] align-middle">
                       <RunningText text={proj.clientName} placeholder="Umum" className="text-[#444444]" />
                     </td>
                     {!isDispatcherUser && (
-                      <td className="py-3 px-4 font-mono font-medium text-[#111111] text-right whitespace-nowrap w-[140px] align-middle">
+                      <td className="py-2.5 px-3 font-bold tracking-tight text-[#111111] text-right whitespace-nowrap w-[140px] align-middle">
                         {formatRupiah(proj.initialDeposit || 0)}
                       </td>
                     )}
                     {!isDispatcherUser && (
                       <td
-                        className={`py-3 px-4 font-mono font-bold text-right whitespace-nowrap w-[140px] align-middle ${
-                          (proj.currentBalance || 0) < 0 ? 'text-[#cf1124]' : 'text-[#008060]'
+                        className={`py-2.5 px-3 font-bold tracking-tight text-right whitespace-nowrap w-[140px] align-middle ${
+                          (proj.currentBalance || 0) < 0 ? 'text-[#cf1124]' : 'text-emerald-700'
                         }`}
                       >
                         {formatRupiah(proj.currentBalance || 0)}
                       </td>
                     )}
-                    <td className="py-3 px-4 text-center whitespace-nowrap w-[90px] align-middle">
-                      <span className="text-[11px] font-semibold text-[#111111]">
+                    <td className="py-2.5 px-3 text-center whitespace-nowrap w-[90px] align-middle">
+                      <span
+                        className={`text-[11px] font-bold tracking-wide ${
+                          proj.status === 'COMPLETED'
+                            ? 'text-[#888888]'
+                            : proj.status === 'ON_HOLD'
+                            ? 'text-amber-700'
+                            : 'text-emerald-700'
+                        }`}
+                      >
                         {proj.status === 'COMPLETED' ? 'SELESAI' : proj.status === 'ON_HOLD' ? 'HOLD' : 'AKTIF'}
                       </span>
                     </td>
                     {!isInvestorUser && (
-                      <td className="py-3 px-4 text-right whitespace-nowrap w-[60px] align-middle">
+                      <td className="py-2.5 px-3 text-right whitespace-nowrap w-[60px] align-middle">
                         <div className="flex items-center justify-end">
                           <TableActionMenu
                             items={[

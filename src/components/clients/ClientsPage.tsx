@@ -8,6 +8,7 @@ import { PinAuthModal } from '@/components/ui/PinAuthModal';
 import { NewClientModal } from '@/components/ui/NewClientModal';
 import { EditClientModal } from '@/components/clients/EditClientModal';
 import { formatPhoneNumber } from '@/lib/phoneUtils';
+import { MobileTitlebarAction } from '@/components/ui/MobileTitlebarAction';
 
 interface ClientsPageProps {
   userEmail: string;
@@ -90,6 +91,17 @@ export function ClientsPage({ userEmail }: ClientsPageProps): React.JSX.Element 
 
   return (
     <div className="space-y-4">
+      {/* Mobile Titlebar Action Button (Rule 108) */}
+      <MobileTitlebarAction>
+        <button
+          type="button"
+          onClick={() => setIsNewClientModalOpen(true)}
+          className="px-2.5 py-1 bg-[#111111] hover:bg-[#2b2b2b] text-white text-xs font-semibold rounded-[6px] transition-colors cursor-pointer whitespace-nowrap"
+        >
+          + Tambah Klien
+        </button>
+      </MobileTitlebarAction>
+
       {/* 1. METRIC CARDS (Rule 99: Sans-serif tebal non-monospace) */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="bg-white border border-[#eaeaea] rounded-[8px] p-3.5">
@@ -200,7 +212,7 @@ export function ClientsPage({ userEmail }: ClientsPageProps): React.JSX.Element 
             <button
               type="button"
               onClick={() => setIsNewClientModalOpen(true)}
-              className="px-3 py-1.5 bg-[#111111] hover:bg-[#2b2b2b] text-white text-xs font-semibold rounded-[6px] transition-colors cursor-pointer whitespace-nowrap"
+              className="hidden md:inline-flex px-3 py-1.5 bg-[#111111] hover:bg-[#2b2b2b] text-white text-xs font-semibold rounded-[6px] transition-colors cursor-pointer whitespace-nowrap"
             >
               + Tambah Klien
             </button>
@@ -210,38 +222,38 @@ export function ClientsPage({ userEmail }: ClientsPageProps): React.JSX.Element 
         {/* 3. TABEL DATA KLIEN (Rule 66: Table-fixed, nowrap, sticky) */}
         <div className="overflow-x-auto select-text">
           <table className="w-full min-w-[780px] table-fixed text-left text-xs border-collapse">
-            <thead className="sticky top-0 z-10 bg-[#f9f9f9] border-b border-[#eaeaea] text-[#666666] font-medium text-[11px]">
+            <thead className="sticky top-0 z-10 bg-[#f9f9f9] border-b border-[#eaeaea] text-[#555555] font-semibold text-[11px] uppercase tracking-wider select-none">
               <tr>
-                <th className="py-2.5 px-4 w-[240px] min-w-[240px] whitespace-nowrap">Nama Klien / Perusahaan</th>
-                <th className="py-2.5 px-4 w-[120px] min-w-[120px] whitespace-nowrap">Klasifikasi</th>
-                <th className="py-2.5 px-4 w-[160px] min-w-[160px] whitespace-nowrap">PIC Lapangan</th>
-                <th className="py-2.5 px-4 w-[160px] min-w-[160px] whitespace-nowrap">Nomor HP / WhatsApp</th>
-                <th className="py-2.5 px-4 w-[60px] min-w-[60px] text-right whitespace-nowrap">Aksi</th>
+                <th className="py-2.5 px-3 w-[240px] min-w-[240px] whitespace-nowrap">Nama Klien / Perusahaan</th>
+                <th className="py-2.5 px-3 w-[120px] min-w-[120px] whitespace-nowrap">Klasifikasi</th>
+                <th className="py-2.5 px-3 w-[160px] min-w-[160px] whitespace-nowrap">PIC Lapangan</th>
+                <th className="py-2.5 px-3 w-[160px] min-w-[160px] whitespace-nowrap">Nomor HP / WhatsApp</th>
+                <th className="py-2.5 px-3 w-[60px] min-w-[60px] text-right whitespace-nowrap">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#eaeaea]">
               {filteredClients.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="py-8 text-center text-[#888888] whitespace-nowrap">
+                  <td colSpan={5} className="py-10 text-center text-xs text-[#888888] whitespace-nowrap">
                     {isLoading ? 'Memuat data klien...' : 'Belum ada data klien terdaftar.'}
                   </td>
                 </tr>
               ) : (
                 filteredClients.map(c => (
                   <tr key={c.id} className="hover:bg-[#fafafa] transition-colors">
-                    <td className="py-3 px-4 font-semibold text-[#111111] whitespace-nowrap w-[240px] align-middle">
+                    <td className="py-2.5 px-3 font-semibold text-[#111111] whitespace-nowrap w-[240px] align-middle">
                       <RunningText text={c.name} className="font-semibold text-[#111111]" />
                     </td>
-                    <td className="py-3 px-4 text-[#666666] whitespace-nowrap w-[120px] align-middle">
+                    <td className="py-2.5 px-3 text-[#666666] whitespace-nowrap w-[120px] align-middle">
                       {c.type || 'PERORANGAN'}
                     </td>
-                    <td className="py-3 px-4 text-[#444444] whitespace-nowrap w-[160px] align-middle">
+                    <td className="py-2.5 px-3 text-[#444444] whitespace-nowrap w-[160px] align-middle">
                       <RunningText text={c.picName} placeholder="-" className="text-[#444444]" />
                     </td>
-                    <td className="py-3 px-4 font-mono text-[#444444] whitespace-nowrap w-[160px] align-middle">
+                    <td className="py-2.5 px-3 font-mono text-[#444444] whitespace-nowrap w-[160px] align-middle">
                       {c.phoneNumber ? formatPhoneNumber(c.phoneNumber) : '-'}
                     </td>
-                    <td className="py-3 px-4 text-right whitespace-nowrap w-[60px] align-middle">
+                    <td className="py-2.5 px-3 text-right whitespace-nowrap w-[60px] align-middle">
                       <div className="flex items-center justify-end">
                         <TableActionMenu
                           items={[

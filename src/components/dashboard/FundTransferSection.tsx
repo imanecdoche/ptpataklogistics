@@ -10,6 +10,7 @@ import { FlexibleTextarea } from '@/components/ui/FlexibleTextarea';
 import { PinAuthModal } from '@/components/ui/PinAuthModal';
 import { CurrencyInput } from '@/components/ui/CurrencyInput';
 import { ProjectCombobox } from '@/components/ui/ProjectCombobox';
+import { TableActionMenu } from '@/components/ui/TableActionMenu';
 
 interface FundTransferSectionProps {
   projects: Project[];
@@ -142,7 +143,7 @@ export function FundTransferSection({ projects, userEmail }: FundTransferSection
         <div className="flex items-center gap-3">
           <div className="text-right hidden sm:block">
             <span className="text-[11px] text-[#888888] block">Talangan Aktif:</span>
-            <span className="font-mono font-bold text-xs text-[#cf1124]">
+            <span className="font-bold tracking-tight text-xs text-[#cf1124]">
               {formatRupiah(totalActiveLoan)}
             </span>
           </div>
@@ -159,7 +160,7 @@ export function FundTransferSection({ projects, userEmail }: FundTransferSection
       {/* Table Log Talangan */}
       <div className="overflow-x-auto select-text">
         <table className="w-full min-w-[900px] table-fixed text-left text-xs border-collapse">
-          <thead className="sticky top-0 z-10 bg-[#f9f9f9] border-b border-[#eaeaea] text-[#666666] font-medium text-[11px]">
+          <thead className="sticky top-0 z-10 bg-[#f9f9f9] border-b border-[#eaeaea] text-[#555555] font-semibold text-[11px] uppercase tracking-wider select-none">
             <tr>
               <th className="py-2.5 px-3 w-[110px] min-w-[110px] whitespace-nowrap">Tanggal</th>
               <th className="py-2.5 px-3 w-[160px] min-w-[160px] whitespace-nowrap">Dari Proyek (Sumber)</th>
@@ -167,13 +168,13 @@ export function FundTransferSection({ projects, userEmail }: FundTransferSection
               <th className="py-2.5 px-3 w-[130px] min-w-[130px] text-right whitespace-nowrap">Nominal Talangan</th>
               <th className="py-2.5 px-3 w-[200px] min-w-[200px] whitespace-nowrap">Keperluan / Catatan</th>
               <th className="py-2.5 px-3 w-[100px] min-w-[100px] text-center whitespace-nowrap">Status</th>
-              <th className="py-2.5 px-3 w-[120px] min-w-[120px] text-right whitespace-nowrap">Aksi</th>
+              <th className="py-2.5 px-3 w-[60px] min-w-[60px] text-right whitespace-nowrap">Aksi</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#eaeaea]">
             {transfers.length === 0 ? (
               <tr>
-                <td colSpan={7} className="py-8 text-center text-[#888888] whitespace-nowrap">
+                <td colSpan={7} className="py-10 text-center text-xs text-[#888888] whitespace-nowrap">
                   {isLoading ? 'Memuat log talangan...' : 'Belum ada catatan subsidi silang / kas talangan.'}
                 </td>
               </tr>
@@ -182,51 +183,53 @@ export function FundTransferSection({ projects, userEmail }: FundTransferSection
                 const isPinjam = t.status === 'PINJAM';
                 return (
                   <tr key={t.id} className="hover:bg-[#fafafa] transition-colors">
-                    <td className="py-3 px-3 font-mono text-[#666666] whitespace-nowrap w-[110px] align-middle">
+                    <td className="py-2.5 px-3 font-mono text-[#555555] whitespace-nowrap w-[110px] align-middle">
                       {t.date}
                     </td>
-                    <td className="py-3 px-3 whitespace-nowrap w-[160px] align-middle">
+                    <td className="py-2.5 px-3 whitespace-nowrap w-[160px] align-middle">
                       <span className="font-semibold text-[#111111] block truncate">
                         {t.fromProjectName}
                       </span>
                     </td>
-                    <td className="py-3 px-3 whitespace-nowrap w-[160px] align-middle">
+                    <td className="py-2.5 px-3 whitespace-nowrap w-[160px] align-middle">
                       <span className="font-semibold text-[#111111] block truncate">
                         {t.toProjectName}
                       </span>
                     </td>
-                    <td className="py-3 px-3 text-right font-mono font-bold text-[#111111] whitespace-nowrap w-[130px] align-middle">
+                    <td className="py-2.5 px-3 text-right font-bold tracking-tight text-[#111111] whitespace-nowrap w-[130px] align-middle">
                       {formatRupiah(t.amount)}
                     </td>
-                    <td className="py-3 px-3 whitespace-nowrap w-[200px] align-middle text-[#666666] text-[11px] truncate">
+                    <td className="py-2.5 px-3 whitespace-nowrap w-[200px] align-middle text-[#666666] text-[11px] truncate">
                       {t.note || '-'}
                     </td>
-                    <td className="py-3 px-3 text-center whitespace-nowrap w-[100px] align-middle">
+                    <td className="py-2.5 px-3 text-center whitespace-nowrap w-[100px] align-middle">
                       <span
-                        className={`text-[11px] font-bold px-2 py-0.5 rounded ${
-                          isPinjam
-                            ? 'bg-[#fee2e2] text-[#991b1b]'
-                            : 'bg-[#dcfce7] text-[#166534]'
+                        className={`text-[11px] font-bold tracking-wide ${
+                          isPinjam ? 'text-amber-700' : 'text-emerald-700'
                         }`}
                       >
                         {isPinjam ? 'PINJAM' : 'LUNAS'}
                       </span>
                     </td>
-                    <td className="py-3 px-3 align-middle text-right whitespace-nowrap w-[120px]">
-                      {isPinjam ? (
-                        <button
-                          type="button"
-                          onClick={() => handleInitiateSettle(t)}
-                          disabled={isSubmitting}
-                          className="px-2.5 py-1 text-[11px] font-semibold text-[#111111] bg-white border border-[#dddddd] hover:bg-[#f5f5f5] rounded-[4px] transition-colors cursor-pointer"
-                        >
-                          Kembalikan Dana
-                        </button>
-                      ) : (
-                        <span className="text-[11px] font-mono text-[#888888]">
-                          {t.settledAt ? t.settledAt.slice(0, 10) : 'Selesai'}
-                        </span>
-                      )}
+                    <td className="py-2.5 px-3 align-middle text-right whitespace-nowrap w-[60px]">
+                      <div className="flex items-center justify-end">
+                        <TableActionMenu
+                          items={[
+                            {
+                              label: isSubmitting ? 'Memproses Pengembalian...' : 'Kembalikan Dana',
+                              onClick: () => handleInitiateSettle(t),
+                              hidden: !isPinjam,
+                              disabled: isSubmitting
+                            },
+                            {
+                              label: 'Salin Keterangan',
+                              onClick: () => {
+                                navigator.clipboard.writeText(`${t.date} - ${t.fromProjectName} -> ${t.toProjectName}: ${formatRupiah(t.amount)}`);
+                              }
+                            }
+                          ]}
+                        />
+                      </div>
                     </td>
                   </tr>
                 );

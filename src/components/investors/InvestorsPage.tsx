@@ -15,6 +15,7 @@ import { MetricCardCurrency } from '@/components/ui/MetricCardCurrency';
 import { PhoneInput } from '@/components/ui/PhoneInput';
 import { formatPhoneNumber } from '@/lib/phoneUtils';
 import { formatEntityNameLive } from '@/lib/nameUtils';
+import { MobileTitlebarAction } from '@/components/ui/MobileTitlebarAction';
 
 const formatRupiah = (val: number): string =>
   'Rp ' + Math.round(val).toLocaleString('id-ID');
@@ -188,6 +189,19 @@ export function InvestorsPage({ userEmail: _userEmail }: InvestorsPageProps): Re
 
   return (
     <div className="space-y-4">
+      {/* Mobile Titlebar Action Button (Rule 108) */}
+      {!isInvestorUser && (
+        <MobileTitlebarAction>
+          <button
+            type="button"
+            onClick={handleOpenAdd}
+            className="px-2.5 py-1 bg-[#111111] hover:bg-[#2b2b2b] text-white text-xs font-semibold rounded-[6px] transition-colors cursor-pointer whitespace-nowrap"
+          >
+            + Tambah Investor
+          </button>
+        </MobileTitlebarAction>
+      )}
+
       {/* 1. Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="bg-white border border-[#eaeaea] rounded-[8px] p-3.5">
@@ -245,7 +259,7 @@ export function InvestorsPage({ userEmail: _userEmail }: InvestorsPageProps): Re
               <button
                 type="button"
                 onClick={handleOpenAdd}
-                className="px-3 py-1.5 bg-[#111111] hover:bg-[#2b2b2b] text-white text-xs font-semibold rounded-[6px] transition-colors cursor-pointer whitespace-nowrap"
+                className="hidden md:inline-flex px-3 py-1.5 bg-[#111111] hover:bg-[#2b2b2b] text-white text-xs font-semibold rounded-[6px] transition-colors cursor-pointer whitespace-nowrap"
               >
                 + Tambah Investor
               </button>
@@ -256,29 +270,29 @@ export function InvestorsPage({ userEmail: _userEmail }: InvestorsPageProps): Re
         {/* Tabel Master Investor (Rule 66) */}
         <div className="overflow-x-auto select-text">
           <table className="w-full min-w-[1050px] table-fixed text-left text-xs border-collapse">
-            <thead className="sticky top-0 z-10 bg-[#f9f9f9] border-b border-[#eaeaea] text-[#666666] font-medium text-[11px]">
+            <thead className="sticky top-0 z-10 bg-[#f9f9f9] border-b border-[#eaeaea] text-[#555555] font-semibold text-[11px] uppercase tracking-wider select-none">
               <tr>
-                <th className="py-2.5 px-4 w-[200px] min-w-[200px] whitespace-nowrap">Nama Investor</th>
-                <th className="py-2.5 px-4 w-[160px] min-w-[160px] whitespace-nowrap">No. WhatsApp / HP</th>
-                <th className="py-2.5 px-4 w-[180px] min-w-[180px] whitespace-nowrap">Rekening Bank</th>
-                <th className="py-2.5 px-4 w-[160px] min-w-[160px] whitespace-nowrap">Proyek Terkait</th>
-                <th className="py-2.5 px-4 w-[140px] min-w-[140px] text-right whitespace-nowrap">Modal Disetor</th>
-                <th className="py-2.5 px-4 w-[140px] min-w-[140px] text-right whitespace-nowrap">Kas Berjalan</th>
+                <th className="py-2.5 px-3 w-[200px] min-w-[200px] whitespace-nowrap">Nama Investor</th>
+                <th className="py-2.5 px-3 w-[160px] min-w-[160px] whitespace-nowrap">No. WhatsApp / HP</th>
+                <th className="py-2.5 px-3 w-[180px] min-w-[180px] whitespace-nowrap">Rekening Bank</th>
+                <th className="py-2.5 px-3 w-[160px] min-w-[160px] whitespace-nowrap">Proyek Terkait</th>
+                <th className="py-2.5 px-3 w-[140px] min-w-[140px] text-right whitespace-nowrap">Modal Disetor</th>
+                <th className="py-2.5 px-3 w-[140px] min-w-[140px] text-right whitespace-nowrap">Kas Berjalan</th>
                 {!isInvestorUser && (
-                  <th className="py-2.5 px-4 w-[60px] min-w-[60px] text-right whitespace-nowrap">Aksi</th>
+                  <th className="py-2.5 px-3 w-[60px] min-w-[60px] text-right whitespace-nowrap">Aksi</th>
                 )}
               </tr>
             </thead>
             <tbody className="divide-y divide-[#eaeaea]">
               {isLoading ? (
                 <tr>
-                  <td colSpan={isInvestorUser ? 6 : 7} className="py-8 text-center text-[#888888] whitespace-nowrap">
+                  <td colSpan={isInvestorUser ? 6 : 7} className="py-10 text-center text-xs text-[#888888] whitespace-nowrap">
                     Memuat data master investor...
                   </td>
                 </tr>
               ) : filteredInvestors.length === 0 ? (
                 <tr>
-                  <td colSpan={isInvestorUser ? 6 : 7} className="py-8 text-center text-[#888888] whitespace-nowrap">
+                  <td colSpan={isInvestorUser ? 6 : 7} className="py-10 text-center text-xs text-[#888888] whitespace-nowrap">
                     Tidak ada data investor yang sesuai.
                   </td>
                 </tr>
@@ -290,17 +304,17 @@ export function InvestorsPage({ userEmail: _userEmail }: InvestorsPageProps): Re
 
                   return (
                     <tr key={inv.id} className="hover:bg-[#fafafa] transition-colors">
-                      <td className="py-3 px-4 whitespace-nowrap w-[200px] align-middle">
+                      <td className="py-2.5 px-3 whitespace-nowrap w-[200px] align-middle">
                         <span className="font-bold text-[#111111] block truncate">{inv.name}</span>
                         <span className="text-[10px] font-mono text-[#888888] block">{inv.id}</span>
                       </td>
-                      <td className="py-3 px-4 font-mono text-[#444444] whitespace-nowrap w-[160px] align-middle">
+                      <td className="py-2.5 px-3 font-mono text-[#444444] whitespace-nowrap w-[160px] align-middle">
                         {inv.phoneNumber ? formatPhoneNumber(inv.phoneNumber) : '-'}
                       </td>
-                      <td className="py-3 px-4 text-[#444444] whitespace-nowrap w-[180px] align-middle">
+                      <td className="py-2.5 px-3 text-[#444444] whitespace-nowrap w-[180px] align-middle">
                         <RunningText text={inv.bankAccount} placeholder="-" className="text-[#444444]" />
                       </td>
-                      <td className="py-3 px-4 text-[#111111] whitespace-nowrap w-[160px] align-middle">
+                      <td className="py-2.5 px-3 text-[#111111] whitespace-nowrap w-[160px] align-middle">
                         {linkedProjects.length > 0 ? (
                           <div className="flex flex-col gap-0.5">
                             {linkedProjects.map(p => (
@@ -313,18 +327,18 @@ export function InvestorsPage({ userEmail: _userEmail }: InvestorsPageProps): Re
                           <span className="text-[#888888]">-</span>
                         )}
                       </td>
-                      <td className="py-3 px-4 font-mono font-medium text-[#111111] text-right whitespace-nowrap w-[140px] align-middle">
+                      <td className="py-2.5 px-3 font-bold tracking-tight text-[#111111] text-right whitespace-nowrap w-[140px] align-middle">
                         {formatRupiah(inv.initialCapital || 0)}
                       </td>
                       <td
-                        className={`py-3 px-4 font-mono font-bold text-right whitespace-nowrap w-[140px] align-middle ${
-                          currentBalance < 0 ? 'text-[#cf1124]' : 'text-[#008060]'
+                        className={`py-2.5 px-3 font-bold tracking-tight text-right whitespace-nowrap w-[140px] align-middle ${
+                          currentBalance < 0 ? 'text-[#cf1124]' : 'text-emerald-700'
                         }`}
                       >
                         {formatRupiah(currentBalance)}
                       </td>
                       {!isInvestorUser && (
-                        <td className="py-3 px-4 text-right whitespace-nowrap w-[60px] align-middle">
+                        <td className="py-2.5 px-3 text-right whitespace-nowrap w-[60px] align-middle">
                           <div className="flex items-center justify-end">
                             <TableActionMenu
                               items={[

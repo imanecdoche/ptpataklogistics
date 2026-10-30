@@ -347,21 +347,21 @@ export function DevPage({ userEmail }: DevPageProps): React.JSX.Element {
       <div className="bg-white rounded-[10px] border border-[#eaeaea] overflow-hidden">
         <div className="overflow-x-auto select-text max-h-[600px]">
           <table className="w-full min-w-[950px] table-fixed text-left text-xs border-collapse">
-            <thead className="sticky top-0 z-10 bg-[#f9f9f9] border-b border-[#eaeaea] text-[#666666] font-medium text-[11px]">
+            <thead className="sticky top-0 z-10 bg-[#f9f9f9] border-b border-[#eaeaea] text-[#555555] font-semibold text-[11px] uppercase tracking-wider select-none">
               <tr>
-                <th className="py-2.5 px-4 w-[180px] min-w-[180px] whitespace-nowrap">Nama Pengguna</th>
-                <th className="py-2.5 px-4 w-[210px] min-w-[210px] whitespace-nowrap">Email (@patak.id / @patak.dev)</th>
-                <th className="py-2.5 px-4 w-[120px] min-w-[120px] whitespace-nowrap">Peran (Role)</th>
-                <th className="py-2.5 px-4 w-[130px] min-w-[130px] whitespace-nowrap">Status Akun</th>
-                <th className="py-2.5 px-4 w-[160px] min-w-[160px] whitespace-nowrap">Sesi Aktif Terakhir</th>
-                <th className="py-2.5 px-4 w-[120px] min-w-[120px] whitespace-nowrap">Dibuat Tanggal</th>
-                <th className="py-2.5 px-4 w-[60px] min-w-[60px] text-right whitespace-nowrap">Aksi</th>
+                <th className="py-2.5 px-3 w-[180px] min-w-[180px] whitespace-nowrap">Nama Pengguna</th>
+                <th className="py-2.5 px-3 w-[210px] min-w-[210px] whitespace-nowrap">Email (@patak.id / @patak.dev)</th>
+                <th className="py-2.5 px-3 w-[120px] min-w-[120px] whitespace-nowrap">Peran (Role)</th>
+                <th className="py-2.5 px-3 w-[130px] min-w-[130px] whitespace-nowrap">Status Akun</th>
+                <th className="py-2.5 px-3 w-[160px] min-w-[160px] whitespace-nowrap">Sesi Aktif Terakhir</th>
+                <th className="py-2.5 px-3 w-[120px] min-w-[120px] whitespace-nowrap">Dibuat Tanggal</th>
+                <th className="py-2.5 px-3 w-[60px] min-w-[60px] text-right whitespace-nowrap">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#eaeaea]">
               {filteredUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-10 text-center text-[#888888] whitespace-nowrap">
+                  <td colSpan={7} className="py-10 text-center text-xs text-[#888888] whitespace-nowrap">
                     {isLoading ? 'Memuat data pengguna...' : 'Tidak ada akun yang sesuai kriteria.'}
                   </td>
                 </tr>
@@ -371,39 +371,39 @@ export function DevPage({ userEmail }: DevPageProps): React.JSX.Element {
 
                   return (
                     <tr key={u.id} className="hover:bg-[#fafafa] transition-colors">
-                      <td className="py-3 px-4 font-semibold text-[#111111] whitespace-nowrap w-[180px] align-middle">
+                      <td className="py-2.5 px-3 font-semibold text-[#111111] whitespace-nowrap w-[180px] align-middle">
                         <RunningText text={u.name} className="font-semibold text-[#111111]" />
                       </td>
-                      <td className="py-3 px-4 font-mono font-bold text-[#111111] whitespace-nowrap w-[210px] align-middle">
+                      <td className="py-2.5 px-3 font-mono font-bold text-[#111111] whitespace-nowrap w-[210px] align-middle">
                         {u.email}
                       </td>
-                      <td className="py-3 px-4 text-[#555555] whitespace-nowrap w-[120px] align-middle uppercase text-[11px] font-semibold">
+                      <td className="py-2.5 px-3 text-[#555555] whitespace-nowrap w-[120px] align-middle uppercase text-[11px] font-semibold">
                         {u.role}
                       </td>
-                      <td className="py-3 px-4 whitespace-nowrap w-[130px] align-middle">
+                      <td className="py-2.5 px-3 whitespace-nowrap w-[130px] align-middle">
                         {u.status === 'ACTIVE' && (
-                          <span className="text-[11px] font-bold text-[#008060]">
+                          <span className="text-[11px] font-bold text-emerald-700 tracking-wide">
                             AKTIF
                           </span>
                         )}
                         {u.status === 'PENDING' && (
-                          <span className="text-[11px] font-bold text-[#ca8a04]">
+                          <span className="text-[11px] font-bold text-amber-700 tracking-wide">
                             MENUNGGU ACC
                           </span>
                         )}
                         {u.status === 'INACTIVE' && (
-                          <span className="text-[11px] font-bold text-[#dc2626]">
+                          <span className="text-[11px] font-bold text-red-600 tracking-wide">
                             NONAKTIF
                           </span>
                         )}
                       </td>
-                      <td className="py-3 px-4 font-mono text-[#555555] whitespace-nowrap w-[160px] align-middle">
+                      <td className="py-2.5 px-3 font-mono text-[#555555] whitespace-nowrap w-[160px] align-middle">
                         {formatRelativeTime(u.lastLoginAt)}
                       </td>
-                      <td className="py-3 px-4 font-mono text-[#666666] whitespace-nowrap w-[120px] align-middle">
+                      <td className="py-2.5 px-3 font-mono text-[#666666] whitespace-nowrap w-[120px] align-middle">
                         {u.createdAt ? u.createdAt.slice(0, 10) : '-'}
                       </td>
-                      <td className="py-3 px-4 text-right whitespace-nowrap w-[60px] align-middle">
+                      <td className="py-2.5 px-3 text-right whitespace-nowrap w-[60px] align-middle">
                         <div className="flex items-center justify-end">
                           <TableActionMenu
                             items={[

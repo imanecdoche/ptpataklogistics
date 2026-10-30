@@ -1208,5 +1208,62 @@ Dokumen ini adalah hukum tertinggi operasional sistem. Kegagalan mematuhi aturan
       * Saat Kuari Asal dan Material dipilih, sistem WAJIB otomatis menarik (`auto-fill`) **Harga Beli** dan **Harga Jual** dari `quarry_material_rates` yang cocok. Jika belum diset khusus, sistem otomatis menggunakan harga dasar komoditas (`defaultBuyPrice` dan `defaultSellPrice`).
       * Saat Kuari Asal dan Proyek Tujuan dipilih, sistem WAJIB otomatis menarik acuan uang jalan rute dari `route_tariffs`.
 
+106. **Standar Desain & Struktur Seluruh Tabel Aplikasi (Unified Data Table Architecture)**:
+    - **Kontainer Pembungkus & Overflow**:
+      * Seluruh tabel di seluruh aplikasi wajib dibungkus dalam kontainer kartu seragam: `<div className="border border-[#eaeaea] rounded-[10px] bg-white overflow-hidden">` dengan pembungkus gulir horizontal `<div className="w-full overflow-x-auto select-text">`.
+      * Tabel menggunakan kelas `w-full table-fixed text-left text-xs border-collapse min-w-[...]`.
+    - **Header Tabel (`thead`)**:
+      * Header tabel menempel di bagian atas saat scroll vertikal (`sticky top-0 z-10 select-none`).
+      * Latar belakang solid abu-abu terang seragam: `bg-[#f9f9f9] border-b border-[#eaeaea]`.
+      * Tipografi kolom: `text-[11px] font-semibold text-[#555555] uppercase tracking-wider`.
+      * Padding sel header: `py-2.5 px-3` (atau `py-2.5 px-4` jika ruang sel longgar), rata tengah atau rata kanan sesuai jenis konten sel.
+    - **Baris & Sel Data (`tbody tr / td`)**:
+      * Kerapatan baris kompak data-dense: padding `py-2.5 px-3` (tinggi baris ~40px) untuk memaksimalkan jumlah baris data yang terbaca per layar tanpa banyak scroll.
+      * Pembatas antar-baris halus: `divide-y divide-[#eaeaea]`.
+      * Status hover baris: `hover:bg-[#fafafa] transition-colors`.
+      * Anti-wrapping mutlak: `whitespace-nowrap` pada seluruh sel per Rule 66.
+      * Teks panjang berpotensi terpotong wajib dibungkus komponen `<RunningText />`.
+    - **Tipografi Nilai Sel (Pemisahan Presisi Sans-Serif vs Monospace)**:
+      * **Nilai Finansial & Volume**: Wajib menggunakan font sans-serif tebal dengan tracking rapat (`font-bold tracking-tight text-[#111111]`) per Rule 99. DILARANG menggunakan `font-mono` untuk angka nominal Rupiah, kubikasi DT, atau tonase.
+      * **Kode Teknis & Identifier**: Menggunakan font monospace rapi (`font-mono text-[#555555]` atau `font-mono font-semibold text-[#111111]`) khusus untuk No. Tiket, No. Surat Jalan Fisik, Plat Truk, dan Kode Unik Material agar karakter berbaris rapi (*tabular alignment*).
+      * **Nama Entitas & Teks Utama**: Font sans-serif tebal elegan (`font-semibold text-[#111111]`).
+    - **Kolom Aksi Seragam (100% TableActionMenu)**:
+      * Seluruh kolom aksi di ujung kanan tabel wajib distandarisasi menggunakan komponen menu popover portal `<TableActionMenu />` (dengan ikon `public/icons/menu-bars.png` per Rule 68). Dilarang menampilkan tombol teks berjejer (`Ubah | Hapus`) langsung di baris tabel.
+    - **Kolom Status Semantik Murni (Bebas Badge/Tag/Pill)**:
+      * Status ditampilkan sebagai teks tebal bersih (`font-bold text-[11px]`) tanpa badge, tag, pill, atau dot per aturan `ai-anti-patterns.md`.
+      * Pewarnaan semantik: Hijau `text-emerald-700` untuk `LUNAS` / `ACTIVE`, Oranye/Kuning `text-amber-700` untuk `TEMPO` / `PINJAM`, Abu-abu `text-[#888888]` untuk `SELESAI` / `COMPLETED`.
+    - **Tampilan Data Kosong & Loading (In-Table Cell colSpan)**:
+      * Keadaan kosong atau memuat data wajib dirender sebagai baris tabel utuh: `<td colSpan={colCount} className="py-10 text-center text-xs text-[#888888] whitespace-nowrap">` agar struktur tabel tetap kokoh dan konsisten.
 
+107. **Standar Visibilitas Kontekstual Filter Proyek Header (Contextual Header Project Switcher)**:
+    - **Tampilan Bersyarat Sesuai Relevansi Halaman**:
+      * Dropdown pemilih proyek di header atas aplikasi (`AppShell.tsx`), baik pada tampilan desktop maupun mobile, **HANYA DITAMPILKAN** pada halaman-halaman yang datanya terikat secara langsung dengan filter proyek operasional:
+        1. `dashboard` (Dasbor Metrik & Feed Ritase Proyek)
+        2. `dispatcher` (Pencatatan Ritase & Riwayat Ritase Proyek)
+        3. `recap` (Rekapitulasi Ritase Per Proyek)
+    - **Penyembunyian Bersih pada Modul Master & Perusahaan**:
+      * Pada halaman master dan data perseroan yang bersifat global:
+        - `clients` (Katalog Klien / Perusahaan)
+        - `quarries` (Katalog Kuari Tambang)
+        - `materials` (Master Database Material & Tarif)
+        - `cash_ledger` (Buku Kas Induk & Piutang Tempo)
+        - `database` (Master Armada & Daftar Supir)
+        - `dev` (Dev Console & System Audit)
+        - `projects` (Katalog Master Seluruh Proyek)
+        - `investors` (Master Pemodal & Investor)
+      * Dropdown filter proyek **WAJIB DISEMBUNYIKAN SEPENUHNYA** dari bilah header.
+      * Menghilangkan ilusi filter fiktif dan mencegah kebingungan pengguna ("mengapa ganti proyek di header tidak ada data yang berubah sama sekali").
 
+108. **Standar Tombol Aksi Utama di Titlebar Mobile (Mobile Titlebar Primary Action Standard)**:
+    - **Penempatan Tombol Aksi di Kanan Titlebar Mobile**:
+      * Pada tampilan layar mobile (< 768px), tombol aksi utama penambahan data master (`+ Tambah Proyek`, `+ Tambah Investor`, `+ Tambah Kuari`, `+ Tambah Klien`, serta tombol dinamis di Material & Rute: `+ Komoditas Baru` / `+ Atur Harga` / `+ Tambah Rute`) **WAJIB DIPINDAHKAN ke sisi kanan titlebar mobile** di dalam header `AppShell` (`flex items-center justify-between` sejajar dengan judul halaman).
+      * Menggunakan komponen portal `<MobileTitlebarAction />` yang merender children ke dalam kontainer `<div id="mobile-titlebar-action" className="md:hidden" />` pada titlebar mobile `AppShell.tsx`.
+    - **Pelebaran Penuh Kolom Pencarian Mobile (100% Full-Width Search Input)**:
+      * Di toolbar tabel bawah pada tampilan mobile, tombol aksi disembunyikan (`hidden md:inline-flex`), sehingga kotak input pencarian (*search bar*) otomatis melebar penuh 100% (`w-full flex-1`) untuk kenyamanan pengetikan dan visual yang lega tanpa terdesak tombol.
+    - **Tampilan Desktop Tetap Berada di Toolbar Tabel**:
+      * Pada tampilan desktop (≥ 768px), tombol aksi tetap berada di dalam toolbar tabel di samping kotak pencarian (`hidden md:inline-flex`), menjaga konsistensi alur kerja desktop yang efisien.
+    - **Perilaku Dinamis pada Halaman Sub-Tab (Material & Rute)**:
+      * Pada halaman dengan multi sub-tab seperti `MasterMaterialPage`, tombol aksi di titlebar mobile wajib otomatis berubah mengikuti sub-tab yang aktif:
+        - Sub-tab Katalog: `+ Komoditas Baru`
+        - Sub-tab Harga Kuari: `+ Atur Harga`
+        - Sub-tab Rute Acuan: `+ Tambah Rute`
