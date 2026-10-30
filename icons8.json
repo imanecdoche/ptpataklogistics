@@ -1,0 +1,79 @@
+{
+  "version": 2,
+  "icons": {
+    "pack": "material_rounded",
+    "style": "solid-glyph",
+    "sizes": [16, 20, 24],
+    "color": "currentColor",
+    "items": {
+      "truck": {
+        "id": "3562",
+        "commonName": "truck",
+        "style": "glyph-filled"
+      },
+      "wallet": {
+        "id": "209",
+        "commonName": "wallet",
+        "style": "glyph-filled"
+      },
+      "barchart": {
+        "id": "15",
+        "commonName": "bar-chart",
+        "style": "glyph-filled"
+      },
+      "layers": {
+        "id": "727",
+        "commonName": "layers",
+        "style": "glyph-filled"
+      },
+      "mail": {
+        "id": "53435",
+        "commonName": "mail",
+        "style": "glyph-filled"
+      },
+      "lock": {
+        "id": "15437",
+        "commonName": "lock",
+        "style": "glyph-filled"
+      },
+      "eye": {
+        "id": "986",
+        "commonName": "eye",
+        "style": "glyph-filled"
+      },
+      "eye-off": {
+        "id": "987",
+        "commonName": "eye-off",
+        "style": "glyph-filled"
+      },
+      "google": {
+        "id": "17904",
+        "commonName": "google",
+        "style": "glyph-filled"
+      },
+      "logout": {
+        "id": "988",
+        "commonName": "logout",
+        "style": "glyph-filled"
+      },
+      "menu": {
+        "id": "3684",
+        "commonName": "menu",
+        "style": "glyph-filled"
+      },
+      "close": {
+        "id": "6483",
+        "commonName": "close",
+        "style": "glyph-filled"
+      }
+    }
+  },
+  "illustrations": {
+    "style": "none",
+    "slots": {}
+  },
+  "tokens": {
+    "iconColor": "currentColor",
+    "radius": "6px"
+  }
+}
