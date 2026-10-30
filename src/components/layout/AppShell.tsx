@@ -4,6 +4,7 @@ import { Sidebar, NavigationTab } from '@/components/layout/Sidebar';
 import { Icons8Menu } from '@/components/icons/Icons8';
 import { MobileRubberBand } from '@/components/ui/MobileRubberBand';
 import { useProjectFilter } from '@/context/ProjectFilterContext';
+import { CustomSelectCombobox } from '@/components/ui/CustomSelectCombobox';
 
 interface AppShellProps {
   user?: User | null;
@@ -133,35 +134,30 @@ export function AppShell({
           <div className="w-8" aria-hidden="true" />
         </div>
 
-        {/* Content Header Desktop (Tetap Fixed Sejajar Presisi dengan Header Sidebar) */}
-        <div className="hidden md:flex md:h-20 bg-white border-b border-[#eaeaea] px-6 items-center justify-between flex-shrink-0">
-          <div className="max-w-xl">
-            <h1 className="text-xl font-bold tracking-tight text-[#111111] leading-tight">
+        {/* Content Header Desktop (Hanya Title per Rule 88) */}
+        <div className="hidden md:flex md:h-16 bg-white border-b border-[#eaeaea] px-6 items-center justify-between flex-shrink-0">
+          <div>
+            <h1 className="text-lg font-bold tracking-tight text-[#111111]">
               {currentTabInfo.title}
             </h1>
-            <p className="text-xs text-[#666666] mt-1 leading-tight">
-              {currentTabInfo.subtitle}
-            </p>
           </div>
 
-          {/* Global Project Switcher Dropdown */}
-          <div className="flex items-center gap-2">
+          {/* Global Project Switcher Dropdown (Custom UI per Rule 87) */}
+          <div className="flex items-center gap-2 w-72">
             <span className="text-xs text-[#666666] font-medium whitespace-nowrap">Proyek:</span>
-            <select
-              value={selectedProjectId}
-              onChange={e => setSelectedProjectId(e.target.value)}
-              disabled={isInvestorUser}
-              className={`px-3 py-1.5 bg-[#f9f9f9] border border-[#dcdcdc] rounded-[8px] text-xs font-semibold text-[#111111] focus:outline-none focus:border-[#111111] transition-colors cursor-pointer ${
-                isInvestorUser ? 'opacity-70 cursor-not-allowed' : ''
-              }`}
-            >
-              {!isInvestorUser && <option value="ALL">Semua Proyek (Global Konsolidasi)</option>}
-              {projects.map(p => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
+            <div className="flex-1">
+              <CustomSelectCombobox
+                options={[
+                  ...(!isInvestorUser ? [{ id: 'ALL', label: 'Semua Proyek (Global)' }] : []),
+                  ...projects.map(p => ({ id: p.id, label: p.name, subLabel: p.location }))
+                ]}
+                value={selectedProjectId}
+                onChange={val => setSelectedProjectId(val)}
+                disabled={isInvestorUser}
+                placeholder="Pilih Proyek..."
+                searchable={false}
+              />
+            </div>
           </div>
         </div>
 
@@ -196,33 +192,30 @@ export function AppShell({
             <div className="w-8" aria-hidden="true" />
           </header>
 
-          {/* Mobile Page Title & Subtitle + Project Switcher */}
-          <div className="md:hidden bg-white border-b border-[#eaeaea] px-4 py-3 flex flex-col gap-2 flex-shrink-0">
+          {/* Mobile Page Title & Project Switcher (Hanya Title per Rule 88) */}
+          <div className="md:hidden bg-white border-b border-[#eaeaea] px-4 py-2.5 flex flex-col gap-2 flex-shrink-0">
             <div>
-              <h1 className="text-lg font-bold tracking-tight text-[#111111] leading-tight">
+              <h1 className="text-base font-bold tracking-tight text-[#111111]">
                 {currentTabInfo.mobileTitle || currentTabInfo.title}
               </h1>
-              <p className="text-[11px] text-[#666666] mt-0.5 leading-tight">
-                {currentTabInfo.subtitle}
-              </p>
             </div>
 
-            {/* Mobile Project Switcher */}
+            {/* Mobile Project Switcher (Custom UI per Rule 87) */}
             <div className="flex items-center gap-2 pt-1 border-t border-[#f0f0f0]">
               <span className="text-[11px] text-[#666666] font-medium whitespace-nowrap">Proyek:</span>
-              <select
-                value={selectedProjectId}
-                onChange={e => setSelectedProjectId(e.target.value)}
-                disabled={isInvestorUser}
-                className="flex-1 px-2.5 py-1.5 bg-[#f9f9f9] border border-[#dcdcdc] rounded-[6px] text-xs font-semibold text-[#111111] focus:outline-none focus:border-[#111111] transition-colors cursor-pointer"
-              >
-                {!isInvestorUser && <option value="ALL">Semua Proyek (Global)</option>}
-                {projects.map(p => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-              </select>
+              <div className="flex-1">
+                <CustomSelectCombobox
+                  options={[
+                    ...(!isInvestorUser ? [{ id: 'ALL', label: 'Semua Proyek (Global)' }] : []),
+                    ...projects.map(p => ({ id: p.id, label: p.name, subLabel: p.location }))
+                  ]}
+                  value={selectedProjectId}
+                  onChange={val => setSelectedProjectId(val)}
+                  disabled={isInvestorUser}
+                  placeholder="Pilih Proyek..."
+                  searchable={false}
+                />
+              </div>
             </div>
           </div>
 

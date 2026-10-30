@@ -938,5 +938,42 @@ Dokumen ini adalah hukum tertinggi operasional sistem. Kegagalan mematuhi aturan
     - **Hak Akses Penuh Manajemen (`developer`, `founder`, `admin`)**:
       * Memiliki visibilitas penuh terhadap kalkulasi omset, modal beli kuari, margin laba bersih riil, serta kontrol terhadap mutasi kas talangan antar-proyek.
 
+86. **Standar Arsitektur Master Material & Matriks Operasional 3 Titik (Commodity, Quarry Rates & Route Tariffs)**:
+    - **Model Relasi 3 Layer**:
+      * **Layer 1: Master Komoditas (`MaterialMaster` / `MaterialItem`)**: Menyimpan jenis komoditas dasar (`Batu Belah`, `Pasir Extra`, `Makadam`, `Abu Batu`), kode, kategori (`BATU`, `PASIR`, `BASE_COURSE`, `TANAH`), satuan acuan (`DT` / `Ton`), dan harga acuan dasar.
+      * **Layer 2: Katalog Mutu & Harga Tebus Kuari (`QuarryMaterialRate`)**: Menghubungkan material ke kuari/tambang asal spesifik (Titik Muat). Memuat spesifikasi grade kualitas (contoh: *Grade A — Hitam Padat Keras*, *Grade B — Batu Campur Kali*), satuan, dan harga tebus tunai cash di mulut tambang (`buyPriceCash`).
+      * **Layer 3: Matriks Tarif Biaya Jalan Rute (`RouteOperatingTariff`)**: Menghubungkan Titik Muat (Kuari Asal) ke Titik Bongkar (Proyek Tujuan). Memuat estimasi jarak tempuh rute riil (`distanceKm`) dan standar biaya operasional armada (`standardOperationalCost` acuan solar + saku sopir + retribusi jalan).
+    - **Halaman Master Material (`MasterMaterialPage`)**:
+      * Memiliki 3 sub-tab fungsional:
+        1. `harga_kuari`: Katalog Tebus Tambang (Harga & Mutu Kuari).
+        2. `rute_operasional`: Standar Biaya Jalan Operasional Armada (Rute Kuari -> Proyek).
+        3. `katalog`: Katalog Komoditas Material Terdaftar.
+      * Mematuhi seluruh aturan tabel Rule 66: `table-fixed`, zero-wrap, sticky header, format monokromatis solid-filled, angka `whitespace-nowrap`, dan font angka JetBrains Mono.
+    - **Rekomendasi Otomatis pada Form Catat Ritase (`DispatchForm`)**:
+      * Ketika operator memilih Proyek Tujuan + Kuari Asal + Jenis Material, sistem secara otomatis mengisi nilai rekomendasi:
+        1. Harga Beli Kuari (`buyPricePerUnit`) langsung terisi dari data `QuarryMaterialRate` yang cocok.
+        2. Biaya Operasional Jalan (`operationalCost`) langsung terisi dari data `RouteOperatingTariff` yang cocok sesuai rute kuari ke proyek tujuan.
+      * Operator tetap dapat menyesuaikan angka tersebut secara manual jika ada kebutuhan darurat lapangan.
+    - **Otorisasi PIN `2008005`**:
+      * Selaras dengan Aturan 76, setiap aksi penambahan/pengubahan tarif kuari, rute jalan, maupun penghapusan data di Master Material wajib melewati verifikasi PIN `2008005`.
 
+87. **Standar Custom UI Mutlak untuk Semua Elemen Picker (Mandatory Custom UI Pickers)**:
+    - **Larangan Native Select & Native Pickers**:
+      * DILARANG KERAS menggunakan tag `<select>` native browser atau date picker bawaan browser `<input type="date">` untuk pemilihan entitas apapun di seluruh aplikasi.
+    - **Implementasi Custom UI Terstandarisasi**:
+      * Seluruh pemilih data (picker/combobox/dropdown/select) WAJIB menggunakan komponen Custom UI:
+        * Pemilih Tanggal: `CustomDatePicker`
+        * Pemilih Material: `MaterialPickerModal` atau custom material picker UI
+        * Pemilih Kuari: `QuarryCombobox` atau custom kuari picker UI
+        * Pemilih Klien: `ClientCombobox`
+        * Pemilih Proyek: `ProjectCombobox` atau custom project selector UI
+        * Pemilih Satuan & Kategori: Custom UI dropdown/combobox dengan pencarian cepat, keyboard navigation, popover styling `#ffffff`, border `#eaeaea`, dan hover state `#f5f5f5`.
+    - **Visual & Ergonomi Konsisten**:
+      * Semua picker harus selaras dengan estetika clean monokromatis solid-filled, border presisi `[8px]`, font JetBrains Mono / Inter, dan bebas dari animasi melambat atau efek blur.
 
+88. **Standar Header Halaman Tab Hanya Judul Tanpa Deskripsi (Minimalist Tab Header Only Title)**:
+    - **Header Bersih Tanpa Subtitle/Deskripsi**:
+      * Seluruh header halaman tab aplikasi (baik di desktop maupun mobile) WAJIB HANYA menampilkan judul halaman (`title`).
+      * DILARANG KERAS menampilkan baris teks deskripsi, keterangan, atau subtitle di bawah judul pada header tab manapun.
+    - **Optimasi Ruang Kerja Vertikal**:
+      * Tinggi bilah header desktop dirancang kompak dan proporsional (`h-16`) agar sejajar presisi dengan dropdown switcher proyek dan menghemat ruang kerja pengguna.

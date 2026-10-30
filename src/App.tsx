@@ -9,6 +9,7 @@ import { SessionTerminatingScreen } from '@/components/auth/SessionTerminatingSc
 import { DashboardPage } from '@/components/dashboard/DashboardPage';
 import { DispatcherPage } from '@/components/dispatcher/DispatcherPage';
 import { DatabasePage } from '@/components/database/DatabasePage';
+import { MasterMaterialPage } from '@/components/materials/MasterMaterialPage';
 import { DevPage } from '@/components/dev/DevPage';
 import { OfflineOverlay } from '@/components/ui/OfflineOverlay';
 import { isDeveloperEmail } from '@/lib/userManagementService';
@@ -165,13 +166,20 @@ export default function App(): React.JSX.Element {
             <DevPage userEmail={user?.email || 'fatih@patak.dev'} />
           )}
 
-          {currentTab !== 'dashboard' && currentTab !== 'dispatcher' && currentTab !== 'database' && currentTab !== 'dev' && (
+          {currentTab === 'materials' && (
+            <MasterMaterialPage
+              userEmail={user?.email || 'admin@patak.id'}
+              activeSubTab={currentSubTab}
+              onNavigateSubTab={handleSelectSubTab}
+            />
+          )}
+
+          {currentTab !== 'dashboard' && currentTab !== 'dispatcher' && currentTab !== 'database' && currentTab !== 'dev' && currentTab !== 'materials' && (
             <div className="bg-white rounded-[10px] p-6 space-y-4">
               <div className="space-y-1">
                 <h2 className="text-sm font-semibold text-[#111111]">
                   {currentTab === 'cash_ledger' && 'Buku Kas & Piutang Tempo'}
                   {currentTab === 'recap' && 'Rekapitulasi Periode Transaksi'}
-                  {currentTab === 'materials' && 'Master Data Material Alam'}
                 </h2>
                 <p className="text-xs text-[#666666]">
                   Sistem terhubung ke database <span className="font-mono text-[#111111]">pataklogisticdb</span> di zona <span className="font-mono text-[#111111]">asia-southeast2</span>.
@@ -183,7 +191,6 @@ export default function App(): React.JSX.Element {
                 <span className="font-medium text-[#111111]">
                   {currentTab === 'cash_ledger' && 'Kas & Piutang Tempo'}
                   {currentTab === 'recap' && 'Rekapitulasi Periode'}
-                  {currentTab === 'materials' && 'Master Material'}
                 </span>
               </div>
             </div>

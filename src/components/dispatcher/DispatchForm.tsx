@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MaterialItem, UnitType, DispatchTransaction, Client, MasterQuarry } from '@/types/database';
+import { MaterialItem, UnitType, DispatchTransaction, Client, MasterQuarry, Project, QuarryMaterialRate, RouteOperatingTariff } from '@/types/database';
 import { createDispatchTransaction, CreateDispatchPayload, subscribeKnownTrucks, KnownTruck, subscribeKnownDrivers, KnownDriver } from '@/lib/dispatcherService';
 import { subscribeClients } from '@/lib/clientService';
 import { subscribeMasterQuarries } from '@/lib/databaseMasterService';
+import { subscribeQuarryRates, subscribeRouteTariffs } from '@/lib/materialMasterService';
 import { useDialog } from '@/context/DialogContext';
 import { CurrencyInput } from '@/components/ui/CurrencyInput';
 import { MaterialPickerModal } from '@/components/ui/MaterialPickerModal';
@@ -10,6 +11,7 @@ import { CustomDatePicker } from '@/components/ui/CustomDatePicker';
 import { TruckPlateInput, extractRegionCode, isValidRegionCode, isCompleteValidTruckPlate } from '@/components/ui/TruckPlateInput';
 import { ClientCombobox } from '@/components/ui/ClientCombobox';
 import { QuarryCombobox } from '@/components/ui/QuarryCombobox';
+import { ProjectCombobox } from '@/components/ui/ProjectCombobox';
 import { FlexibleTextarea } from '@/components/ui/FlexibleTextarea';
 import { NegativeProfitConfirmModal } from '@/components/ui/NegativeProfitConfirmModal';
 import { getMaterialIconSrc } from '@/lib/materialIcons';
@@ -55,6 +57,12 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
   const [formProjectId, setFormProjectId] = useState<string>('');
   const [formProjectName, setFormProjectName] = useState<string>('');
 
+  // Master Material Rates & Route Tariffs State (Matriks 3 Titik)
+  const [quarryRates, setQuarryRates] = useState<QuarryMaterialRate[]>([]);
+  const [routeTariffs, setRouteTariffs] = useState<RouteOperatingTariff[]>([]);
+  const [matchedRate, setMatchedRate] = useState<QuarryMaterialRate | null>(null);
+  const [matchedRoute, setMatchedRoute] = useState<RouteOperatingTariff | null>(null);
+
   // Sinkronisasi dengan filter global proyek di header
   useEffect(() => {
     if (globalProjectId && globalProjectId !== 'ALL' && projects.length > 0) {
@@ -69,15 +77,15 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
     }
   }, [globalProjectId, projects]);
 
-  const handleSelectProject = (projectId: string) => {
-    setFormProjectId(projectId);
-    const p = projects.find(item => item.id === projectId);
-    if (p) {
-      setFormProjectName(p.name);
-      setSelectedClientId(p.clientId);
-      setSelectedClientName(p.clientName);
-      setCustomerName(p.clientName);
+  const handleSelectProject = (project: Project | null) => {
+    if (project) {
+      setFormProjectId(project.id);
+      setFormProjectName(project.name);
+      setSelectedClientId(project.clientId);
+      setSelectedClientName(project.clientName);
+      setCustomerName(project.clientName);
     } else {
+      setFormProjectId('');
       setFormProjectName('');
     }
   };
@@ -132,6 +140,60 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
     return () => unsubQuarries();
   }, []);
 
+  // Subscribe matriks harga kuari & biaya rute dari Firestore
+  useEffect(() => {
+    const unsubRates = subscribeQuarryRates(loaded => {
+      setQuarryRates(loaded);
+    });
+    const unsubRoutes = subscribeRouteTariffs(loaded => {
+      setRouteTariffs(loaded);
+    });
+    return () => {
+      unsubRates();
+      unsubRoutes();
+    };
+  }, []);
+
+  // Material aktif yang dipilih
+  const selectedMat = materials.find(m => m.id === selectedMaterialId);
+
+  // Auto-fill rekomendasi Harga Tebus Cash Kuari ketika Kuari dan Material dipilih
+  useEffect(() => {
+    if (selectedQuarryId && selectedMaterialId) {
+      const found = quarryRates.find(
+        r =>
+          r.quarryId === selectedQuarryId &&
+          (r.materialId === selectedMaterialId ||
+            (selectedMat && r.materialName.toLowerCase() === selectedMat.name.toLowerCase()))
+      );
+      if (found) {
+        setMatchedRate(found);
+        setBuyPricePerUnit(found.buyPriceCash);
+      } else {
+        setMatchedRate(null);
+      }
+    } else {
+      setMatchedRate(null);
+    }
+  }, [selectedQuarryId, selectedMaterialId, quarryRates, selectedMat]);
+
+  // Auto-fill rekomendasi Biaya Jalan Armada ketika Kuari Asal dan Proyek Tujuan dipilih
+  useEffect(() => {
+    if (selectedQuarryId && formProjectId) {
+      const found = routeTariffs.find(
+        r => r.quarryId === selectedQuarryId && r.projectId === formProjectId
+      );
+      if (found) {
+        setMatchedRoute(found);
+        setOperationalCost(found.standardOperationalCost);
+      } else {
+        setMatchedRoute(null);
+      }
+    } else {
+      setMatchedRoute(null);
+    }
+  }, [selectedQuarryId, formProjectId, routeTariffs]);
+
   const handleSelectClient = (c: Client | null): void => {
     if (c) {
       setSelectedClientId(c.id);
@@ -166,8 +228,6 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
       }
     }
   }, [materials, selectedMaterialId]);
-
-  const selectedMat = materials.find(m => m.id === selectedMaterialId);
 
   const handleSelectMaterial = (m: MaterialItem): void => {
     setSelectedMaterialId(m.id);
@@ -506,23 +566,18 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
           </div>
         </div>
 
-        {/* Row 1.5: Proyek Tujuan (Multi-Proyek: Otomatis Mengunci Klien Proyek) */}
+        {/* Row 1.5: Proyek Tujuan (Custom UI per Rule 87: Otomatis Mengunci Klien Proyek) */}
         <div>
           <label className="block text-[#666666] font-medium mb-1">
             Proyek Tujuan <span className="text-[#888888] font-normal">(Otomatis Kunci Klien)</span>
           </label>
-          <select
-            value={formProjectId}
-            onChange={e => handleSelectProject(e.target.value)}
-            className="w-full bg-[#f5f5f5] focus:bg-[#ebebeb] outline-none rounded-[6px] px-3 py-2 text-xs font-semibold text-[#111111] transition-colors cursor-pointer"
-          >
-            <option value="">-- Pilih Proyek Tujuan (Atau Pilih Klien Manual di Bawah) --</option>
-            {projects.map(p => (
-              <option key={p.id} value={p.id}>
-                {p.name} — {p.clientName}
-              </option>
-            ))}
-          </select>
+          <ProjectCombobox
+            projects={projects}
+            selectedProjectId={formProjectId}
+            selectedProjectName={formProjectName}
+            onSelect={handleSelectProject}
+            placeholder="Pilih proyek tujuan (atau pilih klien manual di bawah)..."
+          />
         </div>
 
         {/* Row 2: Master Klien & Kuari Asal (Berdampingan di desktop, bertumpuk di mobile) */}
@@ -631,6 +686,11 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
               value={buyPricePerUnit}
               onChange={setBuyPricePerUnit}
             />
+            {matchedRate && (
+              <div className="text-[10px] text-[#666666] mt-1 font-mono truncate">
+                Acuan Kuari: <span className="font-semibold text-[#111111]">{matchedRate.qualityGrade}</span>
+              </div>
+            )}
           </div>
 
           <div>
@@ -655,6 +715,11 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
             value={operationalCost}
             onChange={setOperationalCost}
           />
+          {matchedRoute && (
+            <div className="text-[10px] text-[#666666] mt-1 font-mono truncate">
+              Acuan Rute ({matchedRoute.distanceKm} km): <span className="font-semibold text-[#111111]">{matchedRoute.quarryName} → {matchedRoute.projectName}</span>
+            </div>
+          )}
         </div>
 
         {/* Catatan */}

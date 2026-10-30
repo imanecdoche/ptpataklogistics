@@ -73,8 +73,9 @@ export const SUB_MENU_ITEMS: Record<NavigationTab, SubTabItem[]> = {
     { id: 'financial', label: 'Laba & Finansial' }
   ],
   materials: [
-    { id: 'catalog', label: 'Katalog Komoditas' },
-    { id: 'pricing', label: 'Standar Harga' }
+    { id: 'pricing', label: 'Harga & Mutu Kuari' },
+    { id: 'routes', label: 'Biaya Jalan Rute' },
+    { id: 'catalog', label: 'Katalog Komoditas' }
   ],
   database: [
     { id: 'ritase', label: 'Riwayat Ritase' },

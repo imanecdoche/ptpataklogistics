@@ -170,3 +170,5 @@ export interface SystemUser {
   inactiveReason?: string | null; // Alasan penonaktifan (e.g. "Tidak ada aktivitas selama 30 hari")
 }
 
+// 12. Re-export Tipe Master Material & Matriks Rute Operasional 3 Titik
+export * from './materialMaster';
