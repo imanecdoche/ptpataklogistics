@@ -904,7 +904,8 @@ Dokumen ini adalah hukum tertinggi operasional sistem. Kegagalan mematuhi aturan
     - **Struktur Entitas & Relasi Proyek**:
       * Setiap proyek operasional dikelola melalui interface `Project` (`src/types/database.ts`) dan koleksi Firestore `projects`.
       * Setiap proyek terikat secara langsung dengan 1 Investor utama (`investorId`, `investorName`) dan 1 Klien/Pemilik Proyek (`clientId`, `clientName`).
-      * Memuat saldo modal awal yang disetor (`initialDeposit`) dan saldo kas berjalan proyek (`currentBalance`), serta status proyek (`ACTIVE`, `ON_HOLD`, `COMPLETED`).
+      * **Relasi One-to-Many (1 Investor untuk Banyak Proyek)**: Jumlah proyek berjalan dapat lebih banyak daripada jumlah investor. Satu dana investor dapat dialokasikan ke beberapa proyek sekaligus, di mana masing-masing proyek memiliki alokasi modal awal disetor (`initialDeposit`) dan saldo kas berjalan (`currentBalance`) yang terpantau terpisah.
+      * Memuat status proyek (`ACTIVE`, `ON_HOLD`, `COMPLETED`).
     - **Global Project Filter Context & Header Switcher**:
       * Seluruh status proyek global dikelola melalui `ProjectFilterContext.tsx` (`useProjectFilter`).
       * Dropdown switcher proyek diletakkan di header `AppShell` (desktop dan mobile) dengan opsi `[Semua Proyek | Situ Cikedal | Menes | Cipeucang]`.
