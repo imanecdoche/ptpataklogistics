@@ -1267,3 +1267,25 @@ Dokumen ini adalah hukum tertinggi operasional sistem. Kegagalan mematuhi aturan
         - Sub-tab Katalog: `+ Komoditas Baru`
         - Sub-tab Harga Kuari: `+ Atur Harga`
         - Sub-tab Rute Acuan: `+ Tambah Rute`
+
+109. **Standar Pengawasan Kebocoran Modal, Terminologi HOK, dan Deteksi Selisih Beban Operasional**:
+    - **Standarisasi Terminologi HOK (Harga Ongkos Kerja) Lapangan**:
+      * Di seluruh antarmuka pencatatan, modal dialog, kartu metrik, dan tabel laporan, label pengeluaran operasional armada wajib menggunakan istilah resmi lapangan:
+        **"Beban Operasional & HOK (Uang Jalan / Supir / Solar)"** (menggantikan sebutan teknis abstrak seperti "Beban Operasional Armada").
+      * Pada kolom ringkasan tabel finansial dipersingkat menjadi: **"HOK & Operasional"**.
+    - **Deteksi & Peringatan Selisih Beban Operasional (HOK Variance Detection)**:
+      * Pada form input ritase (`DispatchForm.tsx`), ketika rute acuan terpilih (`matchedRoute`), jika operator memasukkan beban operasional yang melebihi standar acuan rute (`operationalCost > matchedRoute.standardOperationalCost`), sistem wajib menampilkan indikator selisih pengeluaran secara visual:
+        `⚠️ Melebihi acuan rute: +Rp X.XXX (Standar HOK: Rp Y.YYY)`
+        menggunakan teks semantik `text-amber-700 text-[11px] font-medium mt-1`.
+      * Mencegah kebocoran uang jalan atau penambahan biaya liar tanpa disadari oleh pengawas lapangan.
+    - **Pencatatan Transparan Supir di Buku Kas Induk (`cash_ledger`)**:
+      * Setiap pencatatan kas keluar operasional otomatis dari transaksi ritase wajib mencantumkan nama supir yang bertugas pada kolom keterangan kas:
+        `Beban Operasional & HOK Armada [Plat Truk] (Sopir: [Nama Sopir]) - [No. Tiket]`
+        sehingga riwayat mutasi kas dapat diaudit langsung hingga ke personil penerima uang jalan.
+    - **Kartu Ringkasan Pengeluaran Modal Harian di Dashboard**:
+      * Pada Dashboard Utama, sediakan kartu visual ringkasan pengeluaran modal berjalan:
+        **"Kas Keluar Hari Ini"** dengan rincian ganda:
+        1. **Belanja Pokok Kuari (Cash)**: Total uang tebus material di kuari.
+        2. **HOK & Uang Jalan Supir (Cash)**: Total uang jalan dan upah operasional armada.
+      * Memberikan visibilitas langsung dan instan kepada manajemen perseroan mengenai pemakaian modal riil investor per hari.
+

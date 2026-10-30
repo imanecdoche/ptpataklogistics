@@ -420,7 +420,7 @@ export function EditDispatchModal({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               <div>
                 <label className="block text-xs font-semibold text-[#444444] mb-1">
-                  Beban Operasional (Solar/Supir/Retribusi):
+                  Beban Operasional & HOK (Uang Jalan / Supir / Solar):
                 </label>
                 <CurrencyInput
                   value={operationalCost}

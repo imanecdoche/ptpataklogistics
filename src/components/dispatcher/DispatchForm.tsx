@@ -788,10 +788,10 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
             </div>
           </div>
 
-          {/* Row 5: Operasional Lapangan (Solar, Uang Jalan, Portal) */}
+          {/* Row 5: Operasional Lapangan (Solar, Uang Jalan, HOK, Portal) */}
           <div>
             <label className="block text-[#666666] font-medium mb-1">
-              Beban Operasional Armada (Solar/Supir/Portal)
+              Beban Operasional & HOK (Uang Jalan / Supir / Solar)
             </label>
             <CurrencyInput
               required
@@ -800,8 +800,15 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
               variant="solid-white"
             />
             {matchedRoute && (
-              <div className="text-[10px] text-[#666666] mt-1 truncate">
-                Acuan Rute ({matchedRoute.distanceKm} km): <span className="font-semibold text-[#111111]">{matchedRoute.quarryName} → {matchedRoute.projectName}</span>
+              <div className="space-y-0.5 mt-1">
+                <div className="text-[10px] text-[#666666] truncate">
+                  Acuan Rute ({matchedRoute.distanceKm} km): <span className="font-semibold text-[#111111]">{matchedRoute.quarryName} → {matchedRoute.projectName} ({formatRupiah(matchedRoute.standardOperationalCost)})</span>
+                </div>
+                {operationalCost > matchedRoute.standardOperationalCost && (
+                  <div className="text-[11px] font-medium text-amber-700">
+                    ⚠️ Melebihi acuan rute standar: +{formatRupiah(operationalCost - matchedRoute.standardOperationalCost)} (Standar HOK: {formatRupiah(matchedRoute.standardOperationalCost)})
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -847,7 +854,7 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
           )}
 
           <div className="flex justify-between items-center text-[11px] text-[#666666]">
-            <span>Beban Operasional:</span>
+            <span>Beban Operasional & HOK:</span>
             <span className="font-mono text-[#111111]">{formatRupiah(totalOperational)}</span>
           </div>
 

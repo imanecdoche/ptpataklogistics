@@ -134,7 +134,7 @@ export function NegativeProfitConfirmModal({
             </div>
 
             <div className="flex justify-between items-center text-[#666666]">
-              <span>Beban Operasional Armada:</span>
+              <span>Beban Operasional & HOK:</span>
               <span className="font-mono text-[#111111]">{formatRupiah(totalOperational)}</span>
             </div>
 

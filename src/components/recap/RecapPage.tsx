@@ -503,7 +503,7 @@ export function RecapPage({
 
           <div className="bg-white border border-[#eaeaea] rounded-[8px] p-3.5">
             <span className="text-[11px] text-[#888888] font-medium block">
-              Beban Operasional Armada (Solar/Sopir)
+              Beban Operasional & HOK (Uang Jalan / Supir / Solar)
             </span>
             <div className="mt-1">
               <MetricCardCurrency amount={totalOperationalCost} />
@@ -644,7 +644,7 @@ export function RecapPage({
                   <th className="py-2.5 px-3 whitespace-nowrap min-w-[150px]">Proyek / Klien</th>
                   <th className="py-2.5 px-3 whitespace-nowrap min-w-[140px]">Komoditas & Vol</th>
                   <th className="py-2.5 px-3 whitespace-nowrap min-w-[115px] text-right">Beli Kuari</th>
-                  <th className="py-2.5 px-3 whitespace-nowrap min-w-[115px] text-right">Operasional</th>
+                  <th className="py-2.5 px-3 whitespace-nowrap min-w-[115px] text-right">HOK & Operasional</th>
                   <th className="py-2.5 px-3 whitespace-nowrap min-w-[120px] text-right">Omset Tempo</th>
                   <th className="py-2.5 px-3 whitespace-nowrap min-w-[120px] text-right">Laba Bersih</th>
                   <th className="py-2.5 px-3 whitespace-nowrap min-w-[90px] text-center">Status</th>

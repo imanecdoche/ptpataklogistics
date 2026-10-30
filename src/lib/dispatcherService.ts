@@ -198,7 +198,7 @@ export async function createDispatchTransaction(
       isCredit: false,
       runningBalance: currentBalance,
       referenceId: ticketNumber,
-      description: `Beban Operasional Armada ${payload.truckPlate.toUpperCase()} - ${ticketNumber}`,
+      description: `Beban Operasional & HOK: Truk ${payload.truckPlate.toUpperCase()} (Sopir: ${payload.driverName || 'Supir'}) - ${ticketNumber}`,
       createdByName: userEmail
     });
   }
@@ -530,7 +530,7 @@ export async function updateDispatchTransaction(
       } else if (data.type === 'BIAYA_OPERASIONAL') {
         await updateDoc(docRef, {
           amount: payload.operationalCost,
-          description: `Beban Operasional Armada ${payload.truckPlate.toUpperCase()} - ${ticketNumber}`,
+          description: `Beban Operasional & HOK: Truk ${payload.truckPlate.toUpperCase()} (Sopir: ${payload.driverName || 'Supir'}) - ${ticketNumber}`,
           updatedBy: userEmail
         });
       } else if (data.type === 'PELUNASAN_PIUTANG') {

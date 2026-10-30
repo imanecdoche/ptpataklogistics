@@ -111,6 +111,9 @@ export function DashboardPage({
     const totalVolume = todayTx.reduce((acc, t) => acc + (Number(t.quantity) || 0), 0);
     const totalRevenue = todayTx.reduce((acc, t) => acc + (Number(t.totalRevenue) || 0), 0);
     const totalProfit = todayTx.reduce((acc, t) => acc + (Number(t.netProfit) || 0), 0);
+    const totalBuyCost = todayTx.reduce((acc, t) => acc + (Number(t.totalBuyCost) || 0), 0);
+    const totalOperationalCost = todayTx.reduce((acc, t) => acc + (Number(t.operationalCost) || 0), 0);
+    const totalCashOut = totalBuyCost + totalOperationalCost;
 
     const activePlates = new Set(todayTx.map(t => t.truckPlate?.trim().toUpperCase()).filter(Boolean));
 
@@ -129,6 +132,9 @@ export function DashboardPage({
       totalVolume,
       totalRevenue,
       totalProfit,
+      totalBuyCost,
+      totalOperationalCost,
+      totalCashOut,
       activePlatesCount: activePlates.size,
       pendingReceivables,
       latestCash
@@ -213,6 +219,48 @@ export function DashboardPage({
               <span className="text-[11px] text-[#888888] mt-1">
                 Armada Aktif: <strong className="font-bold text-[#111111]">{todayMetrics.activePlatesCount}</strong> unit
               </span>
+            </div>
+          </div>
+
+          {/* Card / Ringkasan Kas Keluar Hari Ini (Rule 109: Pengawasan Kebocoran Modal & HOK) */}
+          <div className="bg-white rounded-[10px] p-4 border border-[#eaeaea]">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-[#f0f0f0] pb-2.5">
+              <div>
+                <span className="text-xs font-bold text-[#111111] uppercase tracking-wider block">
+                  Arus Kas Keluar Hari Ini (Modal Terpakai)
+                </span>
+                <span className="text-[11px] text-[#888888]">
+                  Akumulasi kas modal yang dikeluarkan untuk tebus kuari dan operasional HOK supir hari ini
+                </span>
+              </div>
+              <div className="text-left sm:text-right">
+                <span className="text-[10px] text-[#777777] font-medium block">Total Kas Keluar</span>
+                <div className="text-base sm:text-lg font-bold tracking-tight text-[#cf1124]">
+                  {formatRupiah(todayMetrics.totalCashOut)}
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3">
+              <div className="p-2.5 bg-[#fafafa] rounded-[6px] border border-[#f0f0f0] flex items-center justify-between">
+                <div>
+                  <span className="text-[11px] font-medium text-[#666666] block">Belanja Pokok Kuari (Cash)</span>
+                  <span className="text-[10px] text-[#888888]">Tebus material tambang langsung</span>
+                </div>
+                <span className="text-sm font-bold tracking-tight text-[#111111]">
+                  {formatRupiah(todayMetrics.totalBuyCost)}
+                </span>
+              </div>
+
+              <div className="p-2.5 bg-[#fafafa] rounded-[6px] border border-[#f0f0f0] flex items-center justify-between">
+                <div>
+                  <span className="text-[11px] font-medium text-[#666666] block">Beban Operasional & HOK (Cash)</span>
+                  <span className="text-[10px] text-[#888888]">Uang jalan supir, solar & retribusi</span>
+                </div>
+                <span className="text-sm font-bold tracking-tight text-[#111111]">
+                  {formatRupiah(todayMetrics.totalOperationalCost)}
+                </span>
+              </div>
             </div>
           </div>
 
