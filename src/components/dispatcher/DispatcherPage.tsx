@@ -65,9 +65,9 @@ export function DispatcherPage({ userEmail }: DispatcherPageProps): React.JSX.El
   }, [selectedDate]);
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6 items-start w-full relative">
-      {/* Sisi Kiri: Formulir Pencatatan Ritase Baru (Boxless di Mobile) */}
-      <div className="w-full lg:w-[380px] xl:w-[420px] flex-shrink-0">
+    <div className="flex flex-col gap-6 items-start w-full relative">
+      {/* Formulir Pencatatan Ritase Baru (Boxless di Mobile, Full-width di Desktop) */}
+      <div className="w-full">
         <DispatchForm
           materials={materials}
           userEmail={userEmail}
@@ -79,8 +79,8 @@ export function DispatcherPage({ userEmail }: DispatcherPageProps): React.JSX.El
         />
       </div>
 
-      {/* Sisi Kanan: Tabel Riwayat Ritase (Desktop Normal: Selalu Tampil Berdampingan) */}
-      <div className="hidden md:block w-full lg:flex-1 min-w-0">
+      {/* Tabel Riwayat Ritase (Desktop: Posisikan Vertikal Tepat di Bawah Form Ritase) */}
+      <div className="hidden md:block w-full min-w-0">
         <DispatchTable
           transactions={transactions}
           selectedDate={selectedDate}

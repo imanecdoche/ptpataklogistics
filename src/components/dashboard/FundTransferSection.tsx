@@ -8,6 +8,8 @@ import {
 import { CustomDatePicker } from '@/components/ui/CustomDatePicker';
 import { FlexibleTextarea } from '@/components/ui/FlexibleTextarea';
 import { PinAuthModal } from '@/components/ui/PinAuthModal';
+import { CurrencyInput } from '@/components/ui/CurrencyInput';
+import { ProjectCombobox } from '@/components/ui/ProjectCombobox';
 
 interface FundTransferSectionProps {
   projects: Project[];
@@ -271,48 +273,39 @@ export function FundTransferSection({ projects, userEmail }: FundTransferSection
                 <label className="block text-xs font-semibold text-[#444444] mb-1">
                   Proyek Sumber (Pemberi Pinjaman):
                 </label>
-                <select
-                  value={fromProjectId}
-                  onChange={e => setFromProjectId(e.target.value)}
-                  className="w-full px-3 py-2 text-xs bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#111111]"
-                >
-                  {projects.map(p => (
-                    <option key={p.id} value={p.id}>
-                      {p.name} (Saldo: {formatRupiah(p.currentBalance)})
-                    </option>
-                  ))}
-                </select>
+                <ProjectCombobox
+                  projects={projects}
+                  selectedProjectId={fromProjectId}
+                  selectedProjectName={projects.find(p => p.id === fromProjectId)?.name || ''}
+                  onSelect={p => setFromProjectId(p?.id || '')}
+                  placeholder="Pilih proyek sumber..."
+                  required
+                />
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-[#444444] mb-1">
                   Proyek Peminjam (Ditalangi):
                 </label>
-                <select
-                  value={toProjectId}
-                  onChange={e => setToProjectId(e.target.value)}
-                  className="w-full px-3 py-2 text-xs bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#111111]"
-                >
-                  {projects.map(p => (
-                    <option key={p.id} value={p.id}>
-                      {p.name} (Saldo: {formatRupiah(p.currentBalance)})
-                    </option>
-                  ))}
-                </select>
+                <ProjectCombobox
+                  projects={projects.filter(p => p.id !== fromProjectId)}
+                  selectedProjectId={toProjectId}
+                  selectedProjectName={projects.find(p => p.id === toProjectId)?.name || ''}
+                  onSelect={p => setToProjectId(p?.id || '')}
+                  placeholder="Pilih proyek peminjam..."
+                  required
+                />
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-[#444444] mb-1">
                   Nominal Talangan (Rp):
                 </label>
-                <input
-                  type="number"
-                  min="0"
-                  step="50000"
-                  value={amount || ''}
-                  onChange={e => setAmount(parseFloat(e.target.value) || 0)}
-                  placeholder="e.g. 5000000"
-                  className="w-full px-3 py-2 text-xs font-mono bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#111111]"
+                <CurrencyInput
+                  value={amount}
+                  onChange={setAmount}
+                  placeholder="0"
+                  required
                 />
               </div>
 

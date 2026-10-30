@@ -5,6 +5,7 @@ interface CustomDatePickerProps {
   onChange: (dateStr: string) => void;
   className?: string;
   fullWidth?: boolean;
+  variant?: 'default' | 'solid-white';
 }
 
 const MONTH_NAMES = [
@@ -14,7 +15,13 @@ const MONTH_NAMES = [
 
 const DAY_NAMES = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
 
-export function CustomDatePicker({ value, onChange, className = '', fullWidth = false }: CustomDatePickerProps): React.JSX.Element {
+export function CustomDatePicker({
+  value,
+  onChange,
+  className = '',
+  fullWidth = false,
+  variant = 'default'
+}: CustomDatePickerProps): React.JSX.Element {
   const [isRendered, setIsRendered] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [dragOffset, setDragOffset] = useState(0);
@@ -184,11 +191,15 @@ export function CustomDatePicker({ value, onChange, className = '', fullWidth = 
           fullWidth
             ? 'w-full px-3 py-2 justify-between'
             : 'px-3 py-1.5'
-        } bg-[#f5f5f5] hover:bg-[#ebebeb] active:bg-[#e5e5e5] outline-none rounded-[6px] text-xs font-mono font-medium text-[#111111] transition-colors flex items-center gap-2 select-none border-none`}
+        } ${
+          variant === 'solid-white'
+            ? 'bg-white border-2 border-black text-black font-semibold hover:bg-[#fafafa]'
+            : 'bg-[#f5f5f5] hover:bg-[#ebebeb] active:bg-[#e5e5e5] text-[#111111] border-none'
+        } outline-none rounded-[6px] text-xs font-mono font-medium transition-colors flex items-center gap-2 select-none`}
       >
         <div className="flex items-center gap-2">
           <svg
-            className="w-3.5 h-3.5 text-[#666666]"
+            className={`w-3.5 h-3.5 ${variant === 'solid-white' ? 'text-black' : 'text-[#666666]'}`}
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -204,7 +215,7 @@ export function CustomDatePicker({ value, onChange, className = '', fullWidth = 
         </div>
 
         {fullWidth && (
-          <span className="text-[10px] font-sans text-[#888888]">Ubah</span>
+          <span className={`text-[10px] font-sans ${variant === 'solid-white' ? 'text-black font-medium' : 'text-[#888888]'}`}>Ubah</span>
         )}
       </button>
 

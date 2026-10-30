@@ -977,3 +977,42 @@ Dokumen ini adalah hukum tertinggi operasional sistem. Kegagalan mematuhi aturan
       * DILARANG KERAS menampilkan baris teks deskripsi, keterangan, atau subtitle di bawah judul pada header tab manapun.
     - **Optimasi Ruang Kerja Vertikal**:
       * Tinggi bilah header desktop dirancang kompak dan proporsional (`h-16`) agar sejajar presisi dengan dropdown switcher proyek dan menghemat ruang kerja pengguna.
+
+89. **Standar Penamaan Picker Proyek Hanya Nama Proyek Tanpa Alamat (Project Picker Name Only)**:
+    - **Tampilan Bersih Nama Proyek**:
+      * Di seluruh elemen pemilih/picker proyek di setiap halaman (`ProjectCombobox`, dropdown switcher header, modal transfer kas, modal edit ritase, dsb.), teks opsi WAJIB HANYA memuat **nama proyek saja (`p.name`)**.
+      * DILARANG KERAS memunculkan alamat lengkap, lokasi, atau sub-label alamat (`p.location`) pada dropdown maupun item pemilih proyek di seluruh halaman aplikasi.
+
+90. **Standar Styling Input Form Pembuatan Ritase Baru (Bold Black Stroke & Solid White Fill)**:
+    - **High-Contrast Solid White Inputs with Black Stroke**:
+      * Seluruh elemen input pada formulir Catat Ritase Baru (`DispatchForm`):
+        * Background: `bg-white` (filled putih pekat).
+        * Border / Outline: `border-2 border-black` (outline stroke hitam inside agak tebal).
+        * Teks input: `text-black font-semibold` (teks hitam pekat).
+        * Sudut: `rounded-[6px]`.
+      * Berlaku untuk seluruh elemen input di form ritase: pemilih tanggal, nomor plat truk, nama supir, pemilih proyek tujuan, nama PT klien, pemilih kuari asal, tombol trigger pemilih jenis material, volume ritase, harga beli cash kuari, harga jual tempo proyek, beban operasional armada, dan textarea catatan tambahan.
+
+91. **Standar Pemisah Isian Form Pembuatan Ritase Baru (Section Dividers & Logical Grouping)**:
+    - **Pemisah Garis Horizontal Antar-Jenis Isian**:
+      * Formulir Catat Ritase Baru (`DispatchForm`) wajib memisahkan setiap kelompok jenis isian menggunakan garis pembatas horizontal (`border-t border-[#eaeaea] my-3` atau divider bersih berlabel halus).
+      * Kelompok isian terbagi menjadi:
+        1. **Waktu & Armada Truk**: Tanggal pelaksanaan ritase, nomor plat truk, dan nama supir.
+        2. **Lokasi & Mitra**: Proyek tujuan, PT/klien pembeli, dan kuari asal.
+        3. **Komoditas & Volume**: Jenis material alam dan volume ritase (DT / Ton).
+        4. **Finansial & Operasional**: Harga beli kuari (cash), harga jual proyek (tempo), dan beban operasional uang jalan armada (solar/supir/portal).
+        5. **Catatan & Otorisasi**: Catatan tambahan lapangan, kalkulasi laba bersih, dan tombol simpan tiket.
+
+92. **Standar Mutlak Input Nominal Uang Auto-Formatting Rupiah (Mandatory CurrencyInput Auto-Formatting)**:
+    - **Penerapan Universal `CurrencyInput`**:
+      * Seluruh input nominal uang/rupiah di seluruh modal, form, dan halaman aplikasi (termasuk modal Kas Talangan Antar-Proyek `FundTransferSection`, modal tambah proyek, modal investor, tarif kuari, ritase, dsb.) WAJIB menggunakan komponen `CurrencyInput` dengan auto-formatting pemisah ribuan titik (`.`) dan label prefix `Rp`.
+      * DILARANG KERAS menggunakan tag `<input type="number">` polos untuk memasukkan nominal uang atau biaya di manapun dalam seluruh sistem.
+    - **Kepatuhan Custom UI Picker**:
+      * Selaras dengan Aturan 87, modal Kas Talangan Antar-Proyek (`FundTransferSection`) dan seluruh modal lainnya dilarang menggunakan elemen `<select>` native browser, melainkan wajib menggunakan Custom UI picker.
+
+93. **Standar Tata Letak Desktop Dispatcher & Ritase (Stacked Layout — Form Di Atas, Riwayat Di Bawah)**:
+    - **Larangan Split-View Desktop**:
+      * Pada tampilan desktop, halaman Dispatcher dan Ritase (`DispatcherPage.tsx` / `App.tsx`) DILARANG membagi layar menjadi split view berdampingan (2 kolom horizontal) antara form pencatatan ritase dan tabel riwayat.
+    - **Susunan Vertikal Terstruktur**:
+      * Kontainer formulir Catat Ritase Baru diletakkan di bagian atas, dan kontainer Tabel Riwayat Ritase Armada diposisikan tepat secara vertikal (**stacked**) di bawah formulir ritase dengan pembatas dan spasi yang proporsional.
+
+

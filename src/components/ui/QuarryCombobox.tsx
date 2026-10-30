@@ -10,6 +10,7 @@ interface QuarryComboboxProps {
   placeholder?: string;
   disabled?: boolean;
   required?: boolean;
+  variant?: 'default' | 'solid-white';
 }
 
 export function QuarryCombobox({
@@ -19,7 +20,8 @@ export function QuarryCombobox({
   onSelect,
   placeholder = 'Pilih atau ketik kuari asal...',
   disabled = false,
-  required = false
+  required = false,
+  variant = 'default'
 }: QuarryComboboxProps): React.JSX.Element {
   const [query, setQuery] = useState(selectedQuarryName || '');
   const [isOpen, setIsOpen] = useState(false);
@@ -117,7 +119,11 @@ export function QuarryCombobox({
           onFocus={() => setIsOpen(true)}
           placeholder={placeholder}
           required={required}
-          className="w-full bg-white border border-[#eaeaea] rounded-[8px] pl-3.5 pr-8 py-2 text-xs text-[#111111] placeholder-[#888888] focus:outline-none focus:border-[#111111] transition-colors disabled:bg-[#f9f9f9] disabled:cursor-not-allowed"
+          className={`w-full rounded-[6px] pl-3.5 pr-8 py-2 text-xs transition-colors disabled:bg-[#f9f9f9] disabled:cursor-not-allowed ${
+            variant === 'solid-white'
+              ? 'bg-white border-2 border-black text-black font-semibold placeholder-[#888888] focus:outline-none'
+              : 'bg-white border border-[#eaeaea] text-[#111111] placeholder-[#888888] focus:outline-none focus:border-[#111111]'
+          }`}
         />
 
         {query && !disabled && (

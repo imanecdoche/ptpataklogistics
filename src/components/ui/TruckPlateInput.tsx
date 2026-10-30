@@ -134,6 +134,7 @@ interface TruckPlateInputProps {
   inputRef?: React.RefObject<HTMLInputElement | null>;
   knownTrucks?: TruckSuggestionItem[];
   onSelectTruck?: (truck: TruckSuggestionItem) => void;
+  variant?: 'default' | 'solid-white';
 }
 
 export function TruckPlateInput({
@@ -144,7 +145,8 @@ export function TruckPlateInput({
   onValidationChange,
   inputRef,
   knownTrucks = [],
-  onSelectTruck
+  onSelectTruck,
+  variant = 'default'
 }: TruckPlateInputProps): React.JSX.Element {
   const [isInvalid, setIsInvalid] = useState(false);
   const [showToast, setShowToast] = useState(false);
@@ -272,7 +274,9 @@ export function TruckPlateInput({
         className={`w-full outline-none rounded-[6px] px-3 py-2 text-xs font-mono font-medium uppercase tracking-wide transition-colors ${
           isInvalid
             ? 'bg-[#fef2f2] text-red-600 ring-2 ring-inset ring-red-500 font-bold placeholder:text-red-300'
-            : 'bg-[#f5f5f5] focus:bg-[#ebebeb] text-[#111111] placeholder:text-[#999999]'
+            : variant === 'solid-white'
+              ? 'bg-white border-2 border-black text-black font-semibold placeholder:text-[#888888]'
+              : 'bg-[#f5f5f5] focus:bg-[#ebebeb] text-[#111111] placeholder:text-[#999999]'
         }`}
       />
 

@@ -7,6 +7,7 @@ import { CustomDatePicker } from '@/components/ui/CustomDatePicker';
 import { FlexibleTextarea } from '@/components/ui/FlexibleTextarea';
 import { PinAuthModal } from '@/components/ui/PinAuthModal';
 import { QuarryCombobox } from '@/components/ui/QuarryCombobox';
+import { CurrencyInput } from '@/components/ui/CurrencyInput';
 import { useProjectFilter } from '@/context/ProjectFilterContext';
 
 interface EditDispatchModalProps {
@@ -277,7 +278,7 @@ export function EditDispatchModal({
                   <option value="">-- Proyek Umum / Tanpa Proyek --</option>
                   {projects.map(p => (
                     <option key={p.id} value={p.id}>
-                      {p.name} ({p.investorName})
+                      {p.name}
                     </option>
                   ))}
                 </select>
@@ -378,13 +379,9 @@ export function EditDispatchModal({
                   <label className="block text-xs font-semibold text-[#444444] mb-1">
                     Harga Beli Kuari:
                   </label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="5000"
+                  <CurrencyInput
                     value={buyPricePerUnit}
-                    onChange={e => setBuyPricePerUnit(parseFloat(e.target.value) || 0)}
-                    className="w-full px-3 py-2 text-xs font-mono bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#111111]"
+                    onChange={setBuyPricePerUnit}
                   />
                 </div>
               )}
@@ -393,13 +390,9 @@ export function EditDispatchModal({
                 <label className="block text-xs font-semibold text-[#444444] mb-1">
                   Harga Jual Tempo:
                 </label>
-                <input
-                  type="number"
-                  min="0"
-                  step="5000"
+                <CurrencyInput
                   value={sellPricePerUnit}
-                  onChange={e => setSellPricePerUnit(parseFloat(e.target.value) || 0)}
-                  className="w-full px-3 py-2 text-xs font-mono bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#111111]"
+                  onChange={setSellPricePerUnit}
                 />
               </div>
             </div>
@@ -410,13 +403,9 @@ export function EditDispatchModal({
                 <label className="block text-xs font-semibold text-[#444444] mb-1">
                   Beban Operasional (Solar/Supir/Retribusi):
                 </label>
-                <input
-                  type="number"
-                  min="0"
-                  step="5000"
+                <CurrencyInput
                   value={operationalCost}
-                  onChange={e => setOperationalCost(parseFloat(e.target.value) || 0)}
-                  className="w-full px-3 py-2 text-xs font-mono bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#111111]"
+                  onChange={setOperationalCost}
                 />
               </div>
 

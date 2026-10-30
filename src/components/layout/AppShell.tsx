@@ -149,7 +149,7 @@ export function AppShell({
               <CustomSelectCombobox
                 options={[
                   ...(!isInvestorUser ? [{ id: 'ALL', label: 'Semua Proyek (Global)' }] : []),
-                  ...projects.map(p => ({ id: p.id, label: p.name, subLabel: p.location }))
+                  ...projects.map(p => ({ id: p.id, label: p.name }))
                 ]}
                 value={selectedProjectId}
                 onChange={val => setSelectedProjectId(val)}
@@ -207,7 +207,7 @@ export function AppShell({
                 <CustomSelectCombobox
                   options={[
                     ...(!isInvestorUser ? [{ id: 'ALL', label: 'Semua Proyek (Global)' }] : []),
-                    ...projects.map(p => ({ id: p.id, label: p.name, subLabel: p.location }))
+                    ...projects.map(p => ({ id: p.id, label: p.name }))
                   ]}
                   value={selectedProjectId}
                   onChange={val => setSelectedProjectId(val)}

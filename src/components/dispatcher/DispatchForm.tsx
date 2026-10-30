@@ -466,273 +466,317 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
         </p>
       </div>
 
-      <form ref={formRef} onSubmit={handleSubmit} className="pt-0 md:pt-4 space-y-3.5 text-xs">
-        {/* Row 0: Tanggal Ritase (Jalan) */}
-        <div>
-          <label className="block text-[#666666] font-medium mb-1">
-            Tanggal Ritase (Jalan) <span className="text-red-500">*</span>
-          </label>
-          <CustomDatePicker
-            value={deliveryDate}
-            onChange={setDeliveryDate}
-            fullWidth
-          />
-          <span className="text-[10px] text-[#888888] mt-1 block">
-            Tanggal armada beroperasi/jalan. Waktu pencatatan tiket otomatis terdata hari ini.
-          </span>
-        </div>
+      <form ref={formRef} onSubmit={handleSubmit} className="pt-0 md:pt-4 space-y-4 text-xs">
+        {/* Section 1: Waktu & Armada Truk */}
+        <div className="space-y-3.5">
+          <div className="text-[11px] font-bold text-[#888888] uppercase tracking-wider">
+            Waktu & Armada Truk
+          </div>
 
-        {/* Row 1: No Plat Truk & Sopir */}
-        <div className="grid grid-cols-2 gap-3">
+          {/* Row 0: Tanggal Ritase (Jalan) */}
           <div>
             <label className="block text-[#666666] font-medium mb-1">
-              No. Plat Truk <span className="text-red-500">*</span>
+              Tanggal Ritase (Jalan) <span className="text-red-500">*</span>
             </label>
-            <TruckPlateInput
-              value={truckPlate}
-              onChange={setTruckPlate}
-              required
-              isInvalidExternal={isPlateInvalid}
-              onValidationChange={valid => {
-                if (valid) setIsPlateInvalid(false);
-              }}
-              inputRef={plateInputRef}
-              knownTrucks={knownTrucks}
-              onSelectTruck={t => {
-                if (t.lastDriverName) {
-                  setDriverName(t.lastDriverName);
-                }
-              }}
+            <CustomDatePicker
+              value={deliveryDate}
+              onChange={setDeliveryDate}
+              fullWidth
+              variant="solid-white"
             />
+            <span className="text-[10px] text-[#888888] mt-1 block">
+              Tanggal armada beroperasi/jalan. Waktu pencatatan tiket otomatis terdata hari ini.
+            </span>
           </div>
 
-          <div className="relative">
-            <label className="block text-[#666666] font-medium mb-1">
-              Nama Sopir (Opsional)
-            </label>
-            <input
-              type="text"
-              placeholder="Pak Joko"
-              value={driverName}
-              onFocus={() => setIsDriverDropdownOpen(true)}
-              onBlur={() => {
-                setTimeout(() => setIsDriverDropdownOpen(false), 200);
-              }}
-              onChange={e => {
-                setDriverName(formatTitleCaseAndEntity(e.target.value));
-                setIsDriverDropdownOpen(true);
-              }}
-              className="w-full bg-[#f5f5f5] focus:bg-[#ebebeb] outline-none rounded-[6px] px-3 py-2 text-xs text-[#111111] placeholder:text-[#999999] transition-colors"
-            />
-
-            {/* Dropdown Autocomplete Suggestions Supir */}
-            {isDriverDropdownOpen && (
-              (() => {
-                const q = driverName.trim().toLowerCase();
-                const filtered = knownDrivers
-                  .filter(d => !q || d.name.toLowerCase().includes(q))
-                  .slice(0, 5);
-
-                if (filtered.length === 0) return null;
-
-                return (
-                  <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-[#eaeaea] rounded-[6px] shadow-lg max-h-48 overflow-y-auto z-30 divide-y divide-[#f5f5f5]">
-                    {filtered.map((driver, idx) => (
-                      <button
-                        key={`${driver.name}-${idx}`}
-                        type="button"
-                        onMouseDown={() => {
-                          setDriverName(driver.name);
-                          // Auto-fill plat armada jika masih kosong dan supir punya defaultPlate
-                          if (!truckPlate && driver.defaultPlate) {
-                            setTruckPlate(driver.defaultPlate);
-                          }
-                          setIsDriverDropdownOpen(false);
-                        }}
-                        className="w-full text-left px-3 py-2 text-xs hover:bg-[#f9f9f9] flex items-center justify-between cursor-pointer transition-colors"
-                      >
-                        <span className="font-medium text-[#111111]">{driver.name}</span>
-                        {driver.defaultPlate && (
-                          <span className="font-mono text-[10px] text-[#666666] bg-[#f0f0f0] px-1.5 py-0.5 rounded-[4px]">
-                            {driver.defaultPlate}
-                          </span>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                );
-              })()
-            )}
-          </div>
-        </div>
-
-        {/* Row 1.5: Proyek Tujuan (Custom UI per Rule 87: Otomatis Mengunci Klien Proyek) */}
-        <div>
-          <label className="block text-[#666666] font-medium mb-1">
-            Proyek Tujuan <span className="text-[#888888] font-normal">(Otomatis Kunci Klien)</span>
-          </label>
-          <ProjectCombobox
-            projects={projects}
-            selectedProjectId={formProjectId}
-            selectedProjectName={formProjectName}
-            onSelect={handleSelectProject}
-            placeholder="Pilih proyek tujuan (atau pilih klien manual di bawah)..."
-          />
-        </div>
-
-        {/* Row 2: Master Klien & Kuari Asal (Berdampingan di desktop, bertumpuk di mobile) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label className="block text-[#666666] font-medium mb-1">
-              Nama PT / Pembeli Proyek <span className="text-red-500">*</span>
-            </label>
-            <ClientCombobox
-              clients={clients}
-              selectedClientId={selectedClientId}
-              selectedClientName={selectedClientName || customerName}
-              onSelect={handleSelectClient}
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-[#666666] font-medium mb-1">
-              Kuari Asal / Tambang
-            </label>
-            <QuarryCombobox
-              quarries={quarries}
-              selectedQuarryId={selectedQuarryId}
-              selectedQuarryName={selectedQuarryName}
-              onSelect={handleSelectQuarry}
-              placeholder="Pilih atau ketik kuari asal..."
-            />
-          </div>
-        </div>
-
-        {/* Row 3: Material & Volume (Bertumpuk 2 baris di mobile, split di desktop) */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div className="sm:col-span-2">
-            <label className="block text-[#666666] font-medium mb-1">
-              Jenis Material <span className="text-red-500">*</span>
-            </label>
-            {/* Custom Trigger Button Modal Picker */}
-            <button
-              type="button"
-              onClick={() => setIsMaterialPickerOpen(true)}
-              className="w-full bg-[#f5f5f5] hover:bg-[#ebebeb] active:bg-[#e8e8e8] outline-none rounded-[6px] px-3 py-2 text-xs text-[#111111] transition-colors flex items-center justify-between border-none cursor-pointer"
-            >
-              <div className="flex items-center gap-2.5 truncate">
-                {selectedMat && (
-                  <img
-                    src={getMaterialIconSrc(selectedMat.name)}
-                    alt=""
-                    className="w-6 h-6 rounded-[4px] object-cover flex-shrink-0 bg-[#ebebeb]"
-                  />
-                )}
-                <span className="font-medium truncate">
-                  {selectedMat ? selectedMat.name : 'Pilih Jenis Material'}
-                </span>
-                {selectedMat && (
-                  <span className="px-1.5 py-0.5 rounded-[4px] bg-[#ebebeb] text-[#555555] font-mono text-[10px] font-semibold border-none select-none">
-                    {selectedMat.unit}
-                  </span>
-                )}
-              </div>
-
-              {/* Chevron Down Icon */}
-              <svg
-                className="w-3.5 h-3.5 text-[#666666] flex-shrink-0 ml-2"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-          </div>
-
-          <div>
-            <label className="block text-[#666666] font-medium mb-1">
-              Volume <span className="text-red-500">*</span>
-            </label>
-            <div className="relative flex items-center bg-[#f5f5f5] focus-within:bg-[#ebebeb] rounded-[6px] transition-colors">
-              <input
-                type="number"
-                step="any"
-                min="0.1"
+          {/* Row 1: No Plat Truk & Sopir */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[#666666] font-medium mb-1">
+                No. Plat Truk <span className="text-red-500">*</span>
+              </label>
+              <TruckPlateInput
+                value={truckPlate}
+                onChange={setTruckPlate}
                 required
-                placeholder="0"
-                value={quantityInput}
-                onChange={handleQuantityChange}
-                onFocus={handleQuantityFocus}
-                onBlur={handleQuantityBlur}
-                className="w-full bg-transparent outline-none border-none py-2 pl-3 pr-2 text-xs font-mono font-medium text-[#111111]"
+                isInvalidExternal={isPlateInvalid}
+                onValidationChange={valid => {
+                  if (valid) setIsPlateInvalid(false);
+                }}
+                inputRef={plateInputRef}
+                knownTrucks={knownTrucks}
+                onSelectTruck={t => {
+                  if (t.lastDriverName) {
+                    setDriverName(t.lastDriverName);
+                  }
+                }}
+                variant="solid-white"
               />
-              <span className="pr-3 pl-1 text-xs font-mono font-medium text-[#888888] select-none pointer-events-none">
-                {unit}
-              </span>
+            </div>
+
+            <div className="relative">
+              <label className="block text-[#666666] font-medium mb-1">
+                Nama Sopir (Opsional)
+              </label>
+              <input
+                type="text"
+                placeholder="Pak Joko"
+                value={driverName}
+                onFocus={() => setIsDriverDropdownOpen(true)}
+                onBlur={() => {
+                  setTimeout(() => setIsDriverDropdownOpen(false), 200);
+                }}
+                onChange={e => {
+                  setDriverName(formatTitleCaseAndEntity(e.target.value));
+                  setIsDriverDropdownOpen(true);
+                }}
+                className="w-full bg-white border-2 border-black rounded-[6px] px-3 py-2 text-xs text-black font-semibold placeholder:text-[#888888] outline-none transition-colors"
+              />
+
+              {/* Dropdown Autocomplete Suggestions Supir */}
+              {isDriverDropdownOpen && (
+                (() => {
+                  const q = driverName.trim().toLowerCase();
+                  const filtered = knownDrivers
+                    .filter(d => !q || d.name.toLowerCase().includes(q))
+                    .slice(0, 5);
+
+                  if (filtered.length === 0) return null;
+
+                  return (
+                    <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-[#eaeaea] rounded-[6px] shadow-lg max-h-48 overflow-y-auto z-30 divide-y divide-[#f5f5f5]">
+                      {filtered.map((driver, idx) => (
+                        <button
+                          key={`${driver.name}-${idx}`}
+                          type="button"
+                          onMouseDown={() => {
+                            setDriverName(driver.name);
+                            // Auto-fill plat armada jika masih kosong dan supir punya defaultPlate
+                            if (!truckPlate && driver.defaultPlate) {
+                              setTruckPlate(driver.defaultPlate);
+                            }
+                            setIsDriverDropdownOpen(false);
+                          }}
+                          className="w-full text-left px-3 py-2 text-xs hover:bg-[#f9f9f9] flex items-center justify-between cursor-pointer transition-colors"
+                        >
+                          <span className="font-medium text-[#111111]">{driver.name}</span>
+                          {driver.defaultPlate && (
+                            <span className="font-mono text-[10px] text-[#666666] bg-[#f0f0f0] px-1.5 py-0.5 rounded-[4px]">
+                              {driver.defaultPlate}
+                            </span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  );
+                })()
+              )}
             </div>
           </div>
         </div>
 
-        {/* Row 4: Harga Beli (Cash Kuari) & Harga Jual (Tempo Proyek) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {/* Section 2: Lokasi & Mitra */}
+        <div className="border-t border-[#eaeaea] pt-3.5 space-y-3.5">
+          <div className="text-[11px] font-bold text-[#888888] uppercase tracking-wider">
+            Lokasi & Mitra
+          </div>
+
+          {/* Row 1.5: Proyek Tujuan (Custom UI per Rule 87 & 89) */}
           <div>
-            <label className="block text-[#666666] font-medium mb-1 whitespace-nowrap">
-              Beli Kuari / {unit} (Cash)
+            <label className="block text-[#666666] font-medium mb-1">
+              Proyek Tujuan <span className="text-[#888888] font-normal">(Otomatis Kunci Klien)</span>
+            </label>
+            <ProjectCombobox
+              projects={projects}
+              selectedProjectId={formProjectId}
+              selectedProjectName={formProjectName}
+              onSelect={handleSelectProject}
+              placeholder="Pilih proyek tujuan (atau pilih klien manual di bawah)..."
+              variant="solid-white"
+            />
+          </div>
+
+          {/* Row 2: Master Klien & Kuari Asal */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[#666666] font-medium mb-1">
+                Nama PT / Pembeli Proyek <span className="text-red-500">*</span>
+              </label>
+              <ClientCombobox
+                clients={clients}
+                selectedClientId={selectedClientId}
+                selectedClientName={selectedClientName || customerName}
+                onSelect={handleSelectClient}
+                required
+                variant="solid-white"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[#666666] font-medium mb-1">
+                Kuari Asal / Tambang
+              </label>
+              <QuarryCombobox
+                quarries={quarries}
+                selectedQuarryId={selectedQuarryId}
+                selectedQuarryName={selectedQuarryName}
+                onSelect={handleSelectQuarry}
+                placeholder="Pilih atau ketik kuari asal..."
+                variant="solid-white"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Section 3: Komoditas & Volume */}
+        <div className="border-t border-[#eaeaea] pt-3.5 space-y-3.5">
+          <div className="text-[11px] font-bold text-[#888888] uppercase tracking-wider">
+            Komoditas & Volume
+          </div>
+
+          {/* Row 3: Material & Volume */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="sm:col-span-2">
+              <label className="block text-[#666666] font-medium mb-1">
+                Jenis Material <span className="text-red-500">*</span>
+              </label>
+              {/* Custom Trigger Button Modal Picker */}
+              <button
+                type="button"
+                onClick={() => setIsMaterialPickerOpen(true)}
+                className="w-full bg-white border-2 border-black rounded-[6px] px-3 py-2 text-xs text-black font-semibold hover:bg-[#fafafa] transition-colors flex items-center justify-between cursor-pointer outline-none"
+              >
+                <div className="flex items-center gap-2.5 truncate">
+                  {selectedMat && (
+                    <img
+                      src={getMaterialIconSrc(selectedMat.name)}
+                      alt=""
+                      className="w-6 h-6 rounded-[4px] object-cover flex-shrink-0 bg-[#ebebeb]"
+                    />
+                  )}
+                  <span className="font-semibold truncate">
+                    {selectedMat ? selectedMat.name : 'Pilih Jenis Material'}
+                  </span>
+                  {selectedMat && (
+                    <span className="px-1.5 py-0.5 rounded-[4px] bg-black text-white font-mono text-[10px] font-semibold select-none">
+                      {selectedMat.unit}
+                    </span>
+                  )}
+                </div>
+
+                {/* Chevron Down Icon */}
+                <svg
+                  className="w-3.5 h-3.5 text-black flex-shrink-0 ml-2"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+            </div>
+
+            <div>
+              <label className="block text-[#666666] font-medium mb-1">
+                Volume <span className="text-red-500">*</span>
+              </label>
+              <div className="relative flex items-center bg-white border-2 border-black rounded-[6px]">
+                <input
+                  type="number"
+                  step="any"
+                  min="0.1"
+                  required
+                  placeholder="0"
+                  value={quantityInput}
+                  onChange={handleQuantityChange}
+                  onFocus={handleQuantityFocus}
+                  onBlur={handleQuantityBlur}
+                  className="w-full bg-transparent outline-none border-none py-2 pl-3 pr-2 text-xs font-mono font-semibold text-black"
+                />
+                <span className="pr-3 pl-1 text-xs font-mono font-semibold text-black select-none pointer-events-none">
+                  {unit}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Section 4: Finansial & Operasional */}
+        <div className="border-t border-[#eaeaea] pt-3.5 space-y-3.5">
+          <div className="text-[11px] font-bold text-[#888888] uppercase tracking-wider">
+            Finansial & Operasional
+          </div>
+
+          {/* Row 4: Harga Beli (Cash Kuari) & Harga Jual (Tempo Proyek) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[#666666] font-medium mb-1 whitespace-nowrap">
+                Beli Kuari / {unit} (Cash)
+              </label>
+              <CurrencyInput
+                required
+                value={buyPricePerUnit}
+                onChange={setBuyPricePerUnit}
+                variant="solid-white"
+              />
+              {matchedRate && (
+                <div className="text-[10px] text-[#666666] mt-1 font-mono truncate">
+                  Acuan Kuari: <span className="font-semibold text-[#111111]">{matchedRate.qualityGrade}</span>
+                </div>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-[#666666] font-medium mb-1 whitespace-nowrap">
+                Jual Proyek / {unit} (Tempo)
+              </label>
+              <CurrencyInput
+                required
+                value={sellPricePerUnit}
+                onChange={setSellPricePerUnit}
+                variant="solid-white"
+              />
+            </div>
+          </div>
+
+          {/* Row 5: Operasional Lapangan (Solar, Uang Jalan, Portal) */}
+          <div>
+            <label className="block text-[#666666] font-medium mb-1">
+              Beban Operasional Armada (Solar/Supir/Portal)
             </label>
             <CurrencyInput
               required
-              value={buyPricePerUnit}
-              onChange={setBuyPricePerUnit}
+              value={operationalCost}
+              onChange={setOperationalCost}
+              variant="solid-white"
             />
-            {matchedRate && (
+            {matchedRoute && (
               <div className="text-[10px] text-[#666666] mt-1 font-mono truncate">
-                Acuan Kuari: <span className="font-semibold text-[#111111]">{matchedRate.qualityGrade}</span>
+                Acuan Rute ({matchedRoute.distanceKm} km): <span className="font-semibold text-[#111111]">{matchedRoute.quarryName} → {matchedRoute.projectName}</span>
               </div>
             )}
           </div>
+        </div>
 
+        {/* Section 5: Catatan & Otorisasi */}
+        <div className="border-t border-[#eaeaea] pt-3.5 space-y-3.5">
+          <div className="text-[11px] font-bold text-[#888888] uppercase tracking-wider">
+            Catatan & Otorisasi
+          </div>
+
+          {/* Catatan */}
           <div>
-            <label className="block text-[#666666] font-medium mb-1 whitespace-nowrap">
-              Jual Proyek / {unit} (Tempo)
+            <label className="block text-[#666666] font-medium mb-1">
+              Catatan Tambahan (Opsional)
             </label>
-            <CurrencyInput
-              required
-              value={sellPricePerUnit}
-              onChange={setSellPricePerUnit}
+            <FlexibleTextarea
+              value={notes}
+              onChange={setNotes}
+              placeholder="Titik bongkar sisi utara proyek..."
+              onSubmitShortcut={handleNotesSubmitShortcut}
+              variant="solid-white"
             />
           </div>
-        </div>
-
-        {/* Row 5: Operasional Lapangan (Solar, Uang Jalan, Portal) */}
-        <div>
-          <label className="block text-[#666666] font-medium mb-1">
-            Beban Operasional Armada (Solar/Supir/Portal)
-          </label>
-          <CurrencyInput
-            required
-            value={operationalCost}
-            onChange={setOperationalCost}
-          />
-          {matchedRoute && (
-            <div className="text-[10px] text-[#666666] mt-1 font-mono truncate">
-              Acuan Rute ({matchedRoute.distanceKm} km): <span className="font-semibold text-[#111111]">{matchedRoute.quarryName} → {matchedRoute.projectName}</span>
-            </div>
-          )}
-        </div>
-
-        {/* Catatan */}
-        <div>
-          <label className="block text-[#666666] font-medium mb-1">
-            Catatan Tambahan (Opsional)
-          </label>
-          <FlexibleTextarea
-            value={notes}
-            onChange={setNotes}
-            placeholder="Titik bongkar sisi utara proyek..."
-            onSubmitShortcut={handleNotesSubmitShortcut}
-          />
         </div>
 
         {/* Live Calculation Box (Sesuai Formula PRD & Proteksi RBAC Margin) */}

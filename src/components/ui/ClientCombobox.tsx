@@ -10,6 +10,7 @@ interface ClientComboboxProps {
   onSelect: (client: Client | null) => void;
   required?: boolean;
   disabled?: boolean;
+  variant?: 'default' | 'solid-white';
 }
 
 export function ClientCombobox({
@@ -18,7 +19,8 @@ export function ClientCombobox({
   selectedClientName,
   onSelect,
   required = false,
-  disabled = false
+  disabled = false,
+  variant = 'default'
 }: ClientComboboxProps): React.JSX.Element {
   const [query, setQuery] = useState(selectedClientName || '');
   const [isOpen, setIsOpen] = useState(false);
@@ -104,7 +106,13 @@ export function ClientCombobox({
   return (
     <div ref={containerRef} className="relative w-full">
       {/* Input Field */}
-      <div className="relative flex items-center bg-[#f5f5f5] focus-within:bg-[#ebebeb] rounded-[6px] transition-colors">
+      <div
+        className={`relative flex items-center rounded-[6px] transition-colors ${
+          variant === 'solid-white'
+            ? 'bg-white border-2 border-black'
+            : 'bg-[#f5f5f5] focus-within:bg-[#ebebeb]'
+        }`}
+      >
         <input
           ref={inputRef}
           type="text"
@@ -115,7 +123,11 @@ export function ClientCombobox({
           onChange={handleInputChange}
           onBlur={handleInputBlur}
           onFocus={() => setIsOpen(true)}
-          className="w-full bg-transparent outline-none border-none py-2 px-3 text-xs text-[#111111] placeholder:text-[#999999]"
+          className={`w-full bg-transparent outline-none border-none py-2 px-3 text-xs ${
+            variant === 'solid-white'
+              ? 'text-black font-semibold placeholder:text-[#888888]'
+              : 'text-[#111111] placeholder:text-[#999999]'
+          }`}
         />
 
         {/* Chevron Dropdown Toggle */}
@@ -128,7 +140,9 @@ export function ClientCombobox({
               inputRef.current?.focus();
             }
           }}
-          className="p-2 text-[#777777] hover:text-[#111111] transition-colors border-none bg-transparent cursor-pointer"
+          className={`p-2 transition-colors border-none bg-transparent cursor-pointer ${
+            variant === 'solid-white' ? 'text-black' : 'text-[#777777] hover:text-[#111111]'
+          }`}
         >
           <svg
             className={`w-3.5 h-3.5 transition-transform duration-150 ${isOpen ? 'rotate-180' : ''}`}

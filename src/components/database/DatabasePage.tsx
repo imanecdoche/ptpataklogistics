@@ -46,6 +46,7 @@ import { NewClientModal } from '@/components/ui/NewClientModal';
 import { RunningText } from '@/components/ui/RunningText';
 import { TableActionMenu } from '@/components/ui/TableActionMenu';
 import { PinAuthModal } from '@/components/ui/PinAuthModal';
+import { CurrencyInput } from '@/components/ui/CurrencyInput';
 import { DispatchDetailModal } from '@/components/dispatcher/DispatchDetailModal';
 import { EditDispatchModal } from '@/components/dispatcher/EditDispatchModal';
 
@@ -2054,13 +2055,9 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
             </div>
             <div>
               <label className="block text-[#666666] font-medium mb-1">Modal / Investasi Awal (Rp)</label>
-              <input
-                type="number"
+              <CurrencyInput
                 value={editInvestorTarget.initialCapital || 0}
-                onChange={e => setEditInvestorTarget({ ...editInvestorTarget, initialCapital: Number(e.target.value) || 0 })}
-                min="0"
-                step="500000"
-                className="w-full font-mono bg-white border border-[#eaeaea] rounded-[8px] px-3.5 py-2 text-xs focus:outline-none focus:border-[#111111]"
+                onChange={val => setEditInvestorTarget({ ...editInvestorTarget, initialCapital: val })}
               />
             </div>
             <div>
@@ -2195,13 +2192,9 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
             </div>
             <div>
               <label className="block text-[#666666] font-medium mb-1">Modal Awal Disetor (Rp)</label>
-              <input
-                type="number"
+              <CurrencyInput
                 value={editProjectTarget.initialDeposit || 0}
-                onChange={e => setEditProjectTarget({ ...editProjectTarget, initialDeposit: Number(e.target.value) || 0 })}
-                min="0"
-                step="500000"
-                className="w-full font-mono bg-white border border-[#eaeaea] rounded-[8px] px-3.5 py-2 text-xs focus:outline-none focus:border-[#111111]"
+                onChange={val => setEditProjectTarget({ ...editProjectTarget, initialDeposit: val })}
               />
             </div>
             <div>
@@ -2544,14 +2537,10 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
             <label className="block text-[#666666] font-medium mb-1">
               Modal / Investasi Awal (Rp)
             </label>
-            <input
-              type="number"
-              value={inputInvestorCapital || ''}
-              onChange={e => setInputInvestorCapital(Number(e.target.value) || 0)}
-              placeholder="Contoh: 100000000"
-              min="0"
-              step="500000"
-              className="w-full font-mono bg-white border border-[#eaeaea] rounded-[8px] px-3.5 py-2 text-xs focus:outline-none focus:border-[#111111]"
+            <CurrencyInput
+              value={inputInvestorCapital}
+              onChange={setInputInvestorCapital}
+              placeholder="0"
             />
           </div>
 
@@ -2663,14 +2652,10 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
             <label className="block text-[#666666] font-medium mb-1">
               Modal Awal Disetor (Rp)
             </label>
-            <input
-              type="number"
-              value={inputProjectInitialDeposit || ''}
-              onChange={e => setInputProjectInitialDeposit(Number(e.target.value) || 0)}
-              placeholder="Contoh: 100000000"
-              min="0"
-              step="500000"
-              className="w-full font-mono bg-white border border-[#eaeaea] rounded-[8px] px-3.5 py-2 text-xs focus:outline-none focus:border-[#111111]"
+            <CurrencyInput
+              value={inputProjectInitialDeposit}
+              onChange={setInputProjectInitialDeposit}
+              placeholder="0"
             />
           </div>
 

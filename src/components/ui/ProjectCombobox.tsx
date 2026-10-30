@@ -10,6 +10,7 @@ interface ProjectComboboxProps {
   disabled?: boolean;
   required?: boolean;
   allowClear?: boolean;
+  variant?: 'default' | 'solid-white';
 }
 
 export function ProjectCombobox({
@@ -20,7 +21,8 @@ export function ProjectCombobox({
   placeholder = 'Pilih proyek tujuan...',
   disabled = false,
   required = false,
-  allowClear = true
+  allowClear = true,
+  variant = 'default'
 }: ProjectComboboxProps): React.JSX.Element {
   const [query, setQuery] = useState(selectedProjectName || '');
   const [isOpen, setIsOpen] = useState(false);
@@ -59,9 +61,7 @@ export function ProjectCombobox({
     return projects.filter(
       item =>
         item.name.toLowerCase().includes(q) ||
-        (item.location && item.location.toLowerCase().includes(q)) ||
-        (item.clientName && item.clientName.toLowerCase().includes(q)) ||
-        (item.investorName && item.investorName.toLowerCase().includes(q))
+        (item.clientName && item.clientName.toLowerCase().includes(q))
     );
   }, [projects, query]);
 
@@ -78,6 +78,8 @@ export function ProjectCombobox({
     inputRef.current?.focus();
   };
 
+  const isSolidWhite = variant === 'solid-white';
+
   return (
     <div ref={containerRef} className="relative w-full">
       <div
@@ -87,9 +89,11 @@ export function ProjectCombobox({
             inputRef.current?.focus();
           }
         }}
-        className={`flex items-center justify-between w-full bg-[#f5f5f5] hover:bg-[#ebebeb] focus-within:bg-[#ebebeb] rounded-[6px] px-3 py-2 text-xs transition-colors cursor-pointer border border-transparent focus-within:border-[#111111] ${
-          disabled ? 'opacity-60 cursor-not-allowed' : ''
-        }`}
+        className={`flex items-center justify-between w-full rounded-[6px] px-3 py-2 text-xs transition-colors cursor-pointer ${
+          isSolidWhite
+            ? 'bg-white border-2 border-black text-black font-semibold'
+            : 'bg-[#f5f5f5] hover:bg-[#ebebeb] focus-within:bg-[#ebebeb] text-[#111111] border border-transparent focus-within:border-[#111111]'
+        } ${disabled ? 'opacity-60 cursor-not-allowed' : ''}`}
       >
         <div className="flex-1 min-w-0 pr-2">
           <input
@@ -106,7 +110,11 @@ export function ProjectCombobox({
             onFocus={() => {
               if (!disabled) setIsOpen(true);
             }}
-            className="w-full bg-transparent outline-none text-[#111111] font-semibold text-xs placeholder:text-[#888888] placeholder:font-normal"
+            className={`w-full bg-transparent outline-none text-xs placeholder:font-normal ${
+              isSolidWhite
+                ? 'text-black font-semibold placeholder:text-[#888888]'
+                : 'text-[#111111] font-semibold placeholder:text-[#888888]'
+            }`}
           />
         </div>
 
@@ -115,7 +123,9 @@ export function ProjectCombobox({
             <button
               type="button"
               onClick={handleClear}
-              className="text-[#888888] hover:text-[#111111] p-0.5 rounded transition-colors"
+              className={`${
+                isSolidWhite ? 'text-black hover:text-red-600' : 'text-[#888888] hover:text-[#111111]'
+              } p-0.5 rounded transition-colors`}
               title="Bersihkan pilihan"
             >
               <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
@@ -129,7 +139,9 @@ export function ProjectCombobox({
           )}
 
           <svg
-            className={`w-3.5 h-3.5 text-[#666666] transition-transform ${isOpen ? 'rotate-180' : ''}`}
+            className={`w-3.5 h-3.5 transition-transform ${
+              isSolidWhite ? 'text-black' : 'text-[#666666]'
+            } ${isOpen ? 'rotate-180' : ''}`}
             viewBox="0 0 20 20"
             fill="currentColor"
           >
@@ -142,7 +154,7 @@ export function ProjectCombobox({
         </div>
       </div>
 
-      {/* Dropdown Popover */}
+      {/* Dropdown Popover: Hanya nama proyek saja per Rule 89 */}
       {isOpen && !disabled && (
         <div className="absolute z-50 left-0 right-0 mt-1 max-h-60 overflow-y-auto bg-white border border-[#eaeaea] rounded-[8px] shadow-lg py-1 text-xs">
           {filteredProjects.length === 0 ? (
@@ -156,28 +168,12 @@ export function ProjectCombobox({
                 <div
                   key={p.id}
                   onClick={() => handleSelect(p)}
-                  className={`px-3 py-2 cursor-pointer flex flex-col gap-0.5 border-b border-[#f5f5f5] last:border-b-0 transition-colors ${
-                    isSelected ? 'bg-[#111111] text-white' : 'hover:bg-[#f5f5f5] text-[#111111]'
+                  className={`px-3 py-2 cursor-pointer flex items-center justify-between border-b border-[#f5f5f5] last:border-b-0 transition-colors ${
+                    isSelected ? 'bg-[#111111] text-white font-bold' : 'hover:bg-[#f5f5f5] text-[#111111] font-semibold'
                   }`}
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-xs">{p.name}</span>
-                    <span
-                      className={`text-[10px] font-mono ${
-                        isSelected ? 'text-[#e5e5e5]' : 'text-[#666666]'
-                      }`}
-                    >
-                      {p.location}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between text-[11px]">
-                    <span className={isSelected ? 'text-[#e5e5e5]' : 'text-[#666666]'}>
-                      Klien: <strong className="font-medium">{p.clientName}</strong>
-                    </span>
-                    <span className={isSelected ? 'text-[#cccccc]' : 'text-[#888888]'}>
-                      Investor: {p.investorName}
-                    </span>
-                  </div>
+                  <span className="truncate text-xs">{p.name}</span>
+                  {isSelected && <span className="text-[10px] text-white font-mono">✓</span>}
                 </div>
               );
             })

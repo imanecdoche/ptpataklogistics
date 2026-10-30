@@ -9,6 +9,7 @@ interface CurrencyInputProps {
   className?: string;
   id?: string;
   name?: string;
+  variant?: 'default' | 'solid-white';
 }
 
 /**
@@ -26,7 +27,8 @@ export function CurrencyInput({
   disabled = false,
   className = '',
   id,
-  name
+  name,
+  variant = 'default'
 }: CurrencyInputProps): React.JSX.Element {
   const [isFocused, setIsFocused] = useState(false);
   const [displayValue, setDisplayValue] = useState<string>(() => (value ? value.toLocaleString('id-ID') : '0'));
@@ -70,12 +72,18 @@ export function CurrencyInput({
 
   return (
     <div
-      className={`relative flex items-center bg-[#f5f5f5] focus-within:bg-[#ebebeb] rounded-[6px] transition-colors ${
-        disabled ? 'opacity-50 cursor-not-allowed' : ''
-      } ${className}`}
+      className={`relative flex items-center rounded-[6px] transition-colors ${
+        variant === 'solid-white'
+          ? 'bg-white border-2 border-black text-black font-semibold'
+          : 'bg-[#f5f5f5] focus-within:bg-[#ebebeb]'
+      } ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}`}
     >
       {/* Simbol Fixed 'Rp' */}
-      <span className="pl-3 pr-1 text-xs font-mono font-medium text-[#888888] select-none pointer-events-none">
+      <span
+        className={`pl-3 pr-1 text-xs font-mono select-none pointer-events-none ${
+          variant === 'solid-white' ? 'text-black font-semibold' : 'text-[#888888] font-medium'
+        }`}
+      >
         Rp
       </span>
 
@@ -92,7 +100,11 @@ export function CurrencyInput({
         onChange={handleChange}
         onFocus={handleFocus}
         onBlur={handleBlur}
-        className="w-full bg-transparent outline-none border-none py-2 pr-3 text-xs font-mono font-medium text-[#111111] placeholder:text-[#999999]"
+        className={`w-full bg-transparent outline-none border-none py-2 pr-3 text-xs font-mono ${
+          variant === 'solid-white'
+            ? 'text-black font-semibold placeholder:text-[#888888]'
+            : 'text-[#111111] font-medium placeholder:text-[#999999]'
+        }`}
       />
     </div>
   );

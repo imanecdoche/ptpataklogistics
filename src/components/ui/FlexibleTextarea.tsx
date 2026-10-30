@@ -8,6 +8,7 @@ interface FlexibleTextareaProps {
   required?: boolean;
   disabled?: boolean;
   id?: string;
+  variant?: 'default' | 'solid-white';
 }
 
 const LINE_HEIGHT = 18; // px per line
@@ -22,7 +23,8 @@ export function FlexibleTextarea({
   onSubmitShortcut,
   required = false,
   disabled = false,
-  id
+  id,
+  variant = 'default'
 }: FlexibleTextareaProps): React.JSX.Element {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -111,12 +113,18 @@ export function FlexibleTextarea({
   };
 
   const showHandle = hasOverflow || manualHeight !== null;
-  const fadeBgClass = isFocused ? 'from-[#ebebeb]' : 'from-[#f5f5f5]';
+  const fadeBgClass = variant === 'solid-white'
+    ? 'from-white'
+    : isFocused ? 'from-[#ebebeb]' : 'from-[#f5f5f5]';
 
   return (
     <div
       ref={containerRef}
-      className="relative w-full bg-[#f5f5f5] focus-within:bg-[#ebebeb] rounded-[6px] transition-colors flex flex-col group"
+      className={`relative w-full rounded-[6px] transition-colors flex flex-col group ${
+        variant === 'solid-white'
+          ? 'bg-white border-2 border-black'
+          : 'bg-[#f5f5f5] focus-within:bg-[#ebebeb]'
+      }`}
     >
       {/* Top Fading Edge (Muncul saat user men-scroll teks ke bawah) */}
       {canScrollUp && (
@@ -145,7 +153,11 @@ export function FlexibleTextarea({
         required={required}
         disabled={disabled}
         rows={1}
-        className="w-full bg-transparent outline-none px-3 py-2 text-xs text-[#111111] placeholder:text-[#999999] resize-none overflow-y-auto font-sans leading-[18px] transition-[height] duration-75"
+        className={`w-full bg-transparent outline-none px-3 py-2 text-xs resize-none overflow-y-auto font-sans leading-[18px] transition-[height] duration-75 ${
+          variant === 'solid-white'
+            ? 'text-black font-semibold placeholder:text-[#888888]'
+            : 'text-[#111111] placeholder:text-[#999999]'
+        }`}
         style={{
           minHeight: `${MIN_HEIGHT}px`
         }}
