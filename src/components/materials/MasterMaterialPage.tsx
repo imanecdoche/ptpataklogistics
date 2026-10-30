@@ -673,7 +673,8 @@ export function MasterMaterialPage({
                     </tr>
                   ) : (
                     filteredRates.map(rate => {
-                      const sell = rate.sellPrice || 0;
+                      const comm = commodities.find(c => c.id === rate.materialId);
+                      const sell = rate.sellPrice ?? comm?.defaultSellPrice ?? 0;
                       const margin = sell - rate.buyPriceCash;
                       return (
                         <tr key={rate.id} className="hover:bg-[#fafafa] transition-colors">
@@ -698,8 +699,14 @@ export function MasterMaterialPage({
                           <td className="py-2.5 px-3 text-right font-bold tracking-tight text-[#111111] whitespace-nowrap">
                             {formatRupiah(sell)}
                           </td>
-                          <td className="py-2.5 px-3 text-right font-bold tracking-tight text-emerald-700 whitespace-nowrap">
-                            +{formatRupiah(margin)}
+                          <td className={`py-2.5 px-3 text-right font-bold tracking-tight whitespace-nowrap ${
+                            margin > 0 ? 'text-emerald-700' : margin < 0 ? 'text-red-600' : 'text-[#888888]'
+                          }`}>
+                            {margin > 0
+                              ? `+${formatRupiah(margin)}`
+                              : margin < 0
+                              ? `-${formatRupiah(Math.abs(margin))}`
+                              : formatRupiah(0)}
                           </td>
                           <td className="py-2.5 px-3 text-center whitespace-nowrap">
                             <div className="flex items-center justify-center gap-1.5">
