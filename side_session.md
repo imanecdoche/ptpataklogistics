@@ -99,6 +99,19 @@ Dokumen ini mencatat seluruh riwayat, konteks percakapan, kendala lingkungan lok
    - Pencatatan subsidi silang, talangan operasional, pengembalian hutang, dan migrasi modal antar-investor.
    - Dilengkapi filter status (*Semua*, *Belum Lunas/Talangan Aktif*, *Lunas*) dan tombol cepat pelunasan talangan yang dilindungi verifikasi PIN.
 
+### F. Dynamic Entity Resolution (SSoT), Kolom "Dibuat Oleh", dan Akun Investor Bpk. Yadi
+1. **Dynamic Entity Resolution (SSoT)**:
+   - Pemanggilan nama di riwayat transaksi dan seluruh tabel tidak lagi statis dari snapshot dokumen transaksi, melainkan dinamis merujuk ke Master Data berdasarkan ID (`clientId`, `projectId`, `materialId`, `quarryId`, `truckPlate`, `driverName`).
+   - Perubahan nama di master otomatis ter-update di seluruh baris riwayat secara instan tanpa perlu batch write ke Firestore.
+   - Jika entitas master tidak ditemukan atau terhapus (orphan), sistem menampilkan fallback nama historis disertai icon segitiga merah peringatan (`/icons/warning-triangle.png`) berukuran kecil (`w-3.5 h-3.5`) dengan hover tooltip.
+2. **Kolom "Dibuat Oleh" (Pembuat Laporan)**:
+   - Ditambahkan pada tabel **Riwayat Ritase** (`DatabasePage.tsx`), **Buku Kas** (`CashFlowView.tsx`), dan **Piutang Tempo** (`ReceivablesView.tsx`) di akhir sebelum kolom Aksi.
+   - Ditampilkan dengan tipografi sans-serif bersih (`font-medium text-[#111111]`) tanpa background badge.
+   - Mapping nama akun ringkas: `fatih@patak.dev` $\rightarrow$ **Fatih**, `founder@patak.id` $\rightarrow$ **Owner**, `administrator@patak.id` $\rightarrow$ **Admin**, `opspatak.id@patak.id` $\rightarrow$ **Ops**.
+3. **Provisioning Akun Investor Bpk. Yadi**:
+   - Dibuatkan akun Firebase Auth dan Firestore `system_users`: email `yadi@patak.id`, password `patak12345`, role `'investor'`, dan terhubung ke `investorId: 'inv-bpk-yadi'`.
+   - Penerapan **Data Scoping & RBAC Ketat**: Saat investor login, menu sidebar dibatasi hanya **Dashboard**, **Proyek**, dan **Investor**; dropdown proyek di header dikunci hanya ke proyek miliknya; serta seluruh data proyek lain dan modul sensitif perusahaan (buku kas, HOK, master kuari/material, dev) disembunyikan total.
+
 ---
 
 ## 📁 4. Berkas Baru & Modifikasi Kode
