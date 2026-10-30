@@ -12,6 +12,7 @@ import { CustomDialog } from '@/components/ui/CustomDialog';
 import { RunningText } from '@/components/ui/RunningText';
 import { TableActionMenu } from '@/components/ui/TableActionMenu';
 import { EyeToggleIcon } from '@/components/auth/EyeToggleIcon';
+import { formatPersonNameLive } from '@/lib/nameUtils';
 
 interface DevPageProps {
   userEmail: string;
@@ -208,13 +209,13 @@ export function DevPage({ userEmail }: DevPageProps): React.JSX.Element {
         </div>
       </div>
 
-      {/* 2. METRIC CARDS RINGKASAN AKUN (Aturan 71: 1 kolom mobile, 2 tablet, 4 desktop) */}
+      {/* 2. METRIC CARDS RINGKASAN AKUN (Rule 99: Sans-serif bold tracking-tight, no monospace) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
         {/* Card 1: Total Akun */}
         <div className="bg-white rounded-[10px] p-4 border border-[#eaeaea] shadow-sm flex flex-col justify-between">
           <span className="text-[11px] font-medium text-[#666666]">Total Akun Terdaftar</span>
           <div className="mt-2 flex items-baseline gap-1.5">
-            <span className="text-2xl font-bold font-mono text-[#111111]">{counts.total}</span>
+            <span className="text-2xl font-bold tracking-tight text-[#111111]">{counts.total}</span>
             <span className="text-xs text-[#777777]">user</span>
           </div>
           <span className="text-[11px] text-[#888888] mt-1">Termasuk developer & operator</span>
@@ -224,7 +225,7 @@ export function DevPage({ userEmail }: DevPageProps): React.JSX.Element {
         <div className="bg-white rounded-[10px] p-4 border border-[#eaeaea] shadow-sm flex flex-col justify-between">
           <span className="text-[11px] font-medium text-[#ca8a04]">Menunggu ACC (Pending)</span>
           <div className="mt-2 flex items-baseline gap-1.5">
-            <span className={`text-2xl font-bold font-mono ${counts.pending > 0 ? 'text-[#ca8a04]' : 'text-[#111111]'}`}>
+            <span className={`text-2xl font-bold tracking-tight ${counts.pending > 0 ? 'text-[#ca8a04]' : 'text-[#111111]'}`}>
               {counts.pending}
             </span>
             <span className="text-xs text-[#777777]">pemohon</span>
@@ -236,7 +237,7 @@ export function DevPage({ userEmail }: DevPageProps): React.JSX.Element {
         <div className="bg-white rounded-[10px] p-4 border border-[#eaeaea] shadow-sm flex flex-col justify-between">
           <span className="text-[11px] font-medium text-[#008060]">Akun Berstatus Aktif</span>
           <div className="mt-2 flex items-baseline gap-1.5">
-            <span className="text-2xl font-bold font-mono text-[#008060]">{counts.active}</span>
+            <span className="text-2xl font-bold tracking-tight text-[#008060]">{counts.active}</span>
             <span className="text-xs text-[#777777]">aktif</span>
           </div>
           <span className="text-[11px] text-[#888888] mt-1">Dapat login & beroperasi</span>
@@ -246,7 +247,7 @@ export function DevPage({ userEmail }: DevPageProps): React.JSX.Element {
         <div className="bg-white rounded-[10px] p-4 border border-[#eaeaea] shadow-sm flex flex-col justify-between">
           <span className="text-[11px] font-medium text-[#666666]">Akun Nonaktif</span>
           <div className="mt-2 flex items-baseline gap-1.5">
-            <span className="text-2xl font-bold font-mono text-[#dc2626]">{counts.inactive}</span>
+            <span className="text-2xl font-bold tracking-tight text-[#dc2626]">{counts.inactive}</span>
             <span className="text-xs text-[#777777]">nonaktif</span>
           </div>
           <span className="text-[11px] text-[#888888] mt-1">&gt; 30 hari tanpa aktivitas login</span>
@@ -303,14 +304,19 @@ export function DevPage({ userEmail }: DevPageProps): React.JSX.Element {
           </button>
         </div>
 
-        {/* Search Bar */}
+        {/* Search Bar (Rule 98: Universal Search Icon) */}
         <div className="relative w-full sm:w-64">
+          <img
+            src="/icons/search.png"
+            alt="Search"
+            className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 object-contain pointer-events-none opacity-60"
+          />
           <input
             type="text"
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             placeholder="Cari nama, email, role..."
-            className="w-full bg-[#fafafa] border border-[#eaeaea] rounded-[8px] px-3.5 py-1.5 text-xs text-[#111111] placeholder-[#888888] focus:outline-none focus:border-[#111111] focus:bg-white transition-colors"
+            className="w-full bg-[#fafafa] border border-[#eaeaea] rounded-[8px] pl-9 pr-3.5 py-1.5 text-xs text-[#111111] placeholder-[#888888] focus:outline-none focus:border-[#111111] focus:bg-white transition-colors"
           />
         </div>
       </div>
@@ -439,7 +445,7 @@ export function DevPage({ userEmail }: DevPageProps): React.JSX.Element {
             <input
               type="text"
               value={newName}
-              onChange={e => setNewName(e.target.value)}
+              onChange={e => setNewName(formatPersonNameLive(e.target.value))}
               placeholder="Contoh: Ahmad Fauzi"
               required
               className="w-full bg-white border border-[#eaeaea] rounded-[8px] px-3.5 py-2 text-xs focus:outline-none focus:border-[#111111]"
@@ -565,7 +571,7 @@ export function DevPage({ userEmail }: DevPageProps): React.JSX.Element {
               <input
                 type="text"
                 value={editingUser.name}
-                onChange={e => setEditingUser({ ...editingUser, name: e.target.value })}
+                onChange={e => setEditingUser({ ...editingUser, name: formatPersonNameLive(e.target.value) })}
                 required
                 className="w-full bg-white border border-[#eaeaea] rounded-[8px] px-3.5 py-2 text-xs focus:outline-none focus:border-[#111111]"
               />

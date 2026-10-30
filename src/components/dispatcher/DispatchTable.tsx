@@ -7,6 +7,7 @@ import { CustomDatePicker } from '@/components/ui/CustomDatePicker';
 import { RunningText } from '@/components/ui/RunningText';
 import { TableActionMenu } from '@/components/ui/TableActionMenu';
 import { useProjectFilter } from '@/context/ProjectFilterContext';
+import { MetricCardCurrency } from '@/components/ui/MetricCardCurrency';
 
 interface DispatchTableProps {
   transactions: DispatchTransaction[];
@@ -111,39 +112,50 @@ export function DispatchTable({
             onChange={onDateChange}
           />
 
-          {/* Instant Search */}
-          <input
-            type="text"
-            placeholder="Cari plat, tiket, pembeli..."
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            className="w-44 sm:w-52 bg-[#f5f5f5] focus:bg-[#ebebeb] outline-none rounded-[6px] px-3 py-1.5 text-xs text-[#111111] placeholder:text-[#999999] transition-colors"
-          />
+          {/* Instant Search (Rule 98: Universal Search Icon) */}
+          <div className="relative">
+            <img
+              src="/icons/search.png"
+              alt="Search"
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 object-contain pointer-events-none opacity-60"
+            />
+            <input
+              type="text"
+              placeholder="Cari plat, tiket, pembeli..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="w-44 sm:w-56 bg-[#f5f5f5] focus:bg-[#ebebeb] outline-none rounded-[6px] pl-9 pr-3 py-1.5 text-xs text-[#111111] placeholder:text-[#999999] transition-colors"
+            />
+          </div>
         </div>
       </div>
 
-      {/* Ringkasan Finansial Harian (Pure Flat Surface, Tonal - 1 card per row di mobile) */}
+      {/* Ringkasan Finansial Harian (Rule 99: Sans-serif bold tracking-tight, no monospace) */}
       <div className={`grid grid-cols-1 ${hideMargin ? 'sm:grid-cols-2' : 'sm:grid-cols-3'} gap-2.5 py-4 border-b border-[#f5f5f5]`}>
         <div className="bg-[#fafafa] rounded-[8px] p-3 flex sm:flex-col justify-between sm:justify-start items-center sm:items-start gap-1">
           <span className="text-[11px] text-[#888888]">Total Ritase</span>
-          <span className="font-mono text-sm sm:text-base font-bold text-[#111111]">
+          <span className="text-sm sm:text-base font-bold tracking-tight text-[#111111]">
             {totalRitase} <span className="text-xs font-normal text-[#666666]">Trip</span>
           </span>
         </div>
 
         <div className="bg-[#fafafa] rounded-[8px] p-3 flex sm:flex-col justify-between sm:justify-start items-center sm:items-start gap-1">
           <span className="text-[11px] text-[#888888]">Total Tagihan (Tempo)</span>
-          <span className="font-mono text-sm sm:text-base font-bold text-[#111111] whitespace-nowrap">
-            {formatRupiah(totalOmset)}
-          </span>
+          <div className="mt-0.5">
+            <MetricCardCurrency amount={totalOmset} size="sm" />
+          </div>
         </div>
 
         {!hideMargin && (
           <div className="bg-[#fafafa] rounded-[8px] p-3 flex sm:flex-col justify-between sm:justify-start items-center sm:items-start gap-1">
             <span className="text-[11px] text-[#888888]">Total Laba Bersih</span>
-            <span className="font-mono text-sm sm:text-base font-bold text-[#111111] whitespace-nowrap">
-              {formatRupiah(totalLaba)}
-            </span>
+            <div className="mt-0.5">
+              <MetricCardCurrency
+                amount={totalLaba}
+                size="sm"
+                colorClassName={totalLaba >= 0 ? 'text-[#008060]' : 'text-[#cf1124]'}
+              />
+            </div>
           </div>
         )}
       </div>

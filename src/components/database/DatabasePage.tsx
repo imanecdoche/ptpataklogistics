@@ -2,12 +2,9 @@ import React, { useState, useEffect, useMemo } from 'react';
 import {
   MasterVehicle,
   MasterDriver,
-  MasterQuarry,
-  Investor,
   Client,
   DispatchTransaction,
-  MaterialItem,
-  Project
+  MaterialItem
 } from '@/types/database';
 import {
   subscribeMasterVehicles,
@@ -16,17 +13,9 @@ import {
   combineVehicleData,
   subscribeMasterDrivers,
   saveMasterDriver,
-  deleteMasterDriver,
-  subscribeMasterQuarries,
-  saveMasterQuarry,
-  deleteMasterQuarry
+  deleteMasterDriver
 } from '@/lib/databaseMasterService';
-import {
-  subscribeInvestors,
-  saveInvestor,
-  deleteInvestor
-} from '@/lib/investorService';
-import { subscribeClients, deleteClient, updateClient } from '@/lib/clientService';
+import { subscribeClients } from '@/lib/clientService';
 import {
   getMaterials,
   subscribeAllTransactions,
@@ -35,22 +24,20 @@ import {
   settleTransaction,
   UpdateDispatchPayload
 } from '@/lib/dispatcherService';
-import {
-  subscribeProjects,
-  saveProject,
-  deleteProject
-} from '@/lib/projectService';
 import { CustomDialog } from '@/components/ui/CustomDialog';
 import { formatTruckPlate, isValidRegionCode, extractRegionCode } from '@/components/ui/TruckPlateInput';
-import { NewClientModal } from '@/components/ui/NewClientModal';
 import { RunningText } from '@/components/ui/RunningText';
 import { TableActionMenu } from '@/components/ui/TableActionMenu';
 import { PinAuthModal } from '@/components/ui/PinAuthModal';
-import { CurrencyInput } from '@/components/ui/CurrencyInput';
 import { DispatchDetailModal } from '@/components/dispatcher/DispatchDetailModal';
 import { EditDispatchModal } from '@/components/dispatcher/EditDispatchModal';
+import { CustomSelectCombobox } from '@/components/ui/CustomSelectCombobox';
+import { MetricCardCurrency } from '@/components/ui/MetricCardCurrency';
+import { PhoneInput } from '@/components/ui/PhoneInput';
+import { formatPhoneNumber } from '@/lib/phoneUtils';
+import { formatPersonNameLive } from '@/lib/nameUtils';
 
-type SubTab = 'ritase' | 'projects' | 'vehicles' | 'drivers' | 'clients' | 'quarries' | 'investors';
+type SubTab = 'ritase' | 'vehicles' | 'drivers';
 type TimeRangeFilter = 'all' | 'today' | 'this_month' | 'last_30_days';
 type StatusFilter = 'all' | 'TEMPO' | 'LUNAS';
 type SortOption =
@@ -74,9 +61,6 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
   const [transactions, setTransactions] = useState<DispatchTransaction[]>([]);
   const [drivers, setDrivers] = useState<MasterDriver[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
-  const [quarries, setQuarries] = useState<MasterQuarry[]>([]);
-  const [investors, setInvestors] = useState<Investor[]>([]);
-  const [projects, setProjects] = useState<Project[]>([]);
   const [materials, setMaterials] = useState<MaterialItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -90,10 +74,6 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
   // Modals Tambah Baru
   const [isVehicleModalOpen, setIsVehicleModalOpen] = useState(false);
   const [isDriverModalOpen, setIsDriverModalOpen] = useState(false);
-  const [isQuarryModalOpen, setIsQuarryModalOpen] = useState(false);
-  const [isClientModalOpen, setIsClientModalOpen] = useState(false);
-  const [isInvestorModalOpen, setIsInvestorModalOpen] = useState(false);
-  const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
 
   // Form input states Tambah Baru
   const [inputPlate, setInputPlate] = useState('');
@@ -107,34 +87,12 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
   const [inputDriverPlate, setInputDriverPlate] = useState('');
   const [inputDriverNotes, setInputDriverNotes] = useState('');
 
-  const [inputQuarryName, setInputQuarryName] = useState('');
-  const [inputQuarryLocation, setInputQuarryLocation] = useState('');
-  const [inputQuarryPIC, setInputQuarryPIC] = useState('');
-  const [inputQuarryPhone, setInputQuarryPhone] = useState('');
-
-  const [inputInvestorName, setInputInvestorName] = useState('');
-  const [inputInvestorPhone, setInputInvestorPhone] = useState('');
-  const [inputInvestorBank, setInputInvestorBank] = useState('');
-  const [inputInvestorCapital, setInputInvestorCapital] = useState<number>(0);
-  const [inputInvestorNotes, setInputInvestorNotes] = useState('');
-
-  const [inputProjectName, setInputProjectName] = useState('');
-  const [inputProjectLocation, setInputProjectLocation] = useState('');
-  const [inputProjectInvestorId, setInputProjectInvestorId] = useState('');
-  const [inputProjectClientId, setInputProjectClientId] = useState('');
-  const [inputProjectInitialDeposit, setInputProjectInitialDeposit] = useState<number>(0);
-  const [inputProjectNotes, setInputProjectNotes] = useState('');
-
   // Modals & Target Edit
   const [selectedDetailTx, setSelectedDetailTx] = useState<DispatchTransaction | null>(null);
   const [selectedEditTx, setSelectedEditTx] = useState<DispatchTransaction | null>(null);
 
   const [editVehicleTarget, setEditVehicleTarget] = useState<MasterVehicle | null>(null);
   const [editDriverTarget, setEditDriverTarget] = useState<MasterDriver | null>(null);
-  const [editClientTarget, setEditClientTarget] = useState<Client | null>(null);
-  const [editQuarryTarget, setEditQuarryTarget] = useState<MasterQuarry | null>(null);
-  const [editInvestorTarget, setEditInvestorTarget] = useState<Investor | null>(null);
-  const [editProjectTarget, setEditProjectTarget] = useState<Project | null>(null);
 
   // State Eksekusi Otorisasi PIN
   const [pinModalConfig, setPinModalConfig] = useState<{
@@ -171,18 +129,6 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
       setClients(list);
     });
 
-    const unsubQuarries = subscribeMasterQuarries(list => {
-      setQuarries(list);
-    });
-
-    const unsubInvestors = subscribeInvestors(list => {
-      setInvestors(list);
-    });
-
-    const unsubProjects = subscribeProjects(list => {
-      setProjects(list);
-    });
-
     const unsubTx = subscribeAllTransactions(list => {
       setTransactions(list);
       setIsLoading(false);
@@ -194,9 +140,6 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
       unsubVehicles();
       unsubDrivers();
       unsubClients();
-      unsubQuarries();
-      unsubInvestors();
-      unsubProjects();
       unsubTx();
     };
   }, []);
@@ -206,22 +149,7 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
     return 'Rp ' + Math.round(val).toLocaleString('id-ID');
   };
 
-  // Filter Data Proyek
-  const filteredProjects = useMemo(() => {
-    let result = [...projects];
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase().trim();
-      result = result.filter(
-        p =>
-          p.name.toLowerCase().includes(q) ||
-          p.location.toLowerCase().includes(q) ||
-          p.investorName.toLowerCase().includes(q) ||
-          p.clientName.toLowerCase().includes(q) ||
-          (p.notes && p.notes.toLowerCase().includes(q))
-      );
-    }
-    return result;
-  }, [projects, searchQuery]);
+
 
   // Agregasi seluruh data armada (manual + riwayat transaksi)
   const combinedVehicles = useMemo(() => {
@@ -314,6 +242,54 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
     return { totalRitase, totalOmset, totalBelanjaKuari, totalLabaBersih };
   }, [filteredTransactions]);
 
+  // Opsi Dropdown Filter Riwayat Ritase (Custom UI - Rule 87 & Rule 97)
+  const timeRangeOptions = useMemo(
+    () => [
+      { id: 'all', label: 'Semua Waktu (All-Time)' },
+      { id: 'today', label: 'Hari Ini' },
+      { id: 'this_month', label: 'Bulan Ini' },
+      { id: 'last_30_days', label: '30 Hari Terakhir' }
+    ],
+    []
+  );
+
+  const statusFilterOptions = useMemo(
+    () => [
+      { id: 'all', label: 'Semua Status' },
+      { id: 'TEMPO', label: 'TEMPO (Belum Lunas)' },
+      { id: 'LUNAS', label: 'LUNAS' }
+    ],
+    []
+  );
+
+  const materialFilterOptions = useMemo(
+    () => [
+      { id: 'all', label: 'Semua Material' },
+      ...materials.map(m => ({ id: m.name, label: m.name }))
+    ],
+    [materials]
+  );
+
+  const clientFilterOptions = useMemo(
+    () => [
+      { id: 'all', label: 'Semua Klien' },
+      ...clients.map(c => ({ id: c.name, label: c.name }))
+    ],
+    [clients]
+  );
+
+  const sortOptions = useMemo(
+    () => [
+      { id: 'date_desc', label: 'Tanggal Terbaru' },
+      { id: 'date_asc', label: 'Tanggal Terlama' },
+      { id: 'revenue_desc', label: 'Omset Tertinggi' },
+      { id: 'revenue_asc', label: 'Omset Terendah' },
+      { id: 'profit_desc', label: 'Laba Tertinggi' },
+      { id: 'profit_asc', label: 'Laba Terendah' }
+    ],
+    []
+  );
+
   // Filtered lists Master Data
   const filteredVehicles = useMemo(() => {
     const q = searchQuery.trim().toUpperCase();
@@ -336,39 +312,6 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
     );
   }, [drivers, searchQuery]);
 
-  const filteredClients = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
-    if (!q) return clients;
-    return clients.filter(
-      c =>
-        c.name.toLowerCase().includes(q) ||
-        (c.picName && c.picName.toLowerCase().includes(q)) ||
-        (c.phoneNumber && c.phoneNumber.includes(q))
-    );
-  }, [clients, searchQuery]);
-
-  const filteredQuarries = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
-    if (!q) return quarries;
-    return quarries.filter(
-      qry =>
-        qry.name.toLowerCase().includes(q) ||
-        (qry.location && qry.location.toLowerCase().includes(q)) ||
-        (qry.contactPerson && qry.contactPerson.toLowerCase().includes(q))
-    );
-  }, [quarries, searchQuery]);
-
-  const filteredInvestors = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
-    if (!q) return investors;
-    return investors.filter(
-      inv =>
-        inv.name.toLowerCase().includes(q) ||
-        (inv.phoneNumber && inv.phoneNumber.includes(q)) ||
-        (inv.bankAccount && inv.bankAccount.toLowerCase().includes(q)) ||
-        (inv.notes && inv.notes.toLowerCase().includes(q))
-    );
-  }, [investors, searchQuery]);
 
   // Aksi Tambah Baru
   const handleSaveVehicle = async (e: React.FormEvent): Promise<void> => {
@@ -413,92 +356,6 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
     }
   };
 
-  const handleSaveQuarry = async (e: React.FormEvent): Promise<void> => {
-    e.preventDefault();
-    if (!inputQuarryName.trim()) return;
-
-    try {
-      await saveMasterQuarry(
-        inputQuarryName,
-        inputQuarryLocation,
-        inputQuarryPIC,
-        inputQuarryPhone
-      );
-      setIsQuarryModalOpen(false);
-      setInputQuarryName('');
-      setInputQuarryLocation('');
-      setInputQuarryPIC('');
-      setInputQuarryPhone('');
-    } catch (err) {
-      console.error('Gagal menyimpan kuari:', err);
-    }
-  };
-
-  const handleSaveInvestor = async (e: React.FormEvent): Promise<void> => {
-    e.preventDefault();
-    if (!inputInvestorName.trim()) return;
-
-    try {
-      await saveInvestor({
-        name: inputInvestorName,
-        phoneNumber: inputInvestorPhone,
-        bankAccount: inputInvestorBank,
-        initialCapital: Number(inputInvestorCapital) || 0,
-        notes: inputInvestorNotes
-      });
-      setIsInvestorModalOpen(false);
-      setInputInvestorName('');
-      setInputInvestorPhone('');
-      setInputInvestorBank('');
-      setInputInvestorCapital(0);
-      setInputInvestorNotes('');
-    } catch (err) {
-      console.error('Gagal menyimpan investor:', err);
-    }
-  };
-
-  const handleSaveProject = async (e: React.FormEvent): Promise<void> => {
-    e.preventDefault();
-    if (!inputProjectName.trim()) return;
-
-    const inv = investors.find(i => i.id === inputProjectInvestorId);
-    const cl = clients.find(c => c.id === inputProjectClientId);
-
-    try {
-      await saveProject({
-        name: inputProjectName,
-        location: inputProjectLocation,
-        investorId: inputProjectInvestorId,
-        investorName: inv?.name || 'Investor Umum',
-        clientId: inputProjectClientId,
-        clientName: cl?.name || 'Klien Umum',
-        initialDeposit: Number(inputProjectInitialDeposit) || 0,
-        notes: inputProjectNotes
-      });
-      setIsProjectModalOpen(false);
-      setInputProjectName('');
-      setInputProjectLocation('');
-      setInputProjectInvestorId('');
-      setInputProjectClientId('');
-      setInputProjectInitialDeposit(0);
-      setInputProjectNotes('');
-    } catch (err) {
-      console.error('Gagal menyimpan proyek:', err);
-    }
-  };
-
-  const handleDeleteProject = (proj: Project) => {
-    requestAuthorization(
-      'Hapus Data Proyek',
-      'Proyek akan dihapus dari sistem. Pastikan tidak ada tiket ritase berjalan yang terikat pada proyek ini.',
-      proj.name,
-      async () => {
-        await deleteProject(proj.id);
-      },
-      true,
-      'Hapus Proyek'
-    );
-  };
 
   // Helper Pemicu Otorisasi PIN
   const requestAuthorization = (
@@ -625,29 +482,6 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
             {drivers.length}
           </span>
         </button>
-
-        {/* Tab 4: Klien / Pelanggan */}
-        <button
-          type="button"
-          onClick={() => {
-            setActiveSubTab('clients');
-            setSearchQuery('');
-          }}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-[8px] text-xs font-medium transition-colors whitespace-nowrap cursor-pointer ${
-            activeSubTab === 'clients'
-              ? 'bg-[#111111] text-white'
-              : 'text-[#666666] hover:bg-[#f5f5f5] hover:text-[#111111]'
-          }`}
-        >
-          <span>Klien / Pelanggan</span>
-          <span
-            className={`text-[11px] font-mono px-1.5 py-0.2 rounded ${
-              activeSubTab === 'clients' ? 'bg-white/20 text-white' : 'bg-[#f0f0f0] text-[#777777]'
-            }`}
-          >
-            {clients.length}
-          </span>
-        </button>
       </div>
 
       {/* 2. KONTROL FILTER & SEARCH BAR */}
@@ -655,6 +489,11 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
         {/* Baris Utama: Search Bar & Tombol Tambah */}
         <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
           <div className="relative flex-1">
+            <img
+              src="/icons/search.png"
+              alt="Search"
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 object-contain pointer-events-none opacity-60"
+            />
             <input
               type="text"
               value={searchQuery}
@@ -664,11 +503,9 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
                   ? 'Cari tiket, plat nomor, supir, klien, material, catatan...'
                   : activeSubTab === 'vehicles'
                   ? 'Cari plat nomor atau nama supir...'
-                  : activeSubTab === 'drivers'
-                  ? 'Cari nama atau nomor HP supir...'
-                  : 'Cari nama klien / perusahaan...'
+                  : 'Cari nama atau nomor HP supir...'
               }
-              className="w-full bg-[#fafafa] border border-[#eaeaea] rounded-[8px] px-3.5 py-2 text-xs text-[#111111] placeholder-[#888888] focus:outline-none focus:border-[#111111] focus:bg-white transition-colors"
+              className="w-full bg-[#fafafa] border border-[#eaeaea] rounded-[8px] pl-9 pr-3.5 py-2 text-xs text-[#111111] placeholder-[#888888] focus:outline-none focus:border-[#111111] focus:bg-white transition-colors"
             />
           </div>
 
@@ -692,100 +529,72 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
                 <span>+ Tambah Supir Baru</span>
               </button>
             )}
-
-            {activeSubTab === 'clients' && (
-              <button
-                type="button"
-                onClick={() => setIsClientModalOpen(true)}
-                className="w-full sm:w-auto px-4 py-2 bg-[#111111] hover:bg-black text-white text-xs font-medium rounded-[8px] transition-colors cursor-pointer flex items-center justify-center gap-1.5"
-              >
-                <span>+ Tambah Klien Baru</span>
-              </button>
-            )}
           </div>
         </div>
 
-        {/* Filter Bar Khusus Riwayat Ritase: Rentang Waktu, Status, Material, Klien, dan Sorting */}
+        {/* Filter Bar Khusus Riwayat Ritase: Rentang Waktu, Status, Material, Klien, dan Sorting (Rule 97) */}
         {activeSubTab === 'ritase' && (
-          <div className="pt-2 border-t border-[#f0f0f0] flex flex-wrap items-center gap-2 text-xs">
-            {/* Rentang Waktu */}
-            <div className="flex items-center gap-1.5">
-              <span className="text-[#888888] text-[11px] font-medium">Waktu:</span>
-              <select
-                value={timeRangeFilter}
-                onChange={e => setTimeRangeFilter(e.target.value as TimeRangeFilter)}
-                className="px-2.5 py-1.5 bg-[#f9f9f9] border border-[#e0e0e0] rounded-[6px] text-xs font-medium text-[#222222] focus:outline-none focus:border-[#111111]"
-              >
-                <option value="all">Semua Waktu (All-Time)</option>
-                <option value="today">Hari Ini</option>
-                <option value="this_month">Bulan Ini</option>
-                <option value="last_30_days">30 Hari Terakhir</option>
-              </select>
-            </div>
+          <div className="pt-3 border-t border-[#f0f0f0]">
+            <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+              {/* 1. Rentang Waktu */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[#777777] text-[11px] font-medium">Waktu</label>
+                <CustomSelectCombobox
+                  options={timeRangeOptions}
+                  value={timeRangeFilter}
+                  onChange={val => setTimeRangeFilter(val as TimeRangeFilter)}
+                  variant="white"
+                  searchable={false}
+                />
+              </div>
 
-            {/* Status Pembayaran */}
-            <div className="flex items-center gap-1.5">
-              <span className="text-[#888888] text-[11px] font-medium">Status:</span>
-              <select
-                value={statusFilter}
-                onChange={e => setStatusFilter(e.target.value as StatusFilter)}
-                className="px-2.5 py-1.5 bg-[#f9f9f9] border border-[#e0e0e0] rounded-[6px] text-xs font-medium text-[#222222] focus:outline-none focus:border-[#111111]"
-              >
-                <option value="all">Semua Status</option>
-                <option value="TEMPO">TEMPO (Belum Lunas)</option>
-                <option value="LUNAS">LUNAS</option>
-              </select>
-            </div>
+              {/* 2. Status Pembayaran */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[#777777] text-[11px] font-medium">Status</label>
+                <CustomSelectCombobox
+                  options={statusFilterOptions}
+                  value={statusFilter}
+                  onChange={val => setStatusFilter(val as StatusFilter)}
+                  variant="white"
+                  searchable={false}
+                />
+              </div>
 
-            {/* Material */}
-            <div className="flex items-center gap-1.5">
-              <span className="text-[#888888] text-[11px] font-medium">Material:</span>
-              <select
-                value={materialFilter}
-                onChange={e => setMaterialFilter(e.target.value)}
-                className="px-2.5 py-1.5 bg-[#f9f9f9] border border-[#e0e0e0] rounded-[6px] text-xs font-medium text-[#222222] focus:outline-none focus:border-[#111111] max-w-[150px] truncate"
-              >
-                <option value="all">Semua Material</option>
-                {materials.map(m => (
-                  <option key={m.id} value={m.name}>
-                    {m.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+              {/* 3. Material */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[#777777] text-[11px] font-medium">Material</label>
+                <CustomSelectCombobox
+                  options={materialFilterOptions}
+                  value={materialFilter}
+                  onChange={val => setMaterialFilter(val)}
+                  variant="white"
+                  searchable={true}
+                />
+              </div>
 
-            {/* Klien */}
-            <div className="flex items-center gap-1.5">
-              <span className="text-[#888888] text-[11px] font-medium">Klien:</span>
-              <select
-                value={clientFilter}
-                onChange={e => setClientFilter(e.target.value)}
-                className="px-2.5 py-1.5 bg-[#f9f9f9] border border-[#e0e0e0] rounded-[6px] text-xs font-medium text-[#222222] focus:outline-none focus:border-[#111111] max-w-[160px] truncate"
-              >
-                <option value="all">Semua Klien</option>
-                {clients.map(c => (
-                  <option key={c.id} value={c.name}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+              {/* 4. Klien */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[#777777] text-[11px] font-medium">Klien</label>
+                <CustomSelectCombobox
+                  options={clientFilterOptions}
+                  value={clientFilter}
+                  onChange={val => setClientFilter(val)}
+                  variant="white"
+                  searchable={true}
+                />
+              </div>
 
-            {/* Sorting */}
-            <div className="flex items-center gap-1.5 ml-auto">
-              <span className="text-[#888888] text-[11px] font-medium">Urutkan:</span>
-              <select
-                value={sortOption}
-                onChange={e => setSortOption(e.target.value as SortOption)}
-                className="px-2.5 py-1.5 bg-[#f9f9f9] border border-[#e0e0e0] rounded-[6px] text-xs font-medium text-[#222222] focus:outline-none focus:border-[#111111]"
-              >
-                <option value="date_desc">Tanggal Terbaru</option>
-                <option value="date_asc">Tanggal Terlama</option>
-                <option value="revenue_desc">Omset Tertinggi</option>
-                <option value="revenue_asc">Omset Terendah</option>
-                <option value="profit_desc">Laba Tertinggi</option>
-                <option value="profit_asc">Laba Terendah</option>
-              </select>
+              {/* 5. Sorting (Lebar Penuh 2 Kolom di Layar Mobile) */}
+              <div className="flex flex-col gap-1.5 col-span-2 lg:col-span-1">
+                <label className="text-[#777777] text-[11px] font-medium">Urutkan</label>
+                <CustomSelectCombobox
+                  options={sortOptions}
+                  value={sortOption}
+                  onChange={val => setSortOption(val as SortOption)}
+                  variant="white"
+                  searchable={false}
+                />
+              </div>
             </div>
           </div>
         )}
@@ -798,7 +607,7 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
           <div className="bg-white rounded-[10px] p-4 border border-[#eaeaea] shadow-sm flex flex-col justify-between">
             <span className="text-[11px] font-medium text-[#666666]">Total Ritase Terfilter</span>
             <div className="mt-2 flex items-baseline gap-1.5">
-              <span className="text-2xl font-bold font-mono text-[#111111]">
+              <span className="text-2xl font-bold tracking-tight text-[#111111]">
                 {ritaseMetrics.totalRitase}
               </span>
               <span className="text-xs text-[#777777]">trip</span>
@@ -810,9 +619,7 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
           <div className="bg-white rounded-[10px] p-4 border border-[#eaeaea] shadow-sm flex flex-col justify-between">
             <span className="text-[11px] font-medium text-[#666666]">Total Omset (Piutang)</span>
             <div className="mt-2">
-              <span className="text-lg sm:text-xl font-bold font-mono text-[#111111]">
-                {formatRupiah(ritaseMetrics.totalOmset)}
-              </span>
+              <MetricCardCurrency amount={ritaseMetrics.totalOmset} />
             </div>
             <span className="text-[11px] text-[#888888] mt-1">Bruto penjualan material</span>
           </div>
@@ -821,9 +628,7 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
           <div className="bg-white rounded-[10px] p-4 border border-[#eaeaea] shadow-sm flex flex-col justify-between">
             <span className="text-[11px] font-medium text-[#666666]">Total Belanja Kuari</span>
             <div className="mt-2">
-              <span className="text-lg sm:text-xl font-bold font-mono text-[#111111]">
-                {formatRupiah(ritaseMetrics.totalBelanjaKuari)}
-              </span>
+              <MetricCardCurrency amount={ritaseMetrics.totalBelanjaKuari} />
             </div>
             <span className="text-[11px] text-[#888888] mt-1">Beban beli material tunai</span>
           </div>
@@ -832,11 +637,12 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
           <div className="bg-white rounded-[10px] p-4 border border-[#eaeaea] shadow-sm flex flex-col justify-between">
             <span className="text-[11px] font-medium text-[#666666]">Estimasi Laba Bersih</span>
             <div className="mt-2">
-              <span className={`text-lg sm:text-xl font-bold font-mono ${
-                ritaseMetrics.totalLabaBersih < 0 ? 'text-[#cf1124]' : 'text-[#008060]'
-              }`}>
-                {formatRupiah(ritaseMetrics.totalLabaBersih)}
-              </span>
+              <MetricCardCurrency
+                amount={ritaseMetrics.totalLabaBersih}
+                colorClassName={
+                  ritaseMetrics.totalLabaBersih < 0 ? 'text-[#cf1124]' : 'text-[#008060]'
+                }
+              />
             </div>
             <span className="text-[11px] text-[#888888] mt-1">Net profit setelah ops & kuari</span>
           </div>
@@ -977,100 +783,7 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
         )}
 
         {/* ============================================================== */}
-        {/* TAB: MASTER PROYEK                                             */}
-        {/* ============================================================== */}
-        {activeSubTab === 'projects' && (
-          <div className="overflow-x-auto select-text">
-            <table className="w-full min-w-[1070px] table-fixed text-left text-xs border-collapse">
-              <thead className="sticky top-0 z-10 bg-[#f9f9f9] border-b border-[#eaeaea] text-[#666666] font-medium text-[11px]">
-                <tr>
-                  <th className="py-2.5 px-4 w-[180px] min-w-[180px] whitespace-nowrap">Nama Proyek</th>
-                  <th className="py-2.5 px-4 w-[140px] min-w-[140px] whitespace-nowrap">Lokasi</th>
-                  <th className="py-2.5 px-4 w-[160px] min-w-[160px] whitespace-nowrap">Investor Pendana</th>
-                  <th className="py-2.5 px-4 w-[160px] min-w-[160px] whitespace-nowrap">Klien / Pemilik</th>
-                  <th className="py-2.5 px-4 w-[140px] min-w-[140px] text-right whitespace-nowrap">Modal Awal Disetor</th>
-                  <th className="py-2.5 px-4 w-[140px] min-w-[140px] text-right whitespace-nowrap">Saldo Kas Berjalan</th>
-                  <th className="py-2.5 px-4 w-[90px] min-w-[90px] text-center whitespace-nowrap">Status</th>
-                  <th className="py-2.5 px-4 w-[60px] min-w-[60px] text-right whitespace-nowrap">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#eaeaea]">
-                {filteredProjects.length === 0 ? (
-                  <tr>
-                    <td colSpan={8} className="py-8 text-center text-[#888888] whitespace-nowrap">
-                      {isLoading ? 'Memuat data proyek...' : 'Belum ada data proyek terdaftar.'}
-                    </td>
-                  </tr>
-                ) : (
-                  filteredProjects.map(proj => (
-                    <tr key={proj.id} className="hover:bg-[#fafafa] transition-colors">
-                      <td className="py-3 px-4 whitespace-nowrap w-[180px] align-middle">
-                        <span className="font-bold text-[#111111] block truncate">
-                          {proj.name}
-                        </span>
-                        <span className="text-[10px] font-mono text-[#888888] block">
-                          {proj.id}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4 text-[#444444] whitespace-nowrap w-[140px] align-middle">
-                        <RunningText text={proj.location} placeholder="-" className="text-[#444444]" />
-                      </td>
-                      <td className="py-3 px-4 text-[#111111] whitespace-nowrap w-[160px] align-middle font-medium">
-                        <RunningText text={proj.investorName} placeholder="Umum" className="text-[#111111]" />
-                      </td>
-                      <td className="py-3 px-4 text-[#444444] whitespace-nowrap w-[160px] align-middle">
-                        <RunningText text={proj.clientName} placeholder="Umum" className="text-[#444444]" />
-                      </td>
-                      <td className="py-3 px-4 font-mono font-medium text-[#111111] text-right whitespace-nowrap w-[140px] align-middle">
-                        {formatRupiah(proj.initialDeposit || 0)}
-                      </td>
-                      <td className="py-3 px-4 font-mono font-bold text-right whitespace-nowrap w-[140px] align-middle text-[#008060]">
-                        {formatRupiah(proj.currentBalance || 0)}
-                      </td>
-                      <td className="py-3 px-4 text-center whitespace-nowrap w-[90px] align-middle">
-                        <span
-                          className={`text-[11px] font-bold px-2 py-0.5 rounded ${
-                            proj.status === 'COMPLETED'
-                              ? 'bg-[#f0fdf4] text-[#166534]'
-                              : proj.status === 'ON_HOLD'
-                              ? 'bg-[#fefce8] text-[#854d0e]'
-                              : 'bg-[#eff6ff] text-[#1e40af]'
-                          }`}
-                        >
-                          {proj.status === 'COMPLETED' ? 'SELESAI' : proj.status === 'ON_HOLD' ? 'HOLD' : 'AKTIF'}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4 text-right whitespace-nowrap w-[60px] align-middle">
-                        <div className="flex items-center justify-end">
-                          <TableActionMenu
-                            items={[
-                              {
-                                label: 'Edit Data Proyek',
-                                onClick: () => setEditProjectTarget(proj)
-                              },
-                              {
-                                label: 'Salin ID Proyek',
-                                onClick: () => navigator.clipboard.writeText(proj.id)
-                              },
-                              {
-                                label: 'Hapus Proyek',
-                                variant: 'danger',
-                                onClick: () => handleDeleteProject(proj)
-                              }
-                            ]}
-                          />
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {/* ============================================================== */}
-        {/* TAB 3: ARMADA & PLAT NOMOR                                     */}
+        {/* TAB 2: ARMADA & PLAT NOMOR                                     */}
         {/* ============================================================== */}
         {activeSubTab === 'vehicles' && (
           <div className="overflow-x-auto select-text">
@@ -1183,7 +896,7 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
                         <RunningText text={d.name} className="font-semibold text-[#111111]" />
                       </td>
                       <td className="py-3 px-4 font-mono text-[#444444] whitespace-nowrap w-[150px] align-middle">
-                        {d.phoneNumber || '-'}
+                        {d.phoneNumber ? formatPhoneNumber(d.phoneNumber) : '-'}
                       </td>
                       <td className="py-3 px-4 font-mono font-medium text-[#111111] whitespace-nowrap w-[140px] align-middle">
                         {d.defaultPlate || '-'}
@@ -1229,277 +942,6 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
                                     },
                                     true,
                                     'Hapus Supir'
-                                  )
-                              }
-                            ]}
-                          />
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {/* ============================================================== */}
-        {/* TAB 4: KLIEN / PELANGGAN                                       */}
-        {/* ============================================================== */}
-        {activeSubTab === 'clients' && (
-          <div className="overflow-x-auto select-text">
-            <table className="w-full min-w-[780px] table-fixed text-left text-xs border-collapse">
-              <thead className="sticky top-0 z-10 bg-[#f9f9f9] border-b border-[#eaeaea] text-[#666666] font-medium text-[11px]">
-                <tr>
-                  <th className="py-2.5 px-4 w-[210px] min-w-[210px] whitespace-nowrap">Nama Klien / Perusahaan</th>
-                  <th className="py-2.5 px-4 w-[120px] min-w-[120px] whitespace-nowrap">Tipe</th>
-                  <th className="py-2.5 px-4 w-[160px] min-w-[160px] whitespace-nowrap">PIC Lapangan</th>
-                  <th className="py-2.5 px-4 w-[150px] min-w-[150px] whitespace-nowrap">Nomor HP / WA</th>
-                  <th className="py-2.5 px-4 w-[60px] min-w-[60px] text-right whitespace-nowrap">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#eaeaea]">
-                {filteredClients.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="py-8 text-center text-[#888888] whitespace-nowrap">
-                      {isLoading ? 'Memuat data klien...' : 'Belum ada klien tersimpan.'}
-                    </td>
-                  </tr>
-                ) : (
-                  filteredClients.map(c => (
-                    <tr key={c.id} className="hover:bg-[#fafafa] transition-colors">
-                      <td className="py-3 px-4 font-semibold text-[#111111] whitespace-nowrap w-[210px] align-middle">
-                        <RunningText text={c.name} className="font-semibold text-[#111111]" />
-                      </td>
-                      <td className="py-3 px-4 text-[#666666] whitespace-nowrap w-[120px] align-middle">
-                        {c.type || 'PERORANGAN'}
-                      </td>
-                      <td className="py-3 px-4 text-[#444444] whitespace-nowrap w-[160px] align-middle">
-                        <RunningText text={c.picName} placeholder="-" className="text-[#444444]" />
-                      </td>
-                      <td className="py-3 px-4 font-mono text-[#444444] whitespace-nowrap w-[150px] align-middle">
-                        {c.phoneNumber || '-'}
-                      </td>
-                      <td className="py-3 px-4 text-right whitespace-nowrap w-[60px] align-middle">
-                        <div className="flex items-center justify-end">
-                          <TableActionMenu
-                            items={[
-                              {
-                                label: 'Edit Data',
-                                onClick: () => setEditClientTarget(c)
-                              },
-                              {
-                                label: 'Hubungi via WhatsApp',
-                                hidden: !c.phoneNumber,
-                                onClick: () => {
-                                  if (c.phoneNumber) {
-                                    const cleanNum = c.phoneNumber.replace(/[^0-9]/g, '');
-                                    window.open(`https://wa.me/${cleanNum.startsWith('0') ? '62' + cleanNum.slice(1) : cleanNum}`, '_blank');
-                                  }
-                                }
-                              },
-                              {
-                                label: 'Salin Kontak',
-                                hidden: !c.phoneNumber,
-                                onClick: () => {
-                                  if (c.phoneNumber) navigator.clipboard.writeText(c.phoneNumber);
-                                }
-                              },
-                              {
-                                label: 'Hapus Klien',
-                                variant: 'danger',
-                                onClick: () =>
-                                  requestAuthorization(
-                                    'Hapus Data Klien',
-                                    'Data klien ini akan dihapus dari sistem master klien.',
-                                    c.name,
-                                    async () => {
-                                      await deleteClient(c.id);
-                                    },
-                                    true,
-                                    'Hapus Klien'
-                                  )
-                              }
-                            ]}
-                          />
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {/* ============================================================== */}
-        {/* TAB 5: KUARI ASAL                                              */}
-        {/* ============================================================== */}
-        {activeSubTab === 'quarries' && (
-          <div className="overflow-x-auto select-text">
-            <table className="w-full min-w-[780px] table-fixed text-left text-xs border-collapse">
-              <thead className="sticky top-0 z-10 bg-[#f9f9f9] border-b border-[#eaeaea] text-[#666666] font-medium text-[11px]">
-                <tr>
-                  <th className="py-2.5 px-4 w-[190px] min-w-[190px] whitespace-nowrap">Nama Kuari / Pemasok</th>
-                  <th className="py-2.5 px-4 w-[220px] min-w-[220px] whitespace-nowrap">Lokasi Tambang</th>
-                  <th className="py-2.5 px-4 w-[160px] min-w-[160px] whitespace-nowrap">PIC Tambang</th>
-                  <th className="py-2.5 px-4 w-[150px] min-w-[150px] whitespace-nowrap">Kontak / HP</th>
-                  <th className="py-2.5 px-4 w-[60px] min-w-[60px] text-right whitespace-nowrap">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#eaeaea]">
-                {filteredQuarries.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="py-8 text-center text-[#888888] whitespace-nowrap">
-                      {isLoading ? 'Memuat data kuari...' : 'Belum ada kuari tersimpan.'}
-                    </td>
-                  </tr>
-                ) : (
-                  filteredQuarries.map(qry => (
-                    <tr key={qry.id} className="hover:bg-[#fafafa] transition-colors">
-                      <td className="py-3 px-4 font-semibold text-[#111111] whitespace-nowrap w-[190px] align-middle">
-                        <RunningText text={qry.name} className="font-semibold text-[#111111]" />
-                      </td>
-                      <td className="py-3 px-4 text-[#444444] whitespace-nowrap w-[220px] align-middle">
-                        <RunningText text={qry.location} placeholder="-" className="text-[#444444]" />
-                      </td>
-                      <td className="py-3 px-4 text-[#444444] whitespace-nowrap w-[160px] align-middle">
-                        <RunningText text={qry.contactPerson} placeholder="-" className="text-[#444444]" />
-                      </td>
-                      <td className="py-3 px-4 font-mono text-[#444444] whitespace-nowrap w-[150px] align-middle">
-                        {qry.phoneNumber || '-'}
-                      </td>
-                      <td className="py-3 px-4 text-right whitespace-nowrap w-[60px] align-middle">
-                        <div className="flex items-center justify-end">
-                          <TableActionMenu
-                            items={[
-                              {
-                                label: 'Edit Data',
-                                onClick: () => setEditQuarryTarget(qry)
-                              },
-                              {
-                                label: 'Hubungi via WhatsApp',
-                                hidden: !qry.phoneNumber,
-                                onClick: () => {
-                                  if (qry.phoneNumber) {
-                                    const cleanNum = qry.phoneNumber.replace(/[^0-9]/g, '');
-                                    window.open(`https://wa.me/${cleanNum.startsWith('0') ? '62' + cleanNum.slice(1) : cleanNum}`, '_blank');
-                                  }
-                                }
-                              },
-                              {
-                                label: 'Salin Info Kontak',
-                                hidden: !qry.phoneNumber,
-                                onClick: () => {
-                                  if (qry.phoneNumber) navigator.clipboard.writeText(qry.phoneNumber);
-                                }
-                              },
-                              {
-                                label: 'Hapus Kuari',
-                                variant: 'danger',
-                                onClick: () =>
-                                  requestAuthorization(
-                                    'Hapus Data Kuari',
-                                    'Data lokasi kuari ini akan dihapus dari daftar.',
-                                    qry.name,
-                                    async () => {
-                                      await deleteMasterQuarry(qry.id);
-                                    },
-                                    true,
-                                    'Hapus Kuari'
-                                  )
-                              }
-                            ]}
-                          />
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {/* ============================================================== */}
-        {/* TAB 6: INVESTOR & PERMODALAN                                   */}
-        {/* ============================================================== */}
-        {activeSubTab === 'investors' && (
-          <div className="overflow-x-auto select-text">
-            <table className="w-full min-w-[890px] table-fixed text-left text-xs border-collapse">
-              <thead className="sticky top-0 z-10 bg-[#f9f9f9] border-b border-[#eaeaea] text-[#666666] font-medium text-[11px]">
-                <tr>
-                  <th className="py-2.5 px-4 w-[190px] min-w-[190px] whitespace-nowrap">Nama Investor / Pemodal</th>
-                  <th className="py-2.5 px-4 w-[140px] min-w-[140px] whitespace-nowrap">Nomor Kontak / WA</th>
-                  <th className="py-2.5 px-4 w-[210px] min-w-[210px] whitespace-nowrap">Informasi Rekening / Bank</th>
-                  <th className="py-2.5 px-4 w-[170px] min-w-[170px] text-right whitespace-nowrap">Modal / Investasi Awal</th>
-                  <th className="py-2.5 px-4 w-[180px] min-w-[180px] whitespace-nowrap">Catatan</th>
-                  <th className="py-2.5 px-4 w-[60px] min-w-[60px] text-right whitespace-nowrap">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#eaeaea]">
-                {filteredInvestors.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="py-8 text-center text-[#888888] whitespace-nowrap">
-                      {isLoading ? 'Memuat data investor...' : 'Belum ada data investor tersimpan.'}
-                    </td>
-                  </tr>
-                ) : (
-                  filteredInvestors.map(inv => (
-                    <tr key={inv.id} className="hover:bg-[#fafafa] transition-colors">
-                      <td className="py-3 px-4 font-semibold text-[#111111] whitespace-nowrap w-[190px] align-middle">
-                        <RunningText text={inv.name} className="font-semibold text-[#111111]" />
-                      </td>
-                      <td className="py-3 px-4 font-mono text-[#444444] whitespace-nowrap w-[140px] align-middle">
-                        {inv.phoneNumber || '-'}
-                      </td>
-                      <td className="py-3 px-4 text-[#444444] whitespace-nowrap w-[210px] align-middle">
-                        <RunningText text={inv.bankAccount} placeholder="-" className="text-[#444444]" />
-                      </td>
-                      <td className="py-3 px-4 font-mono font-bold text-[#111111] text-right whitespace-nowrap w-[170px] align-middle">
-                        {formatRupiah(inv.initialCapital || 0)}
-                      </td>
-                      <td className="py-3 px-4 text-[#666666] whitespace-nowrap w-[180px] align-middle">
-                        <RunningText text={inv.notes} placeholder="-" className="text-[#666666]" />
-                      </td>
-                      <td className="py-3 px-4 text-right whitespace-nowrap w-[60px] align-middle">
-                        <div className="flex items-center justify-end">
-                          <TableActionMenu
-                            items={[
-                              {
-                                label: 'Edit Data',
-                                onClick: () => setEditInvestorTarget(inv)
-                              },
-                              {
-                                label: 'Hubungi via WhatsApp',
-                                hidden: !inv.phoneNumber,
-                                onClick: () => {
-                                  if (inv.phoneNumber) {
-                                    const cleanNum = inv.phoneNumber.replace(/[^0-9]/g, '');
-                                    window.open(`https://wa.me/${cleanNum.startsWith('0') ? '62' + cleanNum.slice(1) : cleanNum}`, '_blank');
-                                  }
-                                }
-                              },
-                              {
-                                label: 'Salin Rekening',
-                                hidden: !inv.bankAccount,
-                                onClick: () => {
-                                  if (inv.bankAccount) navigator.clipboard.writeText(inv.bankAccount);
-                                }
-                              },
-                              {
-                                label: 'Hapus Investor',
-                                variant: 'danger',
-                                onClick: () =>
-                                  requestAuthorization(
-                                    'Hapus Data Investor',
-                                    'Data investor dan catatan modal ini akan dihapus permanen dari sistem.',
-                                    inv.name,
-                                    async () => {
-                                      await deleteInvestor(inv.id);
-                                    },
-                                    true,
-                                    'Hapus Investor'
                                   )
                               }
                             ]}
@@ -1669,18 +1111,16 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
               <input
                 type="text"
                 value={editDriverTarget.name}
-                onChange={e => setEditDriverTarget({ ...editDriverTarget, name: e.target.value })}
+                onChange={e => setEditDriverTarget({ ...editDriverTarget, name: formatPersonNameLive(e.target.value) })}
                 required
                 className="w-full bg-white border border-[#eaeaea] rounded-[8px] px-3.5 py-2 text-xs focus:outline-none focus:border-[#111111]"
               />
             </div>
             <div>
               <label className="block text-[#666666] font-medium mb-1">Nomor HP / WhatsApp</label>
-              <input
-                type="tel"
+              <PhoneInput
                 value={editDriverTarget.phoneNumber || ''}
-                onChange={e => setEditDriverTarget({ ...editDriverTarget, phoneNumber: e.target.value })}
-                className="w-full font-mono bg-white border border-[#eaeaea] rounded-[8px] px-3.5 py-2 text-xs focus:outline-none focus:border-[#111111]"
+                onChange={val => setEditDriverTarget({ ...editDriverTarget, phoneNumber: val })}
               />
             </div>
             <div>
@@ -1705,414 +1145,6 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
               <button
                 type="button"
                 onClick={() => setEditDriverTarget(null)}
-                className="px-3 py-1.5 rounded-[8px] border border-[#eaeaea] text-[#666666] hover:bg-[#f5f5f5]"
-              >
-                Batal
-              </button>
-              <button
-                type="submit"
-                className="px-4 py-1.5 rounded-[8px] bg-[#111111] text-white hover:bg-black font-medium"
-              >
-                Simpan Perubahan
-              </button>
-            </div>
-          </form>
-        </CustomDialog>
-      )}
-
-      {/* 3. Edit Klien Modal */}
-      {editClientTarget && (
-        <CustomDialog
-          isOpen={Boolean(editClientTarget)}
-          onClose={() => setEditClientTarget(null)}
-          title="Edit Data Klien"
-          description={`Koreksi informasi kontak dan PIC klien ${editClientTarget.name}.`}
-        >
-          <form
-            onSubmit={e => {
-              e.preventDefault();
-              requestAuthorization(
-                'Otorisasi Edit Klien',
-                'Simpan pembaruan data pelanggan.',
-                editClientTarget.name,
-                async () => {
-                  await updateClient(editClientTarget.id, {
-                    name: editClientTarget.name,
-                    picName: editClientTarget.picName,
-                    phoneNumber: editClientTarget.phoneNumber
-                  });
-                  setEditClientTarget(null);
-                }
-              );
-            }}
-            className="space-y-3 text-xs pt-2"
-          >
-            <div>
-              <label className="block text-[#666666] font-medium mb-1">Nama Perusahaan / Klien</label>
-              <input
-                type="text"
-                value={editClientTarget.name}
-                onChange={e => setEditClientTarget({ ...editClientTarget, name: e.target.value })}
-                required
-                className="w-full bg-white border border-[#eaeaea] rounded-[8px] px-3.5 py-2 text-xs focus:outline-none focus:border-[#111111]"
-              />
-            </div>
-            <div>
-              <label className="block text-[#666666] font-medium mb-1">PIC Lapangan</label>
-              <input
-                type="text"
-                value={editClientTarget.picName || ''}
-                onChange={e => setEditClientTarget({ ...editClientTarget, picName: e.target.value })}
-                className="w-full bg-white border border-[#eaeaea] rounded-[8px] px-3.5 py-2 text-xs focus:outline-none focus:border-[#111111]"
-              />
-            </div>
-            <div>
-              <label className="block text-[#666666] font-medium mb-1">Nomor HP / WhatsApp</label>
-              <input
-                type="tel"
-                value={editClientTarget.phoneNumber || ''}
-                onChange={e => setEditClientTarget({ ...editClientTarget, phoneNumber: e.target.value })}
-                className="w-full font-mono bg-white border border-[#eaeaea] rounded-[8px] px-3.5 py-2 text-xs focus:outline-none focus:border-[#111111]"
-              />
-            </div>
-            <div className="flex justify-end gap-2 pt-2 border-t border-[#eaeaea]">
-              <button
-                type="button"
-                onClick={() => setEditClientTarget(null)}
-                className="px-3 py-1.5 rounded-[8px] border border-[#eaeaea] text-[#666666] hover:bg-[#f5f5f5]"
-              >
-                Batal
-              </button>
-              <button
-                type="submit"
-                className="px-4 py-1.5 rounded-[8px] bg-[#111111] text-white hover:bg-black font-medium"
-              >
-                Simpan Perubahan
-              </button>
-            </div>
-          </form>
-        </CustomDialog>
-      )}
-
-      {/* 4. Edit Kuari Modal */}
-      {editQuarryTarget && (
-        <CustomDialog
-          isOpen={Boolean(editQuarryTarget)}
-          onClose={() => setEditQuarryTarget(null)}
-          title="Edit Data Kuari"
-          description={`Koreksi lokasi dan kontak PIC kuari ${editQuarryTarget.name}.`}
-        >
-          <form
-            onSubmit={e => {
-              e.preventDefault();
-              requestAuthorization(
-                'Otorisasi Edit Kuari',
-                'Simpan pembaruan data kuari / tambang.',
-                editQuarryTarget.name,
-                async () => {
-                  await saveMasterQuarry(
-                    editQuarryTarget.name,
-                    editQuarryTarget.location,
-                    editQuarryTarget.contactPerson,
-                    editQuarryTarget.phoneNumber,
-                    editQuarryTarget.notes,
-                    editQuarryTarget.id
-                  );
-                  setEditQuarryTarget(null);
-                }
-              );
-            }}
-            className="space-y-3 text-xs pt-2"
-          >
-            <div>
-              <label className="block text-[#666666] font-medium mb-1">Nama Kuari</label>
-              <input
-                type="text"
-                value={editQuarryTarget.name}
-                onChange={e => setEditQuarryTarget({ ...editQuarryTarget, name: e.target.value })}
-                required
-                className="w-full bg-white border border-[#eaeaea] rounded-[8px] px-3.5 py-2 text-xs focus:outline-none focus:border-[#111111]"
-              />
-            </div>
-            <div>
-              <label className="block text-[#666666] font-medium mb-1">Lokasi Tambang</label>
-              <input
-                type="text"
-                value={editQuarryTarget.location || ''}
-                onChange={e => setEditQuarryTarget({ ...editQuarryTarget, location: e.target.value })}
-                className="w-full bg-white border border-[#eaeaea] rounded-[8px] px-3.5 py-2 text-xs focus:outline-none focus:border-[#111111]"
-              />
-            </div>
-            <div>
-              <label className="block text-[#666666] font-medium mb-1">PIC Tambang</label>
-              <input
-                type="text"
-                value={editQuarryTarget.contactPerson || ''}
-                onChange={e => setEditQuarryTarget({ ...editQuarryTarget, contactPerson: e.target.value })}
-                className="w-full bg-white border border-[#eaeaea] rounded-[8px] px-3.5 py-2 text-xs focus:outline-none focus:border-[#111111]"
-              />
-            </div>
-            <div>
-              <label className="block text-[#666666] font-medium mb-1">Nomor Telepon Kuari</label>
-              <input
-                type="tel"
-                value={editQuarryTarget.phoneNumber || ''}
-                onChange={e => setEditQuarryTarget({ ...editQuarryTarget, phoneNumber: e.target.value })}
-                className="w-full font-mono bg-white border border-[#eaeaea] rounded-[8px] px-3.5 py-2 text-xs focus:outline-none focus:border-[#111111]"
-              />
-            </div>
-            <div className="flex justify-end gap-2 pt-2 border-t border-[#eaeaea]">
-              <button
-                type="button"
-                onClick={() => setEditQuarryTarget(null)}
-                className="px-3 py-1.5 rounded-[8px] border border-[#eaeaea] text-[#666666] hover:bg-[#f5f5f5]"
-              >
-                Batal
-              </button>
-              <button
-                type="submit"
-                className="px-4 py-1.5 rounded-[8px] bg-[#111111] text-white hover:bg-black font-medium"
-              >
-                Simpan Perubahan
-              </button>
-            </div>
-          </form>
-        </CustomDialog>
-      )}
-
-      {/* 5. Edit Investor Modal */}
-      {editInvestorTarget && (
-        <CustomDialog
-          isOpen={Boolean(editInvestorTarget)}
-          onClose={() => setEditInvestorTarget(null)}
-          title="Edit Data Investor"
-          description={`Koreksi profil dan rincian pemodal ${editInvestorTarget.name}.`}
-        >
-          <form
-            onSubmit={e => {
-              e.preventDefault();
-              requestAuthorization(
-                'Otorisasi Edit Investor',
-                'Simpan pembaruan data dan informasi modal investor.',
-                editInvestorTarget.name,
-                async () => {
-                  await saveInvestor(
-                    {
-                      name: editInvestorTarget.name,
-                      phoneNumber: editInvestorTarget.phoneNumber,
-                      bankAccount: editInvestorTarget.bankAccount,
-                      initialCapital: Number(editInvestorTarget.initialCapital) || 0,
-                      notes: editInvestorTarget.notes
-                    },
-                    editInvestorTarget.id
-                  );
-                  setEditInvestorTarget(null);
-                }
-              );
-            }}
-            className="space-y-3 text-xs pt-2"
-          >
-            <div>
-              <label className="block text-[#666666] font-medium mb-1">
-                Nama Investor / Pemodal <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={editInvestorTarget.name}
-                onChange={e => setEditInvestorTarget({ ...editInvestorTarget, name: e.target.value })}
-                required
-                className="w-full bg-white border border-[#eaeaea] rounded-[8px] px-3.5 py-2 text-xs focus:outline-none focus:border-[#111111]"
-              />
-            </div>
-            <div>
-              <label className="block text-[#666666] font-medium mb-1">Nomor Kontak / WhatsApp</label>
-              <input
-                type="tel"
-                value={editInvestorTarget.phoneNumber || ''}
-                onChange={e => setEditInvestorTarget({ ...editInvestorTarget, phoneNumber: e.target.value })}
-                placeholder="Contoh: 081234567890"
-                className="w-full font-mono bg-white border border-[#eaeaea] rounded-[8px] px-3.5 py-2 text-xs focus:outline-none focus:border-[#111111]"
-              />
-            </div>
-            <div>
-              <label className="block text-[#666666] font-medium mb-1">Informasi Rekening / Bank</label>
-              <input
-                type="text"
-                value={editInvestorTarget.bankAccount || ''}
-                onChange={e => setEditInvestorTarget({ ...editInvestorTarget, bankAccount: e.target.value })}
-                placeholder="Contoh: BCA 123456789 a.n PT Investama"
-                className="w-full bg-white border border-[#eaeaea] rounded-[8px] px-3.5 py-2 text-xs focus:outline-none focus:border-[#111111]"
-              />
-            </div>
-            <div>
-              <label className="block text-[#666666] font-medium mb-1">Modal / Investasi Awal (Rp)</label>
-              <CurrencyInput
-                value={editInvestorTarget.initialCapital || 0}
-                onChange={val => setEditInvestorTarget({ ...editInvestorTarget, initialCapital: val })}
-              />
-            </div>
-            <div>
-              <label className="block text-[#666666] font-medium mb-1">Catatan</label>
-              <input
-                type="text"
-                value={editInvestorTarget.notes || ''}
-                onChange={e => setEditInvestorTarget({ ...editInvestorTarget, notes: e.target.value })}
-                placeholder="Contoh: Pemodal pengadaan unit dump truck"
-                className="w-full bg-white border border-[#eaeaea] rounded-[8px] px-3.5 py-2 text-xs focus:outline-none focus:border-[#111111]"
-              />
-            </div>
-            <div className="flex justify-end gap-2 pt-2 border-t border-[#eaeaea]">
-              <button
-                type="button"
-                onClick={() => setEditInvestorTarget(null)}
-                className="px-3 py-1.5 rounded-[8px] border border-[#eaeaea] text-[#666666] hover:bg-[#f5f5f5]"
-              >
-                Batal
-              </button>
-              <button
-                type="submit"
-                className="px-4 py-1.5 rounded-[8px] bg-[#111111] text-white hover:bg-black font-medium"
-              >
-                Simpan Perubahan
-              </button>
-            </div>
-          </form>
-        </CustomDialog>
-      )}
-
-      {/* 6. Edit Proyek Modal */}
-      {editProjectTarget && (
-        <CustomDialog
-          isOpen={Boolean(editProjectTarget)}
-          onClose={() => setEditProjectTarget(null)}
-          title="Edit Data Proyek"
-          description={`Koreksi data proyek ${editProjectTarget.name} dan alokasi investor pendana.`}
-        >
-          <form
-            onSubmit={e => {
-              e.preventDefault();
-              requestAuthorization(
-                'Edit Data Proyek',
-                'Perubahan data proyek akan memperbarui alokasi permodalan dan relasi tiket ritase.',
-                editProjectTarget.name,
-                async () => {
-                  const inv = investors.find(i => i.id === editProjectTarget.investorId);
-                  const cl = clients.find(c => c.id === editProjectTarget.clientId);
-                  await saveProject(
-                    {
-                      name: editProjectTarget.name,
-                      location: editProjectTarget.location,
-                      investorId: editProjectTarget.investorId,
-                      investorName: inv?.name || editProjectTarget.investorName,
-                      clientId: editProjectTarget.clientId,
-                      clientName: cl?.name || editProjectTarget.clientName,
-                      initialDeposit: editProjectTarget.initialDeposit,
-                      status: editProjectTarget.status,
-                      notes: editProjectTarget.notes
-                    },
-                    editProjectTarget.id
-                  );
-                  setEditProjectTarget(null);
-                },
-                false,
-                'Simpan Perubahan'
-              );
-            }}
-            className="space-y-3 text-xs pt-2"
-          >
-            <div>
-              <label className="block text-[#666666] font-medium mb-1">Nama Proyek</label>
-              <input
-                type="text"
-                value={editProjectTarget.name}
-                onChange={e => setEditProjectTarget({ ...editProjectTarget, name: e.target.value })}
-                required
-                className="w-full bg-white border border-[#eaeaea] rounded-[8px] px-3.5 py-2 text-xs focus:outline-none focus:border-[#111111]"
-              />
-            </div>
-            <div>
-              <label className="block text-[#666666] font-medium mb-1">Lokasi Proyek</label>
-              <input
-                type="text"
-                value={editProjectTarget.location || ''}
-                onChange={e => setEditProjectTarget({ ...editProjectTarget, location: e.target.value })}
-                className="w-full bg-white border border-[#eaeaea] rounded-[8px] px-3.5 py-2 text-xs focus:outline-none focus:border-[#111111]"
-              />
-            </div>
-            <div>
-              <label className="block text-[#666666] font-medium mb-1">Investor Pendana</label>
-              <select
-                value={editProjectTarget.investorId}
-                onChange={e => {
-                  const inv = investors.find(i => i.id === e.target.value);
-                  setEditProjectTarget({
-                    ...editProjectTarget,
-                    investorId: e.target.value,
-                    investorName: inv?.name || ''
-                  });
-                }}
-                className="w-full bg-white border border-[#eaeaea] rounded-[8px] px-3.5 py-2 text-xs focus:outline-none focus:border-[#111111]"
-              >
-                {investors.map(i => (
-                  <option key={i.id} value={i.id}>
-                    {i.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-[#666666] font-medium mb-1">Klien Pemilik Proyek</label>
-              <select
-                value={editProjectTarget.clientId}
-                onChange={e => {
-                  const cl = clients.find(c => c.id === e.target.value);
-                  setEditProjectTarget({
-                    ...editProjectTarget,
-                    clientId: e.target.value,
-                    clientName: cl?.name || ''
-                  });
-                }}
-                className="w-full bg-white border border-[#eaeaea] rounded-[8px] px-3.5 py-2 text-xs focus:outline-none focus:border-[#111111]"
-              >
-                {clients.map(c => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-[#666666] font-medium mb-1">Modal Awal Disetor (Rp)</label>
-              <CurrencyInput
-                value={editProjectTarget.initialDeposit || 0}
-                onChange={val => setEditProjectTarget({ ...editProjectTarget, initialDeposit: val })}
-              />
-            </div>
-            <div>
-              <label className="block text-[#666666] font-medium mb-1">Status Proyek</label>
-              <select
-                value={editProjectTarget.status || 'ACTIVE'}
-                onChange={e => setEditProjectTarget({ ...editProjectTarget, status: e.target.value as 'ACTIVE' | 'COMPLETED' | 'ON_HOLD' })}
-                className="w-full bg-white border border-[#eaeaea] rounded-[8px] px-3.5 py-2 text-xs focus:outline-none focus:border-[#111111]"
-              >
-                <option value="ACTIVE">AKTIF</option>
-                <option value="ON_HOLD">HOLD</option>
-                <option value="COMPLETED">SELESAI</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-[#666666] font-medium mb-1">Catatan</label>
-              <input
-                type="text"
-                value={editProjectTarget.notes || ''}
-                onChange={e => setEditProjectTarget({ ...editProjectTarget, notes: e.target.value })}
-                className="w-full bg-white border border-[#eaeaea] rounded-[8px] px-3.5 py-2 text-xs focus:outline-none focus:border-[#111111]"
-              />
-            </div>
-            <div className="flex justify-end gap-2 pt-2 border-t border-[#eaeaea]">
-              <button
-                type="button"
-                onClick={() => setEditProjectTarget(null)}
                 className="px-3 py-1.5 rounded-[8px] border border-[#eaeaea] text-[#666666] hover:bg-[#f5f5f5]"
               >
                 Batal
@@ -2168,7 +1200,7 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
             <input
               type="text"
               value={inputPlateDriver}
-              onChange={e => setInputPlateDriver(e.target.value)}
+              onChange={e => setInputPlateDriver(formatPersonNameLive(e.target.value))}
               placeholder="Contoh: Pak Herman"
               className="w-full bg-white border border-[#eaeaea] rounded-[8px] px-3.5 py-2 text-xs focus:outline-none focus:border-[#111111]"
             />
@@ -2233,7 +1265,7 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
             <input
               type="text"
               value={inputDriverName}
-              onChange={e => setInputDriverName(e.target.value)}
+              onChange={e => setInputDriverName(formatPersonNameLive(e.target.value))}
               placeholder="Contoh: Herman Suherman"
               required
               className="w-full bg-white border border-[#eaeaea] rounded-[8px] px-3.5 py-2 text-xs focus:outline-none focus:border-[#111111]"
@@ -2244,12 +1276,9 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
             <label className="block text-[#666666] font-medium mb-1">
               Nomor Handphone / WhatsApp
             </label>
-            <input
-              type="tel"
+            <PhoneInput
               value={inputDriverPhone}
-              onChange={e => setInputDriverPhone(e.target.value)}
-              placeholder="Contoh: 081234567890"
-              className="w-full font-mono bg-white border border-[#eaeaea] rounded-[8px] px-3.5 py-2 text-xs focus:outline-none focus:border-[#111111]"
+              onChange={setInputDriverPhone}
             />
           </div>
 
@@ -2296,299 +1325,6 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
           </div>
         </form>
       </CustomDialog>
-
-      {/* Modal Tambah Kuari Baru */}
-      <CustomDialog
-        isOpen={isQuarryModalOpen}
-        onClose={() => setIsQuarryModalOpen(false)}
-        title="Tambah Kuari Baru"
-        description="Daftarkan lokasi kuari / tambang sumber material tambang."
-      >
-        <form onSubmit={handleSaveQuarry} className="space-y-3.5 text-xs pt-2">
-          <div>
-            <label className="block text-[#666666] font-medium mb-1">
-              Nama Kuari / Tambang <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={inputQuarryName}
-              onChange={e => setInputQuarryName(e.target.value)}
-              placeholder="Contoh: Kuari Cilegon Jaya"
-              required
-              className="w-full bg-white border border-[#eaeaea] rounded-[8px] px-3.5 py-2 text-xs focus:outline-none focus:border-[#111111]"
-            />
-          </div>
-
-          <div>
-            <label className="block text-[#666666] font-medium mb-1">
-              Lokasi / Kota
-            </label>
-            <input
-              type="text"
-              value={inputQuarryLocation}
-              onChange={e => setInputQuarryLocation(e.target.value)}
-              placeholder="Contoh: Cilegon Barat"
-              className="w-full bg-white border border-[#eaeaea] rounded-[8px] px-3.5 py-2 text-xs focus:outline-none focus:border-[#111111]"
-            />
-          </div>
-
-          <div>
-            <label className="block text-[#666666] font-medium mb-1">
-              PIC Lapangan
-            </label>
-            <input
-              type="text"
-              value={inputQuarryPIC}
-              onChange={e => setInputQuarryPIC(e.target.value)}
-              placeholder="Contoh: Pak Ridwan"
-              className="w-full bg-white border border-[#eaeaea] rounded-[8px] px-3.5 py-2 text-xs focus:outline-none focus:border-[#111111]"
-            />
-          </div>
-
-          <div>
-            <label className="block text-[#666666] font-medium mb-1">
-              Nomor Telepon Kuari
-            </label>
-            <input
-              type="tel"
-              value={inputQuarryPhone}
-              onChange={e => setInputQuarryPhone(e.target.value)}
-              placeholder="Contoh: 081234567890"
-              className="w-full font-mono bg-white border border-[#eaeaea] rounded-[8px] px-3.5 py-2 text-xs focus:outline-none focus:border-[#111111]"
-            />
-          </div>
-
-          <div className="flex justify-end gap-2 pt-2 border-t border-[#eaeaea]">
-            <button
-              type="button"
-              onClick={() => setIsQuarryModalOpen(false)}
-              className="px-3 py-1.5 rounded-[8px] border border-[#eaeaea] text-[#666666] hover:bg-[#f5f5f5]"
-            >
-              Batal
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-1.5 rounded-[8px] bg-[#111111] text-white hover:bg-black font-medium"
-            >
-              Simpan Kuari
-            </button>
-          </div>
-        </form>
-      </CustomDialog>
-
-      {/* Modal Tambah Investor Baru */}
-      <CustomDialog
-        isOpen={isInvestorModalOpen}
-        onClose={() => setIsInvestorModalOpen(false)}
-        title="Tambah Investor Baru"
-        description="Daftarkan investor / pemilik modal untuk pencatatan permodalan logistik."
-      >
-        <form onSubmit={handleSaveInvestor} className="space-y-3.5 text-xs pt-2">
-          <div>
-            <label className="block text-[#666666] font-medium mb-1">
-              Nama Investor / Perusahaan <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={inputInvestorName}
-              onChange={e => setInputInvestorName(e.target.value)}
-              placeholder="Contoh: Bpk. H. Sukardi / PT Mandiri Investama"
-              required
-              className="w-full bg-white border border-[#eaeaea] rounded-[8px] px-3.5 py-2 text-xs focus:outline-none focus:border-[#111111]"
-            />
-          </div>
-
-          <div>
-            <label className="block text-[#666666] font-medium mb-1">
-              Nomor Handphone / WhatsApp
-            </label>
-            <input
-              type="tel"
-              value={inputInvestorPhone}
-              onChange={e => setInputInvestorPhone(e.target.value)}
-              placeholder="Contoh: 081234567890"
-              className="w-full font-mono bg-white border border-[#eaeaea] rounded-[8px] px-3.5 py-2 text-xs focus:outline-none focus:border-[#111111]"
-            />
-          </div>
-
-          <div>
-            <label className="block text-[#666666] font-medium mb-1">
-              Informasi Rekening / Bank
-            </label>
-            <input
-              type="text"
-              value={inputInvestorBank}
-              onChange={e => setInputInvestorBank(e.target.value)}
-              placeholder="Contoh: BCA 8891234567 a.n Sukardi"
-              className="w-full bg-white border border-[#eaeaea] rounded-[8px] px-3.5 py-2 text-xs focus:outline-none focus:border-[#111111]"
-            />
-          </div>
-
-          <div>
-            <label className="block text-[#666666] font-medium mb-1">
-              Modal / Investasi Awal (Rp)
-            </label>
-            <CurrencyInput
-              value={inputInvestorCapital}
-              onChange={setInputInvestorCapital}
-              placeholder="0"
-            />
-          </div>
-
-          <div>
-            <label className="block text-[#666666] font-medium mb-1">
-              Catatan
-            </label>
-            <input
-              type="text"
-              value={inputInvestorNotes}
-              onChange={e => setInputInvestorNotes(e.target.value)}
-              placeholder="Contoh: Modal pengadaan unit armada 01 & 02"
-              className="w-full bg-white border border-[#eaeaea] rounded-[8px] px-3.5 py-2 text-xs focus:outline-none focus:border-[#111111]"
-            />
-          </div>
-
-          <div className="flex justify-end gap-2 pt-2 border-t border-[#eaeaea]">
-            <button
-              type="button"
-              onClick={() => setIsInvestorModalOpen(false)}
-              className="px-3 py-1.5 rounded-[8px] border border-[#eaeaea] text-[#666666] hover:bg-[#f5f5f5]"
-            >
-              Batal
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-1.5 rounded-[8px] bg-[#111111] text-white hover:bg-black font-medium"
-            >
-              Simpan Investor
-            </button>
-          </div>
-        </form>
-      </CustomDialog>
-
-      {/* Modal Tambah Proyek Baru */}
-      <CustomDialog
-        isOpen={isProjectModalOpen}
-        onClose={() => setIsProjectModalOpen(false)}
-        title="Tambah Proyek Baru"
-        description="Daftarkan proyek baru beserta pautan investor pendana dan klien penagihan."
-      >
-        <form onSubmit={handleSaveProject} className="space-y-3.5 text-xs pt-2">
-          <div>
-            <label className="block text-[#666666] font-medium mb-1">
-              Nama Proyek <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={inputProjectName}
-              onChange={e => setInputProjectName(e.target.value)}
-              placeholder="Contoh: Proyek Situ Cikedal"
-              required
-              className="w-full bg-white border border-[#eaeaea] rounded-[8px] px-3.5 py-2 text-xs focus:outline-none focus:border-[#111111]"
-            />
-          </div>
-
-          <div>
-            <label className="block text-[#666666] font-medium mb-1">
-              Lokasi Proyek
-            </label>
-            <input
-              type="text"
-              value={inputProjectLocation}
-              onChange={e => setInputProjectLocation(e.target.value)}
-              placeholder="Contoh: Cikedal, Pandeglang"
-              className="w-full bg-white border border-[#eaeaea] rounded-[8px] px-3.5 py-2 text-xs focus:outline-none focus:border-[#111111]"
-            />
-          </div>
-
-          <div>
-            <label className="block text-[#666666] font-medium mb-1">
-              Investor Pendana <span className="text-red-500">*</span>
-            </label>
-            <select
-              value={inputProjectInvestorId}
-              onChange={e => setInputProjectInvestorId(e.target.value)}
-              required
-              className="w-full bg-white border border-[#eaeaea] rounded-[8px] px-3.5 py-2 text-xs focus:outline-none focus:border-[#111111]"
-            >
-              <option value="">-- Pilih Investor --</option>
-              {investors.map(i => (
-                <option key={i.id} value={i.id}>
-                  {i.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-[#666666] font-medium mb-1">
-              Klien Pemilik Proyek <span className="text-red-500">*</span>
-            </label>
-            <select
-              value={inputProjectClientId}
-              onChange={e => setInputProjectClientId(e.target.value)}
-              required
-              className="w-full bg-white border border-[#eaeaea] rounded-[8px] px-3.5 py-2 text-xs focus:outline-none focus:border-[#111111]"
-            >
-              <option value="">-- Pilih Klien / Pemilik --</option>
-              {clients.map(c => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-[#666666] font-medium mb-1">
-              Modal Awal Disetor (Rp)
-            </label>
-            <CurrencyInput
-              value={inputProjectInitialDeposit}
-              onChange={setInputProjectInitialDeposit}
-              placeholder="0"
-            />
-          </div>
-
-          <div>
-            <label className="block text-[#666666] font-medium mb-1">
-              Catatan Proyek
-            </label>
-            <input
-              type="text"
-              value={inputProjectNotes}
-              onChange={e => setInputProjectNotes(e.target.value)}
-              placeholder="Contoh: Proyek pengurukan dan perkerasan jalan"
-              className="w-full bg-white border border-[#eaeaea] rounded-[8px] px-3.5 py-2 text-xs focus:outline-none focus:border-[#111111]"
-            />
-          </div>
-
-          <div className="flex justify-end gap-2 pt-2 border-t border-[#eaeaea]">
-            <button
-              type="button"
-              onClick={() => setIsProjectModalOpen(false)}
-              className="px-3 py-1.5 rounded-[8px] border border-[#eaeaea] text-[#666666] hover:bg-[#f5f5f5]"
-            >
-              Batal
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-1.5 rounded-[8px] bg-[#111111] text-white hover:bg-black font-medium"
-            >
-              Simpan Proyek
-            </button>
-          </div>
-        </form>
-      </CustomDialog>
-
-      {/* Modal Tambah Klien Menggunakan NewClientModal yang Sudah Terstandarisasi */}
-      <NewClientModal
-        isOpen={isClientModalOpen}
-        onClose={() => setIsClientModalOpen(false)}
-        onCreated={() => {
-          setIsClientModalOpen(false);
-        }}
-      />
 
       {/* ============================================================== */}
       {/* DIALOG OTORISASI PIN TERPADU (DEFAULT "2008005")               */}

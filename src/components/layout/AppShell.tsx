@@ -43,6 +43,11 @@ const TAB_TITLES: Record<NavigationTab, { title: string; mobileTitle?: string; s
     mobileTitle: 'Kuari / Suplier',
     subtitle: ''
   },
+  clients: {
+    title: 'Klien & Pelanggan',
+    mobileTitle: 'Klien',
+    subtitle: ''
+  },
   materials: {
     title: 'Master Material',
     mobileTitle: 'Material',

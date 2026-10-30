@@ -10,6 +10,8 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Investor } from '@/types/database';
+import { formatPhoneNumber } from '@/lib/phoneUtils';
+import { formatEntityName } from '@/lib/nameUtils';
 
 const INVESTORS_COLLECTION = 'investors';
 
@@ -48,7 +50,7 @@ export async function saveInvestor(
   },
   existingId?: string
 ): Promise<string> {
-  const cleanName = payload.name.trim();
+  const cleanName = formatEntityName(payload.name);
   if (!cleanName) {
     throw new Error('Nama investor wajib diisi.');
   }
@@ -59,7 +61,7 @@ export async function saveInvestor(
     const docRef = doc(colRef, existingId);
     await updateDoc(docRef, {
       name: cleanName,
-      phoneNumber: payload.phoneNumber?.trim() || '',
+      phoneNumber: payload.phoneNumber ? formatPhoneNumber(payload.phoneNumber) : '',
       bankAccount: payload.bankAccount?.trim() || '',
       initialCapital: Number(payload.initialCapital) || 0,
       notes: payload.notes?.trim() || ''
@@ -72,7 +74,7 @@ export async function saveInvestor(
   const newInvestor: Investor = {
     id: docId,
     name: cleanName,
-    phoneNumber: payload.phoneNumber?.trim() || '',
+    phoneNumber: payload.phoneNumber ? formatPhoneNumber(payload.phoneNumber) : '',
     bankAccount: payload.bankAccount?.trim() || '',
     initialCapital: Number(payload.initialCapital) || 0,
     notes: payload.notes?.trim() || '',

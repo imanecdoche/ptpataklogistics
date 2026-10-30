@@ -11,6 +11,7 @@ export type NavigationTab =
   | 'projects'
   | 'investors'
   | 'quarries'
+  | 'clients'
   | 'materials'
   | 'cash_ledger'
   | 'recap'
@@ -55,6 +56,11 @@ const MENU_ITEMS: SidebarItem[] = [
     iconSrc: '/icons/quarry.png'
   },
   {
+    id: 'clients',
+    label: 'Klien',
+    iconSrc: '/icons/client.png'
+  },
+  {
     id: 'materials',
     label: 'Master Material',
     iconSrc: '/icons/layers.png'
@@ -93,6 +99,7 @@ export const SUB_MENU_ITEMS: Record<NavigationTab, SubTabItem[]> = {
   projects: [],
   investors: [],
   quarries: [],
+  clients: [],
   materials: [
     { id: 'pricing', label: 'Harga & Mutu Kuari' },
     { id: 'routes', label: 'Biaya Jalan Rute' },
@@ -298,7 +305,7 @@ export function Sidebar({
           if (isInvestorUser && !['dashboard', 'projects', 'investors'].includes(item.id)) {
             return null;
           }
-          if (isDispatcherUser && !['dispatcher', 'projects', 'quarries', 'materials', 'database'].includes(item.id)) {
+          if (isDispatcherUser && !['dispatcher', 'projects', 'quarries', 'clients', 'materials', 'database'].includes(item.id)) {
             return null;
           }
 

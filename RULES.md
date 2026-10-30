@@ -1061,6 +1061,111 @@ Dokumen ini adalah hukum tertinggi operasional sistem. Kegagalan mematuhi aturan
       * Khusus untuk akun manajemen (`!isDispatcherUser`), kotak kalkulasi ritase menampilkan baris `"Saldo Kas Proyek Berjalan"` dan baris kalkulasi `"Estimasi Sisa Saldo Kas"`.
       * Jika total pengeluaran tunai tiket ritase (belanja tunai kuari + beban operasional jalan) melebihi saldo kas proyek berjalan, sistem menampilkan indikator peringatan visual teks merah bahwa saldo kas proyek tidak mencukupi untuk belanja kuari & operasional.
 
+97. **Standar Tata Letak Filter Riwayat Ritase (Filter Bar Stacked Label & Grid System)**:
+    - **Label Vertikal Di Atas Dropdown (Stacked Layout)**:
+      * Seluruh label filter (Waktu, Status, Material, Klien, Urutkan) WAJIB diposisikan tepat di atas dropdown masing-masing (bukan inline di sebelah kiri).
+      * Menggunakan format penulisan Title Case bersih ("Waktu", "Status", "Material", "Klien", "Urutkan"), ukuran teks 11px font-medium warna abu-abu netral (`#777777`).
+    - **Tata Letak Desktop (Grid 5 Kolom Berjejer Rapi)**:
+      * Pada tampilan desktop (`lg:` ke atas), kelima filter disusun rapi ke samping dalam grid 5 kolom presisi (`grid-cols-5 gap-3`) dengan lebar seragam dari ujung kiri hingga kanan kontainer.
+    - **Tata Letak Mobile (Grid 2 Kolom dengan Urutkan Full-Width)**:
+      * Pada tampilan mobile (`< lg`), filter disusun menggunakan grid 2 kolom (`grid-cols-2 gap-3`):
+        * Baris 1: Filter Waktu & Filter Status
+        * Baris 2: Filter Material & Filter Klien
+        * Baris 3: Filter Urutkan mengambil lebar penuh 2 kolom (`col-span-2`).
+    - **Implementasi Custom UI Picker (Rule 87 & Pure White Surface)**:
+      * Seluruh dropdown filter WAJIB menggunakan komponen Custom UI (`CustomSelectCombobox`) dengan permukaan putih murni (`#ffffff`), border halus (`#eaeaea`), rounded `[8px]`, teks `xs text-[#111111]`, dan popover menu terstandarisasi.
+      * DILARANG KERAS menggunakan elemen `<select>` native browser.
 
+98. **Standar Ikon Kaca Pembesar pada Seluruh Field Searchbar (Universal Searchbar Icon Standard)**:
+    - **Aset Resmi Ikon Pencarian**:
+      * Seluruh field input pencarian (searchbar) di seluruh aplikasi WAJIB menggunakan aset ikon resmi `public/icons/search.png` (`/icons/search.png`).
+    - **Posisi & Ukuran Standar**:
+      * Diletakkan di sebelah kiri di dalam input (`absolute left-3 top-1/2 -translate-y-1/2`), ukuran `w-4 h-4` (`16px`), `object-contain`, dan `pointer-events-none`.
+      * Input teks wajib diberi padding kiri yang proporsional (`pl-9`) agar teks placeholder dan input tidak menabrak ikon.
+    - **Cakupan Universal Seluruh Aplikasi**:
+      * Wajib diterapkan pada seluruh searchbar halaman utama: Database (`DatabasePage`), Proyek (`ProjectsPage`), Investor (`InvestorsPage`), Kuari (`QuarriesPage`), Master Material (`MasterMaterialPage`), Riwayat Ritase (`DispatchTable`), dan Dev Console (`DevPage`).
+      * Wajib diterapkan pula pada input pencarian di dalam modal dan combobox: `ClientCombobox`, `CustomSelectCombobox`, dan `MaterialPickerModal`.
 
+99. **Standar Tipografi Kartu Metrik Tanpa Monospace (Sans-Serif Bold Metric Cards)**:
+    - **Larangan Font Monospace pada Kartu Metrik**:
+      * DILARANG KERAS menggunakan kelas `font-mono` pada angka nominal atau nilai statistik di seluruh kartu metrik (*Metric Cards* / *KPI Cards*) di seluruh halaman aplikasi.
+    - **Penerapan Font Sans-Serif Standar**:
+      * Angka dan nominal pada kartu metrik wajib menggunakan font sans-serif tebal dengan tracking rapat (`font-bold tracking-tight`), ukuran `text-2xl` atau `text-xl md:text-2xl`.
+      * Teks label penjelas tetap proporsional dan bersih (`text-[11px] font-medium text-[#666666]` / `text-[#888888]`).
+    - **Format Simbol "Rp" Lebih Kecil & Semi-Transparan**:
+      * Pada kartu metrik yang menyajikan nilai uang/finansial, simbol `"Rp"` dibuat berukuran lebih kecil (`text-xs` / `text-sm`), `font-semibold`, semi-transparan (`opacity-50`), dan menempel rapat tanpa spasi terpisah (`gap-0.5`) langsung di samping kiri angka nominal.
+      * Untuk nominal negatif/defisit, tanda minus diletakkan paling depan sebelum simbol Rp (contoh: `-Rp500.000`) dengan warna merah tegas (`#cf1124`).
+
+100. **Standar Tab Mandiri Klien & Kebijakan Hak Akses Penghapusan Klien (Dedicated Clients Tab & Deletion Policy)**:
+    - **Daftar & Urutan Menu Sidepanel (Tepat 11 Menu)**:
+      1. `dashboard`: "Dashboard" (`/icons/dashboard.png`)
+      2. `dispatcher`: "Dispatcher & Ritase" (`/icons/truck.png`)
+      3. `projects`: "Proyek" (`/icons/project.png`)
+      4. `investors`: "Investor" (`/icons/investor.png`)
+      5. `quarries`: "Kuari / Suplier" (`/icons/quarry.png`)
+      6. `clients`: "Klien" (`/icons/client.png`)
+      7. `materials`: "Master Material" (`/icons/layers.png`)
+      8. `cash_ledger`: "Kas & Piutang Tempo" (`/icons/wallet.png`)
+      9. `recap`: "Rekapitulasi Periode" (`/icons/chart.png`)
+      10. `database`: "Database" (`/icons/database.png`)
+      11. `dev`: "Dev Console" (`/icons/dev-terminal.png`)
+    - **Pembersihan Sub-Tab Klien di Halaman Database**:
+      * Sub-tab `clients` di dalam halaman Database dihapus agar tidak terjadi duplikasi pengelolaan.
+      * Halaman Master Database murni mengelola 3 entitas teknis operasional armada: `ritase` (Riwayat Ritase), `vehicles` (Armada & Plat Nomor), dan `drivers` (Daftar Supir).
+    - **Format Halaman Mandiri `ClientsPage.tsx`**:
+      * Dibuat modul mandiri `src/components/clients/ClientsPage.tsx`.
+      * Header halaman bersih hanya judul "Klien" tanpa deskripsi (Rule 88).
+      * Dilengkapi 3 Metric Cards (Total Klien Terdaftar, Klien Tipe PT/CV/Kontraktor, Klien Perorangan/Mandor) dengan tipografi sans-serif tebal non-monospace (Rule 99).
+      * Searchbar dilengkapi ikon resmi `/icons/search.png` di sebelah kiri (`pl-9`) (Rule 98).
+    - **Kebijakan RBAC & Restriksi Penghapusan (Deletion Security)**:
+      * **Hak Akses Tab**: Dibuka untuk Manajemen (`admin`, `founder`, `developer`) dan `dispatcher`. Tertutup untuk `investor`.
+      * **Restriksi Opsi Hapus Klien**: Opsi "Hapus Klien" pada menu aksi titik tiga (`TableActionMenu`) **HANYA TERSEDIA untuk role `founder` dan `developer`**. Role `admin` dan `dispatcher` dilarang melihat atau mengeksekusi opsi hapus klien untuk mencegah hilangnya relasi piutang/transaksi.
+
+101. **Standar Standardisasi Menyeluruh Format Nomor Telepon (+62 8xx-xxxx-xxxx)**:
+    - **Komponen Input Baku (`PhoneInput`)**:
+      * SELURUH form input nomor telepon di aplikasi (Modal Tambah/Edit Supir di `DatabasePage`, Modal Tambah/Edit Kuari di `QuarriesPage`, Modal Tambah/Edit Investor di `InvestorsPage`, serta Modal Tambah/Edit Klien di `NewClientModal` dan `EditClientModal`) WAJIB menggunakan komponen `<PhoneInput />`.
+      * Dilarang menggunakan `<input type="tel">` polos tanpa format otomatis.
+      * Komponen `PhoneInput` wajib menampilkan prefix fixed `+62 ` di sisi kiri, membuang otomatis angka `0` atau `62` di awal, dan menyisipkan divider strip (`-`) per kelompok digit secara live (`8xx-xxxx-xxxx`).
+    - **Sanitasi Database Service**:
+      * Seluruh fungsi penyimpanan data kontak ke database Firestore (`saveMasterDriver`, `saveMasterQuarry`, `saveInvestor`, `saveClient`, `updateClient`) WAJIB memproses `phoneNumber` dengan fungsi kanonikal `formatPhoneNumber(phoneNumber)`.
+      * Data yang tersimpan di Firestore selalu baku berformat `+62 8xx-xxxx-xxxx` (atau string kosong `""` jika tidak diisi), mencegah inkonsistensi data.
+    - **Tampilan Tabel & Komponen Antarmuka**:
+      * Seluruh tampilan nomor kontak di tabel data (Tabel Supir, Tabel Kuari, Tabel Investor, Tabel Klien, dan Dropdown Combobox) WAJIB diformat dengan `formatPhoneNumber()` agar nomor lama atau unformatted dari database otomatis ditampilkan rapi dan seragam sebagai `+62 8xx-xxxx-xxxx`.
+
+102. **Standar Standardisasi Menyeluruh Format Nama Entitas & Nama Orang (PUEBI Title Case & Legal Entity Auto-Formatting)**:
+    - **Prinsip Utama & Universalitas**:
+      * SEMUA input nama di SELURUH modul dan halaman aplikasi (Klien, PIC, Supir, Kuari, Investor, Proyek, Pengguna Sistem/Auth) WAJIB mengimplementasikan pemformatan otomatis secara live (*as-you-type*) dan saat penyimpanan ke database (*sanitization on write*).
+      * DILARANG KERAS membiarkan field nama menerima teks huruf kecil semua atau tanpa standardisasi huruf kapital.
+    - **Nama Entitas Bisnis & Perusahaan (`formatEntityNameLive` / `formatEntityName`)**:
+      * Diterapkan pada nama Klien, Kuari Tambang, Perusahaan Investor, Proyek Operasional, dan Komoditas Material.
+      * Otomatis mengkapitalisasi huruf pertama setiap kata (Title Case).
+      * Menstandardisasi singkatan badan hukum resmi Indonesia sesuai PUEBI dan UU Perseroan Terbatas:
+        - `PT` (Perseroan Terbatas) -> huruf kapital penuh tanpa titik (`PT`).
+        - `CV` (Commanditaire Vennootschap) -> huruf kapital penuh tanpa titik (`CV`).
+        - `UD` (Usaha Dagang) -> huruf kapital penuh tanpa titik (`UD`).
+        - `KM` (Koperasi Mandiri/Keluarga Mas) -> huruf kapital penuh tanpa titik (`KM`).
+        - `Tbk` (Terbuka) -> kapital awal dan huruf kecil (`Tbk`).
+      * Mendukung kata bersambung bertanda hubung (contoh: `Bojong-Gede` -> `Bojong-Gede`), serta mempertahankan spasi di akhir kata secara aman saat pengguna masih mengetik tanpa cursor jumping.
+    - **Nama Orang / Pribadi (`formatPersonNameLive` / `formatPersonName`)**:
+      * Diterapkan pada nama Supir (`DatabasePage`, `DispatchForm`, `EditDispatchModal`), nama PIC Lapangan / Kontak Person (`QuarriesPage`, `NewClientModal`, `EditClientModal`), nama Investor Pribadi, nama Pengguna Akun (`DevPage`), dan pendaftaran akun (`RequestAccessModal`, `RequestAccessView`).
+      * Mengkapitalisasi huruf pertama setiap kata secara rapi dan mempertahankan gelar kehormatan / sapaan (contoh: `Bpk.`, `Ibu`, `Haji`, `Dr.`).
+    - **Sanitasi Database Service**:
+      * Seluruh backend service (`databaseMasterService.ts`, `clientService.ts`, `investorService.ts`, `projectService.ts`, `userManagementService.ts`) WAJIB memanggil `formatEntityName()` atau `formatPersonName()` sebelum menulis data ke Firestore.
+
+103. **Standar Standardisasi Menyeluruh Input & Format Nominal Uang (Rupiah Currency Standard)**:
+    - **Komponen Input Baku (`CurrencyInput`)**:
+      * SELURUH form input yang menerima nilai uang/rupiah di SELURUH modul (Modal Tambah/Edit Proyek, Modal Tambah/Edit Investor, Modal Tambah/Edit Biaya Rute Material, Formulir Ritase & Edit Ritase) WAJIB menggunakan komponen `<CurrencyInput />`.
+      * DILARANG KERAS menggunakan `<input type="number">` polos untuk nilai uang.
+      * Fitur Baku `CurrencyInput`:
+        - Prefix simbol `Rp` statis di sisi kiri dengan gaya abu-abu netral.
+        - Pemisah ribuan otomatis dengan tanda titik (`.`) gaya Indonesia (`id-ID`).
+        - Mengizinkan input dikosongkan saat pengguna menekan Backspace (tidak terkunci pada angka 0 saat mengetik).
+        - Menormalkan ke angka `0` saat kehilangan fokus (*blur*) jika field ditinggalkan dalam keadaan kosong.
+    - **Tampilan Angka Finansial pada Tabel & Teks Naratif (`formatRupiah`)**:
+      * Tampilan nilai uang di tabel, rincian transaksi, modal konfirmasi, dan tooltip WAJIB diformat menggunakan fungsi kanonikal `formatRupiah(val)`: `'Rp ' + Math.round(val).toLocaleString('id-ID')` (contoh: `Rp 1.500.000`).
+    - **Tampilan Angka Finansial pada Kartu Metrik (`MetricCardCurrency`)**:
+      * Seluruh kartu metrik KPI yang menyajikan nilai uang WAJIB menggunakan `<MetricCardCurrency amount={...} />`.
+      * Simbol `Rp` berukuran lebih kecil (`text-xs`/`text-sm`), semi-transparan (`opacity-50`), menempel rapat langsung dengan angka tanpa spasi.
+      * Untuk nilai negatif, tanda minus ditempatkan di depan simbol Rp (`-Rp500.000`) dengan kelas warna defisit (`text-[#cf1124]`).
+      * Angka menggunakan font sans-serif bold tracking-tight (`font-bold tracking-tight`), DILARANG menggunakan `font-mono`.
 

@@ -94,15 +94,20 @@ export function MaterialPickerModal({
             </button>
           </div>
 
-          {/* Searchbar Pencarian Cepat di Header */}
-          <div className="mt-3">
+          {/* Searchbar Pencarian Cepat di Header (Rule 98: Universal Search Icon) */}
+          <div className="relative mt-3">
+            <img
+              src="/icons/search.png"
+              alt="Search"
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 object-contain pointer-events-none opacity-60"
+            />
             <input
               type="text"
               autoFocus
               placeholder="Cari jenis material atau satuan..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="w-full bg-[#f5f5f5] focus:bg-[#ebebeb] outline-none rounded-[6px] px-3.5 py-2 text-xs text-[#111111] placeholder:text-[#999999] transition-colors border-none"
+              className="w-full bg-[#f5f5f5] focus:bg-[#ebebeb] outline-none rounded-[6px] pl-9 pr-3.5 py-2 text-xs text-[#111111] placeholder:text-[#999999] transition-colors border-none"
             />
           </div>
         </div>

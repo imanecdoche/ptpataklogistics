@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Client } from '@/types/database';
 import { formatClientName, formatClientNameLive } from '@/lib/clientService';
+import { formatPhoneNumber } from '@/lib/phoneUtils';
 import { NewClientModal } from '@/components/ui/NewClientModal';
 
 interface ClientComboboxProps {
@@ -184,7 +185,7 @@ export function ClientCombobox({
                         >
                           {c.picName && <span>PIC: {c.picName}</span>}
                           {c.picName && c.phoneNumber && <span className="mx-1">•</span>}
-                          {c.phoneNumber && <span className="font-mono">{c.phoneNumber}</span>}
+                          {c.phoneNumber && <span className="font-mono">{formatPhoneNumber(c.phoneNumber)}</span>}
                         </div>
                       )}
                     </div>

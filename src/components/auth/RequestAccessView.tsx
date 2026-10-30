@@ -3,6 +3,7 @@ import loginMainGif from '../../../assets/login-main.gif';
 import { EyeToggleIcon } from '@/components/auth/EyeToggleIcon';
 import { requestAccountAccess } from '@/lib/userManagementService';
 import { SystemUser } from '@/types/database';
+import { formatPersonNameLive } from '@/lib/nameUtils';
 
 interface RequestAccessViewProps {
   onBackToLogin: () => void;
@@ -112,7 +113,7 @@ export function RequestAccessView({
                 autoComplete="name"
                 required
                 value={name}
-                onChange={e => setName(e.target.value)}
+                onChange={e => setName(formatPersonNameLive(e.target.value))}
                 placeholder="Contoh: Ahmad Fauzi"
                 disabled={isSubmitting}
                 className="w-full h-10 px-3 text-sm text-[#171717] placeholder-[#888888] bg-[#f5f5f5] rounded-[6px] outline-none transition-colors focus:bg-[#ebebeb] disabled:bg-[#f0f0f0]"

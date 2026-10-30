@@ -9,6 +9,7 @@ import { PinAuthModal } from '@/components/ui/PinAuthModal';
 import { QuarryCombobox } from '@/components/ui/QuarryCombobox';
 import { CurrencyInput } from '@/components/ui/CurrencyInput';
 import { useProjectFilter } from '@/context/ProjectFilterContext';
+import { formatPersonNameLive } from '@/lib/nameUtils';
 
 interface EditDispatchModalProps {
   isOpen: boolean;
@@ -243,7 +244,7 @@ export function EditDispatchModal({
                 <input
                   type="text"
                   value={driverName}
-                  onChange={e => setDriverName(e.target.value)}
+                  onChange={e => setDriverName(formatPersonNameLive(e.target.value))}
                   placeholder="Nama sopir armada..."
                   className="w-full px-3 py-2 text-xs bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#111111]"
                 />

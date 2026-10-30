@@ -14,6 +14,8 @@ import { TableActionMenu } from '@/components/ui/TableActionMenu';
 import { PinAuthModal } from '@/components/ui/PinAuthModal';
 import { CurrencyInput } from '@/components/ui/CurrencyInput';
 import { useProjectFilter } from '@/context/ProjectFilterContext';
+import { MetricCardCurrency } from '@/components/ui/MetricCardCurrency';
+import { formatEntityNameLive } from '@/lib/nameUtils';
 
 interface ProjectsPageProps {
   userEmail: string;
@@ -201,27 +203,27 @@ export function ProjectsPage({ userEmail: _userEmail }: ProjectsPageProps): Reac
         <div className="bg-white border border-[#eaeaea] rounded-[8px] p-3.5">
           <span className="text-[11px] text-[#888888] font-medium block">Total Proyek Terdaftar</span>
           <div className="flex items-baseline gap-1.5 mt-1">
-            <span className="text-xl font-bold font-mono text-[#111111]">{filteredProjects.length}</span>
+            <span className="text-xl font-bold tracking-tight text-[#111111]">{filteredProjects.length}</span>
             <span className="text-xs text-[#666666]">({activeProjectsCount} Aktif)</span>
           </div>
         </div>
 
         <div className="bg-white border border-[#eaeaea] rounded-[8px] p-3.5">
           <span className="text-[11px] text-[#888888] font-medium block">Total Modal Disetor</span>
-          <span className="text-xl font-bold font-mono text-[#111111] block mt-1 whitespace-nowrap">
-            {formatRupiah(totalDeposit)}
-          </span>
+          <div className="mt-1">
+            <MetricCardCurrency amount={totalDeposit} size="lg" />
+          </div>
         </div>
 
         <div className="bg-white border border-[#eaeaea] rounded-[8px] p-3.5">
           <span className="text-[11px] text-[#888888] font-medium block">Total Saldo Kas Berjalan</span>
-          <span
-            className={`text-xl font-bold font-mono block mt-1 whitespace-nowrap ${
-              totalCurrentBalance < 0 ? 'text-[#cf1124]' : 'text-[#008060]'
-            }`}
-          >
-            {formatRupiah(totalCurrentBalance)}
-          </span>
+          <div className="mt-1">
+            <MetricCardCurrency
+              amount={totalCurrentBalance}
+              size="lg"
+              colorClassName={totalCurrentBalance < 0 ? 'text-[#cf1124]' : 'text-[#008060]'}
+            />
+          </div>
         </div>
       </div>
 
@@ -280,12 +282,17 @@ export function ProjectsPage({ userEmail: _userEmail }: ProjectsPageProps): Reac
           <div className="flex items-center gap-2">
             {/* Search Input */}
             <div className="relative flex-1 sm:w-64">
+              <img
+                src="/icons/search.png"
+                alt="Search"
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 object-contain pointer-events-none opacity-60"
+              />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 placeholder="Cari proyek, lokasi, investor..."
-                className="w-full bg-white border border-[#eaeaea] rounded-[6px] px-3 py-1.5 text-xs text-[#111111] placeholder:text-[#999999] outline-none focus:border-[#111111] transition-colors"
+                className="w-full bg-white border border-[#eaeaea] rounded-[6px] pl-9 pr-3 py-1.5 text-xs text-[#111111] placeholder:text-[#999999] outline-none focus:border-[#111111] transition-colors"
               />
             </div>
 
@@ -425,7 +432,7 @@ export function ProjectsPage({ userEmail: _userEmail }: ProjectsPageProps): Reac
                   type="text"
                   required
                   value={name}
-                  onChange={e => setName(e.target.value)}
+                  onChange={e => setName(formatEntityNameLive(e.target.value))}
                   placeholder="Contoh: Proyek Situ Cikedal"
                   className="w-full bg-white border border-[#eaeaea] rounded-[6px] px-3 py-2 text-xs text-[#111111] outline-none focus:border-[#111111]"
                 />
@@ -536,7 +543,7 @@ export function ProjectsPage({ userEmail: _userEmail }: ProjectsPageProps): Reac
                   type="text"
                   required
                   value={editTarget.name}
-                  onChange={e => setEditTarget({ ...editTarget, name: e.target.value })}
+                  onChange={e => setEditTarget({ ...editTarget, name: formatEntityNameLive(e.target.value) })}
                   className="w-full bg-white border border-[#eaeaea] rounded-[6px] px-3 py-2 text-xs text-[#111111] outline-none focus:border-[#111111]"
                 />
               </div>

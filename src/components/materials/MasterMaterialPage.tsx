@@ -21,6 +21,7 @@ import { ProjectCombobox } from '@/components/ui/ProjectCombobox';
 import { CustomSelectCombobox } from '@/components/ui/CustomSelectCombobox';
 import { CurrencyInput } from '@/components/ui/CurrencyInput';
 import { useDialog } from '@/context/DialogContext';
+import { formatEntityNameLive } from '@/lib/nameUtils';
 
 export type MaterialSubTab = 'pricing' | 'routes' | 'catalog';
 
@@ -577,8 +578,13 @@ export function MasterMaterialPage({
           </button>
         </div>
 
-        {/* Global Search Bar per sub-tab */}
-        <div className="w-full sm:w-64">
+        {/* Global Search Bar per sub-tab (Rule 98: Universal Search Icon) */}
+        <div className="relative w-full sm:w-64">
+          <img
+            src="/icons/search.png"
+            alt="Search"
+            className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 object-contain pointer-events-none opacity-60"
+          />
           <input
             type="text"
             value={searchQuery}
@@ -590,7 +596,7 @@ export function MasterMaterialPage({
                 ? 'Cari rute kuari atau proyek...'
                 : 'Cari komoditas...'
             }
-            className="w-full bg-[#f9f9f9] border border-[#dcdcdc] rounded-[8px] px-3 py-1.5 text-xs text-[#111111] placeholder:text-[#888888] outline-none focus:border-[#111111] transition-colors"
+            className="w-full bg-[#f9f9f9] border border-[#dcdcdc] rounded-[8px] pl-9 pr-3 py-1.5 text-xs text-[#111111] placeholder:text-[#888888] outline-none focus:border-[#111111] transition-colors"
           />
         </div>
       </div>
@@ -1167,7 +1173,7 @@ export function MasterMaterialPage({
                   type="text"
                   required
                   value={commName}
-                  onChange={e => setCommName(e.target.value)}
+                  onChange={e => setCommName(formatEntityNameLive(e.target.value))}
                   placeholder="contoh: Batu Belah (Pondasi)"
                   className="w-full bg-[#f5f5f5] rounded-[6px] px-3 py-2 text-xs text-[#111111] font-semibold outline-none"
                 />

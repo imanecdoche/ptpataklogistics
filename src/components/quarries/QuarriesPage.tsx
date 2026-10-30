@@ -9,6 +9,9 @@ import { RunningText } from '@/components/ui/RunningText';
 import { TableActionMenu } from '@/components/ui/TableActionMenu';
 import { PinAuthModal } from '@/components/ui/PinAuthModal';
 import { useProjectFilter } from '@/context/ProjectFilterContext';
+import { PhoneInput } from '@/components/ui/PhoneInput';
+import { formatPhoneNumber } from '@/lib/phoneUtils';
+import { formatEntityNameLive, formatPersonNameLive } from '@/lib/nameUtils';
 
 interface QuarriesPageProps {
   userEmail: string;
@@ -140,25 +143,25 @@ export function QuarriesPage({ userEmail: _userEmail }: QuarriesPageProps): Reac
 
   return (
     <div className="space-y-4">
-      {/* 1. Metric Cards */}
+      {/* 1. Metric Cards (Rule 99: Sans-serif bold tracking-tight, no monospace) */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="bg-white border border-[#eaeaea] rounded-[8px] p-3.5">
           <span className="text-[11px] text-[#888888] font-medium block">Total Mitra Tambang</span>
-          <span className="text-xl font-bold font-mono text-[#111111] block mt-1">
+          <span className="text-xl font-bold tracking-tight text-[#111111] block mt-1">
             {filteredQuarries.length} Kuari Terdaftar
           </span>
         </div>
 
         <div className="bg-white border border-[#eaeaea] rounded-[8px] p-3.5">
           <span className="text-[11px] text-[#888888] font-medium block">Lokasi Titik Muat Tersebar</span>
-          <span className="text-xl font-bold font-mono text-[#111111] block mt-1">
+          <span className="text-xl font-bold tracking-tight text-[#111111] block mt-1">
             {uniqueLocationsCount} Wilayah / Titik
           </span>
         </div>
 
         <div className="bg-white border border-[#eaeaea] rounded-[8px] p-3.5">
           <span className="text-[11px] text-[#888888] font-medium block">Status Operasional Mitra</span>
-          <span className="text-xl font-bold font-mono text-[#008060] block mt-1">
+          <span className="text-xl font-bold tracking-tight text-[#008060] block mt-1">
             100% Siap Suplai
           </span>
         </div>
@@ -173,14 +176,19 @@ export function QuarriesPage({ userEmail: _userEmail }: QuarriesPageProps): Reac
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Search Input */}
+            {/* Search Input (Rule 98: Universal Search Icon) */}
             <div className="relative flex-1 sm:w-64">
+              <img
+                src="/icons/search.png"
+                alt="Search"
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 object-contain pointer-events-none opacity-60"
+              />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 placeholder="Cari kuari, lokasi, kontak..."
-                className="w-full bg-white border border-[#eaeaea] rounded-[6px] px-3 py-1.5 text-xs text-[#111111] placeholder:text-[#999999] outline-none focus:border-[#111111] transition-colors"
+                className="w-full bg-white border border-[#eaeaea] rounded-[6px] pl-9 pr-3 py-1.5 text-xs text-[#111111] placeholder:text-[#999999] outline-none focus:border-[#111111] transition-colors"
               />
             </div>
 
@@ -238,7 +246,7 @@ export function QuarriesPage({ userEmail: _userEmail }: QuarriesPageProps): Reac
                       <RunningText text={q.contactPerson} placeholder="-" className="text-[#111111]" />
                     </td>
                     <td className="py-3 px-4 font-mono text-[#444444] whitespace-nowrap w-[150px] align-middle">
-                      {q.phoneNumber || '-'}
+                      {q.phoneNumber ? formatPhoneNumber(q.phoneNumber) : '-'}
                     </td>
                     <td className="py-3 px-4 whitespace-nowrap w-[120px] align-middle">
                       <span className="text-[11px] font-bold text-[#166534]">
@@ -300,7 +308,7 @@ export function QuarriesPage({ userEmail: _userEmail }: QuarriesPageProps): Reac
                   type="text"
                   required
                   value={name}
-                  onChange={e => setName(e.target.value)}
+                  onChange={e => setName(formatEntityNameLive(e.target.value))}
                   placeholder="Contoh: PT Tambang Batu Mandiri"
                   className="w-full bg-white border border-[#eaeaea] rounded-[6px] px-3 py-2 text-xs text-[#111111] outline-none focus:border-[#111111]"
                 />
@@ -323,7 +331,7 @@ export function QuarriesPage({ userEmail: _userEmail }: QuarriesPageProps): Reac
                   <input
                     type="text"
                     value={contactPerson}
-                    onChange={e => setContactPerson(e.target.value)}
+                    onChange={e => setContactPerson(formatPersonNameLive(e.target.value))}
                     placeholder="Contoh: Bpk. Dani"
                     className="w-full bg-white border border-[#eaeaea] rounded-[6px] px-3 py-2 text-xs text-[#111111] outline-none focus:border-[#111111]"
                   />
@@ -331,12 +339,9 @@ export function QuarriesPage({ userEmail: _userEmail }: QuarriesPageProps): Reac
 
                 <div>
                   <label className="block text-[#666666] font-medium mb-1">Nomor Telepon / WhatsApp</label>
-                  <input
-                    type="text"
+                  <PhoneInput
                     value={phoneNumber}
-                    onChange={e => setPhoneNumber(e.target.value)}
-                    placeholder="Contoh: 08123456789"
-                    className="w-full bg-white border border-[#eaeaea] rounded-[6px] px-3 py-2 text-xs text-[#111111] outline-none focus:border-[#111111]"
+                    onChange={setPhoneNumber}
                   />
                 </div>
               </div>
@@ -383,7 +388,7 @@ export function QuarriesPage({ userEmail: _userEmail }: QuarriesPageProps): Reac
                   type="text"
                   required
                   value={editTarget.name}
-                  onChange={e => setEditTarget({ ...editTarget, name: e.target.value })}
+                  onChange={e => setEditTarget({ ...editTarget, name: formatEntityNameLive(e.target.value) })}
                   className="w-full bg-white border border-[#eaeaea] rounded-[6px] px-3 py-2 text-xs text-[#111111] outline-none focus:border-[#111111]"
                 />
               </div>
@@ -404,18 +409,16 @@ export function QuarriesPage({ userEmail: _userEmail }: QuarriesPageProps): Reac
                   <input
                     type="text"
                     value={editTarget.contactPerson || ''}
-                    onChange={e => setEditTarget({ ...editTarget, contactPerson: e.target.value })}
+                    onChange={e => setEditTarget({ ...editTarget, contactPerson: formatPersonNameLive(e.target.value) })}
                     className="w-full bg-white border border-[#eaeaea] rounded-[6px] px-3 py-2 text-xs text-[#111111] outline-none focus:border-[#111111]"
                   />
                 </div>
 
                 <div>
                   <label className="block text-[#666666] font-medium mb-1">Nomor Telepon / WhatsApp</label>
-                  <input
-                    type="text"
+                  <PhoneInput
                     value={editTarget.phoneNumber || ''}
-                    onChange={e => setEditTarget({ ...editTarget, phoneNumber: e.target.value })}
-                    className="w-full bg-white border border-[#eaeaea] rounded-[6px] px-3 py-2 text-xs text-[#111111] outline-none focus:border-[#111111]"
+                    onChange={val => setEditTarget({ ...editTarget, phoneNumber: val })}
                   />
                 </div>
               </div>

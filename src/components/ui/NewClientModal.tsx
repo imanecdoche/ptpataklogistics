@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Client } from '@/types/database';
 import { createClient, formatClientName, formatClientNameLive } from '@/lib/clientService';
 import { formatPhoneNumber } from '@/lib/phoneUtils';
+import { formatPersonName, formatPersonNameLive } from '@/lib/nameUtils';
 import { PhoneInput } from '@/components/ui/PhoneInput';
 import { Icons8Close } from '@/components/icons/Icons8';
 
@@ -50,7 +51,7 @@ export function NewClientModal({
       const cleanPhone = formatPhoneNumber(phoneNumber);
       const newClient = await createClient({
         name: formatted,
-        picName: picName.trim(),
+        picName: formatPersonName(picName),
         phoneNumber: cleanPhone
       });
       onCreated(newClient);
@@ -135,7 +136,7 @@ export function NewClientModal({
               type="text"
               placeholder="Contoh: Pak Joko / Mandor Proyek"
               value={picName}
-              onChange={e => setPicName(e.target.value)}
+              onChange={e => setPicName(formatPersonNameLive(e.target.value))}
               className="w-full bg-[#f5f5f5] focus:bg-[#ebebeb] outline-none rounded-[6px] px-3 py-2 text-xs text-[#111111] placeholder:text-[#999999] transition-colors"
             />
           </div>

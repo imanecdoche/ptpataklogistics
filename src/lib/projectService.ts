@@ -13,6 +13,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Project, Investor } from '@/types/database';
+import { formatEntityName } from '@/lib/nameUtils';
 
 const PROJECTS_COLLECTION = 'projects';
 const INVESTORS_COLLECTION = 'investors';
@@ -69,7 +70,7 @@ export async function saveProject(
   },
   existingId?: string
 ): Promise<string> {
-  const cleanName = payload.name.trim();
+  const cleanName = formatEntityName(payload.name);
   if (!cleanName) {
     throw new Error('Nama proyek wajib diisi.');
   }
@@ -200,7 +201,7 @@ export async function seedDefaultProjects(): Promise<void> {
         const newInv: Investor = {
           id: prj.investorId,
           name: prj.investorName,
-          phoneNumber: '081234567890',
+          phoneNumber: '+62 812-3456-7890',
           bankAccount: 'BCA 123456789 a.n ' + prj.investorName,
           initialCapital: prj.initialDeposit,
           notes: `Pemodal proyek ${prj.name}`,

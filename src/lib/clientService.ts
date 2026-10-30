@@ -25,80 +25,13 @@ export function detectClientType(name: string): ClientType {
   return 'PERORANGAN';
 }
 
-/**
- * Helper untuk format satu kata: mendukung Title Case & pembakuan PT/CV/UD/Tbk
- * serta mempertahankan tanda kurung buka/tutup ( )
- */
-function formatWordWithParen(token: string): string {
-  if (!token) return '';
-  const startsWithParen = token.startsWith('(');
-  const endsWithParen = token.endsWith(')');
-  const core = token.replace(/[()]/g, '');
-  if (!core) return token;
+import {
+  formatEntityName as formatClientName,
+  formatEntityNameLive as formatClientNameLive,
+  formatPersonName
+} from '@/lib/nameUtils';
 
-  const upper = core.toUpperCase();
-  let formatted = '';
-  if (['PT', 'CV', 'UD', 'KM', 'TBK'].includes(upper)) {
-    formatted = upper === 'TBK' ? 'Tbk' : upper;
-  } else {
-    formatted = core.charAt(0).toUpperCase() + core.slice(1).toLowerCase();
-  }
-
-  if (startsWithParen) formatted = '(' + formatted;
-  if (endsWithParen) formatted = formatted + ')';
-  return formatted;
-}
-
-/**
- * Membersihkan input dan hanya mengizinkan huruf alfabet (A-Z, a-z), spasi, dan tanda kurung ( ).
- * Menghapus seluruh angka, simbol aneh, dan tanda baca lain.
- */
-export function sanitizeClientNameInput(input: string): string {
-  if (!input) return '';
-  return input.replace(/[^a-zA-Z\s()]/g, '');
-}
-
-/**
- * Standardisasi format nama klien secara real-time saat pengguna mengetik (live input).
- * Mengizinkan huruf, spasi, dan tanda kurung ( ) untuk nama mandor/proyek perorangan.
- * Otomatis Title Case & huruf kapital PT/CV/UD tanpa titik, serta menjaga trailing space.
- */
-export function formatClientNameLive(input: string): string {
-  if (!input) return '';
-
-  // 1. Larangan simbol aneh & angka: hanya izinkan huruf, spasi, dan tanda kurung ( )
-  const sanitized = input.replace(/[^a-zA-Z\s()]/g, '');
-
-  // 2. Cek apakah ada spasi di akhir (pengguna sedang menekan spasi untuk kata berikutnya)
-  const hasTrailingSpace = /\s$/.test(sanitized);
-
-  // 3. Pisahkan per kata
-  const words = sanitized.split(/\s+/).filter(Boolean);
-  if (words.length === 0) {
-    return hasTrailingSpace ? ' ' : '';
-  }
-
-  // 4. Format setiap kata
-  const formattedWords = words.map(formatWordWithParen);
-
-  const joined = formattedWords.join(' ');
-  return hasTrailingSpace ? joined + ' ' : joined;
-}
-
-/**
- * Standardisasi format nama klien final (Title Case, huruf kapital entitas tanpa titik, kurung lokasi rapi)
- */
-export function formatClientName(input: string): string {
-  if (!input) return '';
-
-  const sanitized = input.replace(/[^a-zA-Z\s()]/g, ' ');
-  return sanitized
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean)
-    .map(formatWordWithParen)
-    .join(' ');
-}
+export { formatClientName, formatClientNameLive };
 
 const DEFAULT_CLIENTS: Client[] = [
   {
@@ -211,7 +144,7 @@ export async function createClient(data: {
   const clientData = {
     name: formattedName,
     type: clientType,
-    picName: data.picName?.trim() || '',
+    picName: data.picName ? formatPersonName(data.picName) : '',
     phoneNumber: data.phoneNumber ? formatPhoneNumber(data.phoneNumber) : '',
     createdAt: nowIso
   };
@@ -280,7 +213,7 @@ export async function updateClient(
     {
       name: formattedName,
       type: clientType,
-      picName: data.picName?.trim() || '',
+      picName: data.picName ? formatPersonName(data.picName) : '',
       phoneNumber: data.phoneNumber ? formatPhoneNumber(data.phoneNumber) : ''
     },
     { merge: true }

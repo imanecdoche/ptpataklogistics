@@ -16,6 +16,7 @@ import { FlexibleTextarea } from '@/components/ui/FlexibleTextarea';
 import { NegativeProfitConfirmModal } from '@/components/ui/NegativeProfitConfirmModal';
 import { getMaterialIconSrc } from '@/lib/materialIcons';
 import { useProjectFilter } from '@/context/ProjectFilterContext';
+import { formatPersonNameLive } from '@/lib/nameUtils';
 
 interface DispatchFormProps {
   materials: MaterialItem[];
@@ -237,29 +238,7 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
     setSellPricePerUnit(m.defaultSellPrice);
   };
 
-  // Format nama pembeli/sopir: Huruf besar di awal kata & standardisasi resmi PT/CV/UD/KM tanpa titik
-  const formatTitleCaseAndEntity = (input: string): string => {
-    if (!input) return '';
 
-    return input
-      .split(/(\s+)/)
-      .map(token => {
-        if (/^\s+$/.test(token)) return token;
-
-        const lower = token.toLowerCase();
-
-        // Standar Resmi PUEBI Indonesia & UU PT: 'PT', 'CV', 'UD', 'KM' (tanpa titik)
-        if (lower === 'pt' || lower === 'pt.') return 'PT';
-        if (lower === 'cv' || lower === 'cv.') return 'CV';
-        if (lower === 'ud' || lower === 'ud.') return 'UD';
-        if (lower === 'km' || lower === 'km.') return 'KM';
-        if (lower === 'tbk' || lower === 'tbk.') return 'Tbk';
-
-        // Huruf besar di awal kata (Title Case)
-        return token.charAt(0).toUpperCase() + token.slice(1);
-      })
-      .join('');
-  };
 
   // Handler Volume: Mengizinkan field kosong saat diedit/dihapus, dan baru mengisi '0' saat unfocused
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
@@ -536,7 +515,7 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
                   setTimeout(() => setIsDriverDropdownOpen(false), 200);
                 }}
                 onChange={e => {
-                  setDriverName(formatTitleCaseAndEntity(e.target.value));
+                  setDriverName(formatPersonNameLive(e.target.value));
                   setIsDriverDropdownOpen(true);
                 }}
                 className="w-full bg-white border-none outline-none focus:outline-none focus:ring-0 rounded-[6px] px-3 py-2 text-xs text-black font-semibold placeholder:text-[#888888] transition-colors"

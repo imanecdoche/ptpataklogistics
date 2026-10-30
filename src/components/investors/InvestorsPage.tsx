@@ -11,6 +11,10 @@ import { TableActionMenu } from '@/components/ui/TableActionMenu';
 import { PinAuthModal } from '@/components/ui/PinAuthModal';
 import { CurrencyInput } from '@/components/ui/CurrencyInput';
 import { useProjectFilter } from '@/context/ProjectFilterContext';
+import { MetricCardCurrency } from '@/components/ui/MetricCardCurrency';
+import { PhoneInput } from '@/components/ui/PhoneInput';
+import { formatPhoneNumber } from '@/lib/phoneUtils';
+import { formatEntityNameLive } from '@/lib/nameUtils';
 
 const formatRupiah = (val: number): string =>
   'Rp ' + Math.round(val).toLocaleString('id-ID');
@@ -188,27 +192,27 @@ export function InvestorsPage({ userEmail: _userEmail }: InvestorsPageProps): Re
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="bg-white border border-[#eaeaea] rounded-[8px] p-3.5">
           <span className="text-[11px] text-[#888888] font-medium block">Total Investor Terdaftar</span>
-          <span className="text-xl font-bold font-mono text-[#111111] block mt-1">
+          <span className="text-xl font-bold tracking-tight text-[#111111] block mt-1">
             {filteredInvestors.length} Mitra Pendana
           </span>
         </div>
 
         <div className="bg-white border border-[#eaeaea] rounded-[8px] p-3.5">
           <span className="text-[11px] text-[#888888] font-medium block">Total Modal Disetor</span>
-          <span className="text-xl font-bold font-mono text-[#111111] block mt-1 whitespace-nowrap">
-            {formatRupiah(totalCapital)}
-          </span>
+          <div className="mt-1">
+            <MetricCardCurrency amount={totalCapital} size="lg" />
+          </div>
         </div>
 
         <div className="bg-white border border-[#eaeaea] rounded-[8px] p-3.5">
           <span className="text-[11px] text-[#888888] font-medium block">Total Saldo Kas Berjalan Proyek</span>
-          <span
-            className={`text-xl font-bold font-mono block mt-1 whitespace-nowrap ${
-              totalProjectsBalance < 0 ? 'text-[#cf1124]' : 'text-[#008060]'
-            }`}
-          >
-            {formatRupiah(totalProjectsBalance)}
-          </span>
+          <div className="mt-1">
+            <MetricCardCurrency
+              amount={totalProjectsBalance}
+              size="lg"
+              colorClassName={totalProjectsBalance < 0 ? 'text-[#cf1124]' : 'text-[#008060]'}
+            />
+          </div>
         </div>
       </div>
 
@@ -223,12 +227,17 @@ export function InvestorsPage({ userEmail: _userEmail }: InvestorsPageProps): Re
           <div className="flex items-center gap-2">
             {/* Search Input */}
             <div className="relative flex-1 sm:w-64">
+              <img
+                src="/icons/search.png"
+                alt="Search"
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 object-contain pointer-events-none opacity-60"
+              />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 placeholder="Cari investor, kontak, bank..."
-                className="w-full bg-white border border-[#eaeaea] rounded-[6px] px-3 py-1.5 text-xs text-[#111111] placeholder:text-[#999999] outline-none focus:border-[#111111] transition-colors"
+                className="w-full bg-white border border-[#eaeaea] rounded-[6px] pl-9 pr-3 py-1.5 text-xs text-[#111111] placeholder:text-[#999999] outline-none focus:border-[#111111] transition-colors"
               />
             </div>
 
@@ -286,7 +295,7 @@ export function InvestorsPage({ userEmail: _userEmail }: InvestorsPageProps): Re
                         <span className="text-[10px] font-mono text-[#888888] block">{inv.id}</span>
                       </td>
                       <td className="py-3 px-4 font-mono text-[#444444] whitespace-nowrap w-[160px] align-middle">
-                        {inv.phoneNumber || '-'}
+                        {inv.phoneNumber ? formatPhoneNumber(inv.phoneNumber) : '-'}
                       </td>
                       <td className="py-3 px-4 text-[#444444] whitespace-nowrap w-[180px] align-middle">
                         <RunningText text={inv.bankAccount} placeholder="-" className="text-[#444444]" />
@@ -370,7 +379,7 @@ export function InvestorsPage({ userEmail: _userEmail }: InvestorsPageProps): Re
                   type="text"
                   required
                   value={name}
-                  onChange={e => setName(e.target.value)}
+                  onChange={e => setName(formatEntityNameLive(e.target.value))}
                   placeholder="Contoh: Investor A / PT Investama Mandiri"
                   className="w-full bg-white border border-[#eaeaea] rounded-[6px] px-3 py-2 text-xs text-[#111111] outline-none focus:border-[#111111]"
                 />
@@ -378,12 +387,9 @@ export function InvestorsPage({ userEmail: _userEmail }: InvestorsPageProps): Re
 
               <div>
                 <label className="block text-[#666666] font-medium mb-1">Nomor Telepon / WhatsApp</label>
-                <input
-                  type="text"
+                <PhoneInput
                   value={phoneNumber}
-                  onChange={e => setPhoneNumber(e.target.value)}
-                  placeholder="Contoh: 08123456789"
-                  className="w-full bg-white border border-[#eaeaea] rounded-[6px] px-3 py-2 text-xs text-[#111111] outline-none focus:border-[#111111]"
+                  onChange={setPhoneNumber}
                 />
               </div>
 
@@ -460,18 +466,16 @@ export function InvestorsPage({ userEmail: _userEmail }: InvestorsPageProps): Re
                   type="text"
                   required
                   value={editTarget.name}
-                  onChange={e => setEditTarget({ ...editTarget, name: e.target.value })}
+                  onChange={e => setEditTarget({ ...editTarget, name: formatEntityNameLive(e.target.value) })}
                   className="w-full bg-white border border-[#eaeaea] rounded-[6px] px-3 py-2 text-xs text-[#111111] outline-none focus:border-[#111111]"
                 />
               </div>
 
               <div>
                 <label className="block text-[#666666] font-medium mb-1">Nomor Telepon / WhatsApp</label>
-                <input
-                  type="text"
+                <PhoneInput
                   value={editTarget.phoneNumber || ''}
-                  onChange={e => setEditTarget({ ...editTarget, phoneNumber: e.target.value })}
-                  className="w-full bg-white border border-[#eaeaea] rounded-[6px] px-3 py-2 text-xs text-[#111111] outline-none focus:border-[#111111]"
+                  onChange={val => setEditTarget({ ...editTarget, phoneNumber: val })}
                 />
               </div>
 

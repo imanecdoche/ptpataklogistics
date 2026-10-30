@@ -8,6 +8,7 @@ import { TableActionMenu } from '@/components/ui/TableActionMenu';
 import { DispatchDetailModal } from '@/components/dispatcher/DispatchDetailModal';
 import { useProjectFilter } from '@/context/ProjectFilterContext';
 import { FundTransferSection } from '@/components/dashboard/FundTransferSection';
+import { MetricCardCurrency } from '@/components/ui/MetricCardCurrency';
 
 interface DashboardPageProps {
   userEmail: string;
@@ -146,13 +147,13 @@ export function DashboardPage({
                 Ritase Hari Ini
               </span>
               <div className="mt-2 flex items-baseline gap-1.5">
-                <span className="text-2xl font-bold font-mono text-[#111111]">
+                <span className="text-2xl font-bold tracking-tight text-[#111111]">
                   {todayMetrics.totalTrips}
                 </span>
                 <span className="text-xs text-[#777777]">trip</span>
               </div>
               <span className="text-[11px] text-[#888888] mt-1">
-                Volume: <strong className="font-mono text-[#111111]">{todayMetrics.totalVolume}</strong> DT/Ton
+                Volume: <strong className="font-bold text-[#111111]">{todayMetrics.totalVolume}</strong> DT/Ton
               </span>
             </div>
 
@@ -162,15 +163,16 @@ export function DashboardPage({
                 {hideMargin ? 'Omzet Penjualan Hari Ini' : 'Estimasi Laba Bersih Hari Ini'}
               </span>
               <div className="mt-2">
-                <span
-                  className={`text-xl md:text-2xl font-bold font-mono ${
+                <MetricCardCurrency
+                  amount={hideMargin ? todayMetrics.totalRevenue : todayMetrics.totalProfit}
+                  colorClassName={
                     hideMargin
                       ? 'text-[#111111]'
-                      : todayMetrics.totalProfit >= 0 ? 'text-[#0e9f6e]' : 'text-[#cf1124]'
-                  }`}
-                >
-                  {formatRupiah(hideMargin ? todayMetrics.totalRevenue : todayMetrics.totalProfit)}
-                </span>
+                      : todayMetrics.totalProfit >= 0
+                      ? 'text-[#0e9f6e]'
+                      : 'text-[#cf1124]'
+                  }
+                />
               </div>
               <span className="text-[11px] text-[#888888] mt-1">
                 {hideMargin
@@ -185,13 +187,10 @@ export function DashboardPage({
                 {selectedProject ? `Kas Proyek (${selectedProject.name})` : 'Posisi Kas Riil'}
               </span>
               <div className="mt-2">
-                <span
-                  className={`text-xl md:text-2xl font-bold font-mono ${
-                    todayMetrics.latestCash >= 0 ? 'text-[#111111]' : 'text-[#cf1124]'
-                  }`}
-                >
-                  {formatRupiah(todayMetrics.latestCash)}
-                </span>
+                <MetricCardCurrency
+                  amount={todayMetrics.latestCash}
+                  colorClassName={todayMetrics.latestCash >= 0 ? 'text-[#111111]' : 'text-[#cf1124]'}
+                />
               </div>
               <span className="text-[11px] text-[#888888] mt-1">
                 {selectedProject
@@ -206,12 +205,13 @@ export function DashboardPage({
                 Piutang Tempo Berjalan
               </span>
               <div className="mt-2">
-                <span className="text-xl md:text-2xl font-bold font-mono text-[#e3a008]">
-                  {formatRupiah(todayMetrics.pendingReceivables)}
-                </span>
+                <MetricCardCurrency
+                  amount={todayMetrics.pendingReceivables}
+                  colorClassName="text-[#e3a008]"
+                />
               </div>
               <span className="text-[11px] text-[#888888] mt-1">
-                Armada Aktif: <strong className="font-mono text-[#111111]">{todayMetrics.activePlatesCount}</strong> unit
+                Armada Aktif: <strong className="font-bold text-[#111111]">{todayMetrics.activePlatesCount}</strong> unit
               </span>
             </div>
           </div>

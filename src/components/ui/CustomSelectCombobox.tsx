@@ -14,6 +14,9 @@ interface CustomSelectComboboxProps {
   disabled?: boolean;
   required?: boolean;
   searchable?: boolean;
+  className?: string;
+  triggerClassName?: string;
+  variant?: 'gray' | 'white';
 }
 
 export function CustomSelectCombobox({
@@ -23,7 +26,10 @@ export function CustomSelectCombobox({
   placeholder = 'Pilih opsi...',
   disabled = false,
   required = false,
-  searchable = true
+  searchable = true,
+  className = '',
+  triggerClassName = '',
+  variant = 'gray'
 }: CustomSelectComboboxProps): React.JSX.Element {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -58,18 +64,25 @@ export function CustomSelectCombobox({
     setSearch('');
   };
 
+  const isWhite = variant === 'white';
+  const baseTriggerClass = isWhite
+    ? `flex items-center justify-between w-full bg-white hover:bg-[#fafafa] rounded-[8px] px-3 py-2 text-xs transition-colors cursor-pointer border border-[#eaeaea] ${
+        isOpen ? 'border-[#111111] ring-1 ring-[#111111]' : ''
+      }`
+    : `flex items-center justify-between w-full bg-[#f5f5f5] hover:bg-[#ebebeb] rounded-[6px] px-3 py-2 text-xs transition-colors cursor-pointer border border-transparent ${
+        isOpen ? 'border-[#111111]' : ''
+      }`;
+
   return (
-    <div ref={containerRef} className="relative w-full">
+    <div ref={containerRef} className={`relative w-full ${className}`}>
       <div
         onClick={() => {
           if (!disabled) setIsOpen(prev => !prev);
         }}
-        className={`flex items-center justify-between w-full bg-[#f5f5f5] hover:bg-[#ebebeb] rounded-[6px] px-3 py-2 text-xs transition-colors cursor-pointer border border-transparent ${
-          isOpen ? 'border-[#111111]' : ''
-        } ${disabled ? 'opacity-60 cursor-not-allowed' : ''}`}
+        className={`${baseTriggerClass} ${disabled ? 'opacity-60 cursor-not-allowed' : ''} ${triggerClassName}`}
       >
         <span
-          className={`font-semibold truncate ${
+          className={`font-medium truncate ${
             selectedOption ? 'text-[#111111]' : 'text-[#888888] font-normal'
           }`}
         >
@@ -96,14 +109,21 @@ export function CustomSelectCombobox({
         <div className="absolute z-50 left-0 right-0 mt-1 max-h-60 overflow-y-auto bg-white border border-[#eaeaea] rounded-[8px] shadow-lg py-1 text-xs">
           {searchable && options.length > 5 && (
             <div className="p-2 border-b border-[#eaeaea]">
-              <input
-                type="text"
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                placeholder="Cari..."
-                autoFocus
-                className="w-full bg-[#f5f5f5] rounded-[4px] px-2 py-1 text-xs text-[#111111] outline-none"
-              />
+              <div className="relative">
+                <img
+                  src="/icons/search.png"
+                  alt="Search"
+                  className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 object-contain pointer-events-none opacity-60"
+                />
+                <input
+                  type="text"
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  placeholder="Cari..."
+                  autoFocus
+                  className="w-full bg-[#f5f5f5] rounded-[4px] pl-8 pr-2 py-1 text-xs text-[#111111] outline-none"
+                />
+              </div>
             </div>
           )}
 

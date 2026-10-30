@@ -15,6 +15,7 @@ import { initializeApp, getApps } from 'firebase/app';
 import { getAuth, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { db, firebaseConfig } from '@/lib/firebase';
 import { SystemUser, UserRole, UserStatus } from '@/types/database';
+import { formatPersonName } from '@/lib/nameUtils';
 
 export const DEVELOPER_EMAIL = 'fatih@patak.dev';
 export const FOUNDER_EMAIL = 'founder@patak.id';
@@ -140,7 +141,7 @@ export async function requestAccountAccess(payload: {
   const docId = `usr-${cleanUsername}-${Date.now().toString().slice(-4)}`;
   const newUser: SystemUser = {
     id: docId,
-    name: payload.name.trim(),
+    name: formatPersonName(payload.name),
     email: cleanEmail,
     role: 'dispatcher',
     status: 'PENDING',
@@ -319,13 +320,14 @@ export async function createAccountDirectly(payload: {
   createdBy: string;
 }): Promise<void> {
   const cleanEmail = payload.email.trim().toLowerCase();
+  const cleanName = formatPersonName(payload.name);
   let authUid = '';
 
   // 1. Buatkan akun ke Firebase Auth
   const secondaryAuth = getSecondaryAuth();
   const cred = await createUserWithEmailAndPassword(secondaryAuth, cleanEmail, payload.password);
   authUid = cred.user.uid;
-  await updateProfile(cred.user, { displayName: payload.name.trim() });
+  await updateProfile(cred.user, { displayName: cleanName });
   await secondaryAuth.signOut();
 
   // 2. Simpan ke Firestore
@@ -333,7 +335,7 @@ export async function createAccountDirectly(payload: {
   const newUser: SystemUser = {
     id: docId,
     uid: authUid,
-    name: payload.name.trim(),
+    name: cleanName,
     email: cleanEmail,
     role: payload.role,
     status: 'ACTIVE',
@@ -361,8 +363,12 @@ export async function updateAccountData(
   if ((userId === 'usr-fatih-patak-dev' || userId === 'usr-founder-patak-id') && data.status === 'INACTIVE') {
     throw new Error('Akun Developer dan Founder tidak dapat dinonaktifkan.');
   }
+  const payloadToUpdate = { ...data };
+  if (payloadToUpdate.name) {
+    payloadToUpdate.name = formatPersonName(payloadToUpdate.name);
+  }
   const docRef = doc(db, 'system_users', userId);
-  await updateDoc(docRef, data);
+  await updateDoc(docRef, payloadToUpdate);
 }
 
 /**

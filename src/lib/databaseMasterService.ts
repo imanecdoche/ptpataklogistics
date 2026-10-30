@@ -9,6 +9,8 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { MasterVehicle, MasterDriver, MasterQuarry, DispatchTransaction } from '@/types/database';
+import { formatPhoneNumber } from '@/lib/phoneUtils';
+import { formatEntityName, formatPersonName } from '@/lib/nameUtils';
 
 /**
  * 1. ARMADA & PLAT NOMOR (master_vehicles)
@@ -52,7 +54,7 @@ export async function saveMasterVehicle(
     docRef,
     {
       plateNumber: cleanPlate,
-      driverName: driverName?.trim() || '',
+      driverName: driverName ? formatPersonName(driverName) : '',
       truckType: truckType?.trim() || 'Dump Truck',
       notes: notes?.trim() || '',
       source: 'MANUAL',
@@ -144,7 +146,7 @@ export async function saveMasterDriver(
   notes?: string,
   id?: string
 ): Promise<void> {
-  const cleanName = name.trim();
+  const cleanName = formatPersonName(name);
   if (!cleanName) throw new Error('Nama supir wajib diisi');
 
   const docId = id || `drv-${Date.now()}`;
@@ -154,7 +156,7 @@ export async function saveMasterDriver(
     docRef,
     {
       name: cleanName,
-      phoneNumber: phoneNumber?.trim() || '',
+      phoneNumber: phoneNumber ? formatPhoneNumber(phoneNumber) : '',
       defaultPlate: defaultPlate?.trim().toUpperCase() || '',
       notes: notes?.trim() || '',
       createdAt: new Date().toISOString()
@@ -201,7 +203,7 @@ export async function saveMasterQuarry(
   notes?: string,
   id?: string
 ): Promise<string> {
-  const cleanName = name.trim();
+  const cleanName = formatEntityName(name);
   if (!cleanName) throw new Error('Nama kuari wajib diisi');
 
   const docId = id || `qry-${Date.now()}`;
@@ -212,8 +214,8 @@ export async function saveMasterQuarry(
     {
       name: cleanName,
       location: location?.trim() || '',
-      contactPerson: contactPerson?.trim() || '',
-      phoneNumber: phoneNumber?.trim() || '',
+      contactPerson: contactPerson ? formatPersonName(contactPerson) : '',
+      phoneNumber: phoneNumber ? formatPhoneNumber(phoneNumber) : '',
       notes: notes?.trim() || '',
       createdAt: new Date().toISOString()
     },

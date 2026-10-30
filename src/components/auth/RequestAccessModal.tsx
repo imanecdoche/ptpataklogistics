@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { EyeToggleIcon } from '@/components/auth/EyeToggleIcon';
 import { requestAccountAccess } from '@/lib/userManagementService';
 import { SystemUser } from '@/types/database';
+import { formatPersonNameLive } from '@/lib/nameUtils';
 
 interface RequestAccessModalProps {
   isOpen: boolean;
@@ -97,7 +98,7 @@ export function RequestAccessModal({
             <input
               type="text"
               value={name}
-              onChange={e => setName(e.target.value)}
+              onChange={e => setName(formatPersonNameLive(e.target.value))}
               placeholder="Contoh: Budi Santoso"
               required
               className="w-full px-3.5 py-2.5 text-xs bg-white border border-[#dddddd] rounded-[8px] focus:outline-none focus:border-[#111111]"
