@@ -135,6 +135,8 @@ interface TruckPlateInputProps {
   knownTrucks?: TruckSuggestionItem[];
   onSelectTruck?: (truck: TruckSuggestionItem) => void;
   variant?: 'default' | 'solid-white';
+  onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  onFocus?: (e: React.FocusEvent<HTMLInputElement>) => void;
 }
 
 export function TruckPlateInput({
@@ -146,7 +148,9 @@ export function TruckPlateInput({
   inputRef,
   knownTrucks = [],
   onSelectTruck,
-  variant = 'default'
+  variant = 'default',
+  onKeyDown,
+  onFocus
 }: TruckPlateInputProps): React.JSX.Element {
   const [isInvalid, setIsInvalid] = useState(false);
   const [showToast, setShowToast] = useState(false);
@@ -244,6 +248,9 @@ export function TruckPlateInput({
           handleSelectSuggestion(top);
         }
       }
+      if (onKeyDown) {
+        onKeyDown(e);
+      }
     } else if (e.key === 'Enter') {
       if (isOpen && filteredSuggestions.length > 0) {
         e.preventDefault();
@@ -252,8 +259,18 @@ export function TruckPlateInput({
           handleSelectSuggestion(top);
         }
       }
+      if (onKeyDown) {
+        onKeyDown(e);
+      }
     } else if (e.key === 'Escape') {
       setIsOpen(false);
+      if (onKeyDown) {
+        onKeyDown(e);
+      }
+    } else {
+      if (onKeyDown) {
+        onKeyDown(e);
+      }
     }
   };
 
@@ -291,7 +308,12 @@ export function TruckPlateInput({
         value={value}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
-        onFocus={() => setIsOpen(true)}
+        onFocus={e => {
+          setIsOpen(true);
+          const target = e.currentTarget;
+          setTimeout(() => target.select(), 0);
+          if (onFocus) onFocus(e);
+        }}
         onBlur={handleBlur}
         className={`w-full outline-none rounded-[6px] px-3 py-2 text-xs font-mono font-medium uppercase tracking-wide transition-colors ${
           isInvalid

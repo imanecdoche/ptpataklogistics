@@ -7,6 +7,9 @@ import { CustomDatePicker } from '@/components/ui/CustomDatePicker';
 import { FlexibleTextarea } from '@/components/ui/FlexibleTextarea';
 import { PinAuthModal } from '@/components/ui/PinAuthModal';
 import { QuarryCombobox } from '@/components/ui/QuarryCombobox';
+import { ProjectCombobox } from '@/components/ui/ProjectCombobox';
+import { ClientCombobox } from '@/components/ui/ClientCombobox';
+import { MaterialCombobox } from '@/components/ui/MaterialCombobox';
 import { CurrencyInput } from '@/components/ui/CurrencyInput';
 import { CustomSelectCombobox } from '@/components/ui/CustomSelectCombobox';
 import { useProjectFilter } from '@/context/ProjectFilterContext';
@@ -34,26 +37,36 @@ export function EditDispatchModal({
   const { projects, isDispatcherUser, isInvestorUser } = useProjectFilter();
   const hideMargin = isDispatcherUser || isInvestorUser;
 
-  const [deliveryDate, setDeliveryDate] = useState('');
-  const [suratJalan, setSuratJalan] = useState('');
-  const [truckPlate, setTruckPlate] = useState('');
-  const [driverName, setDriverName] = useState('');
-  const [projectId, setProjectId] = useState('');
-  const [projectName, setProjectName] = useState('');
-  const [clientId, setClientId] = useState('');
-  const [clientName, setClientName] = useState('');
-  const [quarryId, setQuarryId] = useState('');
-  const [quarryName, setQuarryName] = useState('');
+  // Ekstrak tanggal ritase asli dari transaksi
+  const getInitialDate = (tx: DispatchTransaction | null): string => {
+    if (!tx) return new Date().toISOString().slice(0, 10);
+    if (tx.deliveryDate && tx.deliveryDate.trim()) return tx.deliveryDate.trim();
+    if (tx.date && !tx.date.includes('T')) return tx.date.trim();
+    if (tx.date) return tx.date.slice(0, 10);
+    if (tx.createdAt) return tx.createdAt.slice(0, 10);
+    return new Date().toISOString().slice(0, 10);
+  };
+
+  const [deliveryDate, setDeliveryDate] = useState<string>(getInitialDate(transaction));
+  const [suratJalan, setSuratJalan] = useState<string>(transaction?.suratJalan || '');
+  const [truckPlate, setTruckPlate] = useState<string>(transaction?.truckPlate || '');
+  const [driverName, setDriverName] = useState<string>(transaction?.driverName || '');
+  const [projectId, setProjectId] = useState<string>(transaction?.projectId || '');
+  const [projectName, setProjectName] = useState<string>(transaction?.projectName || '');
+  const [clientId, setClientId] = useState<string>(transaction?.clientId || '');
+  const [clientName, setClientName] = useState<string>(transaction?.clientName || transaction?.customerName || '');
+  const [quarryId, setQuarryId] = useState<string>(transaction?.quarryId || '');
+  const [quarryName, setQuarryName] = useState<string>(transaction?.quarryName || '');
   const [quarries, setQuarries] = useState<MasterQuarry[]>(propQuarries || []);
-  const [materialId, setMaterialId] = useState('');
-  const [materialName, setMaterialName] = useState('');
-  const [unit, setUnit] = useState<'DT' | 'Ton'>('DT');
-  const [quantity, setQuantity] = useState(1);
-  const [buyPricePerUnit, setBuyPricePerUnit] = useState(0);
-  const [sellPricePerUnit, setSellPricePerUnit] = useState(0);
-  const [operationalCost, setOperationalCost] = useState(0);
-  const [notes, setNotes] = useState('');
-  const [status, setStatus] = useState<'TEMPO' | 'LUNAS'>('TEMPO');
+  const [materialId, setMaterialId] = useState<string>(transaction?.materialId || '');
+  const [materialName, setMaterialName] = useState<string>(transaction?.materialName || '');
+  const [unit, setUnit] = useState<'DT' | 'Ton'>(transaction?.unit || 'DT');
+  const [quantity, setQuantity] = useState<number>(transaction?.quantity || 1);
+  const [buyPricePerUnit, setBuyPricePerUnit] = useState<number>(transaction?.buyPricePerUnit || 0);
+  const [sellPricePerUnit, setSellPricePerUnit] = useState<number>(transaction?.sellPricePerUnit || 0);
+  const [operationalCost, setOperationalCost] = useState<number>(transaction?.operationalCost || 0);
+  const [notes, setNotes] = useState<string>(transaction?.notes || '');
+  const [status, setStatus] = useState<'TEMPO' | 'LUNAS'>(transaction?.status || 'TEMPO');
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPinModalOpen, setIsPinModalOpen] = useState(false);
@@ -65,10 +78,10 @@ export function EditDispatchModal({
     }
   }, [propQuarries]);
 
-  // Inisialisasi formulir dari transaksi yang dipilih
+  // Sinkronisasi data saat transaksi yang dipilih berubah
   useEffect(() => {
     if (transaction) {
-      setDeliveryDate(transaction.deliveryDate || transaction.date?.slice(0, 10) || new Date().toISOString().slice(0, 10));
+      setDeliveryDate(getInitialDate(transaction));
       setSuratJalan(transaction.suratJalan || '');
       setTruckPlate(transaction.truckPlate || '');
       setDriverName(transaction.driverName || '');
@@ -108,34 +121,50 @@ export function EditDispatchModal({
     quantity > 0 &&
     sellPricePerUnit > 0;
 
-  const handleProjectSelect = (selId: string) => {
-    setProjectId(selId);
-    const found = projects.find(p => p.id === selId);
-    if (found) {
-      setProjectName(found.name);
-      if (found.clientId) {
-        setClientId(found.clientId);
-        setClientName(found.clientName || '');
+  const handleProjectSelect = (p: { id: string; name: string; clientId?: string; clientName?: string } | null) => {
+    if (p) {
+      setProjectId(p.id);
+      setProjectName(p.name);
+      if (p.clientId) {
+        setClientId(p.clientId);
+        setClientName(p.clientName || '');
       }
     } else {
+      setProjectId('');
       setProjectName('');
     }
   };
 
-  const handleMaterialSelect = (selId: string) => {
-    setMaterialId(selId);
-    const found = materials.find(m => m.id === selId);
-    if (found) {
-      setMaterialName(found.name);
-      setUnit(found.unit);
+  const handleMaterialSelect = (m: MaterialItem | null) => {
+    if (m) {
+      setMaterialId(m.id);
+      setMaterialName(m.name);
+      setUnit(m.unit);
+      if (!buyPricePerUnit) setBuyPricePerUnit(m.defaultBuyPrice);
+      if (!sellPricePerUnit) setSellPricePerUnit(m.defaultSellPrice);
+    } else {
+      setMaterialId('');
+      setMaterialName('');
     }
   };
 
-  const handleClientSelect = (selId: string) => {
-    setClientId(selId);
-    const found = clients.find(c => c.id === selId);
-    if (found) {
-      setClientName(found.name);
+  const handleClientSelect = (c: Client | null) => {
+    if (c) {
+      setClientId(c.id);
+      setClientName(c.name);
+    } else {
+      setClientId('');
+      setClientName('');
+    }
+  };
+
+  const handleQuarrySelect = (q: MasterQuarry | null) => {
+    if (q) {
+      setQuarryId(q.id);
+      setQuarryName(q.name);
+    } else {
+      setQuarryId('');
+      setQuarryName('');
     }
   };
 
@@ -204,7 +233,7 @@ export function EditDispatchModal({
               type="button"
               onClick={onClose}
               aria-label="Tutup form edit"
-              className="text-[#888888] hover:text-[#111111] p-1.5 rounded transition-colors"
+              className="text-[#888888] hover:text-[#111111] p-1.5 rounded transition-colors cursor-pointer"
             >
               <img src="/icons/close.png" alt="Tutup" className="w-4 h-4 object-contain" />
             </button>
@@ -221,6 +250,7 @@ export function EditDispatchModal({
                 <CustomDatePicker
                   value={deliveryDate}
                   onChange={setDeliveryDate}
+                  fullWidth
                 />
               </div>
 
@@ -245,9 +275,10 @@ export function EditDispatchModal({
                 <input
                   type="text"
                   value={suratJalan}
+                  onFocus={e => e.target.select()}
                   onChange={e => setSuratJalan(e.target.value)}
                   placeholder="Contoh: SJ-00123"
-                  className="w-full px-3 py-2 text-xs bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#111111] font-mono"
+                  className="w-full px-3 py-2 text-xs bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#111111] font-mono font-semibold"
                 />
               </div>
 
@@ -258,9 +289,10 @@ export function EditDispatchModal({
                 <input
                   type="text"
                   value={driverName}
+                  onFocus={e => e.target.select()}
                   onChange={e => setDriverName(formatPersonNameLive(e.target.value))}
                   placeholder="Nama sopir armada..."
-                  className="w-full px-3 py-2 text-xs bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#111111]"
+                  className="w-full px-3 py-2 text-xs bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#111111] font-semibold"
                 />
               </div>
             </div>
@@ -282,24 +314,47 @@ export function EditDispatchModal({
               />
             </div>
 
-            {/* Grid 3: Proyek Tujuan & Kuari Asal */}
+            {/* Grid 3: Proyek Tujuan & Klien */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               <div>
                 <label className="block text-xs font-semibold text-[#444444] mb-1">
                   Proyek Tujuan (Alokasi Kas/Investor):
                 </label>
-                <CustomSelectCombobox
-                  options={[
-                    { id: '', label: '-- Proyek Umum / Tanpa Proyek --' },
-                    ...projects
-                      .filter(p => p.status === 'ACTIVE')
-                      .map(p => ({ id: p.id, label: p.name }))
-                  ]}
-                  value={projectId}
-                  onChange={handleProjectSelect}
-                  variant="white"
-                  searchable={true}
+                <ProjectCombobox
+                  projects={projects}
+                  selectedProjectId={projectId}
+                  selectedProjectName={projectName}
+                  onSelect={handleProjectSelect}
                   placeholder="Pilih proyek tujuan..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-[#444444] mb-1">
+                  Klien / Pemilik Proyek (Penagihan):
+                </label>
+                <ClientCombobox
+                  clients={clients}
+                  selectedClientId={clientId}
+                  selectedClientName={clientName}
+                  onSelect={handleClientSelect}
+                  placeholder="Pilih klien / pemilik..."
+                />
+              </div>
+            </div>
+
+            {/* Grid 3.5: Jenis Material & Kuari Asal */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <div>
+                <label className="block text-xs font-semibold text-[#444444] mb-1">
+                  Jenis Material:
+                </label>
+                <MaterialCombobox
+                  materials={materials}
+                  selectedMaterialId={materialId}
+                  selectedMaterialName={materialName}
+                  onSelect={handleMaterialSelect}
+                  placeholder="Pilih atau cari jenis material..."
                 />
               </div>
 
@@ -311,57 +366,13 @@ export function EditDispatchModal({
                   quarries={quarries}
                   selectedQuarryId={quarryId}
                   selectedQuarryName={quarryName}
-                  onSelect={q => {
-                    if (q) {
-                      setQuarryId(q.id);
-                      setQuarryName(q.name);
-                    } else {
-                      setQuarryId('');
-                      setQuarryName('');
-                    }
-                  }}
+                  onSelect={handleQuarrySelect}
                   placeholder="Pilih atau ketik kuari..."
                 />
               </div>
             </div>
 
-            {/* Grid 3.1: Klien / Pemilik Proyek */}
-            <div>
-              <label className="block text-xs font-semibold text-[#444444] mb-1">
-                Klien / Pemilik Proyek (Penagihan):
-              </label>
-              <CustomSelectCombobox
-                options={[
-                  { id: '', label: '-- Pilih Klien / Pemilik Proyek --' },
-                  ...clients.map(c => ({ id: c.id, label: c.name }))
-                ]}
-                value={clientId}
-                onChange={handleClientSelect}
-                variant="white"
-                searchable={true}
-                placeholder="Pilih klien / pemilik..."
-              />
-            </div>
-
-            {/* Grid 3.5: Jenis Material */}
-            <div>
-              <label className="block text-xs font-semibold text-[#444444] mb-1">
-                Jenis Material:
-              </label>
-              <CustomSelectCombobox
-                options={[
-                  { id: '', label: '-- Pilih Jenis Material --' },
-                  ...materials.map(m => ({ id: m.id, label: `${m.name} (${m.unit})` }))
-                ]}
-                value={materialId}
-                onChange={handleMaterialSelect}
-                variant="white"
-                searchable={true}
-                placeholder="Pilih jenis material..."
-              />
-            </div>
-
-            {/* Grid 4: Volume & Satuan */}
+            {/* Grid 4: Volume & Satuan & Harga */}
             <div className={`grid grid-cols-2 ${hideMargin ? 'sm:grid-cols-3' : 'sm:grid-cols-4'} gap-3`}>
               <div>
                 <label className="block text-xs font-semibold text-[#444444] mb-1">
@@ -369,11 +380,12 @@ export function EditDispatchModal({
                 </label>
                 <input
                   type="number"
-                  min="0.1"
-                  step="0.1"
+                  min="1"
+                  step="1"
                   value={quantity}
+                  onFocus={e => e.target.select()}
                   onChange={e => setQuantity(parseFloat(e.target.value) || 0)}
-                  className="w-full px-3 py-2 text-xs font-mono bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#111111]"
+                  className="w-full px-3 py-2 text-xs font-mono font-bold bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#111111]"
                 />
               </div>
 
@@ -401,6 +413,7 @@ export function EditDispatchModal({
                   <CurrencyInput
                     value={buyPricePerUnit}
                     onChange={setBuyPricePerUnit}
+                    variant="solid-white"
                   />
                 </div>
               )}
@@ -412,6 +425,7 @@ export function EditDispatchModal({
                 <CurrencyInput
                   value={sellPricePerUnit}
                   onChange={setSellPricePerUnit}
+                  variant="solid-white"
                 />
               </div>
             </div>
@@ -425,6 +439,7 @@ export function EditDispatchModal({
                 <CurrencyInput
                   value={operationalCost}
                   onChange={setOperationalCost}
+                  variant="solid-white"
                 />
               </div>
 
@@ -434,6 +449,7 @@ export function EditDispatchModal({
                 </label>
                 <FlexibleTextarea
                   value={notes}
+                  onFocus={(e: React.FocusEvent<HTMLTextAreaElement>) => e.target.select()}
                   onChange={setNotes}
                   placeholder="Catatan kendala, supir cadangan, lokasi..."
                 />
@@ -445,21 +461,21 @@ export function EditDispatchModal({
               {!hideMargin && (
                 <div>
                   <span className="text-[#666666] block text-[11px]">Total Belanja Kuari:</span>
-                  <span className="font-bold font-mono text-[#111111]">
+                  <span className="font-bold tracking-tight text-[#111111]">
                     {formatRupiah(totalBuyCost)}
                   </span>
                 </div>
               )}
               <div>
                 <span className="text-[#666666] block text-[11px]">Total Omset Penjualan:</span>
-                <span className="font-bold font-mono text-[#111111]">
+                <span className="font-bold tracking-tight text-[#111111]">
                   {formatRupiah(totalRevenue)}
                 </span>
               </div>
               {!hideMargin && (
                 <div>
                   <span className="text-[#666666] block text-[11px]">Estimasi Laba Bersih:</span>
-                  <span className={`font-bold font-mono ${netProfit < 0 ? 'text-[#cf1124]' : 'text-[#008060]'}`}>
+                  <span className={`font-bold tracking-tight ${netProfit < 0 ? 'text-[#cf1124]' : 'text-[#008060]'}`}>
                     {formatRupiah(netProfit)}
                   </span>
                 </div>
@@ -481,7 +497,7 @@ export function EditDispatchModal({
               type="button"
               onClick={handleInitiateSave}
               disabled={!isFormValid || isSubmitting}
-              className="px-4 py-2 text-xs font-semibold text-white bg-[#111111] hover:bg-[#2b2b2b] rounded-[6px] transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+              className="px-5 py-2 text-xs font-semibold text-white bg-[#111111] hover:bg-black rounded-[6px] transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
             >
               {isSubmitting ? 'Menyimpan...' : 'Simpan Perubahan'}
             </button>
@@ -489,13 +505,13 @@ export function EditDispatchModal({
         </div>
       </div>
 
-      {/* Pin Authorization Dialog */}
+      {/* Pin Authorization Modal */}
       <PinAuthModal
         isOpen={isPinModalOpen}
         title="Otorisasi Edit Tiket Ritase"
-        description="Pengubahan data tiket akan menyinkronkan kembali mutasi kas masuk/keluar di Buku Kas."
-        targetLabel={`${transaction.ticketNumber} • ${truckPlate}`}
-        confirmText="Otorisasi & Simpan"
+        description="Masukkan PIN otorisasi default (2008005) untuk memverifikasi perubahan data tiket ritase."
+        targetLabel={`Tiket: ${transaction.ticketNumber} (${truckPlate})`}
+        confirmText="Otorisasi Simpan"
         onSuccess={handlePinSuccess}
         onClose={() => setIsPinModalOpen(false)}
       />

@@ -8,6 +8,7 @@ import { subscribeCashLedger } from '@/lib/cashLedgerService';
 import { useDialog } from '@/context/DialogContext';
 import { CurrencyInput } from '@/components/ui/CurrencyInput';
 import { MaterialPickerModal } from '@/components/ui/MaterialPickerModal';
+import { MaterialCombobox } from '@/components/ui/MaterialCombobox';
 import { CustomDatePicker } from '@/components/ui/CustomDatePicker';
 import { TruckPlateInput, extractRegionCode, isValidRegionCode, isCompleteValidTruckPlate } from '@/components/ui/TruckPlateInput';
 import { ClientCombobox } from '@/components/ui/ClientCombobox';
@@ -15,7 +16,6 @@ import { QuarryCombobox } from '@/components/ui/QuarryCombobox';
 import { ProjectCombobox } from '@/components/ui/ProjectCombobox';
 import { FlexibleTextarea } from '@/components/ui/FlexibleTextarea';
 import { NegativeProfitConfirmModal } from '@/components/ui/NegativeProfitConfirmModal';
-import { getMaterialIconSrc } from '@/lib/materialIcons';
 import { useProjectFilter } from '@/context/ProjectFilterContext';
 import { formatPersonNameLive } from '@/lib/nameUtils';
 
@@ -38,6 +38,7 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
   };
 
   const [deliveryDate, setDeliveryDate] = useState<string>(getTodayString());
+  const datePickerRef = useRef<HTMLButtonElement>(null);
   const [suratJalan, setSuratJalan] = useState('');
   const suratJalanInputRef = useRef<HTMLInputElement>(null);
   const [truckPlate, setTruckPlate] = useState('');
@@ -45,6 +46,16 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
   const plateInputRef = useRef<HTMLInputElement>(null);
   const [driverName, setDriverName] = useState('');
   const [isTruckLocked, setIsTruckLocked] = useState<boolean>(true);
+
+  // Fast Keyboard Flow Traversal Refs
+  const projectInputRef = useRef<HTMLInputElement>(null);
+  const clientInputRef = useRef<HTMLInputElement>(null);
+  const materialInputRef = useRef<HTMLInputElement>(null);
+  const quarryInputRef = useRef<HTMLInputElement>(null);
+  const volumeInputRef = useRef<HTMLInputElement>(null);
+  const buyPriceInputRef = useRef<HTMLInputElement>(null);
+  const sellPriceInputRef = useRef<HTMLInputElement>(null);
+  const operationalCostInputRef = useRef<HTMLInputElement>(null);
 
   // Success Toast State (Non-blocking untuk Fast Flow)
   const [successToast, setSuccessToast] = useState<{ show: boolean; message: string } | null>(null);
@@ -393,10 +404,12 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
         if (!isTruckLocked) {
           setTruckPlate('');
           setDriverName('');
-          setTimeout(() => plateInputRef.current?.focus(), 50);
-        } else {
-          setTimeout(() => suratJalanInputRef.current?.focus(), 50);
         }
+
+        // Fokus navigasi langsung kembali ke date picker
+        setTimeout(() => {
+          datePickerRef.current?.focus();
+        }, 50);
 
         // Tampilkan Non-blocking green toast
         setSuccessToast({
@@ -555,10 +568,17 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
               </span>
             </div>
             <CustomDatePicker
+              triggerRef={datePickerRef}
               value={deliveryDate}
               onChange={setDeliveryDate}
               fullWidth
               variant="solid-white"
+              onKeyDown={e => {
+                if (e.key === 'Tab' && !e.shiftKey) {
+                  e.preventDefault();
+                  plateInputRef.current?.focus();
+                }
+              }}
             />
             <span className="text-[10px] text-[#888888] mt-1 block">
               Tanggal armada beroperasi/jalan. Waktu pencatatan tiket otomatis terdata hari ini.
@@ -586,6 +606,20 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
                     setDriverName(t.lastDriverName);
                   }
                 }}
+                onKeyDown={e => {
+                  if (e.key === 'Tab') {
+                    e.preventDefault();
+                    if (e.shiftKey) {
+                      datePickerRef.current?.focus();
+                    } else {
+                      if (globalProjectId && globalProjectId !== 'ALL') {
+                        materialInputRef.current?.focus();
+                      } else {
+                        projectInputRef.current?.focus();
+                      }
+                    }
+                  }
+                }}
                 variant="solid-white"
               />
             </div>
@@ -596,6 +630,7 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
               </label>
               <input
                 type="text"
+                tabIndex={-1}
                 placeholder="Pak Joko"
                 value={driverName}
                 onFocus={() => {
@@ -675,6 +710,7 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
             <label className="col-span-2 flex items-center gap-2 text-xs text-[#444444] cursor-pointer mt-0.5 select-none">
               <input
                 type="checkbox"
+                tabIndex={-1}
                 checked={isTruckLocked}
                 onChange={e => setIsTruckLocked(e.target.checked)}
                 className="rounded border-[#d1d5db] text-[#111111] focus:ring-0 cursor-pointer"
@@ -693,6 +729,7 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
             <input
               ref={suratJalanInputRef}
               type="text"
+              tabIndex={-1}
               placeholder="Contoh: SJ-00123"
               value={suratJalan}
               onChange={e => setSuratJalan(e.target.value)}
@@ -720,6 +757,17 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
               selectedProjectId={formProjectId}
               selectedProjectName={formProjectName}
               onSelect={handleSelectProject}
+              inputRef={projectInputRef}
+              onKeyDown={e => {
+                if (e.key === 'Tab') {
+                  e.preventDefault();
+                  if (e.shiftKey) {
+                    plateInputRef.current?.focus();
+                  } else {
+                    clientInputRef.current?.focus();
+                  }
+                }
+              }}
               placeholder="Pilih proyek tujuan (atau pilih klien manual di bawah)..."
               variant="solid-white"
             />
@@ -735,22 +783,18 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
               selectedClientId={selectedClientId}
               selectedClientName={selectedClientName || customerName}
               onSelect={handleSelectClient}
+              inputRef={clientInputRef}
+              onKeyDown={e => {
+                if (e.key === 'Tab') {
+                  e.preventDefault();
+                  if (e.shiftKey) {
+                    projectInputRef.current?.focus();
+                  } else {
+                    materialInputRef.current?.focus();
+                  }
+                }
+              }}
               placeholder="Cari atau ketik nama klien..."
-              variant="solid-white"
-            />
-          </div>
-
-          {/* Row 3: Kuari Asal Material */}
-          <div>
-            <label className="block text-[#666666] font-medium mb-1">
-              Kuari Asal / Tambang
-            </label>
-            <QuarryCombobox
-              quarries={quarries}
-              selectedQuarryId={selectedQuarryId}
-              selectedQuarryName={selectedQuarryName}
-              onSelect={handleSelectQuarry}
-              placeholder="Pilih kuari asal..."
               variant="solid-white"
             />
           </div>
@@ -762,42 +806,61 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
             Material & Volume
           </div>
 
-          {/* Row 1: Pilih Material */}
+          {/* Row 1: Pilih Material (Combobox Cepat Tab + Enter) */}
           <div>
             <label className="block text-[#666666] font-medium mb-1">
               Jenis Material <span className="text-red-500">*</span>
             </label>
-            {(() => {
-              const selectedMat = materials.find(m => m.id === selectedMaterialId);
-              return (
-                <button
-                  type="button"
-                  onClick={() => setIsMaterialPickerOpen(true)}
-                  className="w-full flex items-center justify-between p-2.5 bg-white rounded-[6px] hover:bg-[#fafafa] transition-colors border-none text-left cursor-pointer"
-                >
-                  <div className="flex items-center space-x-2.5 min-w-0">
-                    <img
-                      src={getMaterialIconSrc(selectedMat?.name || 'Material')}
-                      alt={selectedMat?.name || 'Material'}
-                      className="w-6 h-6 object-contain flex-shrink-0"
-                    />
-                    <div className="min-w-0">
-                      <span className="block font-semibold text-xs text-[#111111] truncate">
-                        {selectedMat?.name || 'Pilih Jenis Material'}
-                      </span>
-                      {selectedMat && (
-                        <span className="block text-[10px] text-[#888888] font-mono mt-0.5">
-                          Acuan: Beli {formatRupiah(selectedMat.defaultBuyPrice)} • Jual {formatRupiah(selectedMat.defaultSellPrice)} / {selectedMat.unit}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <span className="text-xs font-medium text-[#111111] flex-shrink-0 ml-2">
-                    Ubah
-                  </span>
-                </button>
-              );
-            })()}
+            <MaterialCombobox
+              materials={materials}
+              selectedMaterialId={selectedMaterialId}
+              selectedMaterialName={materials.find(m => m.id === selectedMaterialId)?.name || ''}
+              onSelect={m => {
+                if (m) handleSelectMaterial(m);
+              }}
+              inputRef={materialInputRef}
+              onKeyDown={e => {
+                if (e.key === 'Tab') {
+                  e.preventDefault();
+                  if (e.shiftKey) {
+                    if (globalProjectId && globalProjectId !== 'ALL') {
+                      plateInputRef.current?.focus();
+                    } else {
+                      clientInputRef.current?.focus();
+                    }
+                  } else {
+                    quarryInputRef.current?.focus();
+                  }
+                }
+              }}
+              variant="solid-white"
+            />
+          </div>
+
+          {/* Row 1.5: Kuari Asal Material (Tepat di Bawah Row Material) */}
+          <div>
+            <label className="block text-[#666666] font-medium mb-1">
+              Kuari Asal / Tambang
+            </label>
+            <QuarryCombobox
+              quarries={quarries}
+              selectedQuarryId={selectedQuarryId}
+              selectedQuarryName={selectedQuarryName}
+              onSelect={handleSelectQuarry}
+              inputRef={quarryInputRef}
+              onKeyDown={e => {
+                if (e.key === 'Tab') {
+                  e.preventDefault();
+                  if (e.shiftKey) {
+                    materialInputRef.current?.focus();
+                  } else {
+                    volumeInputRef.current?.focus();
+                  }
+                }
+              }}
+              placeholder="Pilih kuari asal..."
+              variant="solid-white"
+            />
           </div>
 
           {/* Row 2: Satuan & Volume */}
@@ -814,14 +877,33 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
                 Volume Ritase <span className="text-red-500">*</span>
               </label>
               <input
+                ref={volumeInputRef}
                 type="number"
-                step="any"
-                min="0.01"
+                step="1"
+                min="1"
                 placeholder="1"
                 value={quantityInput}
                 onChange={handleQuantityChange}
-                onFocus={handleQuantityFocus}
+                onFocus={e => {
+                  handleQuantityFocus();
+                  const target = e.currentTarget;
+                  setTimeout(() => target.select(), 0);
+                }}
                 onBlur={handleQuantityBlur}
+                onKeyDown={e => {
+                  if (e.key === 'Tab') {
+                    e.preventDefault();
+                    if (e.shiftKey) {
+                      quarryInputRef.current?.focus();
+                    } else {
+                      if (!isDispatcherUser) {
+                        buyPriceInputRef.current?.focus();
+                      } else {
+                        sellPriceInputRef.current?.focus();
+                      }
+                    }
+                  }
+                }}
                 className="w-full bg-white border-none outline-none focus:outline-none focus:ring-0 rounded-[6px] px-3 py-2 text-xs font-bold text-black text-right transition-colors"
               />
             </div>
@@ -842,8 +924,19 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
                   Harga Beli Kuari / {unit} (Cash)
                 </label>
                 <CurrencyInput
+                  inputRef={buyPriceInputRef}
                   value={buyPricePerUnit}
                   onChange={setBuyPricePerUnit}
+                  onKeyDown={e => {
+                    if (e.key === 'Tab') {
+                      e.preventDefault();
+                      if (e.shiftKey) {
+                        volumeInputRef.current?.focus();
+                      } else {
+                        sellPriceInputRef.current?.focus();
+                      }
+                    }
+                  }}
                   placeholder="0"
                   variant="solid-white"
                 />
@@ -855,8 +948,23 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
                 Harga Jual Konsumen / {unit} (Tempo) <span className="text-red-500">*</span>
               </label>
               <CurrencyInput
+                inputRef={sellPriceInputRef}
                 value={sellPricePerUnit}
                 onChange={setSellPricePerUnit}
+                onKeyDown={e => {
+                  if (e.key === 'Tab') {
+                    e.preventDefault();
+                    if (e.shiftKey) {
+                      if (!isDispatcherUser) {
+                        buyPriceInputRef.current?.focus();
+                      } else {
+                        volumeInputRef.current?.focus();
+                      }
+                    } else {
+                      operationalCostInputRef.current?.focus();
+                    }
+                  }
+                }}
                 placeholder="0"
                 variant="solid-white"
               />
@@ -869,8 +977,19 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
               Beban Operasional & HOK (Uang Jalan / Supir / Solar)
             </label>
             <CurrencyInput
+              inputRef={operationalCostInputRef}
               value={operationalCost}
               onChange={setOperationalCost}
+              onKeyDown={e => {
+                if (e.key === 'Tab') {
+                  e.preventDefault();
+                  if (e.shiftKey) {
+                    sellPriceInputRef.current?.focus();
+                  } else {
+                    datePickerRef.current?.focus();
+                  }
+                }
+              }}
               placeholder="0"
               variant="solid-white"
             />
@@ -908,6 +1027,7 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
             <FlexibleTextarea
               value={notes}
               onChange={setNotes}
+              tabIndex={-1}
               placeholder="Titik bongkar sisi utara proyek..."
               onSubmitShortcut={handleNotesSubmitShortcut}
               variant="solid-white"
@@ -978,16 +1098,21 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
           <button
             type="button"
+            tabIndex={-1}
             onClick={() => handleActionSubmit(true)}
             disabled={!isFormValid || isSubmitting}
             className="py-2.5 px-4 bg-[#111111] hover:bg-black active:scale-[0.99] text-white rounded-[6px] font-semibold text-xs transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
           >
-            <span>⚡ Simpan & Input Rit Berikutnya</span>
+            <span className="flex items-center gap-1.5">
+              <img src="/icons/lightning.png" alt="Fast Dispatch" className="w-3.5 h-3.5 object-contain invert" />
+              <span>Simpan & Input Rit Berikutnya</span>
+            </span>
             <span className="text-[10px] text-[#888888] font-normal">(Ctrl+Enter)</span>
           </button>
 
           <button
             type="button"
+            tabIndex={-1}
             onClick={() => handleActionSubmit(false)}
             disabled={!isFormValid || isSubmitting}
             className="py-2.5 px-4 bg-white hover:bg-[#fafafa] border border-[#d1d5db] text-[#111111] rounded-[6px] font-medium text-xs transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"

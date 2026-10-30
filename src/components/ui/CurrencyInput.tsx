@@ -10,6 +10,9 @@ interface CurrencyInputProps {
   id?: string;
   name?: string;
   variant?: 'default' | 'solid-white';
+  inputRef?: React.RefObject<HTMLInputElement | null>;
+  onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  onFocus?: (e: React.FocusEvent<HTMLInputElement>) => void;
 }
 
 /**
@@ -28,7 +31,10 @@ export function CurrencyInput({
   className = '',
   id,
   name,
-  variant = 'default'
+  variant = 'default',
+  inputRef,
+  onKeyDown,
+  onFocus
 }: CurrencyInputProps): React.JSX.Element {
   const [isFocused, setIsFocused] = useState(false);
   const [displayValue, setDisplayValue] = useState<string>(() => (value ? value.toLocaleString('id-ID') : '0'));
@@ -53,12 +59,16 @@ export function CurrencyInput({
     onChange(num);
   };
 
-  const handleFocus = (): void => {
+  const handleFocus = (e: React.FocusEvent<HTMLInputElement>): void => {
     setIsFocused(true);
     // Jika nilai masih 0, kosongkan agar pengguna bisa langsung mengetik angka baru
     if (displayValue === '0' || value === 0) {
       setDisplayValue('');
+    } else {
+      const target = e.currentTarget;
+      setTimeout(() => target.select(), 0);
     }
+    if (onFocus) onFocus(e);
   };
 
   const handleBlur = (): void => {
@@ -89,6 +99,7 @@ export function CurrencyInput({
 
       {/* Input Angka Otomatis 3-Digit Divider */}
       <input
+        ref={inputRef}
         type="text"
         inputMode="numeric"
         id={id}
@@ -98,6 +109,7 @@ export function CurrencyInput({
         placeholder={placeholder}
         value={displayValue}
         onChange={handleChange}
+        onKeyDown={onKeyDown}
         onFocus={handleFocus}
         onBlur={handleBlur}
         className={`w-full bg-transparent outline-none border-none py-2 pr-3 text-xs font-mono ${

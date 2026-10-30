@@ -9,6 +9,8 @@ interface FlexibleTextareaProps {
   disabled?: boolean;
   id?: string;
   variant?: 'default' | 'solid-white';
+  tabIndex?: number;
+  onFocus?: (e: React.FocusEvent<HTMLTextAreaElement>) => void;
 }
 
 const LINE_HEIGHT = 18; // px per line
@@ -24,7 +26,9 @@ export function FlexibleTextarea({
   required = false,
   disabled = false,
   id,
-  variant = 'default'
+  variant = 'default',
+  tabIndex,
+  onFocus
 }: FlexibleTextareaProps): React.JSX.Element {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -137,12 +141,14 @@ export function FlexibleTextarea({
       <textarea
         id={id}
         ref={textareaRef}
+        tabIndex={tabIndex}
         value={value}
         onChange={e => onChange(e.target.value)}
         onScroll={updateScrollState}
-        onFocus={() => {
+        onFocus={e => {
           setIsFocused(true);
           updateScrollState();
+          if (onFocus) onFocus(e);
         }}
         onBlur={() => {
           setIsFocused(false);

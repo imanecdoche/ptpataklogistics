@@ -983,6 +983,7 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
       {/* ============================================================== */}
       {selectedEditTx && (
         <EditDispatchModal
+          key={selectedEditTx.id}
           isOpen={Boolean(selectedEditTx)}
           transaction={selectedEditTx}
           materials={materials}

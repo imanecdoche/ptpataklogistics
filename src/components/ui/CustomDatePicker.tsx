@@ -6,6 +6,8 @@ interface CustomDatePickerProps {
   className?: string;
   fullWidth?: boolean;
   variant?: 'default' | 'solid-white';
+  triggerRef?: React.RefObject<HTMLButtonElement | null>;
+  onKeyDown?: (e: React.KeyboardEvent<HTMLButtonElement>) => void;
 }
 
 const MONTH_NAMES = [
@@ -20,7 +22,9 @@ export function CustomDatePicker({
   onChange,
   className = '',
   fullWidth = false,
-  variant = 'default'
+  variant = 'default',
+  triggerRef,
+  onKeyDown
 }: CustomDatePickerProps): React.JSX.Element {
   const [isRendered, setIsRendered] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
@@ -175,11 +179,35 @@ export function CustomDatePicker({
     }
   };
 
+  const handleTriggerKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>): void => {
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      const d = parseDate(value);
+      d.setDate(d.getDate() - 1);
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      onChange(`${y}-${m}-${day}`);
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      const d = parseDate(value);
+      d.setDate(d.getDate() + 1);
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      onChange(`${y}-${m}-${day}`);
+    } else if (onKeyDown) {
+      onKeyDown(e);
+    }
+  };
+
   return (
     <div ref={containerRef} className={`relative ${fullWidth ? 'w-full block' : 'inline-block'} ${className}`}>
       {/* Tombol Pemicu Custom Date Picker */}
       <button
+        ref={triggerRef}
         type="button"
+        onKeyDown={handleTriggerKeyDown}
         onClick={() => {
           if (isRendered) {
             handleClose();

@@ -11,6 +11,9 @@ interface QuarryComboboxProps {
   disabled?: boolean;
   required?: boolean;
   variant?: 'default' | 'solid-white';
+  inputRef?: React.RefObject<HTMLInputElement | null>;
+  onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  onFocus?: (e: React.FocusEvent<HTMLInputElement>) => void;
 }
 
 export function QuarryCombobox({
@@ -21,14 +24,18 @@ export function QuarryCombobox({
   placeholder = 'Pilih atau ketik kuari asal...',
   disabled = false,
   required = false,
-  variant = 'default'
+  variant = 'default',
+  inputRef,
+  onKeyDown,
+  onFocus
 }: QuarryComboboxProps): React.JSX.Element {
   const [query, setQuery] = useState(selectedQuarryName || '');
   const [isOpen, setIsOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const localInputRef = useRef<HTMLInputElement>(null);
+  const effectiveInputRef = inputRef || localInputRef;
 
   useEffect(() => {
     if (selectedQuarryName !== undefined) {
@@ -76,7 +83,7 @@ export function QuarryCombobox({
     e.stopPropagation();
     setQuery('');
     onSelect(null);
-    inputRef.current?.focus();
+    effectiveInputRef.current?.focus();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>): void => {
@@ -87,6 +94,9 @@ export function QuarryCombobox({
           handleSelect(top);
         }
       }
+      if (onKeyDown) {
+        onKeyDown(e);
+      }
     } else if (e.key === 'Enter') {
       if (isOpen && filteredQuarries.length > 0) {
         e.preventDefault();
@@ -95,10 +105,16 @@ export function QuarryCombobox({
           handleSelect(top);
         }
       }
+      if (onKeyDown) {
+        onKeyDown(e);
+      }
     } else if (e.key === 'Escape') {
       setIsOpen(false);
+      if (onKeyDown) onKeyDown(e);
     } else if (e.key === 'ArrowDown' && !isOpen) {
       setIsOpen(true);
+    } else {
+      if (onKeyDown) onKeyDown(e);
     }
   };
 
@@ -133,7 +149,7 @@ export function QuarryCombobox({
           className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 object-contain pointer-events-none opacity-60"
         />
         <input
-          ref={inputRef}
+          ref={effectiveInputRef}
           type="text"
           value={query}
           disabled={disabled || isCreating}
@@ -145,7 +161,12 @@ export function QuarryCombobox({
             }
           }}
           onKeyDown={handleKeyDown}
-          onFocus={() => setIsOpen(true)}
+          onFocus={e => {
+            setIsOpen(true);
+            const target = e.currentTarget;
+            setTimeout(() => target.select(), 0);
+            if (onFocus) onFocus(e);
+          }}
           placeholder={placeholder}
           required={required}
           className={`w-full rounded-[6px] pl-9 pr-8 py-2 text-xs transition-colors disabled:bg-[#f9f9f9] disabled:cursor-not-allowed ${

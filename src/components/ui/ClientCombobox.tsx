@@ -13,6 +13,9 @@ interface ClientComboboxProps {
   disabled?: boolean;
   placeholder?: string;
   variant?: 'default' | 'solid-white';
+  inputRef?: React.RefObject<HTMLInputElement | null>;
+  onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  onFocus?: (e: React.FocusEvent<HTMLInputElement>) => void;
 }
 
 export function ClientCombobox({
@@ -23,7 +26,10 @@ export function ClientCombobox({
   required = false,
   disabled = false,
   placeholder,
-  variant = 'default'
+  variant = 'default',
+  inputRef,
+  onKeyDown,
+  onFocus
 }: ClientComboboxProps): React.JSX.Element {
   const [query, setQuery] = useState(selectedClientName || '');
   const [isOpen, setIsOpen] = useState(false);
@@ -31,7 +37,8 @@ export function ClientCombobox({
   const [modalInitialName, setModalInitialName] = useState('');
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const localInputRef = useRef<HTMLInputElement>(null);
+  const effectiveInputRef = inputRef || localInputRef;
 
   // Sync internal query when selectedClientName changes externally
   useEffect(() => {
@@ -103,6 +110,9 @@ export function ClientCombobox({
           handleSelectClient(topClient);
         }
       }
+      if (onKeyDown) {
+        onKeyDown(e);
+      }
     } else if (e.key === 'Enter') {
       if (isOpen && filteredClients.length > 0) {
         e.preventDefault();
@@ -111,10 +121,16 @@ export function ClientCombobox({
           handleSelectClient(topClient);
         }
       }
+      if (onKeyDown) {
+        onKeyDown(e);
+      }
     } else if (e.key === 'Escape') {
       setIsOpen(false);
+      if (onKeyDown) onKeyDown(e);
     } else if (e.key === 'ArrowDown' && !isOpen) {
       setIsOpen(true);
+    } else {
+      if (onKeyDown) onKeyDown(e);
     }
   };
 
@@ -145,7 +161,7 @@ export function ClientCombobox({
           className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 object-contain pointer-events-none opacity-60"
         />
         <input
-          ref={inputRef}
+          ref={effectiveInputRef}
           type="text"
           required={required}
           disabled={disabled}
@@ -154,7 +170,12 @@ export function ClientCombobox({
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
           onBlur={handleInputBlur}
-          onFocus={() => setIsOpen(true)}
+          onFocus={e => {
+            setIsOpen(true);
+            const target = e.currentTarget;
+            setTimeout(() => target.select(), 0);
+            if (onFocus) onFocus(e);
+          }}
           className={`w-full bg-transparent outline-none border-none py-2 pl-9 pr-3 text-xs ${
             variant === 'solid-white'
               ? 'text-black font-semibold placeholder:text-[#888888]'
@@ -169,7 +190,7 @@ export function ClientCombobox({
           onClick={() => {
             if (!disabled) {
               setIsOpen(!isOpen);
-              inputRef.current?.focus();
+              effectiveInputRef.current?.focus();
             }
           }}
           className={`p-2 transition-colors border-none bg-transparent cursor-pointer ${

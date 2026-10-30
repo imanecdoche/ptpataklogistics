@@ -12,6 +12,9 @@ interface ProjectComboboxProps {
   allowClear?: boolean;
   variant?: 'default' | 'solid-white';
   activeOnly?: boolean;
+  inputRef?: React.RefObject<HTMLInputElement | null>;
+  onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  onFocus?: (e: React.FocusEvent<HTMLInputElement>) => void;
 }
 
 export function ProjectCombobox({
@@ -24,13 +27,17 @@ export function ProjectCombobox({
   required = false,
   allowClear = true,
   variant = 'default',
-  activeOnly = true
+  activeOnly = true,
+  inputRef,
+  onKeyDown,
+  onFocus
 }: ProjectComboboxProps): React.JSX.Element {
   const [query, setQuery] = useState(selectedProjectName || '');
   const [isOpen, setIsOpen] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const localInputRef = useRef<HTMLInputElement>(null);
+  const effectiveInputRef = inputRef || localInputRef;
 
   useEffect(() => {
     if (selectedProjectName !== undefined) {
@@ -80,7 +87,7 @@ export function ProjectCombobox({
     e.stopPropagation();
     setQuery('');
     onSelect(null);
-    inputRef.current?.focus();
+    effectiveInputRef.current?.focus();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>): void => {
@@ -91,6 +98,9 @@ export function ProjectCombobox({
           handleSelect(top);
         }
       }
+      if (onKeyDown) {
+        onKeyDown(e);
+      }
     } else if (e.key === 'Enter') {
       if (isOpen && filteredProjects.length > 0) {
         e.preventDefault();
@@ -99,10 +109,16 @@ export function ProjectCombobox({
           handleSelect(top);
         }
       }
+      if (onKeyDown) {
+        onKeyDown(e);
+      }
     } else if (e.key === 'Escape') {
       setIsOpen(false);
+      if (onKeyDown) onKeyDown(e);
     } else if (e.key === 'ArrowDown' && !isOpen) {
       setIsOpen(true);
+    } else {
+      if (onKeyDown) onKeyDown(e);
     }
   };
 
@@ -114,7 +130,7 @@ export function ProjectCombobox({
         onClick={() => {
           if (!disabled) {
             setIsOpen(prev => !prev);
-            inputRef.current?.focus();
+            effectiveInputRef.current?.focus();
           }
         }}
         className={`relative flex items-center justify-between w-full rounded-[6px] pl-9 pr-3 py-2 text-xs transition-colors cursor-pointer ${
@@ -130,7 +146,7 @@ export function ProjectCombobox({
         />
         <div className="flex-1 min-w-0 pr-2">
           <input
-            ref={inputRef}
+            ref={effectiveInputRef}
             type="text"
             value={query}
             disabled={disabled}
@@ -141,8 +157,11 @@ export function ProjectCombobox({
               if (!isOpen) setIsOpen(true);
             }}
             onKeyDown={handleKeyDown}
-            onFocus={() => {
+            onFocus={e => {
               if (!disabled) setIsOpen(true);
+              const target = e.currentTarget;
+              setTimeout(() => target.select(), 0);
+              if (onFocus) onFocus(e);
             }}
             className={`w-full bg-transparent outline-none text-xs placeholder:font-normal ${
               isSolidWhite
