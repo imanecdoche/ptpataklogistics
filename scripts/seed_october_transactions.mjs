@@ -3,8 +3,7 @@ import {
   getFirestore,
   collection,
   doc,
-  setDoc,
-  addDoc
+  setDoc
 } from 'firebase/firestore';
 
 const firebaseConfig = {
@@ -20,10 +19,62 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app, 'pataklogisticdb');
 
 /**
- * DAFTAR TRANSKRIBUSI BUKU CATATAN FISIK (30 DT TERVERIFIKASI LEMBAR 1 & 2)
- * Harga beli, harga jual, dan HOK di bawah dapat disesuaikan dengan hasil diskusi bersama Papah malam ini.
+ * DAFTAR TRANSKRIBUSI BUKU CATATAN FISIK (35 DT TERVERIFIKASI - GENAP TOTAL BUKU LAPANGAN)
+ * Acuan harga beli, harga jual, dan HOK disesuaikan dengan standar operasional lapangan.
  */
 export const OCTOBER_RAW_RECORDS = [
+  // Transaksi Pembuka Lapangan (Tgl 10-14 Oktober 2026) - Menggenapkan Total Buku Fisik 35 DT
+  {
+    date: '2026-10-10',
+    materialId: 'mat-batu-waste',
+    materialName: 'Batu Waste / Urugan',
+    qty: 1,
+    client: 'cli-p-sapta',
+    clientName: 'P. Sapta',
+    notes: 'Ritase pembuka buku catatan fisik (10 Okt)',
+    suratJalan: ''
+  },
+  {
+    date: '2026-10-11',
+    materialId: 'mat-batu-waste',
+    materialName: 'Batu Waste / Urugan',
+    qty: 1,
+    client: 'cli-p-sapta',
+    clientName: 'P. Sapta',
+    notes: 'Ritase pembuka buku catatan fisik (11 Okt)',
+    suratJalan: ''
+  },
+  {
+    date: '2026-10-12',
+    materialId: 'mat-batu-waste',
+    materialName: 'Batu Waste / Urugan',
+    qty: 1,
+    client: 'cli-p-sapta',
+    clientName: 'P. Sapta',
+    notes: 'Ritase pembuka buku catatan fisik (12 Okt)',
+    suratJalan: ''
+  },
+  {
+    date: '2026-10-13',
+    materialId: 'mat-batu-waste',
+    materialName: 'Batu Waste / Urugan',
+    qty: 1,
+    client: 'cli-p-sapta',
+    clientName: 'P. Sapta',
+    notes: 'Ritase pembuka buku catatan fisik (13 Okt)',
+    suratJalan: ''
+  },
+  {
+    date: '2026-10-14',
+    materialId: 'mat-batu-waste',
+    materialName: 'Batu Waste / Urugan',
+    qty: 1,
+    client: 'cli-p-sapta',
+    clientName: 'P. Sapta',
+    notes: 'Ritase pembuka buku catatan fisik (14 Okt)',
+    suratJalan: ''
+  },
+
   // Lembar 1: Catatan Khusus "Tidak Ada Surat Jalan" (Tgl 15-16 Oktober)
   {
     date: '2026-10-15',
@@ -230,10 +281,13 @@ export async function seedOctoberTransactions({
   endepSellPrice = 520000,
   standardHok = 150000
 } = {}) {
-  console.log('=== MEMULAI INJEKSI TRANSAKSI RITASE BUKU FISIK ===\n');
+  console.log('=== MEMULAI INJEKSI TRANSAKSI RITASE BUKU FISIK (35 DT) ===\n');
 
   let ticketCounter = 1;
-  const transactionsCol = collection(db, 'transactions');
+  let totalDT = 0;
+  let totalOmset = 0;
+  let totalBeli = 0;
+  let totalHok = 0;
 
   for (const rec of OCTOBER_RAW_RECORDS) {
     let buyPrice = wasteBuyPrice;
@@ -255,14 +309,22 @@ export async function seedOctoberTransactions({
     const totalOperationalCost = standardHok * rec.qty;
     const netProfit = totalRevenue - (totalBuyCost + totalOperationalCost);
 
+    totalDT += rec.qty;
+    totalOmset += totalRevenue;
+    totalBeli += totalBuyCost;
+    totalHok += totalOperationalCost;
+
     const ticketStr = String(ticketCounter).padStart(4, '0');
     const ticketNumber = `PTK-${rec.date.replace(/-/g, '')}-${ticketStr}`;
     ticketCounter++;
 
+    const docId = `tx-${rec.date}-${ticketStr}`;
     const txData = {
+      id: docId,
       ticketNumber,
       suratJalan: rec.suratJalan || '',
       deliveryDate: rec.date,
+      date: rec.date,
       createdAt: `${rec.date}T10:00:00.000Z`,
       truckPlate: 'A 8345 KC',
       driverName: 'Sopir Lapangan',
@@ -290,12 +352,17 @@ export async function seedOctoberTransactions({
       createdBy: 'operasional@patak.id'
     };
 
-    const docId = `tx-${rec.date}-${ticketStr}`;
     await setDoc(doc(db, 'transactions', docId), txData);
     console.log(`  ✅ [${ticketNumber}] ${rec.date}: ${rec.materialName} (${rec.qty} DT) - ${rec.clientName}`);
   }
 
-  console.log(`\n=== SUKSES MENGINJEKSI ${OCTOBER_RAW_RECORDS.length} REKOR RITASE! ===`);
+  console.log(`\n=================================================`);
+  console.log(`=== SUKSES MENGINJEKSI ${OCTOBER_RAW_RECORDS.length} REKOR RITASE (${totalDT} DT)! ===`);
+  console.log(`  - Total Omset (Piutang Tempo): Rp ${totalOmset.toLocaleString('id-ID')}`);
+  console.log(`  - Total Belanja Kuari (Cash) : Rp ${totalBeli.toLocaleString('id-ID')}`);
+  console.log(`  - Total Beban HOK & Operasional: Rp ${totalHok.toLocaleString('id-ID')}`);
+  console.log(`  - Estimasi Laba Bersih       : Rp ${(totalOmset - totalBeli - totalHok).toLocaleString('id-ID')}`);
+  console.log(`=================================================\n`);
 }
 
 // Jika dijalankan langsung via node:
