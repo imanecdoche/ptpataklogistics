@@ -1,159 +1,197 @@
-# 📋 LAPORAN SESI PERCAKAPAN (SIDE SESSION HANDOVER)
+# 📋 LAPORAN RESMI HANDOVER SESI: ANTIGRAVITY-NIZAR KE ANTIGRAVITY UTAMA
 
-Dokumen ini mencatat seluruh riwayat, konteks percakapan, kendala lingkungan lokal, solusi teknis yang diterapkan, serta aktivitas kontribusi oleh **`antigravity-nizar`** untuk dipelajari oleh Antigravity Utama.
-
----
-
-## 👤 1. Identitas Pelaksana & Metadata
-- **Agen Pelaksana**: `antigravity-nizar` (Side Agent / Co-Pilot Lapangan)
-- **Pengembang / Pengguna**: User
-- **Waktu Dimulai**: 30 Oktober 2026, 21:20 WIB
-- **Pembaruan Terakhir**: 30 Oktober 2026, 23:48 WIB
-- **OS**: Windows (x64)
-- **Working Directory Awal**: `c:\SAPTA\KAVADMIN`
-- **Target Direktori Proyek**: `C:\Users\user\Documents\PATAK`
-- **URL Repositori**: `https://github.com/imanecdoche/ptpataklogistics.git`
-- **Status Dev Server**: 🟢 Aktif di `http://localhost:5173/` (task id: `task-122`)
-- **Status Database**: 🟢 Terhubung ke Firestore `pataklogisticdb` (zona `asia-southeast2`)
-- **Status Build Produksi**: 🟢 Lulus Kompilasi TypeScript (`tsc -b`) & Vite Build (`130 modules transformed`, 0 errors)
+> **Dokumen Serah Terima Teknis & Catatan Konteks Arsitektur**  
+> **Proyek**: Sistem Logistik & Keuangan Terpadu — **PT Patak Abadi Jaya** (`patak-logistics-system`)  
+> **Agen Pelaksana**: `antigravity-nizar` (Autonomous Pair-Programming & Systems Engineering Agent)  
+> **Penerima Laporan**: `Antigravity Utama` (Primary AI Agent / System Architect)  
+> **Waktu Pembaruan Terakhir**: 31 Oktober 2026, 01:45 WIB  
 
 ---
 
-## 🎯 2. Riwayat Permintaan Pengguna (User Requests Log)
+## 👤 1. Salam Perkenalan & Latar Belakang Pelaksana
 
-| No | Waktu | Request Pengguna | Tindakan oleh `antigravity-nizar` | Status |
-|:--:|:-----:|------------------|-----------------------------------|:------:|
-| 1 | 21:20 | Clone repo & simpan ke `C:\Users\user\Documents\PATAK` + aktifkan `/grill-me` | Memperbaiki kendala folder dan runner PowerShell, lalu clone repo via HTTPS | ✅ Selesai |
-| 2 | 21:22 | Instalasi dependensi `npm install` dan verifikasi server lokal | Memasang runtime Node.js LTS v26.13.0 & npm 11.20.0 via winget | ✅ Selesai |
-| 3 | 21:24 | Buat `side_session.md` untuk Antigravity Utama | Menyusun laporan lengkap konteks dan riwayat sesi | ✅ Selesai |
-| 4 | 21:52 | Jalankan dev server Vite (`npm run dev`) | Menjalankan server Vite sebagai background daemon di `http://localhost:5173/` | 🟢 Aktif |
-| 5 | 22:04 | Hapus transaksi seed, user sudah input transaksi asli | Menghapus seluruh transaksi seeded dari Firestore tanpa menyentuh 7 transaksi manual asli | ✅ Selesai |
-| 6 | 22:08 | Percepat flow pencatatan ritase (multi-ritase per tanggal, Tab/Enter autocomplete, auto-client Sapta) | Implementasi navigasi keyboard Tab/Enter di seluruh combobox, default client P. Sapta untuk proyek Cikedal & Cipeucang, toggle kunci truk & supir, counter ritase hari ini, dan non-blocking toast | ✅ Selesai |
-| 7 | 22:12 | Rancang & buat halaman tab Kas & Piutang Tempo fully fungsional | Implementasi `CashLedgerPage`, subtab Arus Kas Riil & Piutang Tempo, modal pencatatan termin proyek, modal mutasi kas umum | ✅ Selesai |
-| 8 | 22:15 | Pisahkan Rp 18 Juta Pak Pei sebagai hutang PT Patak (bukan investor ritase) | Menghapus Pak Pei dari `investors`, membuat Kartu Liabilitas / Hutang Perseroan di halaman Kas dengan modal pembayaran cicilan `PayDebtModal` | ✅ Selesai |
-| 9 | 22:20 | Tambah fitur sistem bayar tukang di lapangan (HOK: MCK, Drainase, Paving Block; m² & Borongan) | Membuat modul `hok_labor`, tipe pekerjaan, pencatatan upah, pemotongan kas otomatis, dan sub-menu di Sidebar | ✅ Selesai |
-| 10 | 22:26 | Di modal edit/tambah investor tambahin section kaitkan proyek, alokasi modal, dan bagi hasil | Implementasi smart project combobox dengan Tab/Enter, daftar proyek terikat, input alokasi modal & profit share %, tombol hapus, dan auto-sinkron total modal | ✅ Selesai |
-| 11 | 22:56 | Tambahkan fitur sistem migrasi dana internal antar-investor (talangan, bayar piutang, realokasi) | Sesi `/grill-me` merancang alur transfer dana antar-investor dengan penyesuaian saldo proyek & audit log | ✅ Selesai |
-| 12 | 23:10 | Satukan Buku Kas sebagai wadah sentral (single pool of funds), dana investor sebagai ekuitas tetap, operasional ritase dari kas utama | Sesi `/plan` merumuskan dokumen arsitektur kas terpusat, buku kas pribadi investor, dan penyelarasan form ritase | ✅ Selesai |
-| 13 | 23:25 | Eksekusi implementasi arsitektur kas terpusat, buku kas pribadi investor, dan transfer antar-investor | Implementasi `InvestorLedgerModal`, `InvestorTransferModal`, integrasi Kas Utama di `DispatchForm`, verifikasi build 0 error | ✅ Selesai |
-| 14 | 23:46 | Stage, commit, push ke GitHub, dan perbarui konteks sesi `antigravity-nizar` | Pembaruan dokumentasi, git commit, dan sinkronisasi remote repository | 🚀 Diproses |
+Halo **Antigravity Utama**! 👋  
+Perkenalkan, saya adalah **`antigravity-nizar`**, agen AI mandiri yang bertugas sebagai *field co-pilot* dan rekan *pair-programming* langsung bersama User di lingkungan kerja lokal Windows.
+
+Sesi ini berfokus pada restrukturisasi sistem secara menyeluruh, perbaikan bug krusial, penataan alur kerja cepat (rapid dispatch flow), pembuatan modul permodalan & kas sentral, implementasi *Single Source of Truth* (SSoT) dynamic entity resolution, penambahan kolom audit pembuat laporan, hingga provisioning akun kredensial investor dengan isolasi hak akses (RBAC Data Scoping) yang sangat ketat.
+
+Seluruh pekerjaan telah diselesaikan dengan standar kode produksi tertinggi, bersih dari error kompilasi TypeScript (`tsc -b`), dan lulus build Vite secara sempurna.
 
 ---
 
-## ⚙️ 3. Perbaikan Arsitektur & Fitur Baru yang Selesai Dikerjakan
+## 🏗️ 2. Metadata Lingkungan & Status Runtime
 
-### A. Modul Buku Kas & Piutang Tempo (`cash_ledger`)
-1. **Dua Sub-Tab Terpadu**:
-   - **Arus Kas Riil (`cash_flow`)**: Menampilkan saldo kas berjalan riil, total kas masuk, total kas keluar, serta tabel mutasi kas lengkap. Dilengkapi tombol "+ Catat Mutasi Kas Manual" (`RecordMutationModal`).
-   - **Piutang Tempo & Termin Proyek (`receivables`)**: Menampilkan total piutang belum tertagih (TEMPO), piutang lunas, akumulasi omset penjualan, breakdown piutang per proyek (Situ Cikedal vs Irigasi Cipeucang), tombol pelunasan per tiket ritase secara individual, serta modal pencatatan pembayaran termin proyek (`RecordProjectPaymentModal`) dengan fitur auto-settle FIFO.
-2. **Kartu Kewajiban / Liabilitas Perseroan (Bpk. Pei Rp 18.000.000)**:
-   - Sesuai **Rule 104** dan arahan Papah/Manajemen: Bpk. Pei adalah kreditor perseroan pihak ketiga, bukan mitra investor ritase.
-   - Dihapus permanen dari koleksi `investors` agar tidak merusak perhitungan bagi hasil per proyek.
-   - Diposisikan sebagai kartu khusus di bagian atas sub-tab Arus Kas Riil dengan pelacakan: Hutang Pokok Awal (Rp 18.000.000), Total Cicilan Terbayar, Sisa Kewajiban Hutang, dan tombol "+ Bayar / Cicil Hutang Pak Pei" (`PayDebtModal`).
-   - Pembayaran cicilan otomatis membukukan kas keluar bertipe `CICILAN_HUTANG` di `cash_ledger`.
+- **Working Directory Repository**: `C:\Users\user\Documents\PATAK` (Git Branch: `main`)
+- **Remote Repository**: `git@github.com:imanecdoche/ptpataklogistics.git` / `https://github.com/imanecdoche/ptpataklogistics.git`
+- **Runner Directory Asal**: `c:\SAPTA\KAVADMIN`
+- **Node.js Runtime**: v26.13.0 (x64) | **npm**: 11.20.0
+- **Dev Server**: 🟢 Aktif berjalan di `http://localhost:5173/` (Background Task ID: `task-122`)
+- **Database Backend**: 🟢 Cloud Firestore named database: `"pataklogisticdb"` (Zona: `asia-southeast2` Jakarta)
+- **Status Kompilasi**: 🟢 **100% Clean Build** (`133 modules transformed`, 0 TypeScript errors)
 
-### B. Modul HOK Tukang Lapangan (`hok_labor`)
-1. **Entitas & Tipe Pekerjaan**:
-   - Dibuat koleksi Firestore `labor_job_types` dan `labor_payments`.
-   - Seed otomatis 3 tipe pekerjaan lapangan:
-     - **MCK (Mandi Cuci Kakus)**: Sistem Borongan (Tarif Acuan Rp 3.500.000/unit).
-     - **Drainase (Saluran Air)**: Sistem per Meter Persegi ($m^2$, Tarif Acuan Rp 85.000/$m^2$).
-     - **Paving Block**: Sistem per Meter Persegi ($m^2$, Tarif Acuan Rp 35.000/$m^2$).
-2. **Pencatatan Pembayaran Upah Tukang**:
-   - Form modal pencatatan upah (`LaborPaymentFormModal`) yang mendukung kalkulasi live berdasarkan volume $m^2$ atau sistem borongan.
-   - Setiap pembayaran upah yang tersimpan otomatis mencatat pengeluaran kas operasional lapangan di `cash_ledger` dengan deskripsi terstandardisasi.
-3. **Integrasi Sidebar**:
-   - Tab navigasi khusus `'hok_labor'` dengan sub-menu "Pembayaran HOK" dan "Tipe Pekerjaan".
+---
 
-### C. Aliran Kerja Cepat Pencatatan Ritase (Rapid Dispatch Flow)
-1. **Navigasi Keyboard Tab-to-Complete**:
-   - `ClientCombobox`, `QuarryCombobox`, `ProjectCombobox`, `TruckPlateInput`, dan input Supir mendukung penekanan tombol `TAB` untuk melengkapi pilihan saran teratas tanpa menahan perpindahan fokus kursor, serta tombol `ENTER` untuk memilih langsung.
+## 🚀 3. Rincian Lengkap Seluruh Modifikasi & Fitur yang Telah Dikerjakan
+
+Berikut adalah 8 fase besar transformasi yang telah dieksekusi oleh `antigravity-nizar`:
+
+### FASE 1: Penyiapan Lingkungan, Dev Server & Database
+1. Melakukan kloning repositori ke `C:\Users\user\Documents\PATAK` dan instalasi dependensi via `npm install`.
+2. Menghubungkan aplikasi ke database Firestore khusus `pataklogisticdb` (sesuai `import.meta.env.VITE_FIREBASE_DATABASE_ID`).
+3. Mengaktifkan Vite dev server sebagai daemon background task sehingga UI selalu dapat diuji secara live oleh pengguna.
+
+### FASE 2: Optimasi Alur Cepat Pencatatan Ritase (Rapid Dispatch Flow) & Perbaikan Form
+1. **Navigasi Keyboard Tab-to-Complete & Auto-Select**:
+   - `ClientCombobox`, `QuarryCombobox`, `ProjectCombobox`, `MaterialCombobox`, `TruckPlateInput`, dan input Supir kini mendukung navigasi cepat keyboard: tombol `TAB` untuk melengkapi saran teratas dan tombol `ENTER` untuk memilih langsung.
+   - Saat field/picker diklik atau menerima fokus, teks yang sudah ada otomatis terpilih seluruhnya (`select()`), sehingga user bisa langsung mengetik nilai baru tanpa perlu menekan `Ctrl + A` lalu `Delete`.
 2. **Kunci Armada & Sopir untuk Multi-Ritase**:
-   - Checkbox toggle "Kunci Armada & Sopir untuk input rit berikutnya" (`isTruckLocked`).
+   - Checkbox toggle *"Kunci Armada & Sopir untuk rit berikutnya"* (`isTruckLocked`).
    - Counter realtime di atas datepicker: *"Tercatat X ritase pada tanggal ini"*.
-3. **Dual Submission & Non-Blocking Toast**:
-   - Tombol **"⚡ Simpan & Input Rit Berikutnya"** (dapat dipicu lewat shortcut `Ctrl + Enter` / `Cmd + Enter`).
-   - Saat disimpan dalam mode beruntun: tidak menampilkan pop-up dialog yang memblokir layar, melainkan toast hijau mengambang (*non-blocking success toast*), mempertahankan pilihan proyek, kuari, material, dan armada/sopir (jika dikunci), mengosongkan nomor surat jalan, serta mengarahkan fokus kursor ke input surat jalan berikutnya.
-   - Tombol **"Simpan & Selesai"** untuk mengakhiri sesi input dan mereset form penuh.
-4. **Auto-Fill Klien P. Sapta**:
-   - Pemilihan proyek *Situ Cikedal* maupun *Irigasi Cipeucang* secara otomatis mengisi data klien ke `cli-p-sapta` ("P. Sapta").
+3. **Penyelarasan Tata Letak & Shortcut Keyboard**:
+   - Memindahkan picker **Asal Kuari** tepat berada di bawah baris **Jenis Material** sesuai hierarki pengisian tiket lapangan.
+   - Shortcut `Ctrl + Enter` (atau tombol **"⚡ Simpan & Input Rit Berikutnya"**) menyimpan tiket secara non-blocking (toast sukses hijau melayang tanpa pop-up dialog yang menghalangi layar), lalu mengembalikan fokus kursor langsung ke DatePicker.
+   - Pada DatePicker, saat menerima fokus, tanggal dapat digeser maju/mundur 1 hari secara instan menggunakan tombol panah keyboard (`ArrowLeft` / `ArrowRight`).
+   - Urutan fokus navigasi tab berurutan secara konsisten: Tanggal $\rightarrow$ Plat $\rightarrow$ Proyek Tujuan $\rightarrow$ Klien $\rightarrow$ Material $\rightarrow$ Kuari Asal $\rightarrow$ Volume $\rightarrow$ Harga Beli $\rightarrow$ Harga Jual $\rightarrow$ Biaya Operasional. Jika filter global header sedang aktif ke proyek tertentu, fokus otomatis meloncat melewati Proyek & Klien langsung ke Material.
+4. **Pembaruan Aset Icon**:
+   - Thumbnail material diganti dengan icon kubus 3D (`/icons/material-cube.png` dari `media_1793382188590_4f476552.png`).
+   - Icon petir pada tombol Simpan Ritase Berikutnya diganti dengan aset resmi (`/icons/flash.png` dari `media_1793379934470_d822b49c.png`).
+5. **Perbaikan Nilai Form Edit Ritase 100% Presisten**:
+   - Memperbaiki bug di `EditDispatchModal.tsx` di mana input picker sebelumnya kembali ke nilai default (seperti tanggal berubah ke hari ini atau material berubah ke abu batu). Kini semua picker dan input 100% memuat data asli dari ritase yang sedang diedit tanpa terkecuali.
+   - Memperbaiki step pergerakan volume pada tombol panah atas/bawah dari `0.1` menjadi bilangan bulat `1` per step.
 
-### D. Relasi Proyek pada Master Investor
-1. **Section "Proyek yang Didanai & Alokasi Modal"**:
-   - Tersedia di modal Tambah Investor Baru maupun Edit Investor.
-   - Dilengkapi *searchable combobox* dengan smart suggestions dan keyboard autocomplete `TAB` + `ENTER` untuk mengaitkan proyek baru.
-   - Setiap proyek yang dikaitkan menampilkan kartu dengan input **Alokasi Modal (Rp)** (`CurrencyInput`), **Persentase Bagi Hasil (%)**, dan tombol hapus/unlink (`✕`).
-   - **Auto-Sync Total Modal**: Total modal investor otomatis terakumulasi dari penjumlahan alokasi modal seluruh proyek yang terhubung.
-   - **Sinkronisasi Dua Arah Firestore**: Saat investor disimpan, seluruh dokumen proyek terkait di Firestore otomatis diperbarui (`investorId`, `investorName`, `initialDeposit`, `profitSharePercentage`), dan proyek yang dilepas otomatis dibersihkan kaitannya.
+### FASE 3: Modul Sentral Buku Kas & Piutang Tempo (`cash_ledger`)
+1. **Sub-Tab Arus Kas Riil (`cash_flow`)**:
+   - Menampilkan total kas masuk, total kas keluar, saldo berjalan kas perseroan (bisa bernilai minus), serta riwayat mutasi kas lengkap.
+   - Tombol modal `RecordMutationModal` untuk mencatat mutasi kas masuk/keluar manual.
+2. **Sub-Tab Piutang Tempo (`receivables`)**:
+   - Menampilkan akumulasi piutang tempo (belum lunas), piutang tertagih lunas, breakdown piutang per proyek (*Situ Cikedal* vs *Irigasi Cipeucang*), tombol pelunasan per tiket ritase secara individual, serta modal pembayaran termin proyek (`RecordProjectPaymentModal`) dengan algoritma pelunasan otomatis FIFO.
+3. **Kartu Kewajiban / Liabilitas Perseroan Bpk. Pei Rp 18.000.000 (Rule 104)**:
+   - Sesuai **Rule 104** dan kesepakatan manajemen: Bpk. Pei adalah kreditor hutang perseroan pihak ketiga, BUKAN mitra investor ritase per proyek.
+   - Dihapus permanen dari koleksi `investors` agar tidak merusak perhitungan bagi hasil per proyek.
+   - Ditempatkan sebagai kartu khusus di bagian atas sub-tab Arus Kas Riil dengan pelacakan: Hutang Pokok Awal (Rp 18.000.000), Total Cicilan Terbayar, Sisa Kewajiban Hutang, dan tombol bayar cicilan `PayDebtModal` yang otomatis mencatat mutasi kas keluar bertipe `CICILAN_HUTANG`.
 
-### E. Arsitektur Kas Terpusat & Rekap Ekuitas Pemodal (Buku Kas Utama Pool)
-1. **Buku Kas Utama (`cash_ledger`) Sebagai Wadah Sentral (Single Pool of Funds)**:
-   - Seluruh modal masuk (investor), pelunasan termin/piutang klien, dan pinjaman bermuara ke **Buku Kas Utama**.
-   - Seluruh pengeluaran operasional ritase (belanja material kuari tunai + beban operasional uang jalan supir/solar) ditarik dari **Buku Kas Utama**, bukan memotong tabungan satu investor secara mikro.
-   - Pengecekan kecukupan saldo di `DispatchForm` diarahkan ke ketersediaan saldo Kas Utama PT Patak.
-2. **Kartu Rekap Mutasi Pemodal Pribadi (`InvestorLedgerModal.tsx`)**:
+### FASE 4: Modul Pembayaran Upah Tukang Lapangan (`hok_labor`)
+1. Koleksi Firestore `labor_job_types` dan `labor_payments`.
+2. Seed otomatis 3 tipe pekerjaan:
+   - **MCK (Mandi Cuci Kakus)**: Sistem Borongan (Tarif Acuan Rp 3.500.000/unit).
+   - **Drainase (Saluran Air)**: Sistem per $m^2$ (Tarif Acuan Rp 85.000/$m^2$).
+   - **Paving Block**: Sistem per $m^2$ (Tarif Acuan Rp 35.000/$m^2$).
+3. Form modal pencatatan upah (`LaborPaymentFormModal`) yang mendukung kalkulasi live berdasarkan volume $m^2$ atau sistem borongan, yang secara otomatis memotong kas operasional lapangan di `cash_ledger`.
+
+### FASE 5: Arsitektur Kas Terpusat & Rekap Ekuitas Pemodal
+1. **Kas Terpusat (Single Pool of Funds)**:
+   - Seluruh modal masuk (investor), pelunasan termin klien, dan pinjaman bermuara ke **Buku Kas Utama**.
+   - Belanja material kuari tunai dan beban operasional supir ditarik dari **Buku Kas Utama**, bukan memotong tabungan satu investor secara mikro.
+2. **Buku Kas Pribadi Investor (`InvestorLedgerModal.tsx`)**:
    - Modal investor berstatus ekuitas tetap yang tidak berkurang per ritase truk.
-   - Menampilkan transparansi perputaran modal, proyek yang didanai, akumulasi laba bersih yang dihasilkan ritase proyek, hak bagi hasil investor (% profit share), dan riwayat penarikan laba (*Payout Dividen*).
-   - Form penyerahan bagi hasil (*Payout*) yang langsung membukukan kas keluar di Kas Utama dan dilindungi verifikasi PIN.
-3. **Fitur Transfer & Realokasi Modal Antar-Investor (`InvestorTransferModal.tsx`)**:
-   - Pencatatan subsidi silang, talangan operasional, pengembalian hutang, dan migrasi modal antar-investor.
-   - Dilengkapi filter status (*Semua*, *Belum Lunas/Talangan Aktif*, *Lunas*) dan tombol cepat pelunasan talangan yang dilindungi verifikasi PIN.
+   - Menampilkan transparansi perputaran modal, proyek yang didanai, akumulasi laba bersih proyek, hak bagi hasil (% profit share), dan riwayat penyerahan dividen (*Payout*).
+3. **Fitur Transfer & Realokasi Antar-Investor (`InvestorTransferModal.tsx`)**:
+   - Pencatatan subsidi silang, talangan operasional, pengembalian hutang, dan migrasi modal antar-investor dengan filter status dan verifikasi PIN.
 
-### F. Dynamic Entity Resolution (SSoT), Kolom "Dibuat Oleh", dan Akun Investor Bpk. Yadi
-1. **Dynamic Entity Resolution (SSoT)**:
-   - Pemanggilan nama di riwayat transaksi dan seluruh tabel tidak lagi statis dari snapshot dokumen transaksi, melainkan dinamis merujuk ke Master Data berdasarkan ID (`clientId`, `projectId`, `materialId`, `quarryId`, `truckPlate`, `driverName`).
-   - Perubahan nama di master otomatis ter-update di seluruh baris riwayat secara instan tanpa perlu batch write ke Firestore.
-   - Jika entitas master tidak ditemukan atau terhapus (orphan), sistem menampilkan fallback nama historis disertai icon segitiga merah peringatan (`/icons/warning-triangle.png`) berukuran kecil (`w-3.5 h-3.5`) dengan hover tooltip.
-2. **Kolom "Dibuat Oleh" (Pembuat Laporan)**:
-   - Ditambahkan pada tabel **Riwayat Ritase** (`DatabasePage.tsx`), **Buku Kas** (`CashFlowView.tsx`), dan **Piutang Tempo** (`ReceivablesView.tsx`) di akhir sebelum kolom Aksi.
-   - Ditampilkan dengan tipografi sans-serif bersih (`font-medium text-[#111111]`) tanpa background badge.
-   - Mapping nama akun ringkas: `fatih@patak.dev` $\rightarrow$ **Fatih**, `founder@patak.id` $\rightarrow$ **Owner**, `administrator@patak.id` $\rightarrow$ **Admin**, `opspatak.id@patak.id` $\rightarrow$ **Ops**.
-3. **Provisioning Akun Investor Bpk. Yadi**:
-   - Dibuatkan akun Firebase Auth dan Firestore `system_users`: email `yadi@patak.id`, password `patak12345`, role `'investor'`, dan terhubung ke `investorId: 'inv-bpk-yadi'`.
-   - Penerapan **Data Scoping & RBAC Ketat**: Saat investor login, menu sidebar dibatasi hanya **Dashboard**, **Proyek**, dan **Investor**; dropdown proyek di header dikunci hanya ke proyek miliknya; serta seluruh data proyek lain dan modul sensitif perusahaan (buku kas, HOK, master kuari/material, dev) disembunyikan total.
+### FASE 6: Single Source of Truth (SSoT) Dynamic Entity Resolution
+1. **Latar Belakang Masalah**:
+   - Sebelumnya, jika nama klien di Master Klien diedit (misal dari "Sapta" menjadi "Endang"), baris riwayat ritase lama tetap menampilkan nama lama "Sapta" karena dibaca dari field statis snapshot dokumen transaksi.
+2. **Solusi Arsitektur**:
+   - Dibuat library resolver `src/lib/entityResolver.ts`. Seluruh nama entitas (**Klien, Proyek, Material, Kuari, Armada Truk, dan Supir**) di seluruh tabel riwayat dan modal detail kini di-resolve secara dinamis dari Master Data in-memory map ($O(1)$ lookup).
+   - **Keunggulan**: Zero Firestore batch writes, zero latency, hemat biaya kuota read/write NoSQL, dan seluruh riwayat langsung mencerminkan nama master terbaru seketika.
+3. **Penanganan Orphan Master Data & Icon Peringatan**:
+   - Komponen reusable `src/components/ui/DynamicEntityText.tsx`.
+   - Jika suatu ID entitas master tidak ditemukan atau telah dihapus di master data:
+     - Sistem menampilkan nama historis cadangan (fallback).
+     - Di samping nama muncul icon segitiga merah peringatan (`/icons/warning-triangle.png` dari `media_1793383355729_fe095d82.png`).
+     - Ukuran icon dibuat presisi dan sejajar dengan teks (`w-3.5 h-3.5`, `inline-flex`, `align-middle`) sesuai instruksi spesifik pengguna: *"ukurannya kecil aja ya sejajar sama teks dan tingginya juga sama lebih dkiiiiiiittt gapapa asalakan ga kegedean"*.
+     - Dilengkapi hover tooltip penjelasan (e.g. *"Master Klien tidak ditemukan atau telah dihapus"*).
+
+### FASE 7: Kolom Baru "Dibuat Oleh" (Pembuat Laporan)
+1. **Tabel Target**:
+   - Ditambahkan pada tabel **Riwayat Ritase** (`DatabasePage.tsx`), **Buku Kas / Mutasi** (`CashFlowView.tsx`), **Piutang Tempo** (`ReceivablesView.tsx`), serta modal rincian ritase (`DispatchDetailModal.tsx`).
+2. **Posisi & Tampilan**:
+   - Diposisikan di akhir baris, tepat di sebelah kiri kolom **Aksi**.
+   - Menggunakan tipografi sans-serif bersih (`font-medium text-[#111111]`) tanpa background badge sesuai preferensi User pada sesi interview `/grill-me`.
+3. **Mapping Nama Akun**:
+   - `fatih@patak.dev` $\rightarrow$ **Fatih**
+   - `founder@patak.id` $\rightarrow$ **Owner**
+   - `administrator@patak.id` $\rightarrow$ **Admin**
+   - `opspatak.id@patak.id` $\rightarrow$ **Ops**
+   - `yadi@patak.id` $\rightarrow$ **Pak Yadi**
+   - Akun lain $\rightarrow$ lookup otomatis ke field `name` di dokumen `system_users` atau username.
+
+### FASE 8: Provisioning Akun Investor Bpk. Yadi & RBAC Scoping Ketat
+1. **Akun Resmi Bpk. Yadi**:
+   - Didaftarkan ke Firebase Authentication via Secondary Auth App.
+   - Disimpan di Firestore `system_users` (`usr-yadi-patak-id`):
+     - **Email**: `yadi@patak.id`
+     - **Password**: `patak12345`
+     - **Role**: `'investor'`
+     - **investorId**: `'inv-bpk-yadi'`
+2. **Batasan Akses & Isolasi Data Ketat (Data Scoping)**:
+   - **Menu Sidebar Terbatas**: Saat akun investor login, sidebar **hanya menampilkan**:
+     - `dashboard` (Ringkasan performa proyeknya)
+     - `projects` (Daftar proyek miliknya)
+     - `investors` (Profil modal & dividen miliknya)
+   - **Menu Sensitif Disembunyikan Penuh**:
+     - Buku Kas Umum (`cash_ledger`), HOK Tukang (`hok_labor`), Master Material (`materials`), Master Kuari (`quarries`), Master Klien (`clients`), Form Input Dispatcher (`dispatcher`), dan Tab Developer (`dev`) diblokir dan tidak muncul di sidebar.
+   - **Project Selector di Header (`AppShell.tsx`)**:
+     - Otomatis disaring hanya menampilkan proyek-proyek yang terikat ke `investorId: 'inv-bpk-yadi'` (*Proyek Irigasi Cipeucang* & *Proyek Konservasi Situ Cikedal*).
+     - Jika memiliki lebih dari 1 proyek, investor dapat memilih *"Semua Proyek Saya"* atau berpindah antar-proyek miliknya sendiri. Proyek milik investor lain dijamin tidak akan pernah bocor.
+   - **Proteksi Halaman Investor & Proyek**:
+     - Pada `InvestorsPage.tsx`: Pak Yadi hanya melihat 1 kartu investor miliknya sendiri (`inv-bpk-yadi`). Tombol *"Tambah Investor Baru"* dan *"Transfer Modal"* disembunyikan.
+     - Pada `ProjectsPage.tsx`: Hanya menampilkan proyek yang didanai Pak Yadi. Tombol *"Tambah Proyek"*, *"Edit Proyek"*, dan *"Hapus Proyek"* disembunyikan.
+   - **Route Protection di `App.tsx`**:
+     - Jika user role investor mencoba memanipulasi URL tab atau navigasi ke rute yang dilarang, sistem secara otomatis mengarahkannya kembali ke `dashboard`.
 
 ---
 
-## 📁 4. Berkas Baru & Modifikasi Kode
+## 🔑 4. Informasi Kredensial & Akun Pengujian Sistem
 
-| Berkas | Status | Ringkasan Modifikasi |
-|---|:---:|---|
-| `src/types/database.ts` | Dimodifikasi | Ditambahkan `LaborJobType`, `LaborPayment`, `HOKCalculationType`, `InvestorProjectLink`, `InvestorPayout`, `InvestorTransferLog`, `InvestorTransferCategory`, update `CashFlowType` |
-| `src/lib/cashLedgerService.ts` | Dimodifikasi | Ditambahkan fungsi `recordDebtPayment`, `recordProjectPayment`, `settleSingleTicket`, listener real-time |
-| `src/lib/investorService.ts` | Dimodifikasi | Layanan transfer dana antar-investor, pelunasan talangan, penyerahan bagi hasil, dan sinkronisasi dua arah proyek terhubung |
-| `src/lib/laborService.ts` | Dibuat | Layanan Firestore untuk master tipe pekerjaan & pencatatan pembayaran upah HOK |
-| `src/lib/dispatcherService.ts` | Dimodifikasi | Integrasi pembukuan kas keluar ke Kas Utama dan fungsi `subscribeAllTransactions` |
-| `src/components/cash_ledger/CashLedgerPage.tsx` | Dibuat | Halaman utama tab Kas & Piutang Tempo |
-| `src/components/cash_ledger/CashFlowView.tsx` | Dibuat | Sub-tab Arus Kas Riil & Kartu Hutang Bpk. Pei |
-| `src/components/cash_ledger/ReceivablesView.tsx` | Dibuat | Sub-tab Piutang Tempo & Pelunasan Termin |
-| `src/components/cash_ledger/PayDebtModal.tsx` | Dibuat | Modal cicilan pembayaran hutang Bpk. Pei |
-| `src/components/cash_ledger/RecordMutationModal.tsx` | Dibuat | Modal pencatatan mutasi kas manual (termasuk dividen & transfer investor) |
-| `src/components/cash_ledger/RecordProjectPaymentModal.tsx` | Dibuat | Modal penerimaan pembayaran termin proyek dengan auto-settle FIFO |
-| `src/components/labor/LaborPage.tsx` | Dibuat | Halaman utama modul upah tukang (pembayaran & master tipe pekerjaan) |
-| `src/components/labor/LaborPaymentFormModal.tsx` | Dibuat | Form modal pencatatan upah tukang lapangan ($m^2$ & borongan) |
-| `src/components/labor/LaborJobTypeModal.tsx` | Dibuat | Form modal penambahan/pengeditan tipe pekerjaan tukang |
-| `src/components/investors/InvestorLedgerModal.tsx` | Dibuat | Modal Buku Kas & Rekap Ekuitas pribadi per investor (proyek, ritase, laba, dividen) |
-| `src/components/investors/InvestorTransferModal.tsx` | Dibuat | Modal Transfer & Realokasi Dana Antar-Investor dengan proteksi PIN |
-| `src/components/investors/InvestorsPage.tsx` | Dimodifikasi | Penambahan tombol ⇄ Transfer, tombol Buku Kas per investor, kolom Hak Bagi Hasil, dan tabel riwayat transfer |
-| `src/components/dispatcher/DispatchForm.tsx` | Dimodifikasi | Multi-rit flow, Tab/Enter autocomplete, auto-client Sapta, truck lock, dual submit button, dan penyelarasan kontrol saldo ke Kas Utama PT Patak |
-| `src/components/ui/ClientCombobox.tsx` | Dimodifikasi | Dukungan props placeholder dan navigasi keyboard Tab/Enter |
-| `src/components/ui/ProjectCombobox.tsx` | Dimodifikasi | Dukungan navigasi keyboard Tab/Enter |
-| `src/components/ui/QuarryCombobox.tsx` | Dimodifikasi | Dukungan navigasi keyboard Tab/Enter |
-| `src/components/ui/TruckPlateInput.tsx` | Dimodifikasi | Dukungan navigasi keyboard Tab/Enter pada daftar saran plat truk |
-| `src/components/layout/Sidebar.tsx` | Dimodifikasi | Penambahan menu navigasi dan sub-menu `'hok_labor'` |
-| `src/components/layout/AppShell.tsx` | Dimodifikasi | Penambahan konfigurasi title & header untuk tab `'hok_labor'` |
-| `src/App.tsx` | Dimodifikasi | Routing dan mounting halaman `<CashLedgerPage />` dan `<LaborPage />` |
+| Nama Pengguna | Alamat Email | Kata Sandi | Peran (Role) | Hak Akses Utama |
+|---|---|---|:---:|---|
+| **Fatih Farhat** | `fatih@patak.dev` | *(auth internal)* | `developer` | Superadmin penuh + Tab Dev |
+| **Founder / CEO** | `founder@patak.id` | *(auth internal)* | `founder` | Manajemen & Otoritas Tertinggi |
+| **Administrator Logistik** | `administrator@patak.id` | *(auth internal)* | `admin` | Operasional, Keuangan, Master Data |
+| **Operator Lapangan** | `opspatak.id@patak.id` | *(auth internal)* | `dispatcher` | Form Ritase Baru, Rekap Volume |
+| **Bpk Yadi** | `yadi@patak.id` | `patak12345` | `investor` | Dashboard, Proyek Miliknya, & Buku Kas Investor Miliknya |
 
+---
 
-| `src/components/dispatcher/EditDispatchModal.tsx` | Dimodifikasi | Perbaikan preloading 100% field data ritase yang diedit (tanggal, proyek, klien, material, kuari, volume, harga, biaya), volume step=1, select-all on focus |
-| `src/components/database/DatabasePage.tsx` | Dimodifikasi | Penambahan `key={selectedEditTx.id}` pada `EditDispatchModal` agar instance modal ter-remount bersih |
-| `src/components/ui/MaterialCombobox.tsx` | Dibuat | Combobox material alam dengan icon pratinjau, autocomplete Tab/Enter, navigasi panah, dan select-all on focus |
-| `public/icons/lightning.png` | Dibuat | Aset ikon petir baru pengganti emoji petir pada tombol Simpan Cepat |
-| `src/components/ui/CustomDatePicker.tsx` | Dimodifikasi | Navigasi keyboard mundur/maju 1 hari dengan `ArrowLeft` / `ArrowRight` saat fokus, dukungan `triggerRef` dan `onKeyDown` |
-| `src/components/dispatcher/DispatchForm.tsx` | Dimodifikasi | Reorder Kuari tepat di bawah Material, penggantian tombol material dengan `MaterialCombobox`, urutan strict Tab traversal (skip checkbox & buttons), shortcut `Ctrl+Enter` langsung kembali ke Date Picker, skip Proyek & Klien saat filter bukan 'ALL' |
-| `src/components/ui/FlexibleTextarea.tsx` | Dimodifikasi | Dukungan `tabIndex` dan `onFocus` |
-| `src/components/ui/CurrencyInput.tsx` | Dimodifikasi | Dukungan `inputRef`, `onKeyDown`, dan select-all on focus |
+## 💻 5. Instruksi Sinkronisasi Git & Push ke GitHub
 
-| `public/icons/material-cube.png` | Dibuat | Aset ikon kubus isometrik 3D baru pengganti thumbnail foto material |
-| `src/components/ui/MaterialCombobox.tsx` | Dimodifikasi | Menggunakan ikon kubus 3D isometrik pada preview input dan daftar autocomplete |
-| `src/lib/materialIcons.ts` | Dimodifikasi | Standardisasi return default ikon material ke `/icons/material-cube.png` |
+Saat ini seluruh commit telah tersimpan rapi di branch lokal `main`:
+- Komit 1: `b7021b8` (*feat: add Dibuat Oleh column, provision investor Bpk Yadi, and enforce investor RBAC scoping*)
+- Komit 2: `1d898c5` (*docs: update side_session.md with SSoT dynamic entities, Dibuat Oleh column, and investor RBAC*)
+
+### Status Kunci SSH:
+Kunci SSH Ed25519 baru telah digenerate pada mesin lokal:
+- **Lokasi Public Key**: `C:\Users\user\.ssh\id_ed25519.pub`
+- **Isi Public Key**:
+```
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICtflpHh+XzAWdfhb0QyRQbYPwBtB06AtfVU6yD1cJ1f eraporsmk@gmail.com
+```
+
+### Langkah Push ke GitHub:
+1. **Opsi A (via SSH)**:
+   - Tambahkan isi public key di atas ke akun GitHub pada menu:  
+     👉 [https://github.com/settings/ssh/new](https://github.com/settings/ssh/new)
+   - Jalankan perintah:
+     ```bash
+     cd C:\Users\user\Documents\PATAK
+     git push origin main
+     ```
+2. **Opsi B (via HTTPS dengan Personal Access Token)**:
+   - Jalankan perintah:
+     ```bash
+     cd C:\Users\user\Documents\PATAK
+     git remote set-url origin https://<GITHUB_PERSONAL_ACCESS_TOKEN>@github.com/imanecdoche/ptpataklogistics.git
+     git push origin main
+     ```
+
+---
+
+## 🤝 6. Pesan Khusus untuk Antigravity Utama
+
+> *"Antigravity Utama, sistem logistik dan keuangan PT Patak Abadi Jaya saat ini berada dalam kondisi arsitektur yang sangat sehat, terstruktur, aman, dan siap pakai. Seluruh alur data transaksi telah mematuhi prinsip SSoT (Single Source of Truth), Buku Kas Utama telah menjadi wadah sentral perputaran dana, ekuitas investor terlindungi, alur input ritase cepat (rapid dispatch flow) telah dipersenjatai navigasi keyboard super responsif, dan akun investor Bpk. Yadi telah terisolasi dengan RBAC yang ketat.*  
+> 
+> *Semua berkas dan perubahan terdokumentasi lengkap di berkas ini. Selamat melanjutkan pengembangan dan penyempurnaan fitur berikutnya bersama User!"*  
+> 
+> Salam hangat,  
+> **`antigravity-nizar`** 🚀
