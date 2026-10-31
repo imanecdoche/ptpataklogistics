@@ -10,7 +10,8 @@ import { matchesDateQuery, formatDateID } from '@/lib/dateSearchUtils';
 import { ReceiptLightboxModal } from '@/components/ui/ReceiptLightboxModal';
 import { EditCashLedgerModal } from './EditCashLedgerModal';
 import { DeleteCashLedgerModal } from './DeleteCashLedgerModal';
-import { ImageIcon, Pencil, Trash2 } from 'lucide-react';
+import { ImageIcon, Pencil, Trash2, SlidersHorizontal, X, RotateCcw } from 'lucide-react';
+import { CashFilterDrawer, CashFilterState, DEFAULT_CASH_FILTERS, countActiveFilters } from './CashFilterDrawer';
 
 interface CashFlowViewProps {
   entries: CashLedgerEntry[];
@@ -31,7 +32,21 @@ export function CashFlowView({
   const [activeReceiptLightbox, setActiveReceiptLightbox] = useState<string | null>(null);
   const [editEntry, setEditEntry] = useState<CashLedgerEntry | null>(null);
   const [deleteEntry, setDeleteEntry] = useState<CashLedgerEntry | null>(null);
-  const { isWatcherUser } = useProjectFilter();
+  const { isWatcherUser, projects } = useProjectFilter();
+
+  const [filters, setFilters] = useState<CashFilterState>(DEFAULT_CASH_FILTERS);
+  const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
+  const activeFiltersCount = useMemo(() => countActiveFilters(filters), [filters]);
+
+  const availableCreators = useMemo(() => {
+    const set = new Set<string>();
+    entries.forEach(e => {
+      if (e.createdByName?.trim()) {
+        set.add(e.createdByName.trim());
+      }
+    });
+    return Array.from(set).sort();
+  }, [entries]);
 
   // Kalkulasi Hutang Bpk. Pei
   const peiDebtPayments = useMemo(() => {
@@ -64,26 +79,110 @@ export function CashFlowView({
     return { totalIn, totalOut, currentBalance: latestBalance };
   }, [entries]);
 
-  // Filter Search
+  // Filter Search & Sorting
   // Pagination State (Rule 126: 20 baris per halaman)
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, entries]);
+  }, [searchQuery, filters, entries]);
 
   const filteredEntries = useMemo(() => {
-    if (!searchQuery.trim()) return entries;
-    const q = searchQuery.toLowerCase().trim();
-    return entries.filter(
-      e =>
-        e.description.toLowerCase().includes(q) ||
-        e.type.toLowerCase().includes(q) ||
-        (e.referenceId && e.referenceId.toLowerCase().includes(q)) ||
-        (e.createdByName && e.createdByName.toLowerCase().includes(q)) ||
-        matchesDateQuery(e.date, q)
-    );
-  }, [entries, searchQuery]);
+    let result = [...entries];
+
+    // 1. Text Search (Search bar)
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      result = result.filter(
+        e =>
+          e.description.toLowerCase().includes(q) ||
+          e.type.toLowerCase().includes(q) ||
+          (e.referenceId && e.referenceId.toLowerCase().includes(q)) ||
+          (e.createdByName && e.createdByName.toLowerCase().includes(q)) ||
+          matchesDateQuery(e.date, q)
+      );
+    }
+
+    // 2. Filter Arus Kas (Masuk / Keluar)
+    if (filters.flowDirection === 'IN') {
+      result = result.filter(e => e.isCredit);
+    } else if (filters.flowDirection === 'OUT') {
+      result = result.filter(e => !e.isCredit);
+    }
+
+    // 3. Filter Kategori
+    if (filters.category !== 'ALL') {
+      if (filters.category === 'DEBT') {
+        result = result.filter(e => e.type === 'CICILAN_HUTANG' || e.type === 'TRANSFER_INVESTOR');
+      } else if (filters.category === 'CAPITAL') {
+        result = result.filter(e => e.type === 'MODAL_AWAL' || e.type === 'HUTANG_PIHAK_KETIGA');
+      } else {
+        result = result.filter(e => e.type === filters.category);
+      }
+    }
+
+    // 4. Filter Proyek
+    if (filters.projectId !== 'ALL') {
+      const p = projects.find(item => item.id === filters.projectId);
+      if (p) {
+        const pNameLower = p.name.toLowerCase();
+        result = result.filter(e => {
+          const descLower = e.description.toLowerCase();
+          return (
+            descLower.includes(pNameLower) ||
+            (p.name.includes('Cikedal') && (descLower.includes('cikedal') || descLower.includes('endang') || descLower.includes('sapta'))) ||
+            (p.name.includes('Cipeucang') && descLower.includes('cipeucang'))
+          );
+        });
+      }
+    }
+
+    // 5. Filter Rentang Tanggal
+    if (filters.startDate) {
+      result = result.filter(e => e.date.slice(0, 10) >= filters.startDate);
+    }
+    if (filters.endDate) {
+      result = result.filter(e => e.date.slice(0, 10) <= filters.endDate);
+    }
+
+    // 6. Filter Rentang Nominal
+    if (filters.minAmount !== undefined && filters.minAmount > 0) {
+      result = result.filter(e => (e.amount || 0) >= filters.minAmount!);
+    }
+    if (filters.maxAmount !== undefined && filters.maxAmount > 0) {
+      result = result.filter(e => (e.amount || 0) <= filters.maxAmount!);
+    }
+
+    // 7. Filter Status Bukti Struk
+    if (filters.receiptStatus === 'WITH_RECEIPT') {
+      result = result.filter(e => !!e.receiptUrl);
+    } else if (filters.receiptStatus === 'NO_RECEIPT') {
+      result = result.filter(e => !e.receiptUrl);
+    }
+
+    // 8. Filter PIC Pembuat
+    if (filters.createdByName !== 'ALL') {
+      result = result.filter(e => (e.createdByName || 'System') === filters.createdByName);
+    }
+
+    // 9. Multi-Sorting
+    result.sort((a, b) => {
+      switch (filters.sortBy) {
+        case 'DATE_ASC':
+          return new Date(a.date).getTime() - new Date(b.date).getTime();
+        case 'DATE_DESC':
+          return new Date(b.date).getTime() - new Date(a.date).getTime();
+        case 'AMOUNT_DESC':
+          return (b.amount || 0) - (a.amount || 0);
+        case 'AMOUNT_ASC':
+          return (a.amount || 0) - (b.amount || 0);
+        default:
+          return new Date(b.date).getTime() - new Date(a.date).getTime();
+      }
+    });
+
+    return result;
+  }, [entries, searchQuery, filters, projects]);
 
   const paginatedEntries = useMemo(() => {
     const start = (currentPage - 1) * 20;
@@ -207,6 +306,25 @@ export function CashFlowView({
               />
             </div>
 
+            {/* Filter & Sorting Drawer Trigger Button */}
+            <button
+              type="button"
+              onClick={() => setIsFilterDrawerOpen(true)}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-[6px] border transition-colors cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
+                activeFiltersCount > 0
+                  ? 'bg-[#111111] text-white border-[#111111] shadow-xs'
+                  : 'bg-white text-[#444444] border-[#eaeaea] hover:bg-[#f8f8f8]'
+              }`}
+            >
+              <SlidersHorizontal className="w-3.5 h-3.5" />
+              <span>Filter & Urutkan</span>
+              {activeFiltersCount > 0 && (
+                <span className="ml-0.5 px-1.5 py-0.2 rounded-full bg-emerald-500 text-white text-[10px] font-bold">
+                  {activeFiltersCount}
+                </span>
+              )}
+            </button>
+
             {!isWatcherUser && (
               <button
                 type="button"
@@ -218,6 +336,139 @@ export function CashFlowView({
             )}
           </div>
         </div>
+
+        {/* Active Filter Chips */}
+        {activeFiltersCount > 0 && (
+          <div className="px-3.5 py-2 border-b border-[#eaeaea] bg-white flex flex-wrap items-center gap-1.5 text-xs">
+            <span className="text-[11px] font-semibold text-[#888888] mr-1">
+              Filter Aktif:
+            </span>
+
+            {/* Sorting Chip */}
+            {filters.sortBy !== 'DATE_DESC' && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-[#f5f5f5] text-[#333333] border border-[#eaeaea] text-[11px] font-medium rounded-full">
+                {filters.sortBy === 'DATE_ASC' && 'Urut: Terlama'}
+                {filters.sortBy === 'AMOUNT_DESC' && 'Urut: Nominal Terbesar'}
+                {filters.sortBy === 'AMOUNT_ASC' && 'Urut: Nominal Terkecil'}
+                <button
+                  type="button"
+                  onClick={() => setFilters(prev => ({ ...prev, sortBy: 'DATE_DESC' }))}
+                  className="hover:text-[#cf1124] cursor-pointer"
+                >
+                  <X className="w-2.5 h-2.5" />
+                </button>
+              </span>
+            )}
+
+            {/* Flow Direction Chip */}
+            {filters.flowDirection !== 'ALL' && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-[#f5f5f5] text-[#333333] border border-[#eaeaea] text-[11px] font-medium rounded-full">
+                {filters.flowDirection === 'IN' ? 'Kas Masuk (+)' : 'Kas Keluar (-)'}
+                <button
+                  type="button"
+                  onClick={() => setFilters(prev => ({ ...prev, flowDirection: 'ALL' }))}
+                  className="hover:text-[#cf1124] cursor-pointer"
+                >
+                  <X className="w-2.5 h-2.5" />
+                </button>
+              </span>
+            )}
+
+            {/* Category Chip */}
+            {filters.category !== 'ALL' && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-[#f5f5f5] text-[#333333] border border-[#eaeaea] text-[11px] font-medium rounded-full">
+                Kat: {filters.category.replace(/_/g, ' ')}
+                <button
+                  type="button"
+                  onClick={() => setFilters(prev => ({ ...prev, category: 'ALL' }))}
+                  className="hover:text-[#cf1124] cursor-pointer"
+                >
+                  <X className="w-2.5 h-2.5" />
+                </button>
+              </span>
+            )}
+
+            {/* Project Chip */}
+            {filters.projectId !== 'ALL' && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-[#f5f5f5] text-[#333333] border border-[#eaeaea] text-[11px] font-medium rounded-full">
+                Proyek: {projects.find(p => p.id === filters.projectId)?.name || filters.projectId}
+                <button
+                  type="button"
+                  onClick={() => setFilters(prev => ({ ...prev, projectId: 'ALL' }))}
+                  className="hover:text-[#cf1124] cursor-pointer"
+                >
+                  <X className="w-2.5 h-2.5" />
+                </button>
+              </span>
+            )}
+
+            {/* Date Range Chip */}
+            {(filters.startDate || filters.endDate || filters.datePreset !== 'ALL') && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-[#f5f5f5] text-[#333333] border border-[#eaeaea] text-[11px] font-medium rounded-full">
+                Tanggal: {filters.startDate || 'Awal'} s/d {filters.endDate || 'Akhir'}
+                <button
+                  type="button"
+                  onClick={() => setFilters(prev => ({ ...prev, datePreset: 'ALL', startDate: '', endDate: '' }))}
+                  className="hover:text-[#cf1124] cursor-pointer"
+                >
+                  <X className="w-2.5 h-2.5" />
+                </button>
+              </span>
+            )}
+
+            {/* Amount Range Chip */}
+            {(filters.minAmount || filters.maxAmount) && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-[#f5f5f5] text-[#333333] border border-[#eaeaea] text-[11px] font-medium rounded-full">
+                Nominal: {filters.minAmount ? formatRupiah(filters.minAmount) : 'Rp 0'} - {filters.maxAmount ? formatRupiah(filters.maxAmount) : '∞'}
+                <button
+                  type="button"
+                  onClick={() => setFilters(prev => ({ ...prev, minAmount: undefined, maxAmount: undefined }))}
+                  className="hover:text-[#cf1124] cursor-pointer"
+                >
+                  <X className="w-2.5 h-2.5" />
+                </button>
+              </span>
+            )}
+
+            {/* Receipt Status Chip */}
+            {filters.receiptStatus !== 'ALL' && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-[#f5f5f5] text-[#333333] border border-[#eaeaea] text-[11px] font-medium rounded-full">
+                {filters.receiptStatus === 'WITH_RECEIPT' ? 'Ada Bukti Struk' : 'Tanpa Bukti Struk'}
+                <button
+                  type="button"
+                  onClick={() => setFilters(prev => ({ ...prev, receiptStatus: 'ALL' }))}
+                  className="hover:text-[#cf1124] cursor-pointer"
+                >
+                  <X className="w-2.5 h-2.5" />
+                </button>
+              </span>
+            )}
+
+            {/* Creator Chip */}
+            {filters.createdByName !== 'ALL' && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-[#f5f5f5] text-[#333333] border border-[#eaeaea] text-[11px] font-medium rounded-full">
+                PIC: {filters.createdByName}
+                <button
+                  type="button"
+                  onClick={() => setFilters(prev => ({ ...prev, createdByName: 'ALL' }))}
+                  className="hover:text-[#cf1124] cursor-pointer"
+                >
+                  <X className="w-2.5 h-2.5" />
+                </button>
+              </span>
+            )}
+
+            {/* Reset All Button */}
+            <button
+              type="button"
+              onClick={() => setFilters(DEFAULT_CASH_FILTERS)}
+              className="ml-auto text-[11px] font-semibold text-[#cf1124] hover:underline flex items-center gap-1 cursor-pointer"
+            >
+              <RotateCcw className="w-3 h-3" />
+              Reset Semua
+            </button>
+          </div>
+        )}
 
         {/* Tabel Data Mutasi */}
         <div className="overflow-x-auto select-text">
@@ -378,6 +629,17 @@ export function CashFlowView({
           setDeleteEntry(null);
           onRefresh();
         }}
+      />
+
+      {/* Drawer Filter & Sorting Kas */}
+      <CashFilterDrawer
+        isOpen={isFilterDrawerOpen}
+        onClose={() => setIsFilterDrawerOpen(false)}
+        filters={filters}
+        onApply={setFilters}
+        onReset={() => setFilters(DEFAULT_CASH_FILTERS)}
+        projects={projects}
+        availableCreators={availableCreators}
       />
     </div>
   );
