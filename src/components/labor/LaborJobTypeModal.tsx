@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { LaborJobType } from '@/types/database';
 import { CurrencyInput } from '@/components/ui/CurrencyInput';
 import { saveLaborJobType } from '@/lib/laborService';
+import { X } from 'lucide-react';
 
 interface LaborJobTypeModalProps {
   isOpen: boolean;
@@ -83,9 +84,9 @@ export function LaborJobTypeModal({
           <button
             type="button"
             onClick={onClose}
-            className="hidden md:flex text-[#888888] hover:text-[#111111] text-base p-1 rounded transition-colors cursor-pointer border-none bg-transparent"
+            className="hidden md:flex text-[#888888] hover:text-[#111111] p-1 rounded transition-colors cursor-pointer border-none bg-transparent"
           >
-            ✕
+            <X className="w-4 h-4" />
           </button>
         </div>
 
@@ -93,8 +94,8 @@ export function LaborJobTypeModal({
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
           <div className="p-4 md:p-5 space-y-4 overflow-y-auto flex-1 overscroll-contain">
             {errorMsg && (
-              <div className="p-2.5 bg-red-50 border border-red-200 text-red-700 text-xs rounded-[6px] font-medium">
-                ⚠️ {errorMsg}
+              <div className="p-2.5 bg-[#fce8e6] text-[#cf1124] text-xs rounded-[6px] font-medium border-none">
+                {errorMsg}
               </div>
             )}
 

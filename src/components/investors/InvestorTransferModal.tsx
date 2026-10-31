@@ -1,6 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { Investor, Project, InvestorTransferCategory } from '@/types/database';
 import { CurrencyInput } from '@/components/ui/CurrencyInput';
+import { ReceiptUpload } from '@/components/ui/ReceiptUpload';
+import { X } from 'lucide-react';
 
 interface InvestorTransferModalProps {
   investors: Investor[];
@@ -19,6 +21,7 @@ interface InvestorTransferModalProps {
     amount: number;
     category: InvestorTransferCategory;
     note: string;
+    receiptUrl?: string;
   }) => void;
 }
 
@@ -38,6 +41,7 @@ export function InvestorTransferModal({
   const [amount, setAmount] = useState<number>(0);
   const [category, setCategory] = useState<InvestorTransferCategory>('TALANGAN_OPERASIONAL');
   const [note, setNote] = useState('');
+  const [receiptUrl, setReceiptUrl] = useState('');
 
   // Proyek yang didanai oleh investor pengirim
   const fromProjects = useMemo(() => {
@@ -91,7 +95,8 @@ export function InvestorTransferModal({
       toProjectName: toProj?.name || '',
       amount,
       category,
-      note: note.trim()
+      note: note.trim(),
+      receiptUrl
     });
   };
 
@@ -116,9 +121,9 @@ export function InvestorTransferModal({
           <button
             type="button"
             onClick={onClose}
-            className="hidden md:flex text-[#888888] hover:text-[#111111] text-base p-1 cursor-pointer border-none bg-transparent"
+            className="hidden md:flex text-[#888888] hover:text-[#111111] p-1 cursor-pointer border-none bg-transparent"
           >
-            ✕
+            <X className="w-4 h-4" />
           </button>
         </div>
 
@@ -248,6 +253,14 @@ export function InvestorTransferModal({
             />
           </div>
 
+          {/* Upload Bukti Kwitansi / Transfer */}
+          <ReceiptUpload
+            value={receiptUrl}
+            onChange={setReceiptUrl}
+            label="Unggah Bukti Transfer / Kwitansi"
+            folder="receipts/talangan"
+          />
+
           </div>
 
           {/* Sticky Bottom Actions */}
@@ -255,7 +268,7 @@ export function InvestorTransferModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 md:flex-none px-4 py-2.5 md:py-2 border border-[#eaeaea] rounded-[8px] text-xs font-semibold text-[#666666] hover:bg-[#fafafa] cursor-pointer bg-white"
+              className="flex-1 md:flex-none px-4 py-2.5 md:py-2 rounded-[8px] text-xs font-semibold text-[#111111] bg-[#f0f0f0] hover:bg-[#e4e4e4] border-none cursor-pointer transition-colors"
             >
               Batal
             </button>

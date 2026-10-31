@@ -1,3 +1,4 @@
+import { Printer } from 'lucide-react';
 import React, { useRef } from 'react';
 import { ProjectSubJob, WorkerKasbonLog } from '@/types/database';
 import { formatRupiah } from '@/lib/currencyUtils';
@@ -46,7 +47,7 @@ export function WorkerKasbonPrintModal({
         {/* Modal Toolbar (Disembunyikan saat diprint) */}
         <div className="p-4 border-b border-[#eaeaea] bg-[#fafafa] flex items-center justify-between flex-shrink-0 print:hidden">
           <div className="flex items-center gap-2">
-            <span className="text-base">🖨️</span>
+            <Printer className="w-4 h-4" />
             <div>
               <h3 className="text-sm font-bold text-[#111111]">
                 Cetak Lembar Rekapitulasi Kasbon & Upah Mandor
@@ -63,7 +64,7 @@ export function WorkerKasbonPrintModal({
               onClick={handlePrint}
               className="px-4 py-1.5 bg-[#111111] hover:bg-black text-white text-xs font-bold rounded-[6px] transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
             >
-              <span>🖨️</span>
+              <Printer className="w-4 h-4" />
               <span>Cetak / Simpan PDF</span>
             </button>
             <button
@@ -71,7 +72,7 @@ export function WorkerKasbonPrintModal({
               onClick={onClose}
               className="px-3 py-1.5 text-xs text-[#666666] hover:bg-[#eaeaea] rounded-[6px] transition-colors"
             >
-              ✕ Tutup
+              Tutup
             </button>
           </div>
         </div>
@@ -90,7 +91,7 @@ export function WorkerKasbonPrintModal({
                 </p>
               </div>
               <div className="text-right">
-                <span className="inline-block px-2.5 py-1 text-[11px] font-bold border border-black uppercase tracking-wider">
+                <span className="inline-block px-2.5 py-1 text-[11px] font-bold bg-[#111111] text-white border-none rounded-[4px] uppercase tracking-wider">
                   LEMBAR AUDIT KASBON MANDOR
                 </span>
                 <p className="text-[10px] text-[#666666] mt-1 font-mono">

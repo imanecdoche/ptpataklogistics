@@ -6,6 +6,8 @@ import {
   setDoc,
   addDoc,
   updateDoc,
+  deleteDoc,
+  writeBatch,
   query,
   where,
   orderBy,
@@ -44,6 +46,7 @@ export interface CreateCashLedgerPayload {
   referenceId?: string;
   createdByName: string;
   customDocId?: string;
+  receiptUrl?: string;
 }
 
 /**
@@ -62,7 +65,8 @@ export async function recordCashLedgerEntry(payload: CreateCashLedgerPayload): P
     runningBalance: currentBalance,
     referenceId: payload.referenceId || '',
     description: payload.description.trim(),
-    createdByName: payload.createdByName.trim() || 'System'
+    createdByName: payload.createdByName.trim() || 'System',
+    ...(payload.receiptUrl ? { receiptUrl: payload.receiptUrl } : {})
   };
 
   const colRef = collection(db, CASH_LEDGER_COLLECTION);
@@ -82,6 +86,7 @@ export async function recordDebtPayment(payload: {
   date?: string;
   referenceId?: string;
   notes?: string;
+  receiptUrl?: string;
   userEmail: string;
 }): Promise<string> {
   const latestBalance = await getLatestCashBalance();
@@ -99,7 +104,8 @@ export async function recordDebtPayment(payload: {
     runningBalance: currentBalance,
     referenceId: payload.referenceId?.trim() || '',
     description,
-    createdByName: payload.userEmail
+    createdByName: payload.userEmail,
+    ...(payload.receiptUrl ? { receiptUrl: payload.receiptUrl } : {})
   };
 
   const colRef = collection(db, CASH_LEDGER_COLLECTION);
@@ -117,6 +123,7 @@ export async function recordProjectPayment(payload: {
   date?: string;
   referenceId?: string;
   notes?: string;
+  receiptUrl?: string;
   userEmail: string;
   settleMatchedTickets?: boolean;
 }): Promise<string> {
@@ -135,7 +142,8 @@ export async function recordProjectPayment(payload: {
     runningBalance: currentBalance,
     referenceId: payload.referenceId?.trim() || '',
     description,
-    createdByName: payload.userEmail
+    createdByName: payload.userEmail,
+    ...(payload.receiptUrl ? { receiptUrl: payload.receiptUrl } : {})
   };
 
   const colRef = collection(db, CASH_LEDGER_COLLECTION);
@@ -332,4 +340,103 @@ export async function seedDefaultCashLedger(): Promise<void> {
   } catch (err) {
     console.warn('Gagal melakukan seed default cash ledger:', err);
   }
+}
+
+/**
+ * Merekalkulasi seluruh runningBalance dari cash_ledger secara kronologis
+ * dan menyinkronkan nilai runningBalance yang diperbaiki ke Firestore.
+ */
+export async function recalculateAllLedgerBalances(): Promise<number> {
+  const colRef = collection(db, CASH_LEDGER_COLLECTION);
+  const snap = await getDocs(colRef);
+  
+  if (snap.empty) return 0;
+
+  // Urutkan dokumen secara kronologis (tanggal terlama ke terbaru)
+  const entries: { id: string; data: CashLedgerEntry }[] = snap.docs.map(d => ({
+    id: d.id,
+    data: d.data() as CashLedgerEntry
+  }));
+
+  entries.sort((a, b) => {
+    const timeA = new Date(a.data.date || 0).getTime();
+    const timeB = new Date(b.data.date || 0).getTime();
+    if (timeA !== timeB) return timeA - timeB;
+    return a.id.localeCompare(b.id);
+  });
+
+  let running = 0;
+  const updates: { id: string; runningBalance: number }[] = [];
+
+  for (const entry of entries) {
+    const isCredit = Boolean(entry.data.isCredit);
+    const amount = Number(entry.data.amount) || 0;
+    running += isCredit ? amount : -amount;
+
+    if (entry.data.runningBalance !== running) {
+      updates.push({ id: entry.id, runningBalance: running });
+    }
+  }
+
+  // Tulis perubahan dengan batch Firestore (maksimal 400 per batch)
+  const CHUNK_SIZE = 400;
+  for (let i = 0; i < updates.length; i += CHUNK_SIZE) {
+    const chunk = updates.slice(i, i + CHUNK_SIZE);
+    const batch = writeBatch(db);
+    for (const item of chunk) {
+      batch.update(doc(db, CASH_LEDGER_COLLECTION, item.id), {
+        runningBalance: item.runningBalance
+      });
+    }
+    await batch.commit();
+  }
+
+  return running;
+}
+
+export interface UpdateCashLedgerPayload {
+  entryId: string;
+  date: string;
+  type: CashFlowType;
+  amount: number;
+  isCredit: boolean;
+  description: string;
+  referenceId?: string;
+  receiptUrl?: string;
+  updatedByName?: string;
+}
+
+/**
+ * Memperbarui data entri mutasi kas dan menyinkronkan ulang running balance
+ */
+export async function updateCashLedgerEntry(payload: UpdateCashLedgerPayload): Promise<void> {
+  const docRef = doc(db, CASH_LEDGER_COLLECTION, payload.entryId);
+  
+  const updateData: Record<string, unknown> = {
+    date: payload.date,
+    type: payload.type,
+    amount: payload.amount,
+    isCredit: payload.isCredit,
+    description: payload.description.trim(),
+    referenceId: (payload.referenceId || '').trim()
+  };
+
+  if (payload.receiptUrl !== undefined) {
+    updateData.receiptUrl = payload.receiptUrl;
+  }
+  if (payload.updatedByName) {
+    updateData.updatedByName = payload.updatedByName;
+  }
+
+  await updateDoc(docRef, updateData);
+  await recalculateAllLedgerBalances();
+}
+
+/**
+ * Menghapus entri mutasi kas dari database dan menyinkronkan ulang running balance
+ */
+export async function deleteCashLedgerEntry(entryId: string): Promise<void> {
+  const docRef = doc(db, CASH_LEDGER_COLLECTION, entryId);
+  await deleteDoc(docRef);
+  await recalculateAllLedgerBalances();
 }

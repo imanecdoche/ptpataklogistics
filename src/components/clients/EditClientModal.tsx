@@ -96,7 +96,7 @@ export function EditClientModal({
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="flex-1 md:flex-none px-3.5 py-2.5 md:py-2 text-center rounded-[8px] border border-[#eaeaea] text-[#666666] hover:bg-[#f5f5f5] transition-colors cursor-pointer bg-white"
+              className="flex-1 md:flex-none px-3.5 py-2.5 md:py-2 text-center rounded-[8px] bg-[#f0f0f0] hover:bg-[#e4e4e4] border-none text-[#555555] text-xs font-semibold transition-colors cursor-pointer"
             >
               Batal
             </button>

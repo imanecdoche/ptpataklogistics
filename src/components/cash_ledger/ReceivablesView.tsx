@@ -296,7 +296,7 @@ export function ReceivablesView({
                         {tx.materialName} ({tx.quantity} {tx.unit})
                       </span>
                       <span className="text-[10px] font-mono text-[#888888] block">
-                        {tx.truckPlate} {tx.driverName ? `• ${tx.driverName}` : ''}
+                        {tx.truckPlate} {tx.driverName ? `- ${tx.driverName}` : ''}
                       </span>
                     </td>
                     <td className="py-2.5 px-3 font-bold tracking-tight text-[#111111] text-right whitespace-nowrap align-middle">
@@ -304,10 +304,10 @@ export function ReceivablesView({
                     </td>
                     <td className="py-2.5 px-3 text-center whitespace-nowrap align-middle">
                       <span
-                        className={`text-[10px] font-bold px-2 py-0.5 rounded ${
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded-[4px] border-none ${
                           tx.status === 'LUNAS'
-                            ? 'bg-emerald-100 text-emerald-800'
-                            : 'bg-red-100 text-red-800'
+                            ? 'bg-[#e6f4ea] text-[#137333]'
+                            : 'bg-[#fce8e6] text-[#cf1124]'
                         }`}
                       >
                         {tx.status}
@@ -322,13 +322,13 @@ export function ReceivablesView({
                           type="button"
                           onClick={() => handleSettleTicket(tx.id)}
                           disabled={settlingTicketId === tx.id}
-                          className="px-2 py-1 bg-white hover:bg-emerald-50 text-emerald-700 border border-emerald-300 text-[11px] font-semibold rounded transition-colors cursor-pointer disabled:opacity-50"
+                          className="px-2.5 py-1 bg-[#111111] hover:bg-[#2b2b2b] text-white text-[11px] font-semibold rounded-[6px] border-none transition-colors cursor-pointer disabled:opacity-50"
                         >
                           {settlingTicketId === tx.id ? 'Memproses...' : 'Lunasi'}
                         </button>
                       ) : (
-                        <span className="text-[11px] text-emerald-700 font-medium">
-                          ✓ Selesai
+                        <span className="text-[11px] text-[#008060] font-semibold">
+                          Selesai
                         </span>
                       )}
                     </td>)}

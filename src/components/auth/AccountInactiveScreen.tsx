@@ -19,7 +19,7 @@ export function AccountInactiveScreen({ user, onBackToLogin }: AccountInactiveSc
   const handleContactDeveloper = () => {
     const email = user?.email || '-';
     const name = user?.name || '-';
-    const message = `Halo Developer PT Patak Abadi Jaya, akun saya dinonaktifkan karena tidak aktif selama ${inactiveDays} hari.\n\n• Nama: ${name}\n• Email: ${email}\n\nSaya ingin meminta pembukaan kembali akses akun. Terima kasih!`;
+    const message = `Halo Developer PT Patak Abadi Jaya, akun saya dinonaktifkan karena tidak aktif selama ${inactiveDays} hari.\n\n- Nama: ${name}\n- Email: ${email}\n\nSaya ingin meminta pembukaan kembali akses akun. Terima kasih!`;
     const cleanNumber = DEVELOPER_WHATSAPP.startsWith('0')
       ? '62' + DEVELOPER_WHATSAPP.slice(1)
       : DEVELOPER_WHATSAPP;

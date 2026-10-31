@@ -151,7 +151,7 @@ export function LoginPage({ user }: LoginPageProps): React.JSX.Element {
         </div>
 
         <p className="text-[10px] text-[#888888] mt-6 text-center">
-          PT Patak Abadi Jaya • Sistem Operasional Logistik & Pencatatan Ritase
+          PT Patak Abadi Jaya - Sistem Operasional Logistik & Pencatatan Ritase
         </p>
       </div>
     );
@@ -288,7 +288,7 @@ export function LoginPage({ user }: LoginPageProps): React.JSX.Element {
                   autoComplete="current-password"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
-                  placeholder="••••••••"
+                  placeholder="********"
                   disabled={isLoading}
                   className="w-full h-10 pl-3 pr-10 text-sm text-[#171717] placeholder-[#888888] bg-[#f5f5f5] rounded-[6px] outline-none transition-colors focus:bg-[#ebebeb] disabled:bg-[#f0f0f0]"
                 />

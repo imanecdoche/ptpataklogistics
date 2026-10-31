@@ -1,3 +1,4 @@
+import { X } from 'lucide-react';
 import React, { useState, useEffect, useMemo } from 'react';
 import { MasterQuarry } from '@/types/database';
 import {
@@ -317,9 +318,7 @@ export function QuarriesPage({ userEmail: _userEmail }: QuarriesPageProps): Reac
                 type="button"
                 onClick={() => setIsAddOpen(false)}
                 className="hidden md:flex text-[#888888] hover:text-[#111111] text-base p-1 cursor-pointer border-none bg-transparent"
-              >
-                ✕
-              </button>
+               aria-label="Tutup"><X className="w-4 h-4" /></button>
             </div>
 
             <form onSubmit={handleInitiateAdd} className="flex flex-col flex-1 overflow-hidden">
@@ -412,9 +411,7 @@ export function QuarriesPage({ userEmail: _userEmail }: QuarriesPageProps): Reac
                 type="button"
                 onClick={() => setEditTarget(null)}
                 className="hidden md:flex text-[#888888] hover:text-[#111111] text-base p-1 cursor-pointer border-none bg-transparent"
-              >
-                ✕
-              </button>
+               aria-label="Tutup"><X className="w-4 h-4" /></button>
             </div>
 
             <form onSubmit={handleInitiateEdit} className="flex flex-col flex-1 overflow-hidden">

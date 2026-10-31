@@ -6,6 +6,10 @@ import { useProjectFilter } from '@/context/ProjectFilterContext';
 import { RecordMutationModal } from './RecordMutationModal';
 import { TablePagination } from '@/components/ui/TablePagination';
 import { formatRupiah } from '@/lib/currencyUtils';
+import { ReceiptLightboxModal } from '@/components/ui/ReceiptLightboxModal';
+import { EditCashLedgerModal } from './EditCashLedgerModal';
+import { DeleteCashLedgerModal } from './DeleteCashLedgerModal';
+import { ImageIcon, Pencil, Trash2 } from 'lucide-react';
 
 interface CashFlowViewProps {
   entries: CashLedgerEntry[];
@@ -23,6 +27,9 @@ export function CashFlowView({
   const [searchQuery, setSearchQuery] = useState('');
   const [isPayDebtOpen, setIsPayDebtOpen] = useState(false);
   const [isRecordMutationOpen, setIsRecordMutationOpen] = useState(false);
+  const [activeReceiptLightbox, setActiveReceiptLightbox] = useState<string | null>(null);
+  const [editEntry, setEditEntry] = useState<CashLedgerEntry | null>(null);
+  const [deleteEntry, setDeleteEntry] = useState<CashLedgerEntry | null>(null);
   const { isWatcherUser } = useProjectFilter();
 
   // Kalkulasi Hutang Bpk. Pei
@@ -222,12 +229,13 @@ export function CashFlowView({
                 <th className="py-2.5 px-3 w-[130px] text-right whitespace-nowrap">Kas Keluar (-)</th>
                 <th className="py-2.5 px-3 w-[150px] text-right whitespace-nowrap">Saldo Berjalan</th>
                 <th className="py-2.5 px-3 w-[105px] whitespace-nowrap">Dibuat Oleh</th>
+                <th className="py-2.5 px-3 w-[100px] text-center whitespace-nowrap">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#eaeaea]">
               {filteredEntries.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-10 text-center text-xs text-[#888888]">
+                  <td colSpan={8} className="py-10 text-center text-xs text-[#888888]">
                     Tidak ada catatan mutasi kas yang sesuai kriteria pencarian.
                   </td>
                 </tr>
@@ -243,7 +251,20 @@ export function CashFlowView({
                       </span>
                     </td>
                     <td className="py-2.5 px-3 text-[#333333] align-middle">
-                      <span className="block font-medium truncate">{e.description}</span>
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="block font-medium truncate">{e.description}</span>
+                        {e.receiptUrl && (
+                          <button
+                            type="button"
+                            onClick={() => setActiveReceiptLightbox(e.receiptUrl || null)}
+                            className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#f0f0f0] hover:bg-[#e4e4e4] text-[#111111] text-[10px] font-semibold rounded-[4px] border-none cursor-pointer transition-colors whitespace-nowrap flex-shrink-0"
+                            title="Lihat Bukti Kwitansi"
+                          >
+                            <ImageIcon className="w-3 h-3" />
+                            <span>Bukti</span>
+                          </button>
+                        )}
+                      </div>
                       {e.referenceId ? (
                         <span className="text-[10px] font-mono text-[#888888] block">
                           Ref: {e.referenceId}
@@ -265,6 +286,32 @@ export function CashFlowView({
                     </td>
                     <td className="py-2.5 px-3 font-medium text-[#111111] whitespace-nowrap align-middle">
                       {resolveCreatorName(e.createdByName)}
+                    </td>
+                    <td className="py-2.5 px-3 whitespace-nowrap align-middle text-center">
+                      {!isWatcherUser ? (
+                        <div className="flex items-center justify-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => setEditEntry(e)}
+                            className="p-1.5 bg-[#f0f0f0] hover:bg-[#e4e4e4] text-[#111111] rounded-[6px] border-none cursor-pointer transition-colors"
+                            title="Edit Mutasi"
+                            aria-label="Edit Mutasi"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setDeleteEntry(e)}
+                            className="p-1.5 bg-[#fee2e2] hover:bg-[#fecaca] text-[#cf1124] rounded-[6px] border-none cursor-pointer transition-colors"
+                            title="Hapus Mutasi"
+                            aria-label="Hapus Mutasi"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="text-[11px] text-[#999999]">-</span>
+                      )}
                     </td>
                   </tr>
                 ))
@@ -299,6 +346,36 @@ export function CashFlowView({
         onClose={() => setIsRecordMutationOpen(false)}
         userEmail={userEmail}
         onSuccess={onRefresh}
+      />
+
+      {/* Modal Lightbox Foto Bukti Kwitansi */}
+      <ReceiptLightboxModal
+        isOpen={Boolean(activeReceiptLightbox)}
+        onClose={() => setActiveReceiptLightbox(null)}
+        imageUrl={activeReceiptLightbox}
+      />
+
+      {/* Modal Edit Mutasi Kas */}
+      <EditCashLedgerModal
+        isOpen={Boolean(editEntry)}
+        onClose={() => setEditEntry(null)}
+        entry={editEntry}
+        userEmail={userEmail}
+        onSuccess={() => {
+          setEditEntry(null);
+          onRefresh();
+        }}
+      />
+
+      {/* Modal Hapus Mutasi Kas */}
+      <DeleteCashLedgerModal
+        isOpen={Boolean(deleteEntry)}
+        onClose={() => setDeleteEntry(null)}
+        entry={deleteEntry}
+        onSuccess={() => {
+          setDeleteEntry(null);
+          onRefresh();
+        }}
       />
     </div>
   );

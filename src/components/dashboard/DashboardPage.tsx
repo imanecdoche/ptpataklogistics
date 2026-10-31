@@ -260,7 +260,7 @@ export function DashboardPage({
               <span className="text-xs sm:text-sm font-bold block leading-tight truncate">Filter Operasional</span>
               <span className={`text-[10px] block mt-0.5 truncate ${isFilterActive ? 'text-zinc-300' : 'text-[#777777]'}`}>
                 {filters.datePreset === 'TODAY' ? 'Hari Ini' : filters.datePreset === '7D' ? '7 Hari Terakhir' : filters.datePreset === '30D' ? '30 Hari' : filters.datePreset === 'THIS_MONTH' ? 'Bulan Ini' : filters.datePreset === 'ALL' ? 'Semua Waktu' : 'Kustom'}
-                {filters.projectId !== 'ALL' ? ' • Proyek' : ''}
+                {filters.projectId !== 'ALL' ? ' - Proyek' : ''}
               </span>
             </div>
           </div>

@@ -1,3 +1,4 @@
+import { X } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
 import { Project, MasterQuarry, MaterialItem } from '@/types/database';
 
@@ -166,9 +167,7 @@ export function DispatchFilterPopover({
             type="button"
             onClick={onClose}
             className="p-1 text-[#888888] hover:text-[#111111] rounded-full hover:bg-[#f0f0f0] transition-colors"
-          >
-            ✕
-          </button>
+           aria-label="Tutup"><X className="w-4 h-4" /></button>
         </div>
 
         {/* 1. Filter Preset Tanggal */}
@@ -338,7 +337,7 @@ export function DispatchFilterPopover({
             <button
               type="button"
               onClick={onClose}
-              className="px-3.5 py-1.5 text-xs text-[#555555] border border-[#dcdcdc] rounded-[6px] hover:bg-[#f5f5f5] transition-colors"
+              className="px-3.5 py-1.5 text-xs font-semibold text-[#555555] bg-[#f0f0f0] hover:bg-[#e4e4e4] rounded-[6px] border-none transition-colors cursor-pointer"
             >
               Batal
             </button>

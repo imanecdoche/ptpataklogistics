@@ -43,6 +43,7 @@ import {
   DispatchFilterState
 } from '@/components/dispatcher/DispatchFilterPopover';
 import { formatRupiah, formatRupiahCompact } from '@/lib/currencyUtils';
+import { X } from 'lucide-react';
 import { TablePagination } from '@/components/ui/TablePagination';
 
 interface DispatchHistoryPageProps {
@@ -472,7 +473,7 @@ export function DispatchHistoryPage({ userEmail }: DispatchHistoryPageProps): Re
               onClick={() => setSearchQuery('')}
               className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-[#888888] hover:text-[#111111] p-0.5 rounded-full"
             >
-              ✕
+              <X className="w-3.5 h-3.5" />
             </button>
           )}
         </div>
@@ -608,14 +609,13 @@ export function DispatchHistoryPage({ userEmail }: DispatchHistoryPageProps): Re
                           <span>{tx.ticketNumber}</span>
                           {pendingApprovalsMap.has(tx.id) && (
                             <span
-                              className={`text-[9px] font-sans font-bold px-1.5 py-0.2 rounded border flex items-center gap-1 ${
+                              className={`text-[9px] font-sans font-bold px-1.5 py-0.5 rounded-[4px] border-none flex items-center ${
                                 pendingApprovalsMap.get(tx.id)?.type === 'DELETE'
-                                  ? 'bg-red-50 text-red-700 border-red-200'
-                                  : 'bg-amber-50 text-amber-700 border-amber-200'
+                                  ? 'bg-[#fce8e6] text-[#cf1124]'
+                                  : 'bg-[#fef3c7] text-[#92400e]'
                               }`}
                               title={`Sedang diajukan oleh ${pendingApprovalsMap.get(tx.id)?.requestedByName}: "${pendingApprovalsMap.get(tx.id)?.reason}"`}
                             >
-                              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
                               <span>Menunggu ACC {pendingApprovalsMap.get(tx.id)?.type === 'DELETE' ? 'Hapus' : 'Edit'}</span>
                             </span>
                           )}

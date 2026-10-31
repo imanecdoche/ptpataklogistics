@@ -198,9 +198,7 @@ export function PinAuthModal({
                 {/* Tampilan Visual Masking Titik (Hidden angka jadi titik) */}
                 {digit ? (
                   <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-[#111111] pointer-events-none transform scale-110" />
-                ) : (
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#d0d0d0] pointer-events-none" />
-                )}
+                ) : null}
               </div>
             ))}
           </div>
@@ -221,7 +219,7 @@ export function PinAuthModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 md:flex-none px-4 py-2.5 md:py-2 text-xs font-semibold text-[#555555] bg-white border border-[#dddddd] rounded-[8px] md:rounded-[6px] hover:bg-[#f5f5f5] transition-colors cursor-pointer"
+            className="flex-1 md:flex-none px-4 py-2.5 md:py-2 text-xs font-semibold text-[#555555] bg-[#f0f0f0] hover:bg-[#e4e4e4] rounded-[8px] md:rounded-[6px] border-none transition-colors cursor-pointer"
           >
             {cancelText}
           </button>

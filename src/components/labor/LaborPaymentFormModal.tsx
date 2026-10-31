@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Project, LaborJobType, HOKCalculationType } from '@/types/database';
 import { CurrencyInput } from '@/components/ui/CurrencyInput';
 import { recordLaborPayment } from '@/lib/laborService';
+import { X } from 'lucide-react';
 
 interface LaborPaymentFormModalProps {
   isOpen: boolean;
@@ -154,17 +155,17 @@ export function LaborPaymentFormModal({
           <button
             type="button"
             onClick={onClose}
-            className="hidden md:flex text-[#888888] hover:text-[#111111] text-base p-1 rounded transition-colors cursor-pointer border-none bg-transparent"
+            className="hidden md:flex text-[#888888] hover:text-[#111111] p-1 rounded transition-colors cursor-pointer border-none bg-transparent"
           >
-            ✕
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
           <div className="p-5 space-y-3.5 overflow-y-auto flex-1 overscroll-contain">
           {errorMsg && (
-            <div className="p-2.5 bg-red-50 border border-red-200 text-red-700 text-xs rounded-[6px] font-medium">
-              ⚠️ {errorMsg}
+            <div className="p-2.5 bg-[#fce8e6] text-[#cf1124] text-xs rounded-[6px] font-medium border-none">
+              {errorMsg}
             </div>
           )}
 
@@ -399,7 +400,7 @@ export function LaborPaymentFormModal({
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="flex-1 md:flex-none px-4 py-2.5 md:py-2 text-xs font-semibold text-[#666666] hover:bg-[#f5f5f5] rounded-[8px] transition-colors border border-[#eaeaea] bg-white cursor-pointer"
+              className="flex-1 md:flex-none px-4 py-2.5 md:py-2 text-xs font-semibold text-[#111111] bg-[#f0f0f0] hover:bg-[#e4e4e4] rounded-[8px] transition-colors border-none cursor-pointer"
             >
               Batal
             </button>

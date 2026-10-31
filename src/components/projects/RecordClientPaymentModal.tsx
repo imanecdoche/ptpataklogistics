@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Project, Client } from '@/types/database';
 import { recordClientPayment } from '@/lib/projectFinanceService';
 import { formatRupiah } from '@/lib/currencyUtils';
+import { X, Info } from 'lucide-react';
 
 interface RecordClientPaymentModalProps {
   isOpen: boolean;
@@ -118,12 +119,9 @@ export function RecordClientPaymentModal({
         {/* Header */}
         <div className="p-4 sm:p-5 border-b border-[#eaeaea] bg-white flex items-center justify-between flex-shrink-0">
           <div>
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 animate-pulse" />
-              <h3 className="text-sm sm:text-base font-bold text-[#111111]">
-                Catat Pembayaran Masuk (Klien)
-              </h3>
-            </div>
+            <h3 className="text-sm sm:text-base font-bold text-[#111111]">
+              Catat Pembayaran Masuk (Klien)
+            </h3>
             <p className="text-xs text-[#666666] mt-0.5">
               Pelunasan lump-sum material & sub-proyek langsung memotong total piutang berjalan.
             </p>
@@ -133,7 +131,7 @@ export function RecordClientPaymentModal({
             onClick={onClose}
             className="text-[#888888] hover:text-[#111111] p-1.5 rounded-lg hover:bg-[#f0f0f0] transition-colors"
           >
-            ✕
+            <X className="w-4 h-4" />
           </button>
         </div>
 
@@ -262,9 +260,9 @@ export function RecordClientPaymentModal({
           </div>
 
           {/* Info Banner */}
-          <div className="p-3 bg-sky-50 border border-sky-200 rounded-[8px] flex items-start gap-2.5">
-            <span className="text-sky-700 text-sm">💡</span>
-            <p className="text-[11px] text-sky-900 leading-relaxed">
+          <div className="p-3 bg-[#f0f4f8] rounded-[8px] flex items-start gap-2.5 border-none">
+            <Info className="w-4 h-4 text-[#1a73e8] shrink-0 mt-0.5" />
+            <p className="text-[11px] text-[#1a73e8] leading-relaxed">
               Dana akan langsung menambah saldo di <span className="font-bold">Buku Kas Utama</span> dan memotong total saldo piutang berjalan secara otomatis.
             </p>
           </div>
@@ -275,16 +273,16 @@ export function RecordClientPaymentModal({
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="px-4 py-2 text-xs font-semibold text-[#666666] hover:bg-[#f0f0f0] rounded-[8px]"
+              className="px-4 py-2 text-xs font-semibold text-[#111111] bg-[#f0f0f0] hover:bg-[#e4e4e4] rounded-[8px] border-none"
             >
               Batal
             </button>
             <button
               type="submit"
               disabled={isSubmitting || !amount || amount <= 0 || !clientName.trim()}
-              className="px-5 py-2 text-xs font-bold text-white bg-emerald-700 hover:bg-emerald-800 rounded-[8px] transition-colors disabled:opacity-40 cursor-pointer shadow-xs"
+              className="px-5 py-2 text-xs font-bold text-white bg-emerald-700 hover:bg-emerald-800 rounded-[8px] transition-colors disabled:opacity-40 cursor-pointer shadow-xs border-none"
             >
-              {isSubmitting ? 'Membukukan...' : '✓ Simpan Pembayaran Masuk'}
+              {isSubmitting ? 'Membukukan...' : 'Simpan Pembayaran Masuk'}
             </button>
           </div>
         </form>

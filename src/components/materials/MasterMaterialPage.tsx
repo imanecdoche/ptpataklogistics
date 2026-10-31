@@ -23,6 +23,7 @@ import { CurrencyInput } from '@/components/ui/CurrencyInput';
 import { useDialog } from '@/context/DialogContext';
 import { useProjectFilter } from '@/context/ProjectFilterContext';
 import { formatEntityNameLive } from '@/lib/nameUtils';
+import { X } from 'lucide-react';
 import { TableActionMenu } from '@/components/ui/TableActionMenu';
 import { MobileTitlebarAction } from '@/components/ui/MobileTitlebarAction';
 
@@ -956,9 +957,9 @@ export function MasterMaterialPage({
               <button
                 type="button"
                 onClick={() => setIsRateModalOpen(false)}
-                className="hidden md:flex text-[#888888] hover:text-[#111111] text-base p-1 cursor-pointer border-none bg-transparent"
+                className="hidden md:flex text-[#888888] hover:text-[#111111] p-1 cursor-pointer border-none bg-transparent"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 
@@ -1141,9 +1142,9 @@ export function MasterMaterialPage({
               <button
                 type="button"
                 onClick={() => setIsRouteModalOpen(false)}
-                className="hidden md:flex text-[#888888] hover:text-[#111111] text-base p-1 cursor-pointer border-none bg-transparent"
+                className="hidden md:flex text-[#888888] hover:text-[#111111] p-1 cursor-pointer border-none bg-transparent"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 
@@ -1281,9 +1282,9 @@ export function MasterMaterialPage({
               <button
                 type="button"
                 onClick={() => setIsCommodityModalOpen(false)}
-                className="hidden md:flex text-[#888888] hover:text-[#111111] text-base p-1 cursor-pointer border-none bg-transparent"
+                className="hidden md:flex text-[#888888] hover:text-[#111111] p-1 cursor-pointer border-none bg-transparent"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 

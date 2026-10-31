@@ -1,3 +1,4 @@
+import { X } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import { ProjectSubJob } from '@/types/database';
 import { recordWorkerKasbon } from '@/lib/projectFinanceService';
@@ -98,7 +99,6 @@ export function RecordKasbonModal({
         <div className="p-4 sm:p-5 border-b border-[#eaeaea] bg-white flex items-center justify-between flex-shrink-0">
           <div>
             <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse" />
               <h3 className="text-sm sm:text-base font-bold text-[#111111]">
                 Catat Kasbon / Panjar Tukang
               </h3>
@@ -111,9 +111,7 @@ export function RecordKasbonModal({
             type="button"
             onClick={onClose}
             className="text-[#888888] hover:text-[#111111] p-1.5 rounded-lg hover:bg-[#f0f0f0] transition-colors"
-          >
-            ✕
-          </button>
+           aria-label="Tutup"><X className="w-4 h-4" /></button>
         </div>
 
         {/* Form Body */}
@@ -130,7 +128,7 @@ export function RecordKasbonModal({
             >
               {subJobs.map(s => (
                 <option key={s.id} value={s.id}>
-                  {s.jobName} • {s.workerLeaderName} ({s.projectName})
+                  {s.jobName} - {s.workerLeaderName} ({s.projectName})
                 </option>
               ))}
             </select>
@@ -239,7 +237,7 @@ export function RecordKasbonModal({
               disabled={isSubmitting || !amount || amount <= 0}
               className="px-5 py-2 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 active:bg-amber-800 rounded-[8px] transition-colors disabled:opacity-40 cursor-pointer"
             >
-              {isSubmitting ? 'Mencatat...' : '✓ Simpan Kasbon Tukang'}
+              {isSubmitting ? 'Mencatat...' : 'Simpan Kasbon Tukang'}
             </button>
           </div>
         </form>

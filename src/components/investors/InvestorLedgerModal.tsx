@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Investor, Project, DispatchTransaction, InvestorPayout } from '@/types/database';
 import { CurrencyInput } from '@/components/ui/CurrencyInput';
 import { formatPhoneNumber } from '@/lib/phoneUtils';
+import { X } from 'lucide-react';
 
 interface InvestorLedgerModalProps {
   investor: Investor;
@@ -156,9 +157,9 @@ export function InvestorLedgerModal({
           <button
             type="button"
             onClick={onClose}
-            className="hidden md:flex w-8 h-8 rounded-full items-center justify-center text-[#888888] hover:text-[#111111] hover:bg-[#eaeaea] transition-colors cursor-pointer text-lg flex-shrink-0"
+            className="hidden md:flex w-8 h-8 rounded-full items-center justify-center text-[#888888] hover:text-[#111111] hover:bg-[#eaeaea] transition-colors cursor-pointer flex-shrink-0"
           >
-            ✕
+            <X className="w-4 h-4" />
           </button>
         </div>
 
@@ -523,7 +524,7 @@ export function InvestorLedgerModal({
           <button
             type="button"
             onClick={onClose}
-            className="w-full py-2.5 text-xs font-semibold text-[#111111] bg-[#f5f5f5] hover:bg-[#eaeaea] rounded-[8px] transition-colors border border-[#e0e0e0] text-center cursor-pointer"
+            className="w-full py-2.5 text-xs font-semibold text-[#111111] bg-[#f0f0f0] hover:bg-[#e4e4e4] rounded-[8px] transition-colors border-none text-center cursor-pointer"
           >
             Tutup Rekap Investor
           </button>

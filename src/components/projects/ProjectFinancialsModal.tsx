@@ -19,6 +19,7 @@ import { RecordSubJobModal } from './RecordSubJobModal';
 import { RecordKasbonModal } from './RecordKasbonModal';
 import { RecordClientPaymentModal } from './RecordClientPaymentModal';
 import { WorkerKasbonPrintModal } from './WorkerKasbonPrintModal';
+import { Loader2 } from 'lucide-react';
 
 interface ProjectFinancialsModalProps {
   isOpen: boolean;
@@ -145,7 +146,7 @@ export function ProjectFinancialsModal({
                   </p>
                 )}
                 <p className="text-xs text-[#666666] mt-0.5">
-                  Klien / Pihak Proyek: <span className="font-bold text-[#111111]">{project.clientName || 'Mitra Proyek'}</span> • Investor: <span className="font-semibold text-[#111111]">{project.investorName}</span>
+                  Klien / Pihak Proyek: <span className="font-bold text-[#111111]">{project.clientName || 'Mitra Proyek'}</span> | Investor: <span className="font-semibold text-[#111111]">{project.investorName}</span>
                 </p>
               </div>
 
@@ -260,7 +261,7 @@ export function ProjectFinancialsModal({
                 />
               </div>
               <span className="text-[10px] text-[#888888] block mt-1">
-                {remainingReceivableBalance === 0 ? '✓ Lunas Sepenuhnya' : 'Otomatis terpotong saat bayar'}
+                {remainingReceivableBalance === 0 ? 'Lunas Sepenuhnya' : 'Otomatis terpotong saat bayar'}
               </span>
             </div>
 
@@ -349,7 +350,7 @@ export function ProjectFinancialsModal({
           <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-5 bg-[#f8f8f8]">
             {isLoading ? (
               <div className="py-16 text-center text-xs text-[#888888] flex flex-col items-center gap-2">
-                <span className="w-5 h-5 border-2 border-[#111111]/30 border-t-[#111111] rounded-full animate-spin" />
+                <Loader2 className="w-5 h-5 text-[#111111] animate-spin" />
                 <span>Memuat data finansial proyek...</span>
               </div>
             ) : activeTab === 'subjobs' ? (

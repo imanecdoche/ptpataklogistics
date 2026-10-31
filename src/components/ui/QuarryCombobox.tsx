@@ -1,3 +1,4 @@
+import { Check } from 'lucide-react';
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { MasterQuarry } from '@/types/database';
 import { saveMasterQuarry } from '@/lib/databaseMasterService';
@@ -214,7 +215,7 @@ export function QuarryCombobox({
                     )}
                   </div>
                   {isSelected && (
-                    <span className="text-[10px] font-mono font-bold ml-2">✓</span>
+                    <Check className="w-3.5 h-3.5 text-[#111111] ml-2" />
                   )}
                 </button>
               );

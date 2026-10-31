@@ -1,3 +1,4 @@
+import { Check } from 'lucide-react';
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Project } from '@/types/database';
 
@@ -226,7 +227,7 @@ export function ProjectCombobox({
                   }`}
                 >
                   <span className="truncate text-xs">{p.name}</span>
-                  {isSelected && <span className="text-[10px] text-white font-mono">✓</span>}
+                  {isSelected && <Check className="w-3.5 h-3.5 text-white" />}
                 </div>
               );
             })

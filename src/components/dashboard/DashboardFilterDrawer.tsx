@@ -1,3 +1,4 @@
+import { X } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import { Project } from '@/types/database';
 
@@ -132,9 +133,7 @@ export function DashboardFilterDrawer({
             type="button"
             onClick={onClose}
             className="text-[#888888] hover:text-[#111111] p-1 rounded-md transition-colors"
-          >
-            ✕
-          </button>
+           aria-label="Tutup"><X className="w-4 h-4" /></button>
         </div>
 
         {/* Drawer Body Scrollable */}
@@ -283,7 +282,7 @@ export function DashboardFilterDrawer({
           <button
             type="button"
             onClick={handleReset}
-            className="px-4 py-2.5 rounded-[8px] border border-[#dcdcdc] bg-white text-xs font-bold text-[#666666] hover:bg-[#f0f0f0] transition-colors"
+            className="px-4 py-2.5 rounded-[8px] bg-[#f0f0f0] hover:bg-[#e4e4e4] border-none text-xs font-bold text-[#555555] transition-colors cursor-pointer"
           >
             Reset Default
           </button>

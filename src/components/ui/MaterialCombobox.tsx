@@ -1,3 +1,4 @@
+import { X } from 'lucide-react';
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { MaterialItem } from '@/types/database';
 
@@ -176,9 +177,7 @@ export function MaterialCombobox({
             onClick={handleClear}
             className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#888888] hover:text-[#111111] p-0.5 rounded cursor-pointer"
             title="Hapus pilihan"
-          >
-            ✕
-          </button>
+           aria-label="Hapus"><X className="w-3.5 h-3.5" /></button>
         )}
       </div>
 
@@ -210,7 +209,7 @@ export function MaterialCombobox({
                       {m.name}
                     </span>
                     <span className="block text-[10px] text-[#666666]">
-                      Acuan: Beli {formatRupiah(m.defaultBuyPrice)} • Jual {formatRupiah(m.defaultSellPrice)} / {m.unit}
+                      Acuan: Beli {formatRupiah(m.defaultBuyPrice)} | Jual {formatRupiah(m.defaultSellPrice)} / {m.unit}
                     </span>
                   </div>
                 </div>

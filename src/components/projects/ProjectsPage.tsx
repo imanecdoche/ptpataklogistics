@@ -19,6 +19,7 @@ import { formatEntityNameLive } from '@/lib/nameUtils';
 import { CustomSelectCombobox, SelectOption } from '@/components/ui/CustomSelectCombobox';
 import { MobileTitlebarAction } from '@/components/ui/MobileTitlebarAction';
 import { ProjectFinancialsModal } from './ProjectFinancialsModal';
+import { X } from 'lucide-react';
 
 const PROJECT_STATUS_OPTIONS: SelectOption[] = [
   { id: 'ACTIVE', label: 'AKTIF' },
@@ -518,9 +519,9 @@ export function ProjectsPage({ userEmail: _userEmail }: ProjectsPageProps): Reac
               <button
                 type="button"
                 onClick={() => setIsAddOpen(false)}
-                className="hidden md:flex text-[#888888] hover:text-[#111111] text-base p-1 cursor-pointer border-none bg-transparent"
+                className="hidden md:flex text-[#888888] hover:text-[#111111] p-1 cursor-pointer border-none bg-transparent"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 
@@ -644,9 +645,9 @@ export function ProjectsPage({ userEmail: _userEmail }: ProjectsPageProps): Reac
               <button
                 type="button"
                 onClick={() => setEditTarget(null)}
-                className="hidden md:flex text-[#888888] hover:text-[#111111] text-base p-1 cursor-pointer border-none bg-transparent"
+                className="hidden md:flex text-[#888888] hover:text-[#111111] p-1 cursor-pointer border-none bg-transparent"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 

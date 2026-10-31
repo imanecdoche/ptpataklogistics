@@ -86,6 +86,7 @@ export interface CashLedgerEntry {
   referenceId?: string;      // ID transaksi ritase terkait (jika ada)
   description: string;
   createdByName: string;
+  receiptUrl?: string;       // URL foto kwitansi / struk / bukti transfer
 }
 
 // 5. Koleksi: master_vehicles (Daftar Master Armada Truk & Plat Nomor)
@@ -164,6 +165,16 @@ export type InvestorTransferCategory =
   | 'BAGI_HASIL_PROYEK'
   | 'LAINNYA';
 
+export interface InvestorTransferInstallment {
+  id: string;
+  date: string;              // YYYY-MM-DD
+  amount: number;            // Nominal cicilan yang dibayarkan
+  receiptUrl?: string;       // URL foto bukti transfer / kwitansi cicilan
+  note?: string;             // Catatan cicilan
+  createdByName: string;     // Email / nama pembuat
+  createdAt: string;         // ISO timestamp
+}
+
 export interface InvestorTransferLog {
   id: string;
   date: string;
@@ -175,7 +186,12 @@ export interface InvestorTransferLog {
   toInvestorName: string;
   toProjectId?: string;
   toProjectName?: string;
-  amount: number;
+  amount: number;            // Nominal talangan / hutang pokok
+  totalAmount?: number;      // Total hutang awal (default: amount)
+  paidAmount?: number;       // Akumulasi cicilan yang sudah dibayarkan
+  remainingAmount?: number;  // Sisa kewajiban hutang yang belum lunas
+  installments?: InvestorTransferInstallment[]; // Riwayat cicilan bertahap
+  receiptUrl?: string;       // Bukti transfer / kwitansi awal
   category: InvestorTransferCategory;
   status: 'LUNAS' | 'BELUM_LUNAS';
   note: string;
@@ -349,6 +365,7 @@ export interface ClientProjectPayment {
   amount: number;               // e.g. Rp 80.000.000
   paymentMethod?: string;       // Transfer Bank / Tunai
   referenceNumber?: string;
+  receiptUrl?: string;          // URL foto kwitansi / bukti transfer pelunasan
   note?: string;
   recordedBy: string;
   createdAt: string;

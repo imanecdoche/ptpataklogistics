@@ -14,7 +14,7 @@ import {
   deleteInvestor,
   subscribeInvestorTransfers,
   createInvestorTransfer,
-  settleInvestorTransfer,
+  recordInvestorTalanganInstallment,
   subscribeInvestorPayouts,
   recordInvestorPayout
 } from '@/lib/investorService';
@@ -30,6 +30,9 @@ import { formatEntityNameLive } from '@/lib/nameUtils';
 import { MobileTitlebarAction } from '@/components/ui/MobileTitlebarAction';
 import { InvestorLedgerModal } from './InvestorLedgerModal';
 import { InvestorTransferModal } from './InvestorTransferModal';
+import { PayTalanganModal } from './PayTalanganModal';
+import { ReceiptLightboxModal } from '@/components/ui/ReceiptLightboxModal';
+import { ImageIcon, X } from 'lucide-react';
 
 const formatRupiah = (val: number): string =>
   'Rp ' + Math.round(val).toLocaleString('id-ID');
@@ -80,6 +83,10 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
   const [isPinModalOpen, setIsPinModalOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<(() => Promise<void>) | null>(null);
   const [pinTargetLabel, setPinTargetLabel] = useState('');
+
+  // Pay Talangan & Lightbox Modal State
+  const [payTalanganTarget, setPayTalanganTarget] = useState<InvestorTransferLog | null>(null);
+  const [activeReceiptLightbox, setActiveReceiptLightbox] = useState<string | null>(null);
 
   useEffect(() => {
     const unsubInvestors = subscribeInvestors(list => {
@@ -211,11 +218,14 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
     return map;
   }, [transfers]);
 
-  // Total talangan aktif yang belum lunas
+  // Total talangan aktif yang belum lunas (memperhitungkan sisa setelah dicicil)
   const totalUnsettledTalangan = useMemo(() => {
     return transfers
       .filter(t => t.status === 'BELUM_LUNAS')
-      .reduce((acc, t) => acc + (t.amount || 0), 0);
+      .reduce((acc, t) => {
+        const remaining = t.remainingAmount ?? (t.paidAmount ? Math.max(0, t.amount - t.paidAmount) : t.amount);
+        return acc + (remaining || 0);
+      }, 0);
   }, [transfers]);
 
   // Filter daftar riwayat transfer
@@ -424,6 +434,7 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
     amount: number;
     category: InvestorTransferCategory;
     note: string;
+    receiptUrl?: string;
   }) => {
     setPinTargetLabel(`Transfer ${formatRupiah(payload.amount)}: ${payload.fromInvestorName} → ${payload.toInvestorName}`);
     setPendingAction(() => async () => {
@@ -436,11 +447,23 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
     setIsPinModalOpen(true);
   };
 
-  // Otorisasi Aksi Pelunasan Talangan
-  const handleInitiateSettleTalangan = (trans: InvestorTransferLog) => {
-    setPinTargetLabel(`Lunasi Talangan ${formatRupiah(trans.amount)} (Ref: ${trans.id})`);
+  // Otorisasi Aksi Pelunasan Talangan Penuh (Legacy)
+  
+  // Otorisasi Aksi Bayar Cicilan Talangan Bertahap
+  const handleConfirmPayTalangan = (payload: {
+    transferId: string;
+    amount: number;
+    date: string;
+    note: string;
+    receiptUrl: string;
+  }) => {
+    setPinTargetLabel(`Bayar Cicilan Talangan ${formatRupiah(payload.amount)} (Ref: ${payload.transferId})`);
     setPendingAction(() => async () => {
-      await settleInvestorTransfer(trans.id, userEmail);
+      await recordInvestorTalanganInstallment({
+        ...payload,
+        userEmail
+      });
+      setPayTalanganTarget(null);
     });
     setIsPinModalOpen(true);
   };
@@ -839,31 +862,62 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
                       </span>
                     </td>
                     <td className="py-2.5 px-3 text-right font-bold tracking-tight text-[#111111] whitespace-nowrap">
-                      {formatRupiah(tr.amount)}
+                      <div>{formatRupiah(tr.amount)}</div>
+                      {tr.paidAmount !== undefined && tr.paidAmount > 0 && tr.status === 'BELUM_LUNAS' && (
+                        <div className="text-[10px] font-medium text-[#cf1124]">
+                          Sisa: {formatRupiah(tr.remainingAmount ?? (tr.amount - tr.paidAmount))}
+                        </div>
+                      )}
                     </td>
                     <td className="py-2.5 px-3 text-center whitespace-nowrap">
                       {tr.status === 'BELUM_LUNAS' ? (
-                        <span className="text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded">
+                        <span className="text-[10px] font-bold bg-[#f0f0f0] text-[#555555] px-2 py-0.5 rounded-[4px] border-none">
                           Belum Lunas
                         </span>
                       ) : (
-                        <span className="text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded">
+                        <span className="text-[10px] font-bold bg-[#e6f4ea] text-[#137333] px-2 py-0.5 rounded-[4px] border-none">
                           Lunas
                         </span>
                       )}
                     </td>
-                    <td className="py-2.5 px-3 text-[#666666] max-w-[180px] truncate">
-                      {tr.note || '-'}
+                    <td className="py-2.5 px-3 text-[#666666] max-w-[200px]">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="truncate">{tr.note || '-'}</span>
+                        {tr.receiptUrl ? (
+                          <button
+                            type="button"
+                            onClick={() => setActiveReceiptLightbox(tr.receiptUrl || null)}
+                            className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#f0f0f0] hover:bg-[#e4e4e4] text-[#111111] text-[10px] font-semibold rounded-[4px] border-none cursor-pointer transition-colors whitespace-nowrap"
+                            title="Lihat Bukti Kwitansi"
+                          >
+                            <ImageIcon className="w-3 h-3" />
+                            <span>Bukti</span>
+                          </button>
+                        ) : tr.installments?.some(i => i.receiptUrl) ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const found = tr.installments?.find(i => i.receiptUrl)?.receiptUrl;
+                              if (found) setActiveReceiptLightbox(found);
+                            }}
+                            className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#f0f0f0] hover:bg-[#e4e4e4] text-[#111111] text-[10px] font-semibold rounded-[4px] border-none cursor-pointer transition-colors whitespace-nowrap"
+                            title="Lihat Bukti Cicilan"
+                          >
+                            <ImageIcon className="w-3 h-3" />
+                            <span>Bukti</span>
+                          </button>
+                        ) : null}
+                      </div>
                     </td>
                     {!isInvestorUser && (
                       <td className="py-2.5 px-3 text-right whitespace-nowrap">
                         {tr.status === 'BELUM_LUNAS' ? (
                           <button
                             type="button"
-                            onClick={() => handleInitiateSettleTalangan(tr)}
-                            className="px-2.5 py-1 bg-[#111111] hover:bg-[#2b2b2b] text-white text-[11px] font-semibold rounded cursor-pointer"
+                            onClick={() => setPayTalanganTarget(tr)}
+                            className="px-3 py-1 bg-[#111111] hover:bg-[#2b2b2b] text-white text-[11px] font-semibold rounded-[6px] border-none cursor-pointer transition-colors shadow-sm"
                           >
-                            Lunasi
+                            Bayar
                           </button>
                         ) : (
                           <span className="text-[11px] text-[#888888]">-</span>
@@ -897,9 +951,9 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
               <button
                 type="button"
                 onClick={() => setIsAddOpen(false)}
-                className="hidden md:flex text-[#888888] hover:text-[#111111] text-base p-1 cursor-pointer border-none bg-transparent"
+                className="hidden md:flex text-[#888888] hover:text-[#111111] p-1 cursor-pointer border-none bg-transparent"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 
@@ -1065,7 +1119,7 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
                             className="text-[#cf1124] hover:bg-red-50 p-1.5 rounded transition-colors cursor-pointer text-xs self-end sm:self-center"
                             title="Hapus Kaitan Proyek"
                           >
-                            ✕
+                            <X className="w-3.5 h-3.5" />
                           </button>
                         </div>
                       </div>
@@ -1081,7 +1135,7 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
                     Total Modal / Investasi Awal (Rp)
                   </label>
                   <span className="text-[10px] text-emerald-700 font-medium">
-                    ⚡ Otomatis terakumulasi dari proyek
+                    Otomatis terakumulasi dari proyek
                   </span>
                 </div>
                 <CurrencyInput
@@ -1143,9 +1197,9 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
               <button
                 type="button"
                 onClick={() => setEditTarget(null)}
-                className="hidden md:flex text-[#888888] hover:text-[#111111] text-base p-1 cursor-pointer border-none bg-transparent"
+                className="hidden md:flex text-[#888888] hover:text-[#111111] p-1 cursor-pointer border-none bg-transparent"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 
@@ -1310,7 +1364,7 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
                             className="text-[#cf1124] hover:bg-red-50 p-1.5 rounded transition-colors cursor-pointer text-xs self-end sm:self-center"
                             title="Hapus Kaitan Proyek"
                           >
-                            ✕
+                            <X className="w-3.5 h-3.5" />
                           </button>
                         </div>
                       </div>
@@ -1326,7 +1380,7 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
                     Total Modal / Investasi Awal (Rp)
                   </label>
                   <span className="text-[10px] text-emerald-700 font-medium">
-                    ⚡ Otomatis terakumulasi dari proyek
+                    Otomatis terakumulasi dari proyek
                   </span>
                 </div>
                 <CurrencyInput
@@ -1390,6 +1444,21 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
           onSubmitTransfer={handleInitiateTransfer}
         />
       )}
+
+      {/* Modal Bayar Cicilan Talangan Bertahap */}
+      <PayTalanganModal
+        isOpen={Boolean(payTalanganTarget)}
+        onClose={() => setPayTalanganTarget(null)}
+        transfer={payTalanganTarget}
+        onConfirm={handleConfirmPayTalangan}
+      />
+
+      {/* Modal Lightbox Foto Bukti Kwitansi */}
+      <ReceiptLightboxModal
+        isOpen={Boolean(activeReceiptLightbox)}
+        onClose={() => setActiveReceiptLightbox(null)}
+        imageUrl={activeReceiptLightbox}
+      />
 
       {/* Pin Authorization Modal */}
       <PinAuthModal

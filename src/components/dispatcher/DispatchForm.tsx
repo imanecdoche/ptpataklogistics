@@ -18,6 +18,7 @@ import { FlexibleTextarea } from '@/components/ui/FlexibleTextarea';
 import { NegativeProfitConfirmModal } from '@/components/ui/NegativeProfitConfirmModal';
 import { useProjectFilter } from '@/context/ProjectFilterContext';
 import { formatPersonNameLive } from '@/lib/nameUtils';
+import { Check } from 'lucide-react';
 
 interface DispatchFormProps {
   materials: MaterialItem[];
@@ -536,7 +537,7 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
       {/* Floating Success Toast (Non-blocking) */}
       {successToast?.show && (
         <div className="fixed top-5 right-5 z-50 bg-[#111111] text-white px-4 py-3 rounded-[8px] shadow-2xl flex items-center gap-2.5 text-xs animate-in slide-in-from-top-4 duration-200">
-          <span className="text-emerald-400 font-bold text-sm">✓</span>
+          <Check className="w-4 h-4 text-emerald-400" />
           <span className="font-semibold">{successToast.message}</span>
         </div>
       )}
@@ -576,7 +577,7 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
               }}
             />
             <div className="mt-1.5">
-              <span className="text-[11px] font-bold text-[#111111] bg-white px-2 py-0.5 rounded border border-[#e5e5e5] inline-block">
+              <span className="text-[11px] font-bold text-[#111111] bg-[#f0f0f0] px-2 py-0.5 rounded-[4px] border-none inline-block">
                 Tercatat {todayRitaseCount} ritase pada tanggal ini
               </span>
             </div>
@@ -1002,7 +1003,7 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
                 </div>
                 {operationalCost > matchedRoute.standardOperationalCost && (
                   <div className="text-[11px] font-medium text-amber-700">
-                    ⚠️ Melebihi acuan rute standar: +{formatRupiah(operationalCost - matchedRoute.standardOperationalCost)} (Standar HOK: {formatRupiah(matchedRoute.standardOperationalCost)})
+                    Melebihi acuan rute standar: +{formatRupiah(operationalCost - matchedRoute.standardOperationalCost)} (Standar HOK: {formatRupiah(matchedRoute.standardOperationalCost)})
                   </div>
                 )}
               </div>
@@ -1073,7 +1074,7 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
 
           {!isDispatcherUser && isCashDeficit && (
             <div className="text-[10px] text-[#cf1124] font-medium pt-0.5 leading-snug">
-              ⚠️ Peringatan: Saldo Kas Utama menipis di bawah biaya tunai tiket ini. Tiket tetap dapat disimpan (Defisit Kas Lapangan).
+              Peringatan: Saldo Kas Utama menipis di bawah biaya tunai tiket ini. Tiket tetap dapat disimpan (Defisit Kas Lapangan).
             </div>
           )}
 

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { DispatchTransaction } from '@/types/database';
+import { X, Loader2, Info } from 'lucide-react';
 import { formatRupiah } from '@/lib/currencyUtils';
 
 interface RequestDeleteModalProps {
@@ -57,12 +58,9 @@ export function RequestDeleteModal({
         {/* Header */}
         <div className="p-4 sm:p-5 border-b border-[#eaeaea] bg-white flex items-center justify-between">
           <div>
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse" />
-              <h3 className="text-sm sm:text-base font-bold text-[#111111]">
-                Ajukan Penghapusan Tiket
-              </h3>
-            </div>
+            <h3 className="text-sm sm:text-base font-bold text-[#111111]">
+              Ajukan Penghapusan Tiket
+            </h3>
             <p className="text-xs text-[#666666] mt-0.5">
               Tiket ritase akan diajukan ke Atasan (Admin/Founder) untuk di-ACC.
             </p>
@@ -73,7 +71,7 @@ export function RequestDeleteModal({
             disabled={isSubmitting}
             className="text-[#888888] hover:text-[#111111] p-1.5 rounded-lg hover:bg-[#f0f0f0] transition-colors"
           >
-            ✕
+            <X className="w-4 h-4" />
           </button>
         </div>
 
@@ -126,7 +124,7 @@ export function RequestDeleteModal({
 
           {/* Alert Info */}
           <div className="p-3 bg-amber-50 border border-amber-200 rounded-[8px] flex items-start gap-2.5">
-            <span className="text-amber-600 text-sm">ℹ️</span>
+            <Info className="w-4 h-4 text-amber-600 flex-shrink-0" />
             <p className="text-[11px] text-amber-800 leading-relaxed">
               Setelah dikirim, tiket ini akan ditandai dengan status <span className="font-bold">"Menunggu ACC Hapus"</span> dan notifikasi langsung diteruskan ke dasbor Atasan.
             </p>
@@ -145,11 +143,11 @@ export function RequestDeleteModal({
             <button
               type="submit"
               disabled={isSubmitting || !reason.trim()}
-              className="px-4 py-2 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 active:bg-amber-800 disabled:opacity-50 rounded-[8px] transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
+              className="px-4 py-2 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 active:bg-amber-800 disabled:opacity-50 rounded-[8px] transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm border-none"
             >
               {isSubmitting ? (
                 <>
-                  <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
                   <span>Mengirim...</span>
                 </>
               ) : (

@@ -11,7 +11,7 @@ export function ReviewPendingScreen({ user, onBackToLogin }: ReviewPendingScreen
   const handleContactDeveloper = () => {
     const email = user?.email || '-';
     const name = user?.name || '-';
-    const message = `Halo Developer PT Patak Abadi Jaya, saya butuh akses cepat ke sistem untuk akun:\n\n• Nama: ${name}\n• Email: ${email}\n• Status: Menunggu Review Developer\n\nMohon bantuannya untuk persetujuan (ACC) akun. Terima kasih!`;
+    const message = `Halo Developer PT Patak Abadi Jaya, saya butuh akses cepat ke sistem untuk akun:\n\n- Nama: ${name}\n- Email: ${email}\n- Status: Menunggu Review Developer\n\nMohon bantuannya untuk persetujuan (ACC) akun. Terima kasih!`;
     const cleanNumber = DEVELOPER_WHATSAPP.startsWith('0')
       ? '62' + DEVELOPER_WHATSAPP.slice(1)
       : DEVELOPER_WHATSAPP;

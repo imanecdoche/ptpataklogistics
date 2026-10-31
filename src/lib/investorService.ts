@@ -1,6 +1,7 @@
 import {
   collection,
   doc,
+  getDoc,
   getDocs,
   setDoc,
   updateDoc,
@@ -11,7 +12,7 @@ import {
   where
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { Investor, InvestorProjectLink, InvestorPayout, InvestorTransferLog, InvestorTransferCategory } from '@/types/database';
+import { Investor, InvestorProjectLink, InvestorPayout, InvestorTransferLog, InvestorTransferCategory, InvestorTransferInstallment } from '@/types/database';
 import { formatPhoneNumber } from '@/lib/phoneUtils';
 import { formatEntityName } from '@/lib/nameUtils';
 import { updateProjectBalance } from '@/lib/projectService';
@@ -235,6 +236,7 @@ export async function createInvestorTransfer(payload: {
   amount: number;
   category: InvestorTransferCategory;
   note: string;
+  receiptUrl?: string;
   createdByName: string;
 }): Promise<string> {
   const numAmount = Number(payload.amount);
@@ -262,6 +264,11 @@ export async function createInvestorTransfer(payload: {
     toProjectId: payload.toProjectId || '',
     toProjectName: payload.toProjectName || '',
     amount: numAmount,
+    totalAmount: numAmount,
+    paidAmount: isTalangan ? 0 : numAmount,
+    remainingAmount: isTalangan ? numAmount : 0,
+    installments: [],
+    ...(payload.receiptUrl ? { receiptUrl: payload.receiptUrl } : {}),
     category: payload.category,
     status: isTalangan ? 'BELUM_LUNAS' : 'LUNAS',
     note: payload.note?.trim() || '',
@@ -285,10 +292,78 @@ export async function createInvestorTransfer(payload: {
     isCredit: false,
     description: `Transfer Antar-Investor: Dari ${payload.fromInvestorName} ke ${payload.toInvestorName} (${payload.category}) - ${payload.note || 'Internal'}`,
     referenceId: docId,
+    ...(payload.receiptUrl ? { receiptUrl: payload.receiptUrl } : {}),
     createdByName: payload.createdByName
   });
 
   return docId;
+}
+
+/**
+ * Mencatat pembayaran cicilan bertahap untuk talangan operasional antar-investor
+ */
+export async function recordInvestorTalanganInstallment(payload: {
+  transferId: string;
+  amount: number;
+  date?: string;
+  note?: string;
+  receiptUrl?: string;
+  userEmail: string;
+}): Promise<void> {
+  const docRef = doc(db, INVESTOR_TRANSFERS_COLLECTION, payload.transferId);
+  const snap = await getDoc(docRef);
+  if (!snap.exists()) {
+    throw new Error('Data talangan operasional tidak ditemukan.');
+  }
+
+  const tr = snap.data() as InvestorTransferLog;
+  const numAmount = Number(payload.amount);
+  if (!numAmount || numAmount <= 0) {
+    throw new Error('Nominal cicilan harus lebih besar dari 0.');
+  }
+
+  const totalAmount = tr.totalAmount ?? tr.amount ?? 0;
+  const currentPaid = tr.paidAmount ?? (tr.status === 'LUNAS' ? totalAmount : 0);
+  const newPaid = currentPaid + numAmount;
+  const newRemaining = Math.max(0, totalAmount - newPaid);
+  const isFullySettled = newRemaining <= 0;
+
+  const installmentId = `inst-${Date.now().toString().slice(-6)}`;
+  const now = new Date().toISOString();
+  const dateStr = payload.date || now.slice(0, 10);
+
+  const newInstallment: InvestorTransferInstallment = {
+    id: installmentId,
+    date: dateStr,
+    amount: numAmount,
+    receiptUrl: payload.receiptUrl || '',
+    note: payload.note?.trim() || '',
+    createdByName: payload.userEmail,
+    createdAt: now
+  };
+
+  const installments = [...(tr.installments || []), newInstallment];
+
+  await updateDoc(docRef, {
+    totalAmount,
+    paidAmount: newPaid,
+    remainingAmount: newRemaining,
+    status: isFullySettled ? 'LUNAS' : 'BELUM_LUNAS',
+    ...(isFullySettled ? { settledAt: now } : {}),
+    installments
+  });
+
+  // Catat Kas Keluar Cicilan Hutang di cash_ledger
+  await recordCashLedgerEntry({
+    date: `${dateStr}T12:00:00.000Z`,
+    type: 'CICILAN_HUTANG',
+    amount: numAmount,
+    isCredit: false,
+    description: `Cicilan Talangan: ${tr.fromInvestorName} (Ref: ${payload.transferId}) ${payload.note ? `[${payload.note}]` : ''}`,
+    referenceId: payload.transferId,
+    ...(payload.receiptUrl ? { receiptUrl: payload.receiptUrl } : {}),
+    createdByName: payload.userEmail
+  });
 }
 
 /**

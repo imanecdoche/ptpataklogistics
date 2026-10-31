@@ -1,3 +1,4 @@
+import { Check } from 'lucide-react';
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Client } from '@/types/database';
 import { formatClientName, formatClientNameLive } from '@/lib/clientService';
@@ -236,14 +237,14 @@ export function ClientCombobox({
                           }`}
                         >
                           {c.picName && <span>PIC: {c.picName}</span>}
-                          {c.picName && c.phoneNumber && <span className="mx-1">•</span>}
+                          {c.picName && c.phoneNumber && <span className="mx-1 text-[#888888]">|</span>}
                           {c.phoneNumber && <span className="font-mono">{formatPhoneNumber(c.phoneNumber)}</span>}
                         </div>
                       )}
                     </div>
 
                     {isSelected && (
-                      <span className="text-white text-xs font-semibold">✓</span>
+                      <Check className="w-3.5 h-3.5 text-white" />
                     )}
                   </button>
                 );

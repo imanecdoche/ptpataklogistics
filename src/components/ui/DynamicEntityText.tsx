@@ -38,7 +38,7 @@ export function DynamicEntityText({
             className={`w-3.5 h-3.5 object-contain inline-block align-middle ${iconClassName}`}
           />
           {/* Tooltip Mengambang saat Kursor Di-hover */}
-          <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover/warn:flex items-center bg-[#111111] text-white text-[10px] font-sans font-medium px-2 py-1 rounded-[4px] shadow-xl whitespace-nowrap z-50 border border-[#333333]">
+          <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover/warn:flex items-center bg-[#111111] text-white text-[10px] font-sans font-medium px-2 py-1 rounded-[4px] shadow-xl whitespace-nowrap z-50 border-none">
             {tooltipText}
           </span>
         </span>

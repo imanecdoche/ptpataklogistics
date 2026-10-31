@@ -1,3 +1,4 @@
+import { X } from 'lucide-react';
 import React, { useState, useMemo } from 'react';
 import { DispatchTransaction } from '@/types/database';
 
@@ -214,9 +215,7 @@ export function DashboardChartDrawer({
             type="button"
             onClick={onClose}
             className="text-[#888888] hover:text-[#111111] p-1 rounded-md transition-colors"
-          >
-            ✕
-          </button>
+           aria-label="Tutup"><X className="w-4 h-4" /></button>
         </div>
 
         {/* Sub-Tab Category Switcher */}

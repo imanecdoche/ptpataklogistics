@@ -464,7 +464,7 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
     requestAuthorization(
       'Hapus Tiket Ritase',
       'Tiket ritase akan dihapus permanen dan seluruh mutasi kas terkait di Buku Kas akan otomatis dibersihkan.',
-      `${tx.ticketNumber} • ${tx.truckPlate}`,
+      `${tx.ticketNumber} - ${tx.truckPlate}`,
       async () => {
         await deleteDispatchTransaction(tx.id, tx.ticketNumber);
       },

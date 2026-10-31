@@ -9,6 +9,7 @@ import {
   rejectRequest
 } from '@/lib/approvalService';
 import { formatRupiah } from '@/lib/currencyUtils';
+import { X, Check, CheckCircle2, Loader2 } from 'lucide-react';
 
 interface ApprovalCenterModalProps {
   isOpen: boolean;
@@ -135,7 +136,7 @@ export function ApprovalCenterModal({
                     Pusat Persetujuan Tiket (Approval Center)
                   </h2>
                   {pendingRequests.length > 0 && (
-                    <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-500 text-white animate-pulse">
+                    <span className="px-2 py-0.5 rounded-[4px] text-[11px] font-bold bg-[#111111] text-white border-none">
                       {pendingRequests.length} Pending
                     </span>
                   )}
@@ -149,9 +150,9 @@ export function ApprovalCenterModal({
             <button
               type="button"
               onClick={onClose}
-              className="text-[#888888] hover:text-[#111111] p-1.5 rounded-lg hover:bg-[#f0f0f0] transition-colors"
+              className="text-[#888888] hover:text-[#111111] p-1.5 rounded-lg hover:bg-[#f0f0f0] transition-colors border-none"
             >
-              ✕
+              <X className="w-4 h-4" />
             </button>
           </div>
 
@@ -198,13 +199,13 @@ export function ApprovalCenterModal({
           <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-5 space-y-4 bg-[#f8f8f8]">
             {isLoading ? (
               <div className="py-12 text-center text-xs text-[#888888] flex flex-col items-center gap-2">
-                <span className="w-5 h-5 border-2 border-[#111111]/30 border-t-[#111111] rounded-full animate-spin" />
+                <Loader2 className="w-5 h-5 text-[#111111] animate-spin" />
                 <span>Memuat daftar pengajuan...</span>
               </div>
             ) : activeTab === 'pending' ? (
               pendingRequests.length === 0 ? (
                 <div className="py-16 text-center text-xs text-[#888888] space-y-2">
-                  <div className="text-3xl">🎉</div>
+                  <CheckCircle2 className="w-8 h-8 text-[#008060] mx-auto" />
                   <p className="font-bold text-[#111111]">Tidak Ada Pengajuan Pending</p>
                   <p>Semua permohonan koreksi atau penghapusan tiket telah diproses.</p>
                 </div>
@@ -222,10 +223,10 @@ export function ApprovalCenterModal({
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#f0f0f0]">
                         <div className="flex items-center gap-2">
                           <span
-                            className={`px-2 py-0.5 text-[11px] font-bold rounded-[6px] tracking-wide ${
+                            className={`px-2 py-0.5 text-[11px] font-bold rounded-[4px] border-none tracking-wide ${
                               isDelete
-                                ? 'bg-red-50 text-red-700 border border-red-200'
-                                : 'bg-blue-50 text-blue-700 border border-blue-200'
+                                ? 'bg-[#fce8e6] text-[#cf1124]'
+                                : 'bg-[#e8f0fe] text-[#1a73e8]'
                             }`}
                           >
                             {isDelete ? 'PERMOHONAN HAPUS' : 'PERMOHONAN KOREKSI'}
@@ -235,7 +236,7 @@ export function ApprovalCenterModal({
                           </span>
                         </div>
                         <div className="text-[11px] text-[#777777]">
-                          Diajukan oleh <span className="font-bold text-[#111111]">{req.requestedByName}</span> ({req.requestedBy}) • {formatDateTime(req.requestedAt)}
+                          Diajukan oleh <span className="font-bold text-[#111111]">{req.requestedByName}</span> ({req.requestedBy}) - {formatDateTime(req.requestedAt)}
                         </div>
                       </div>
 
@@ -331,24 +332,25 @@ export function ApprovalCenterModal({
                             setRejectionReason('');
                           }}
                           disabled={isProcessing}
-                          className="px-3.5 py-1.5 text-xs font-semibold text-[#cf1124] bg-white border border-[#cf1124]/30 hover:bg-red-50 rounded-[8px] transition-colors cursor-pointer"
+                          className="px-3.5 py-1.5 text-xs font-semibold text-white bg-[#cf1124] hover:bg-[#b00e1f] rounded-[8px] transition-colors cursor-pointer border-none inline-flex items-center gap-1"
                         >
-                          ✕ Tolak
+                          <X className="w-3.5 h-3.5" />
+                          <span>Tolak</span>
                         </button>
                         <button
                           type="button"
                           onClick={() => handleApprove(req)}
                           disabled={isProcessing}
-                          className="px-4 py-1.5 text-xs font-bold text-white bg-emerald-700 hover:bg-emerald-800 rounded-[8px] transition-colors shadow-xs flex items-center gap-1.5 cursor-pointer"
+                          className="px-4 py-1.5 text-xs font-bold text-white bg-emerald-700 hover:bg-emerald-800 rounded-[8px] transition-colors shadow-xs flex items-center gap-1.5 cursor-pointer border-none"
                         >
                           {isProcessing ? (
                             <>
-                              <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
                               <span>Memproses...</span>
                             </>
                           ) : (
                             <>
-                              <span>✓</span>
+                              <Check className="w-3.5 h-3.5" />
                               <span>Setujui (ACC)</span>
                             </>
                           )}
@@ -392,12 +394,12 @@ export function ApprovalCenterModal({
                         </span>
                       </div>
                       <p className="text-[#666666]">
-                        <span className="font-medium text-[#111111]">Pemohon:</span> {req.requestedByName} • <span className="font-medium text-[#111111]">Alasan:</span> "{req.reason}"
+                        <span className="font-medium text-[#111111]">Pemohon:</span> {req.requestedByName} - <span className="font-medium text-[#111111]">Alasan:</span> "{req.reason}"
                       </p>
                       {req.reviewedByName && (
                         <p className="text-[#888888] text-[11px]">
                           Diproses oleh <span className="font-bold text-[#111111]">{req.reviewedByName}</span>
-                          {req.rejectionReason ? ` • Catatan: "${req.rejectionReason}"` : ''}
+                          {req.rejectionReason ? ` - Catatan: "${req.rejectionReason}"` : ''}
                         </p>
                       )}
                     </div>

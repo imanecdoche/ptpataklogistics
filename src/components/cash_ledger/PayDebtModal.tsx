@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { CurrencyInput } from '@/components/ui/CurrencyInput';
 import { recordDebtPayment } from '@/lib/cashLedgerService';
+import { ReceiptUpload } from '@/components/ui/ReceiptUpload';
+import { X, AlertCircle } from 'lucide-react';
 
 interface PayDebtModalProps {
   isOpen: boolean;
@@ -31,6 +33,7 @@ export function PayDebtModal({
   const [amount, setAmount] = useState<number>(0);
   const [referenceId, setReferenceId] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
+  const [receiptUrl, setReceiptUrl] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -57,6 +60,7 @@ export function PayDebtModal({
         date: `${date}T12:00:00.000Z`,
         referenceId: referenceId.trim(),
         notes: notes.trim(),
+        receiptUrl,
         userEmail
       });
 
@@ -87,15 +91,16 @@ export function PayDebtModal({
               Bayar / Cicil Hutang Bpk. Pei
             </h3>
             <p className="text-[11px] text-[#666666] mt-0.5">
-              Hutang usaha perseroan non-ritase (Pokok Awal: Rp 18.000.000)
+              Hutang usaha perseroan non-ritase (Pokok Awal: Rp 23.000.000)
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="hidden md:flex text-[#888888] hover:text-[#111111] text-base p-1 rounded transition-colors cursor-pointer border-none bg-transparent"
+            className="hidden md:flex text-[#888888] hover:text-[#111111] p-1 rounded transition-colors cursor-pointer border-none bg-transparent"
+            aria-label="Tutup"
           >
-            ✕
+            <X className="w-4 h-4" />
           </button>
         </div>
 
@@ -103,13 +108,14 @@ export function PayDebtModal({
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
           <div className="p-4 md:p-5 space-y-4 overflow-y-auto flex-1 overscroll-contain">
             {errorMsg && (
-              <div className="p-2.5 bg-red-50 border border-red-200 text-red-700 text-xs rounded-[6px] font-medium">
-                ⚠️ {errorMsg}
+              <div className="p-2.5 bg-red-50 text-red-700 text-xs rounded-[6px] font-medium flex items-center gap-2 border-none">
+                <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
+                <span>{errorMsg}</span>
               </div>
             )}
 
             {/* Info Status Hutang & Kas */}
-            <div className="grid grid-cols-2 gap-2 p-3 bg-[#fafafa] border border-[#eaeaea] rounded-[8px] text-xs">
+            <div className="grid grid-cols-2 gap-2 p-3 bg-[#fafafa] rounded-[8px] text-xs border-none">
               <div>
                 <span className="text-[10px] text-[#777777] block font-medium">Sisa Hutang Bpk. Pei:</span>
                 <span className="text-sm font-bold tracking-tight text-[#111111]">
@@ -184,6 +190,14 @@ export function PayDebtModal({
                 className="w-full bg-[#f9f9f9] border border-[#e0e0e0] focus:border-[#111111] rounded-[6px] px-3 py-2 text-xs text-[#111111] outline-none transition-colors"
               />
             </div>
+
+            {/* Upload Bukti Kwitansi / Transfer */}
+            <ReceiptUpload
+              value={receiptUrl}
+              onChange={setReceiptUrl}
+              label="Unggah Bukti Transfer / Kwitansi"
+              folder="receipts/debt_pei"
+            />
           </div>
 
           {/* Sticky Bottom Action Bar */}

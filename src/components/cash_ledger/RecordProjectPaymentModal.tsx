@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Project } from '@/types/database';
 import { CurrencyInput } from '@/components/ui/CurrencyInput';
 import { recordProjectPayment } from '@/lib/cashLedgerService';
+import { ReceiptUpload } from '@/components/ui/ReceiptUpload';
+import { X, AlertCircle } from 'lucide-react';
 
 interface RecordProjectPaymentModalProps {
   isOpen: boolean;
@@ -31,6 +33,7 @@ export function RecordProjectPaymentModal({
   const [amount, setAmount] = useState<number>(0);
   const [referenceId, setReferenceId] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
+  const [receiptUrl, setReceiptUrl] = useState<string>('');
   const [settleMatchedTickets, setSettleMatchedTickets] = useState<boolean>(true);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -61,6 +64,7 @@ export function RecordProjectPaymentModal({
         date: `${date}T12:00:00.000Z`,
         referenceId: referenceId.trim(),
         notes: notes.trim(),
+        receiptUrl,
         userEmail,
         settleMatchedTickets
       });
@@ -98,9 +102,10 @@ export function RecordProjectPaymentModal({
           <button
             type="button"
             onClick={onClose}
-            className="hidden md:flex text-[#888888] hover:text-[#111111] text-base p-1 rounded transition-colors cursor-pointer border-none bg-transparent"
+            className="hidden md:flex text-[#888888] hover:text-[#111111] p-1 rounded transition-colors cursor-pointer border-none bg-transparent"
+            aria-label="Tutup"
           >
-            ✕
+            <X className="w-4 h-4" />
           </button>
         </div>
 
@@ -108,8 +113,9 @@ export function RecordProjectPaymentModal({
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
           <div className="p-4 md:p-5 space-y-4 overflow-y-auto flex-1 overscroll-contain">
           {errorMsg && (
-            <div className="p-2.5 bg-red-50 border border-red-200 text-red-700 text-xs rounded-[6px] font-medium">
-              ⚠️ {errorMsg}
+            <div className="p-2.5 bg-red-50 text-red-700 text-xs rounded-[6px] font-medium flex items-center gap-2 border-none">
+              <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
+              <span>{errorMsg}</span>
             </div>
           )}
 
@@ -207,6 +213,14 @@ export function RecordProjectPaymentModal({
               </span>
             </div>
           </label>
+
+          {/* Upload Bukti Kwitansi / Transfer */}
+          <ReceiptUpload
+            value={receiptUrl}
+            onChange={setReceiptUrl}
+            label="Unggah Bukti Pelunasan / Kwitansi"
+            folder="receipts/project_payments"
+          />
 
           </div>
 

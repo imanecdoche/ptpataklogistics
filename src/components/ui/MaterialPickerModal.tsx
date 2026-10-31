@@ -155,7 +155,7 @@ export function MaterialPickerModal({
                       </div>
 
                       <div className="text-[11px] text-[#888888] mt-1 md:hidden">
-                        Beli: <span className="font-mono text-[#444444]">{formatRupiah(m.defaultBuyPrice)}</span> • Jual: <span className="font-mono text-[#444444]">{formatRupiah(m.defaultSellPrice)}</span>
+                        Beli: <span className="font-mono text-[#444444]">{formatRupiah(m.defaultBuyPrice)}</span> | Jual: <span className="font-mono text-[#444444]">{formatRupiah(m.defaultSellPrice)}</span>
                       </div>
                     </div>
                   </div>
