@@ -1406,6 +1406,24 @@ Dokumen ini adalah hukum tertinggi operasional sistem. Kegagalan mematuhi aturan
         2. **Mobile / Touchscreen**: Melalui *tap and hold* (sentuh dan tahan) selama 500 ms di posisi sentuhan jari, dilengkapi getaran mikro (*haptic vibration*) jika didukung peramban. Jika jari bergeser > 10px untuk scrolling, gesture long-press otomatis dibatalkan.
         3. Baris tabel yang aktif menampilkan menu konteks otomatis diberi highlight warna seleksi halus (`bg-[#f0f0f0]`) selama popover terbuka.
 
+123. **Standar Desain Modal Finansial & Zero-AI-Slop Layout**:
+    - **Pembersihan Elemen AI-Slop (Zero-Slop Standard)**:
+      * Seluruh emoji grafis (seperti 🔨, 💰, 💸, 🖨️, ✏️, 🗑️) DILARANG KERAS digunakan pada tombol aksi, navigasi tab, kartu ringkasan, maupun status empty state.
+      * Seluruh ikon tombol aksi dan kontrol WAJIB menggunakan ikon SVG garis mikro yang presisi (`strokeWidth={1.75}` atau `{2}`).
+      * Tanda tambah pada tombol aksi utama ("Tambah Sub-Pekerjaan", "Daftarkan Sub-Pekerjaan Pertama", dll.) WAJIB berupa elemen ikon SVG plus, DILARANG berupa karakter string teks biasa (`+`).
+    - **Hierarki Tombol Aksi Header Modal**:
+      * Header modal hanya memiliki 1 tombol aksi utama (*Primary Button*) bertema monokrom hitam solid (`bg-[#111111] hover:bg-black text-white`) dengan ikon SVG plus.
+      * Tombol aksi pendukung (*Secondary Buttons*: Catat Bayar, Kasbon Mandor, Cetak Rekap) diformat sebagai tombol outline bersih (`bg-white hover:bg-[#f9fafb] text-[#111111] border border-[#d1d5db]`).
+      * Tombol tutup modal (`✕`) diposisikan terpisah dan proporsional di sisi kanan atas menggunakan ikon SVG silang mikro dengan status hover halus.
+    - **Penerapan Standar Metrik Finansial (Rule 99 & Rule 119)**:
+      * 4 Kartu KPI Ringkasan Proyek di dalam modal WAJIB menggunakan `<MetricCardCurrency />` dengan tipografi sans-serif bold (`font-bold tracking-tight`), DILARANG menggunakan `font-mono` pada angka nominal utama kartu metrik.
+      * Wadah kartu metrik menggunakan latar sejuk (`bg-[#fafafa]`) dengan kartu putih ber-border lembut (`bg-white p-3.5 rounded-[10px] border border-[#eaeaea]`).
+    - **Navigasi Tab Sederhana Tanpa Badge Warna-Warni**:
+      * Hapus seluruh badge bulat/pill berwarna cerah (`bg-amber-100`, `bg-emerald-100`, dll.) pada switcher tab.
+      * Label tab menggunakan teks bersih dengan penghitung netral sederhana, contoh: `Sub-Pekerjaan (n)`, `Ritase Material (n)`, `Kasbon Mandor (n)`, `Pembayaran Klien (n)`.
+      * Indikator tab aktif ditandai secara elegan dengan garis bawah hitam solid (`border-b-2 border-[#111111] text-[#111111]`).
+
+
 
 
 

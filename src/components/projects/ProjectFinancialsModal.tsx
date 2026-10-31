@@ -14,6 +14,7 @@ import {
 } from '@/lib/projectFinanceService';
 import { subscribeAllTransactions } from '@/lib/dispatcherService';
 import { formatRupiah } from '@/lib/currencyUtils';
+import { MetricCardCurrency } from '@/components/ui/MetricCardCurrency';
 import { RecordSubJobModal } from './RecordSubJobModal';
 import { RecordKasbonModal } from './RecordKasbonModal';
 import { RecordClientPaymentModal } from './RecordClientPaymentModal';
@@ -128,12 +129,12 @@ export function ProjectFinancialsModal({
           <div className="p-4 sm:p-5 border-b border-[#eaeaea] bg-white flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 flex-shrink-0">
             <div>
               <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-600" />
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 inline-block flex-shrink-0" />
                 <h2 className="text-base sm:text-lg font-bold text-[#111111]">
                   {project.name}
                 </h2>
-                <span className="text-xs px-2 py-0.5 rounded bg-[#f0f0f0] font-medium text-[#555555]">
-                  {project.location}
+                <span className="text-xs text-[#666666] font-normal">
+                  • {project.location}
                 </span>
               </div>
               <p className="text-xs text-[#666666] mt-0.5">
@@ -145,23 +146,29 @@ export function ProjectFinancialsModal({
             <div className="flex items-center gap-2 flex-wrap">
               <button
                 type="button"
-                onClick={() => setIsPaymentModalOpen(true)}
-                className="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold rounded-[8px] transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer"
-              >
-                <span>💰</span>
-                <span>Catat Bayar (Klien)</span>
-              </button>
-
-              <button
-                type="button"
                 onClick={() => {
                   setEditingSubJob(null);
                   setIsSubJobModalOpen(true);
                 }}
-                className="px-3 py-1.5 bg-[#111111] hover:bg-black text-white text-xs font-bold rounded-[8px] transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#111111] hover:bg-black text-white text-xs font-semibold rounded-[8px] transition-colors shadow-xs cursor-pointer"
               >
-                <span>🔨</span>
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <line x1="12" y1="5" x2="12" y2="19" strokeLinecap="round" strokeLinejoin="round" />
+                  <line x1="5" y1="12" x2="19" y2="12" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
                 <span>Tambah Sub-Pekerjaan</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsPaymentModalOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-[#f9fafb] text-[#111111] border border-[#d1d5db] text-xs font-semibold rounded-[8px] transition-colors shadow-xs cursor-pointer"
+              >
+                <svg className="w-3.5 h-3.5 text-[#555555]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                  <rect x="2" y="5" width="20" height="14" rx="2" strokeLinecap="round" strokeLinejoin="round" />
+                  <line x1="2" y1="10" x2="22" y2="10" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <span>Catat Bayar</span>
               </button>
 
               <button
@@ -170,28 +177,35 @@ export function ProjectFinancialsModal({
                   setTargetSubJobForKasbon(undefined);
                   setIsKasbonModalOpen(true);
                 }}
-                className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-[8px] transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-[#f9fafb] text-[#111111] border border-[#d1d5db] text-xs font-semibold rounded-[8px] transition-colors shadow-xs cursor-pointer"
               >
-                <span>💸</span>
-                <span>Input Kasbon Tukang</span>
+                <svg className="w-3.5 h-3.5 text-[#555555]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                <span>Kasbon Tukang</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setIsPrintModalOpen(true)}
-                className="px-2.5 py-1.5 bg-[#f5f5f5] hover:bg-[#eaeaea] text-[#333333] text-xs font-bold rounded-[8px] transition-colors flex items-center gap-1 cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-[#f9fafb] text-[#111111] border border-[#d1d5db] text-xs font-semibold rounded-[8px] transition-colors cursor-pointer"
                 title="Cetak Rekap Kasbon & Borongan Mandor"
               >
-                <span>🖨️</span>
+                <svg className="w-3.5 h-3.5 text-[#555555]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4H7v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                </svg>
                 <span>Cetak Rekap</span>
               </button>
 
               <button
                 type="button"
                 onClick={onClose}
-                className="text-[#888888] hover:text-[#111111] p-1.5 rounded-lg hover:bg-[#f0f0f0] transition-colors ml-1"
+                className="p-1.5 text-[#666666] hover:text-[#111111] hover:bg-[#f0f0f0] rounded-[8px] transition-colors ml-1 cursor-pointer"
+                title="Tutup Modal"
               >
-                ✕
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
             </div>
           </div>
@@ -199,64 +213,68 @@ export function ProjectFinancialsModal({
           {/* 4 Kartu Metrik Terpadu (Pool Tagihan & Saldo Berjalan) */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 p-4 sm:p-5 bg-[#fafafa] border-b border-[#eaeaea] flex-shrink-0">
             {/* Metrik 1: Total Nilai Proyek (Global) */}
-            <div className="bg-white p-3 rounded-[10px] border border-[#eaeaea]">
+            <div className="bg-white p-3.5 rounded-[10px] border border-[#eaeaea]">
               <span className="text-[10px] font-bold uppercase tracking-wider text-[#777777] block">
                 Total Nilai Tagihan (Pool)
               </span>
-              <span className="text-sm sm:text-base font-bold font-mono text-[#111111] block mt-1">
-                {formatRupiah(totalProjectInvoice)}
-              </span>
-              <span className="text-[10px] text-[#888888] block mt-0.5">
+              <div className="mt-1">
+                <MetricCardCurrency amount={totalProjectInvoice} size="md" colorClassName="text-[#111111]" />
+              </div>
+              <span className="text-[10px] text-[#888888] block mt-1">
                 Material {formatRupiah(totalMaterialRevenue)} + Fisik {formatRupiah(totalSubJobsClientContract)}
               </span>
             </div>
 
             {/* Metrik 2: Total Pembayaran Diterima */}
-            <div className="bg-white p-3 rounded-[10px] border border-[#eaeaea]">
+            <div className="bg-white p-3.5 rounded-[10px] border border-[#eaeaea]">
               <span className="text-[10px] font-bold uppercase tracking-wider text-[#777777] block">
                 Pembayaran Diterima (Kas Masuk)
               </span>
-              <span className="text-sm sm:text-base font-bold font-mono text-emerald-700 block mt-1">
-                {formatRupiah(totalPaymentsReceived)}
-              </span>
-              <span className="text-[10px] text-emerald-800 block mt-0.5">
+              <div className="mt-1">
+                <MetricCardCurrency amount={totalPaymentsReceived} size="md" colorClassName="text-[#008060]" />
+              </div>
+              <span className="text-[10px] text-[#008060] block mt-1">
                 {clientPayments.length} kali pembayaran termin
               </span>
             </div>
 
             {/* Metrik 3: Sisa Piutang Berjalan Proyek */}
-            <div className="bg-white p-3 rounded-[10px] border border-[#eaeaea]">
+            <div className="bg-white p-3.5 rounded-[10px] border border-[#eaeaea]">
               <span className="text-[10px] font-bold uppercase tracking-wider text-[#777777] block">
                 Sisa Piutang Klien (Tempo)
               </span>
-              <span className={`text-sm sm:text-base font-bold font-mono block mt-1 ${
-                remainingReceivableBalance > 0 ? 'text-amber-700' : 'text-emerald-700'
-              }`}>
-                {formatRupiah(remainingReceivableBalance)}
-              </span>
-              <span className="text-[10px] text-[#888888] block mt-0.5">
+              <div className="mt-1">
+                <MetricCardCurrency
+                  amount={remainingReceivableBalance}
+                  size="md"
+                  colorClassName={remainingReceivableBalance > 0 ? "text-amber-800" : "text-[#008060]"}
+                />
+              </div>
+              <span className="text-[10px] text-[#888888] block mt-1">
                 {remainingReceivableBalance === 0 ? '✓ Lunas Sepenuhnya' : 'Otomatis terpotong saat bayar'}
               </span>
             </div>
 
             {/* Metrik 4: Estimasi Laba Bersih Proyek */}
-            <div className="bg-white p-3 rounded-[10px] border border-[#eaeaea]">
+            <div className="bg-white p-3.5 rounded-[10px] border border-[#eaeaea]">
               <span className="text-[10px] font-bold uppercase tracking-wider text-[#777777] block">
                 Estimasi Laba Bersih Proyek
               </span>
-              <span className={`text-sm sm:text-base font-bold font-mono block mt-1 ${
-                netProjectProfit < 0 ? 'text-[#cf1124]' : 'text-emerald-800'
-              }`}>
-                {formatRupiah(netProjectProfit)}
-              </span>
-              <span className="text-[10px] text-[#888888] block mt-0.5">
+              <div className="mt-1">
+                <MetricCardCurrency
+                  amount={netProjectProfit}
+                  size="md"
+                  colorClassName={netProjectProfit < 0 ? "text-[#cf1124]" : "text-[#008060]"}
+                />
+              </div>
+              <span className="text-[10px] text-[#888888] block mt-1">
                 Setelah beban material & tukang
               </span>
             </div>
           </div>
 
           {/* Tab Navigation Switcher */}
-          <div className="px-5 pt-3 pb-0 border-b border-[#eaeaea] flex items-center gap-4 bg-white flex-shrink-0 overflow-x-auto">
+          <div className="px-5 pt-3 pb-0 border-b border-[#eaeaea] flex items-center gap-6 bg-white flex-shrink-0 overflow-x-auto">
             <button
               type="button"
               onClick={() => setActiveTab('subjobs')}
@@ -266,9 +284,9 @@ export function ProjectFinancialsModal({
                   : 'border-transparent text-[#666666] hover:text-[#111111]'
               }`}
             >
-              <span>Sub-Pekerjaan & Mandor</span>
-              <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-[#f0f0f0] text-[#555555]">
-                {subJobs.length}
+              <span>Sub-Pekerjaan</span>
+              <span className="text-[11px] font-semibold text-[#888888]">
+                ({subJobs.length})
               </span>
             </button>
 
@@ -281,9 +299,9 @@ export function ProjectFinancialsModal({
                   : 'border-transparent text-[#666666] hover:text-[#111111]'
               }`}
             >
-              <span>Logistik Ritase Material</span>
-              <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-[#f0f0f0] text-[#555555]">
-                {transactions.length}
+              <span>Ritase Material</span>
+              <span className="text-[11px] font-semibold text-[#888888]">
+                ({transactions.length})
               </span>
             </button>
 
@@ -296,9 +314,9 @@ export function ProjectFinancialsModal({
                   : 'border-transparent text-[#666666] hover:text-[#111111]'
               }`}
             >
-              <span>Riwayat Bon-Bon Kasbon</span>
-              <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-amber-100 text-amber-800 font-bold">
-                {kasbonLogs.length}
+              <span>Kasbon Mandor</span>
+              <span className="text-[11px] font-semibold text-[#888888]">
+                ({kasbonLogs.length})
               </span>
             </button>
 
@@ -311,9 +329,9 @@ export function ProjectFinancialsModal({
                   : 'border-transparent text-[#666666] hover:text-[#111111]'
               }`}
             >
-              <span>Riwayat Pembayaran Klien</span>
-              <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-emerald-100 text-emerald-800 font-bold">
-                {clientPayments.length}
+              <span>Pembayaran Klien</span>
+              <span className="text-[11px] font-semibold text-[#888888]">
+                ({clientPayments.length})
               </span>
             </button>
           </div>
@@ -328,22 +346,32 @@ export function ProjectFinancialsModal({
             ) : activeTab === 'subjobs' ? (
               /* TAB 1: KARTU SUB-PEKERJAAN FISIK */
               subJobs.length === 0 ? (
-                <div className="py-16 text-center text-xs text-[#888888] space-y-3 bg-white rounded-[12px] border border-[#eaeaea] p-8">
-                  <div className="text-3xl">🔨</div>
+                <div className="py-12 text-center text-xs text-[#888888] space-y-3 bg-white rounded-[12px] border border-[#eaeaea] p-8 max-w-lg mx-auto my-6">
+                  <div className="w-10 h-10 mx-auto rounded-full bg-[#f5f5f5] flex items-center justify-center text-[#777777]">
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                    </svg>
+                  </div>
                   <p className="font-bold text-[#111111] text-sm">Belum Ada Sub-Pekerjaan Fisik</p>
-                  <p className="max-w-md mx-auto text-[#666666]">
+                  <p className="text-[#666666] text-xs leading-relaxed">
                     Daftarkan pekerjaan fisik lapangan seperti pembangunan MCK, paving block (m²), atau drainase (m³) untuk mengontrol kontrak klien dan kasbon tukang.
                   </p>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEditingSubJob(null);
-                      setIsSubJobModalOpen(true);
-                    }}
-                    className="px-4 py-2 bg-[#111111] hover:bg-black text-white text-xs font-bold rounded-[8px] transition-colors cursor-pointer"
-                  >
-                    + Daftarkan Sub-Pekerjaan Pertama
-                  </button>
+                  <div className="pt-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingSubJob(null);
+                        setIsSubJobModalOpen(true);
+                      }}
+                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#111111] hover:bg-black text-white text-xs font-semibold rounded-[8px] transition-colors cursor-pointer"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <line x1="12" y1="5" x2="12" y2="19" strokeLinecap="round" strokeLinejoin="round" />
+                        <line x1="5" y1="12" x2="19" y2="12" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      <span>Daftarkan Sub-Pekerjaan Pertama</span>
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -378,18 +406,22 @@ export function ProjectFinancialsModal({
                                 setEditingSubJob(job);
                                 setIsSubJobModalOpen(true);
                               }}
-                              className="p-1.5 text-[#666666] hover:text-[#111111] hover:bg-[#f0f0f0] rounded"
+                              className="p-1.5 text-[#666666] hover:text-[#111111] hover:bg-[#f0f0f0] rounded-[6px] transition-colors cursor-pointer"
                               title="Edit Sub-Pekerjaan"
                             >
-                              ✏️
+                              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                              </svg>
                             </button>
                             <button
                               type="button"
                               onClick={() => handleDeleteJob(job.id, job.jobName)}
-                              className="p-1.5 text-red-600 hover:bg-red-50 rounded"
+                              className="p-1.5 text-[#888888] hover:text-[#cf1124] hover:bg-red-50 rounded-[6px] transition-colors cursor-pointer"
                               title="Hapus Sub-Pekerjaan"
                             >
-                              🗑️
+                              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
                             </button>
                           </div>
                         </div>
@@ -449,10 +481,13 @@ export function ProjectFinancialsModal({
                               setTargetSubJobForKasbon(job.id);
                               setIsKasbonModalOpen(true);
                             }}
-                            className="px-3 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 text-xs font-bold rounded-[6px] transition-colors flex items-center gap-1 cursor-pointer"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-[#f9fafb] text-[#111111] border border-[#d1d5db] text-xs font-semibold rounded-[6px] transition-colors cursor-pointer"
                           >
-                            <span>💸</span>
-                            <span>+ Input Bon Mandor</span>
+                            <svg className="w-3 h-3 text-[#555555]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                              <line x1="12" y1="5" x2="12" y2="19" strokeLinecap="round" strokeLinejoin="round" />
+                              <line x1="5" y1="12" x2="19" y2="12" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                            <span>Input Kasbon</span>
                           </button>
                         </div>
                       </div>
@@ -525,9 +560,12 @@ export function ProjectFinancialsModal({
                     <button
                       type="button"
                       onClick={() => setIsPrintModalOpen(true)}
-                      className="px-2.5 py-1 text-xs font-semibold bg-[#111111] text-white rounded-[6px] hover:bg-black transition-colors"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-[#111111] text-white rounded-[6px] hover:bg-black transition-colors cursor-pointer"
                     >
-                      🖨️ Cetak Lembar Bon
+                      <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4H7v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                      </svg>
+                      <span>Cetak Lembar Bon</span>
                     </button>
                   </div>
                   <table className="w-full text-xs text-left border-collapse">

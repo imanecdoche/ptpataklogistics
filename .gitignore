@@ -34,3 +34,8 @@ lerna-debug.log*
 
 # Large binary recordings
 assets/Meeting Audio Recording/
+
+# FUSE / OS temporary files
+*.fuse_hidden*
+.fuse_hidden*
+
