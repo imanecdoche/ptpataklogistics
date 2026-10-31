@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { CurrencyInput } from '@/components/ui/CurrencyInput';
 import { recordDebtPayment } from '@/lib/cashLedgerService';
 import { ReceiptUpload } from '@/components/ui/ReceiptUpload';
+import { ParsedBankReceipt } from '@/lib/receiptScanner';
 import { X, AlertCircle } from 'lucide-react';
 
 interface PayDebtModalProps {
@@ -36,6 +37,15 @@ export function PayDebtModal({
   const [receiptUrl, setReceiptUrl] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const handleReceiptScan = (parsed: ParsedBankReceipt) => {
+    if (parsed.date) setDate(parsed.date);
+    if (parsed.amount && parsed.amount > 0) setAmount(parsed.amount);
+    if (parsed.referenceId) setReferenceId(parsed.referenceId);
+    if (parsed.notesSummary) {
+      setNotes(prev => (prev.trim() ? `${prev.trim()} - ${parsed.notesSummary}` : parsed.notesSummary || ''));
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -195,6 +205,7 @@ export function PayDebtModal({
             <ReceiptUpload
               value={receiptUrl}
               onChange={setReceiptUrl}
+              onScanComplete={handleReceiptScan}
               label="Unggah Bukti Transfer / Kwitansi"
               folder="receipts/debt_pei"
             />

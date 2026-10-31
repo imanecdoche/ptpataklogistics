@@ -3,6 +3,7 @@ import { CashLedgerEntry, CashFlowType } from '@/types/database';
 import { CurrencyInput } from '@/components/ui/CurrencyInput';
 import { updateCashLedgerEntry } from '@/lib/cashLedgerService';
 import { ReceiptUpload } from '@/components/ui/ReceiptUpload';
+import { ParsedBankReceipt } from '@/lib/receiptScanner';
 import { PinAuthModal } from '@/components/ui/PinAuthModal';
 import { X, Loader2, AlertCircle } from 'lucide-react';
 
@@ -44,6 +45,15 @@ export function EditCashLedgerModal({
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [isPinModalOpen, setIsPinModalOpen] = useState<boolean>(false);
+
+  const handleReceiptScan = (parsed: ParsedBankReceipt) => {
+    if (parsed.date) setDate(parsed.date);
+    if (parsed.amount && parsed.amount > 0) setAmount(parsed.amount);
+    if (parsed.referenceId) setReferenceId(parsed.referenceId);
+    if (parsed.notesSummary) {
+      setDescription(prev => (prev.trim() ? `${prev.trim()} - ${parsed.notesSummary}` : parsed.notesSummary || ''));
+    }
+  };
 
   useEffect(() => {
     if (entry) {
@@ -251,6 +261,7 @@ export function EditCashLedgerModal({
                 <ReceiptUpload
                   value={receiptUrl}
                   onChange={setReceiptUrl}
+                  onScanComplete={handleReceiptScan}
                   folder="cash_ledger"
                   label="Foto Bukti Kwitansi / Struk (Opsional)"
                 />

@@ -3,6 +3,7 @@ import { Project } from '@/types/database';
 import { CurrencyInput } from '@/components/ui/CurrencyInput';
 import { recordProjectPayment } from '@/lib/cashLedgerService';
 import { ReceiptUpload } from '@/components/ui/ReceiptUpload';
+import { ParsedBankReceipt } from '@/lib/receiptScanner';
 import { X, AlertCircle } from 'lucide-react';
 
 interface RecordProjectPaymentModalProps {
@@ -37,6 +38,15 @@ export function RecordProjectPaymentModal({
   const [settleMatchedTickets, setSettleMatchedTickets] = useState<boolean>(true);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const handleReceiptScan = (parsed: ParsedBankReceipt) => {
+    if (parsed.date) setDate(parsed.date);
+    if (parsed.amount && parsed.amount > 0) setAmount(parsed.amount);
+    if (parsed.referenceId) setReferenceId(parsed.referenceId);
+    if (parsed.notesSummary) {
+      setNotes(prev => (prev.trim() ? `${prev.trim()} - ${parsed.notesSummary}` : parsed.notesSummary || ''));
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -218,6 +228,7 @@ export function RecordProjectPaymentModal({
           <ReceiptUpload
             value={receiptUrl}
             onChange={setReceiptUrl}
+            onScanComplete={handleReceiptScan}
             label="Unggah Bukti Pelunasan / Kwitansi"
             folder="receipts/project_payments"
           />

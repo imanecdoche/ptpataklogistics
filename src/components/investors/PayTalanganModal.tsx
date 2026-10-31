@@ -3,6 +3,7 @@ import { X, History } from 'lucide-react';
 import { InvestorTransferLog } from '@/types/database';
 import { CurrencyInput } from '@/components/ui/CurrencyInput';
 import { ReceiptUpload } from '@/components/ui/ReceiptUpload';
+import { ParsedBankReceipt } from '@/lib/receiptScanner';
 import { ReceiptLightboxModal } from '@/components/ui/ReceiptLightboxModal';
 
 interface PayTalanganModalProps {
@@ -44,6 +45,16 @@ export function PayTalanganModal({
   const [receiptUrl, setReceiptUrl] = useState<string>('');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [activeReceiptPreview, setActiveReceiptPreview] = useState<string | null>(null);
+
+  const handleReceiptScan = (parsed: ParsedBankReceipt) => {
+    if (parsed.date) setDate(parsed.date);
+    if (parsed.amount && parsed.amount > 0) {
+      setAmount(Math.min(parsed.amount, remainingAmount));
+    }
+    if (parsed.notesSummary) {
+      setNote(prev => (prev.trim() ? `${prev.trim()} - ${parsed.notesSummary}` : parsed.notesSummary || ''));
+    }
+  };
 
   const formatRupiah = (val: number): string => {
     return new Intl.NumberFormat('id-ID', {
@@ -213,6 +224,7 @@ export function PayTalanganModal({
             <ReceiptUpload
               value={receiptUrl}
               onChange={setReceiptUrl}
+              onScanComplete={handleReceiptScan}
               label="Unggah Bukti Transfer / Kwitansi"
               folder="receipts/talangan"
             />
