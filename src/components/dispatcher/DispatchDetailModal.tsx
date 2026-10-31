@@ -166,10 +166,15 @@ export function DispatchDetailModal({
           <div className="bg-[#fafafa] rounded-[8px] p-3.5 space-y-2 text-xs">
             {!hideMargin && (
               <div className="flex justify-between items-center gap-2">
-                <span className="text-[#666666] truncate">Beli Kuari (Cash):</span>
-                <span className="font-mono text-[#111111] whitespace-nowrap flex-shrink-0">
-                  {formatRupiah(transaction.totalBuyCost)}
-                </span>
+                <span className="text-[#666666] truncate">Harga Beli Kuari:</span>
+                <div className="text-right flex-shrink-0">
+                  <span className="font-mono text-[11px] text-[#666666] block">
+                    {formatRupiah(transaction.buyPricePerUnit || (transaction.quantity ? Math.round(transaction.totalBuyCost / transaction.quantity) : 0))} / {transaction.unit}
+                  </span>
+                  <span className="font-mono font-medium text-[#111111]">
+                    {formatRupiah(transaction.totalBuyCost)}
+                  </span>
+                </div>
               </div>
             )}
 
@@ -181,10 +186,15 @@ export function DispatchDetailModal({
             </div>
 
             <div className="flex justify-between items-center gap-2 pt-1.5 border-t border-[#eaeaea]">
-              <span className="text-[#666666] truncate">Penjualan (Tempo):</span>
-              <span className="font-mono font-semibold text-[#111111] whitespace-nowrap flex-shrink-0">
-                {formatRupiah(transaction.totalRevenue)}
-              </span>
+              <span className="text-[#666666] truncate">Harga Jual (Tempo):</span>
+              <div className="text-right flex-shrink-0">
+                <span className="font-mono text-[11px] text-[#666666] block">
+                  {formatRupiah(transaction.sellPricePerUnit)} / {transaction.unit}
+                </span>
+                <span className="font-mono font-semibold text-[#111111]">
+                  {formatRupiah(transaction.totalRevenue)}
+                </span>
+              </div>
             </div>
 
             {!hideMargin && (

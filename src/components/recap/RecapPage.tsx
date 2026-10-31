@@ -9,6 +9,8 @@ import { NavigationTab } from '@/components/layout/Sidebar';
 import { CustomSelectCombobox, SelectOption } from '@/components/ui/CustomSelectCombobox';
 import { TablePagination } from '@/components/ui/TablePagination';
 import { formatRupiah } from '@/lib/currencyUtils';
+import { PricePerVolCell } from '@/components/ui/PricePerVolCell';
+import { matchesDateQuery } from '@/lib/dateSearchUtils';
 
 interface RecapPageProps {
   userEmail: string;
@@ -213,6 +215,7 @@ export function RecapPage({
         const projectMatch = (tx.projectName || '').toLowerCase().includes(q);
         const quarryMatch = (tx.quarryName || '').toLowerCase().includes(q);
         const materialMatch = (tx.materialName || '').toLowerCase().includes(q);
+        const dateMatch = matchesDateQuery(tx.deliveryDate || tx.date, q);
 
         if (
           !ticketMatch &&
@@ -222,7 +225,8 @@ export function RecapPage({
           !clientMatch &&
           !projectMatch &&
           !quarryMatch &&
-          !materialMatch
+          !materialMatch &&
+          !dateMatch
         ) {
           return false;
         }
@@ -452,7 +456,7 @@ export function RecapPage({
             type="text"
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            placeholder="Cari nomor tiket, no surat jalan, plat truk, supir, proyek, kuari, atau klien..."
+            placeholder="Cari no. tiket, surat jalan, plat, supir, tanggal (misal 28-10-26)..."
             className="w-full pl-9 pr-3 py-2 bg-[#fafafa] border border-[#eaeaea] rounded-[6px] text-xs text-[#111111] placeholder:text-[#888888] focus:outline-none focus:border-[#111111] transition-colors"
           />
         </div>
@@ -648,9 +652,9 @@ export function RecapPage({
                   <th className="py-2.5 px-3 whitespace-nowrap min-w-[125px]">No. Surat Jalan</th>
                   <th className="py-2.5 px-3 whitespace-nowrap min-w-[170px]">Proyek Tujuan</th>
                   <th className="py-2.5 px-3 whitespace-nowrap min-w-[140px]">Komoditas & Vol</th>
-                  <th className="py-2.5 px-3 whitespace-nowrap min-w-[115px] text-right">Beli Kuari</th>
+                  <th className="py-2.5 px-3 whitespace-nowrap min-w-[125px] text-right">Harga Beli</th>
                   <th className="py-2.5 px-3 whitespace-nowrap min-w-[115px] text-right">HOK & Operasional</th>
-                  <th className="py-2.5 px-3 whitespace-nowrap min-w-[120px] text-right">Omset Tempo</th>
+                  <th className="py-2.5 px-3 whitespace-nowrap min-w-[125px] text-right">Harga Jual</th>
                   <th className="py-2.5 px-3 whitespace-nowrap min-w-[120px] text-right">Laba Bersih</th>
                 </tr>
               </thead>
@@ -696,9 +700,15 @@ export function RecapPage({
                       </span>
                     </td>
 
-                    {/* Beli Kuari */}
-                    <td className="py-2.5 px-3 whitespace-nowrap text-right font-bold tracking-tight text-[#111111]">
-                      {formatRupiah(tx.totalBuyCost)}
+                    {/* Harga Beli */}
+                    <td className="py-2.5 px-3 whitespace-nowrap text-right">
+                      <PricePerVolCell
+                        unitPrice={tx.buyPricePerUnit}
+                        totalPrice={tx.totalBuyCost}
+                        unit={tx.unit}
+                        quantity={tx.quantity}
+                        align="right"
+                      />
                     </td>
 
                     {/* Operasional */}
@@ -706,9 +716,15 @@ export function RecapPage({
                       {formatRupiah(tx.operationalCost)}
                     </td>
 
-                    {/* Omset Penjualan */}
-                    <td className="py-2.5 px-3 whitespace-nowrap text-right font-bold tracking-tight text-[#111111]">
-                      {formatRupiah(tx.totalRevenue)}
+                    {/* Harga Jual */}
+                    <td className="py-2.5 px-3 whitespace-nowrap text-right">
+                      <PricePerVolCell
+                        unitPrice={tx.sellPricePerUnit}
+                        totalPrice={tx.totalRevenue}
+                        unit={tx.unit}
+                        quantity={tx.quantity}
+                        align="right"
+                      />
                     </td>
 
                     {/* Laba Bersih Perseroan */}

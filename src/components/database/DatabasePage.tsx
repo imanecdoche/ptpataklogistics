@@ -37,6 +37,8 @@ import { EditDispatchModal } from '@/components/dispatcher/EditDispatchModal';
 import { CustomSelectCombobox } from '@/components/ui/CustomSelectCombobox';
 import { MetricCardCurrency } from '@/components/ui/MetricCardCurrency';
 import { PhoneInput } from '@/components/ui/PhoneInput';
+import { PricePerVolCell } from '@/components/ui/PricePerVolCell';
+import { matchesDateQuery } from '@/lib/dateSearchUtils';
 import { DynamicEntityText } from '@/components/ui/DynamicEntityText';
 import {
   resolveTransactionEntities,
@@ -278,7 +280,8 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
           ent.project.name.toLowerCase().includes(q) ||
           ent.quarry.name.toLowerCase().includes(q) ||
           ent.material.name.toLowerCase().includes(q) ||
-          (tx.notes && tx.notes.toLowerCase().includes(q))
+          (tx.notes && tx.notes.toLowerCase().includes(q)) ||
+          matchesDateQuery(tx.deliveryDate || tx.date, q)
         );
       });
     }
@@ -582,7 +585,7 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
               onChange={e => setSearchQuery(e.target.value)}
               placeholder={
                 activeSubTab === 'ritase'
-                  ? 'Cari tiket, plat nomor, supir, klien, material, catatan...'
+                  ? 'Cari tiket, plat, supir, tanggal (misal 28-10-26)...'
                   : activeSubTab === 'vehicles'
                   ? 'Cari plat nomor atau nama supir...'
                   : 'Cari nama atau nomor HP supir...'
@@ -742,7 +745,7 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
         {/* ============================================================== */}
         {activeSubTab === 'ritase' && (
           <div className="overflow-x-auto select-text max-h-[640px]">
-            <table className="w-full min-w-[1680px] table-fixed text-left text-xs border-collapse">
+            <table className="w-full min-w-[1555px] table-fixed text-left text-xs border-collapse">
               <thead className="sticky top-0 z-10 bg-[#f9f9f9] border-b border-[#eaeaea] text-[#555555] font-semibold text-[11px] uppercase tracking-wider select-none">
                 <tr>
                   <th className="py-2.5 px-3 w-[140px] min-w-[140px] whitespace-nowrap">No. Tiket</th>
@@ -754,10 +757,9 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
                   <th className="py-2.5 px-3 w-[130px] min-w-[130px] whitespace-nowrap">Kuari Asal</th>
                   <th className="py-2.5 px-3 w-[140px] min-w-[140px] whitespace-nowrap">Material</th>
                   <th className="py-2.5 px-3 w-[90px] min-w-[90px] whitespace-nowrap">Vol</th>
-                  <th className="py-2.5 px-3 w-[110px] min-w-[110px] whitespace-nowrap">Harga Jual</th>
-                  <th className="py-2.5 px-3 w-[125px] min-w-[125px] whitespace-nowrap">Total Omset</th>
+                  <th className="py-2.5 px-3 w-[130px] min-w-[130px] whitespace-nowrap">Harga Jual</th>
                   {!isDispatcherUser && (
-                    <th className="py-2.5 px-3 w-[125px] min-w-[125px] whitespace-nowrap">Belanja Kuari</th>
+                    <th className="py-2.5 px-3 w-[130px] min-w-[130px] whitespace-nowrap">Harga Beli</th>
                   )}
                   <th className="py-2.5 px-3 w-[110px] min-w-[110px] whitespace-nowrap">Beban Ops</th>
                   {!isDispatcherUser && (
@@ -772,7 +774,7 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
               <tbody className="divide-y divide-[#eaeaea]">
                 {filteredTransactions.length === 0 ? (
                   <tr>
-                    <td colSpan={isDispatcherUser ? 16 : 18} className="py-10 text-center text-xs text-[#888888] whitespace-nowrap">
+                    <td colSpan={isDispatcherUser ? 15 : 17} className="py-10 text-center text-xs text-[#888888] whitespace-nowrap">
                       {isLoading ? 'Memuat riwayat ritase...' : 'Tidak ada data ritase yang sesuai filter.'}
                     </td>
                   </tr>
@@ -838,15 +840,22 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
                       <td className="py-2.5 px-3 font-bold tracking-tight text-[#111111] whitespace-nowrap w-[90px] align-middle">
                         {tx.quantity} {tx.unit}
                       </td>
-                      <td className="py-2.5 px-3 font-bold tracking-tight text-[#444444] whitespace-nowrap w-[110px] align-middle">
-                        {formatRupiah(tx.sellPricePerUnit)}
-                      </td>
-                      <td className="py-2.5 px-3 font-bold tracking-tight text-[#111111] whitespace-nowrap w-[125px] align-middle">
-                        {formatRupiah(tx.totalRevenue)}
+                      <td className="py-2.5 px-3 whitespace-nowrap w-[130px] align-middle">
+                        <PricePerVolCell
+                          unitPrice={tx.sellPricePerUnit}
+                          totalPrice={tx.totalRevenue}
+                          unit={tx.unit}
+                          quantity={tx.quantity}
+                        />
                       </td>
                       {!isDispatcherUser && (
-                        <td className="py-2.5 px-3 font-bold tracking-tight text-[#555555] whitespace-nowrap w-[125px] align-middle">
-                          {formatRupiah(tx.totalBuyCost)}
+                        <td className="py-2.5 px-3 whitespace-nowrap w-[130px] align-middle">
+                          <PricePerVolCell
+                            unitPrice={tx.buyPricePerUnit}
+                            totalPrice={tx.totalBuyCost}
+                            unit={tx.unit}
+                            quantity={tx.quantity}
+                          />
                         </td>
                       )}
                       <td className="py-2.5 px-3 font-bold tracking-tight text-[#555555] whitespace-nowrap w-[110px] align-middle">

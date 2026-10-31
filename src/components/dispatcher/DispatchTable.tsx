@@ -281,7 +281,10 @@ export function DispatchTable({
 
                     {/* Finansial (Fixed 140px, Zero Wrap) */}
                     <td className="py-2.5 px-3 align-middle text-right whitespace-nowrap w-[140px]">
-                      <div className="font-bold tracking-tight text-[#111111]">
+                      <span className="text-[11px] font-mono text-[#666666] block leading-tight">
+                        {formatRupiah(tx.sellPricePerUnit)} / {tx.unit}
+                      </span>
+                      <div className="font-bold tracking-tight text-[#111111] mt-0.5">
                         {formatRupiah(tx.totalRevenue)}
                       </div>
                       {!hideMargin && (

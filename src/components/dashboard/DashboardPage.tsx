@@ -12,6 +12,7 @@ import { MetricCardCurrency } from '@/components/ui/MetricCardCurrency';
 import { DashboardFilterDrawer, DashboardFilterState } from '@/components/dashboard/DashboardFilterDrawer';
 import { DashboardInlineChart } from '@/components/dashboard/DashboardInlineChart';
 import { TablePagination } from '@/components/ui/TablePagination';
+import { PricePerVolCell } from '@/components/ui/PricePerVolCell';
 import { subscribeMasterQuarries } from '@/lib/databaseMasterService';
 import { subscribeCommodities } from '@/lib/materialMasterService';
 
@@ -507,7 +508,7 @@ export function DashboardPage({
                 <th className="py-2.5 px-3 w-[160px] min-w-[160px] whitespace-nowrap">Proyek Tujuan</th>
                 <th className="py-2.5 px-3 w-[125px] min-w-[125px] whitespace-nowrap">Material</th>
                 <th className="py-2.5 px-3 w-[90px] min-w-[90px] text-center whitespace-nowrap">Volume</th>
-                <th className="py-2.5 px-3 w-[130px] min-w-[130px] text-right whitespace-nowrap">Nilai Jual</th>
+                <th className="py-2.5 px-3 w-[130px] min-w-[130px] text-right whitespace-nowrap">Harga Jual</th>
                 {!hideMargin && (
                   <th className="py-2.5 px-3 w-[130px] min-w-[130px] text-right whitespace-nowrap">Laba Bersih</th>
                 )}
@@ -570,9 +571,15 @@ export function DashboardPage({
                       <span className="text-[#666666] text-[11px]">{tx.unit}</span>
                     </td>
 
-                    {/* Nilai Jual (Fixed 130px, Zero Wrap) */}
-                    <td className="py-2.5 px-3 text-right font-bold tracking-tight text-[#111111] whitespace-nowrap w-[130px] align-middle">
-                      {formatRupiah(tx.totalRevenue)}
+                    {/* Harga Jual (Fixed 130px, Zero Wrap) */}
+                    <td className="py-2.5 px-3 text-right whitespace-nowrap w-[130px] align-middle">
+                      <PricePerVolCell
+                        unitPrice={tx.sellPricePerUnit}
+                        totalPrice={tx.totalRevenue}
+                        unit={tx.unit}
+                        quantity={tx.quantity}
+                        align="right"
+                      />
                     </td>
 
                     {/* Laba Bersih (Fixed 130px, Zero Wrap) */}

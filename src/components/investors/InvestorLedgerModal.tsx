@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Investor, Project, DispatchTransaction, InvestorPayout } from '@/types/database';
 import { CurrencyInput } from '@/components/ui/CurrencyInput';
+import { PricePerVolCell } from '@/components/ui/PricePerVolCell';
 import { formatPhoneNumber } from '@/lib/phoneUtils';
 import { X } from 'lucide-react';
 
@@ -328,7 +329,8 @@ export function InvestorLedgerModal({
                       <th className="py-2 px-2.5">Armada / Sopir</th>
                       <th className="py-2 px-2.5">Proyek Tujuan</th>
                       <th className="py-2 px-2.5">Material & Vol</th>
-                      <th className="py-2 px-2.5 text-right">Omzet (Tempo)</th>
+                      <th className="py-2 px-2.5 text-right">Harga Beli</th>
+                      <th className="py-2 px-2.5 text-right">Harga Jual</th>
                       <th className="py-2 px-2.5 text-right">Biaya (Kas Utama)</th>
                       <th className="py-2 px-2.5 text-right">Laba Bersih</th>
                     </tr>
@@ -336,7 +338,7 @@ export function InvestorLedgerModal({
                   <tbody className="divide-y divide-[#eaeaea]">
                     {investorTransactions.length === 0 ? (
                       <tr>
-                        <td colSpan={7} className="py-8 text-center text-[#888888]">
+                        <td colSpan={8} className="py-8 text-center text-[#888888]">
                           Belum ada transaksi ritase untuk proyek yang didanai investor ini.
                         </td>
                       </tr>
@@ -362,8 +364,23 @@ export function InvestorLedgerModal({
                               <span className="text-[#111111] block font-medium">{tx.materialName}</span>
                               <span className="text-[10px] text-[#888888] block">{tx.quantity} {tx.unit}</span>
                             </td>
-                            <td className="py-2 px-2.5 text-right font-bold tracking-tight text-[#111111]">
-                              {formatRupiah(tx.totalRevenue || 0)}
+                            <td className="py-2 px-2.5 text-right">
+                              <PricePerVolCell
+                                unitPrice={tx.buyPricePerUnit}
+                                totalPrice={tx.totalBuyCost}
+                                unit={tx.unit}
+                                quantity={tx.quantity}
+                                align="right"
+                              />
+                            </td>
+                            <td className="py-2 px-2.5 text-right">
+                              <PricePerVolCell
+                                unitPrice={tx.sellPricePerUnit}
+                                totalPrice={tx.totalRevenue}
+                                unit={tx.unit}
+                                quantity={tx.quantity}
+                                align="right"
+                              />
                             </td>
                             <td className="py-2 px-2.5 text-right font-bold tracking-tight text-[#666666]">
                               {formatRupiah(expense)}

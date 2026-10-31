@@ -6,6 +6,8 @@ import { settleSingleTicket } from '@/lib/cashLedgerService';
 import { useProjectFilter } from '@/context/ProjectFilterContext';
 import { TablePagination } from '@/components/ui/TablePagination';
 import { formatRupiah } from '@/lib/currencyUtils';
+import { PricePerVolCell } from '@/components/ui/PricePerVolCell';
+import { matchesDateQuery } from '@/lib/dateSearchUtils';
 
 interface ReceivablesViewProps {
   transactions: DispatchTransaction[];
@@ -85,7 +87,8 @@ export function ReceivablesView({
         (tx.projectName && tx.projectName.toLowerCase().includes(q)) ||
         (tx.clientName && tx.clientName.toLowerCase().includes(q)) ||
         (tx.truckPlate && tx.truckPlate.toLowerCase().includes(q)) ||
-        (tx.materialName && tx.materialName.toLowerCase().includes(q))
+        (tx.materialName && tx.materialName.toLowerCase().includes(q)) ||
+        matchesDateQuery(tx.deliveryDate || tx.date, q)
       );
     });
   }, [transactions, statusFilter, searchQuery]);
@@ -230,7 +233,7 @@ export function ReceivablesView({
                 type="text"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                placeholder="Cari tiket, proyek, klien, plat..."
+                placeholder="Cari tiket, proyek, klien, tanggal (misal 28-10-26)..."
                 className="w-full bg-white border border-[#eaeaea] rounded-[6px] pl-9 pr-3 py-1.5 text-xs text-[#111111] placeholder:text-[#999999] outline-none focus:border-[#111111] transition-colors"
               />
             </div>
@@ -299,8 +302,14 @@ export function ReceivablesView({
                         {tx.truckPlate} {tx.driverName ? `- ${tx.driverName}` : ''}
                       </span>
                     </td>
-                    <td className="py-2.5 px-3 font-bold tracking-tight text-[#111111] text-right whitespace-nowrap align-middle">
-                      {formatRupiah(tx.totalRevenue || 0)}
+                    <td className="py-2.5 px-3 text-right whitespace-nowrap align-middle">
+                      <PricePerVolCell
+                        unitPrice={tx.sellPricePerUnit}
+                        totalPrice={tx.totalRevenue}
+                        unit={tx.unit}
+                        quantity={tx.quantity}
+                        align="right"
+                      />
                     </td>
                     <td className="py-2.5 px-3 text-center whitespace-nowrap align-middle">
                       <span

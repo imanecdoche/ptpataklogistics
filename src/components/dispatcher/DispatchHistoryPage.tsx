@@ -43,6 +43,8 @@ import {
   DispatchFilterState
 } from '@/components/dispatcher/DispatchFilterPopover';
 import { formatRupiah, formatRupiahCompact } from '@/lib/currencyUtils';
+import { PricePerVolCell } from '@/components/ui/PricePerVolCell';
+import { matchesDateQuery } from '@/lib/dateSearchUtils';
 import { X } from 'lucide-react';
 import { TablePagination } from '@/components/ui/TablePagination';
 
@@ -296,7 +298,8 @@ export function DispatchHistoryPage({ userEmail }: DispatchHistoryPageProps): Re
           ent.quarry.name.toLowerCase().includes(q) ||
           ent.material.name.toLowerCase().includes(q) ||
           (tx.notes && tx.notes.toLowerCase().includes(q)) ||
-          creatorName.includes(q)
+          creatorName.includes(q) ||
+          matchesDateQuery(tx.deliveryDate || tx.date, q)
         );
       });
     }
@@ -464,7 +467,7 @@ export function DispatchHistoryPage({ userEmail }: DispatchHistoryPageProps): Re
             type="text"
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            placeholder="Cari tiket, plat, supir, proyek, klien, kuari, material..."
+            placeholder="Cari tiket, plat, supir, proyek, tanggal (misal 28-10-26)..."
             className="w-full bg-[#f8f8f8] hover:bg-[#f2f2f2] focus:bg-white border border-[#eaeaea] focus:border-[#111111] rounded-[8px] pl-9 pr-8 py-2 text-xs text-[#111111] placeholder:text-[#888888] outline-none transition-all"
           />
           {searchQuery && (
@@ -557,7 +560,7 @@ export function DispatchHistoryPage({ userEmail }: DispatchHistoryPageProps): Re
       {/* 3. TABEL DATA RIWAYAT RITASE FULL-WIDTH */}
       <div className="w-full bg-white border border-[#dcdcdc] rounded-[10px] overflow-hidden shadow-xs">
         <div className="overflow-x-auto select-text max-h-[720px] w-full">
-          <table className="w-full min-w-[1495px] table-fixed text-left text-xs border-collapse">
+          <table className="w-full min-w-[1370px] table-fixed text-left text-xs border-collapse">
             <thead className="sticky top-0 z-10 bg-[#f8f8f8] border-b border-[#eaeaea] text-[#555555] font-semibold text-[11px] uppercase tracking-wider select-none">
               <tr>
                 <th className="py-2.5 px-3 w-[140px] min-w-[140px] whitespace-nowrap">No. Tiket</th>
@@ -568,10 +571,9 @@ export function DispatchHistoryPage({ userEmail }: DispatchHistoryPageProps): Re
                 <th className="py-2.5 px-3 w-[130px] min-w-[130px] whitespace-nowrap">Kuari Asal</th>
                 <th className="py-2.5 px-3 w-[140px] min-w-[140px] whitespace-nowrap">Material</th>
                 <th className="py-2.5 px-3 w-[90px] min-w-[90px] whitespace-nowrap">Vol</th>
-                <th className="py-2.5 px-3 w-[110px] min-w-[110px] whitespace-nowrap">Harga Jual</th>
-                <th className="py-2.5 px-3 w-[125px] min-w-[125px] whitespace-nowrap">Total Omset</th>
+                <th className="py-2.5 px-3 w-[130px] min-w-[130px] whitespace-nowrap">Harga Jual</th>
                 {!hideMargin && (
-                  <th className="py-2.5 px-3 w-[125px] min-w-[125px] whitespace-nowrap">Belanja Kuari</th>
+                  <th className="py-2.5 px-3 w-[130px] min-w-[130px] whitespace-nowrap">Harga Beli</th>
                 )}
                 <th className="py-2.5 px-3 w-[110px] min-w-[110px] whitespace-nowrap">Beban Ops</th>
                 {!hideMargin && (
@@ -586,7 +588,7 @@ export function DispatchHistoryPage({ userEmail }: DispatchHistoryPageProps): Re
               {filteredTransactions.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={hideMargin ? 14 : 16}
+                    colSpan={hideMargin ? 13 : 15}
                     className="py-12 text-center text-xs text-[#888888] whitespace-nowrap"
                   >
                     {isLoading
@@ -675,15 +677,22 @@ export function DispatchHistoryPage({ userEmail }: DispatchHistoryPageProps): Re
                       <td className="py-2.5 px-3 font-bold tracking-tight text-[#111111] whitespace-nowrap w-[90px] align-middle">
                         {tx.quantity} {tx.unit}
                       </td>
-                      <td className="py-2.5 px-3 font-bold tracking-tight text-[#444444] whitespace-nowrap w-[110px] align-middle">
-                        {formatRupiah(tx.sellPricePerUnit)}
-                      </td>
-                      <td className="py-2.5 px-3 font-bold tracking-tight text-[#111111] whitespace-nowrap w-[125px] align-middle">
-                        {formatRupiah(tx.totalRevenue)}
+                      <td className="py-2.5 px-3 whitespace-nowrap w-[130px] align-middle">
+                        <PricePerVolCell
+                          unitPrice={tx.sellPricePerUnit}
+                          totalPrice={tx.totalRevenue}
+                          unit={tx.unit}
+                          quantity={tx.quantity}
+                        />
                       </td>
                       {!hideMargin && (
-                        <td className="py-2.5 px-3 font-bold tracking-tight text-[#555555] whitespace-nowrap w-[125px] align-middle">
-                          {formatRupiah(tx.totalBuyCost)}
+                        <td className="py-2.5 px-3 whitespace-nowrap w-[130px] align-middle">
+                          <PricePerVolCell
+                            unitPrice={tx.buyPricePerUnit}
+                            totalPrice={tx.totalBuyCost}
+                            unit={tx.unit}
+                            quantity={tx.quantity}
+                          />
                         </td>
                       )}
                       <td className="py-2.5 px-3 font-bold tracking-tight text-[#555555] whitespace-nowrap w-[110px] align-middle">

@@ -8,6 +8,7 @@ import {
 import { subscribeProjects } from '@/lib/projectService';
 import { LaborPaymentFormModal } from './LaborPaymentFormModal';
 import { LaborJobTypeModal } from './LaborJobTypeModal';
+import { matchesDateQuery } from '@/lib/dateSearchUtils';
 
 interface LaborPageProps {
   userEmail: string;
@@ -104,7 +105,8 @@ export function LaborPage({
         p.projectName.toLowerCase().includes(q) ||
         p.jobTypeName.toLowerCase().includes(q) ||
         (p.notes && p.notes.toLowerCase().includes(q)) ||
-        (p.workerPhone && p.workerPhone.includes(q))
+        (p.workerPhone && p.workerPhone.includes(q)) ||
+        matchesDateQuery(p.paymentDate, q)
     );
   }, [payments, searchQuery]);
 
@@ -207,7 +209,7 @@ export function LaborPage({
                     type="text"
                     value={searchQuery}
                     onChange={e => setSearchQuery(e.target.value)}
-                    placeholder="Cari tukang, proyek, tipe kerja..."
+                    placeholder="Cari tukang, proyek, tanggal (misal 28-10-26)..."
                     className="w-full bg-white border border-[#eaeaea] rounded-[6px] pl-9 pr-3 py-1.5 text-xs text-[#111111] placeholder:text-[#999999] outline-none focus:border-[#111111] transition-colors"
                   />
                 </div>

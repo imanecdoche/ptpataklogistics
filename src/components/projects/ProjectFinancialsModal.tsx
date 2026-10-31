@@ -14,6 +14,7 @@ import {
 } from '@/lib/projectFinanceService';
 import { subscribeAllTransactions } from '@/lib/dispatcherService';
 import { formatRupiah } from '@/lib/currencyUtils';
+import { PricePerVolCell } from '@/components/ui/PricePerVolCell';
 import { MetricCardCurrency } from '@/components/ui/MetricCardCurrency';
 import { RecordSubJobModal } from './RecordSubJobModal';
 import { RecordKasbonModal } from './RecordKasbonModal';
@@ -513,15 +514,15 @@ export function ProjectFinancialsModal({
                 </div>
               ) : (
                 <div className="bg-white border border-[#eaeaea] rounded-[10px] overflow-x-auto">
-                  <table className="w-full min-w-[720px] text-xs text-left border-collapse">
+                  <table className="w-full min-w-[780px] text-xs text-left border-collapse">
                     <thead className="bg-[#f9f9f9] border-b border-[#eaeaea] text-[#555555] font-semibold text-[10px] uppercase">
                       <tr>
                         <th className="py-2.5 px-3 whitespace-nowrap">Tanggal & Tiket</th>
                         <th className="py-2.5 px-3 whitespace-nowrap">Armada / Sopir</th>
                         <th className="py-2.5 px-3 whitespace-nowrap">Material & Muatan</th>
                         <th className="py-2.5 px-3 whitespace-nowrap">Kuari Asal</th>
+                        <th className="py-2.5 px-3 text-right whitespace-nowrap">Harga Beli</th>
                         <th className="py-2.5 px-3 text-right whitespace-nowrap">Harga Jual</th>
-                        <th className="py-2.5 px-3 text-right whitespace-nowrap">Total Omset</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#eaeaea]">
@@ -539,8 +540,24 @@ export function ProjectFinancialsModal({
                             <span className="text-[10px] text-[#666666] font-mono">{tx.quantity} {tx.unit}</span>
                           </td>
                           <td className="py-2 px-3 text-[#666666] whitespace-nowrap">{tx.quarryName || '-'}</td>
-                          <td className="py-2 px-3 text-right font-mono whitespace-nowrap">{formatRupiah(tx.sellPricePerUnit)}</td>
-                          <td className="py-2 px-3 text-right font-mono font-bold text-[#111111] whitespace-nowrap">{formatRupiah(tx.totalRevenue)}</td>
+                          <td className="py-2 px-3 text-right whitespace-nowrap">
+                            <PricePerVolCell
+                              unitPrice={tx.buyPricePerUnit}
+                              totalPrice={tx.totalBuyCost}
+                              unit={tx.unit}
+                              quantity={tx.quantity}
+                              align="right"
+                            />
+                          </td>
+                          <td className="py-2 px-3 text-right whitespace-nowrap">
+                            <PricePerVolCell
+                              unitPrice={tx.sellPricePerUnit}
+                              totalPrice={tx.totalRevenue}
+                              unit={tx.unit}
+                              quantity={tx.quantity}
+                              align="right"
+                            />
+                          </td>
                         </tr>
                       ))}
                     </tbody>

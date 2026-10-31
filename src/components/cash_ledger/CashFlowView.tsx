@@ -6,6 +6,7 @@ import { useProjectFilter } from '@/context/ProjectFilterContext';
 import { RecordMutationModal } from './RecordMutationModal';
 import { TablePagination } from '@/components/ui/TablePagination';
 import { formatRupiah } from '@/lib/currencyUtils';
+import { matchesDateQuery } from '@/lib/dateSearchUtils';
 import { ReceiptLightboxModal } from '@/components/ui/ReceiptLightboxModal';
 import { EditCashLedgerModal } from './EditCashLedgerModal';
 import { DeleteCashLedgerModal } from './DeleteCashLedgerModal';
@@ -79,7 +80,8 @@ export function CashFlowView({
         e.description.toLowerCase().includes(q) ||
         e.type.toLowerCase().includes(q) ||
         (e.referenceId && e.referenceId.toLowerCase().includes(q)) ||
-        (e.createdByName && e.createdByName.toLowerCase().includes(q))
+        (e.createdByName && e.createdByName.toLowerCase().includes(q)) ||
+        matchesDateQuery(e.date, q)
     );
   }, [entries, searchQuery]);
 
@@ -200,7 +202,7 @@ export function CashFlowView({
                 type="text"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                placeholder="Cari transaksi, deskripsi, ref..."
+                placeholder="Cari transaksi, deskripsi, ref, tanggal (misal 28-10-26)..."
                 className="w-full bg-white border border-[#eaeaea] rounded-[6px] pl-9 pr-3 py-1.5 text-xs text-[#111111] placeholder:text-[#999999] outline-none focus:border-[#111111] transition-colors"
               />
             </div>
