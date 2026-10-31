@@ -10,7 +10,8 @@ import { useProjectFilter } from '@/context/ProjectFilterContext';
 import { FundTransferSection } from '@/components/dashboard/FundTransferSection';
 import { MetricCardCurrency } from '@/components/ui/MetricCardCurrency';
 import { DashboardFilterDrawer, DashboardFilterState } from '@/components/dashboard/DashboardFilterDrawer';
-import { DashboardChartDrawer } from '@/components/dashboard/DashboardChartDrawer';
+import { DashboardInlineChart } from '@/components/dashboard/DashboardInlineChart';
+import { TablePagination } from '@/components/ui/TablePagination';
 import { subscribeMasterQuarries } from '@/lib/databaseMasterService';
 import { subscribeCommodities } from '@/lib/materialMasterService';
 
@@ -40,14 +41,6 @@ export function DashboardPage({
   const [isLoading, setIsLoading] = useState(true);
   const [selectedTx, setSelectedTx] = useState<DispatchTransaction | null>(null);
 
-  // Tanggal hari ini lokal YYYY-MM-DD
-  const todayStr = useMemo(() => {
-    const now = new Date();
-    const y = now.getFullYear();
-    const m = String(now.getMonth() + 1).padStart(2, '0');
-    const d = String(now.getDate()).padStart(2, '0');
-    return `${y}-${m}-${d}`;
-  }, []);
 
   // Format Rupiah
   const formatRupiah = (val: number): string => {
@@ -112,9 +105,9 @@ export function DashboardPage({
   }, []);
 
   const defaultFilters: DashboardFilterState = {
-    datePreset: 'TODAY',
-    startDate: todayStr,
-    endDate: todayStr,
+    datePreset: 'ALL',
+    startDate: '',
+    endDate: '',
     projectId: 'ALL',
     quarryName: 'ALL',
     materialName: 'ALL',
@@ -122,8 +115,8 @@ export function DashboardPage({
   };
 
   const [filters, setFilters] = useState<DashboardFilterState>(defaultFilters);
+  const [currentPage, setCurrentPage] = useState(1);
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
-  const [isChartDrawerOpen, setIsChartDrawerOpen] = useState(false);
   const [quarries, setQuarries] = useState<{ id: string; name: string }[]>([]);
   const [materials, setMaterials] = useState<{ id: string; name: string }[]>([]);
 
@@ -143,12 +136,17 @@ export function DashboardPage({
 
   const isFilterActive = useMemo(() => {
     return (
-      filters.datePreset !== 'TODAY' ||
+      filters.datePreset !== 'ALL' ||
       filters.projectId !== 'ALL' ||
       filters.quarryName !== 'ALL' ||
       filters.materialName !== 'ALL' ||
       filters.status !== 'ALL'
     );
+  }, [filters]);
+
+  // Reset ke halaman 1 saat filter berubah
+  useEffect(() => {
+    setCurrentPage(1);
   }, [filters]);
 
   // Filter transaksi berdasarkan filter drawer & global project filter
@@ -185,6 +183,12 @@ export function DashboardPage({
       return true;
     });
   }, [transactions, selectedProjectId, filters]);
+
+  // Transaksi yang ditampilkan per halaman (20 baris per page)
+  const paginatedTransactions = useMemo(() => {
+    const start = (currentPage - 1) * 20;
+    return filteredTransactions.slice(start, start + 20);
+  }, [filteredTransactions, currentPage]);
 
   // Metrik Utama Berdasarkan Filter Aktif
   const todayMetrics = useMemo(() => {
@@ -232,13 +236,13 @@ export function DashboardPage({
 
   return (
     <div className="space-y-6 w-full">
-      {/* BILAH KONTROL ATAS DASHBOARD (FILTER & CHART DENGAN TOUCH TARGET LUAS) */}
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 select-none">
-        {/* Tombol 1: Filter Operasional (Membuka Bottom Sheet Drawer) */}
+      {/* BILAH KONTROL ATAS DASHBOARD: FILTER OPERASIONAL */}
+      <div className="select-none">
+        {/* Tombol: Filter Operasional (Membuka Bottom Sheet Drawer) */}
         <button
           type="button"
           onClick={() => setIsFilterDrawerOpen(true)}
-          className={`flex items-center justify-between p-3.5 sm:p-4 rounded-[10px] border transition-all cursor-pointer min-h-[52px] ${
+          className={`w-full flex items-center justify-between p-3.5 sm:p-4 rounded-[10px] border transition-all cursor-pointer min-h-[52px] ${
             isFilterActive
               ? 'bg-[#111111] text-white border-[#111111] shadow-md'
               : 'bg-white text-[#111111] border-[#eaeaea] hover:bg-[#f9f9f9] shadow-xs active:scale-[0.99]'
@@ -270,30 +274,6 @@ export function DashboardPage({
             </svg>
           )}
         </button>
-
-        {/* Tombol 2: Lihat Grafik Garis (Membuka Bottom Sheet Drawer) */}
-        <button
-          type="button"
-          onClick={() => setIsChartDrawerOpen(true)}
-          className="flex items-center justify-between p-3.5 sm:p-4 rounded-[10px] border border-[#eaeaea] bg-white text-[#111111] hover:bg-[#f9f9f9] shadow-xs active:scale-[0.99] transition-all cursor-pointer min-h-[52px]"
-        >
-          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-            <div className="w-8 h-8 rounded-[8px] bg-[#f0f0f0] flex-shrink-0 flex items-center justify-center">
-              <img
-                src="/icons/chart-line.png"
-                alt="Chart"
-                className="w-4 h-4 object-contain"
-              />
-            </div>
-            <div className="text-left truncate">
-              <span className="text-xs sm:text-sm font-bold block leading-tight truncate">Lihat Grafik Garis</span>
-              <span className="text-[10px] text-[#777777] block mt-0.5 truncate">Tren Ritase & Keuangan</span>
-            </div>
-          </div>
-          <svg className="w-4 h-4 text-[#888888] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-          </svg>
-        </button>
       </div>
 
       {/* 1. SECTION: KPI CARDS RINGKASAN UTAMA */}
@@ -303,7 +283,7 @@ export function DashboardPage({
             {/* Card 1: Ritase */}
             <div className="bg-white rounded-[10px] p-4 border border-[#eaeaea] flex flex-col justify-between">
               <span className="text-[11px] font-medium text-[#666666]">
-                {filters.datePreset === 'TODAY' ? 'Ritase Hari Ini' : 'Ritase Periode Terpilih'}
+                {filters.datePreset === 'TODAY' ? 'Ritase Hari Ini' : filters.datePreset === 'ALL' ? 'Total Ritase' : 'Ritase Periode Terpilih'}
               </span>
               <div className="mt-2 flex items-baseline gap-1.5">
                 <span className="text-2xl font-bold tracking-tight text-[#111111]">
@@ -316,10 +296,14 @@ export function DashboardPage({
               </span>
             </div>
 
-            {/* Card 2: Estimasi Laba Bersih / Omzet Hari Ini */}
+            {/* Card 2: Estimasi Laba Bersih / Omzet */}
             <div className="bg-white rounded-[10px] p-4 border border-[#eaeaea] flex flex-col justify-between">
               <span className="text-[11px] font-medium text-[#666666]">
-                {hideMargin ? 'Omzet Penjualan Hari Ini' : 'Estimasi Laba Bersih Hari Ini'}
+                {filters.datePreset === 'TODAY'
+                  ? (hideMargin ? 'Omzet Penjualan Hari Ini' : 'Estimasi Laba Bersih Hari Ini')
+                  : filters.datePreset === 'ALL'
+                  ? (hideMargin ? 'Total Omzet Penjualan' : 'Estimasi Laba Bersih')
+                  : (hideMargin ? 'Omzet Periode Terpilih' : 'Estimasi Laba Periode Terpilih')}
               </span>
               <div className="mt-2">
                 <MetricCardCurrency
@@ -379,15 +363,21 @@ export function DashboardPage({
             </div>
           </div>
 
-          {/* Card / Ringkasan Kas Keluar Hari Ini (Rule 109: Pengawasan Kebocoran Modal & HOK) */}
+          {/* 1.1 SECTION: GRAFIK GARIS TREN OPERASIONAL & KEUANGAN (SELALU MUNCUL DI BAWAH KARTU MATRIKS) */}
+          <DashboardInlineChart
+            transactions={filteredTransactions}
+            hideMargin={hideMargin}
+          />
+
+          {/* Card / Ringkasan Kas Keluar (Rule 109: Pengawasan Kebocoran Modal & HOK) */}
           <div className="bg-white rounded-[10px] p-4 border border-[#eaeaea]">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-[#f0f0f0] pb-2.5">
               <div>
                 <span className="text-xs font-bold text-[#111111] uppercase tracking-wider block">
-                  Arus Kas Keluar Hari Ini (Modal Terpakai)
+                  {filters.datePreset === 'TODAY' ? 'Arus Kas Keluar Hari Ini (Modal Terpakai)' : filters.datePreset === 'ALL' ? 'Total Arus Kas Keluar (Modal Terpakai)' : 'Arus Kas Keluar Periode Terpilih (Modal Terpakai)'}
                 </span>
                 <span className="text-[11px] text-[#888888]">
-                  Akumulasi kas modal yang dikeluarkan untuk tebus kuari dan operasional HOK supir hari ini
+                  {filters.datePreset === 'TODAY' ? 'Akumulasi kas modal yang dikeluarkan untuk tebus kuari dan operasional HOK supir hari ini' : 'Akumulasi kas modal yang dikeluarkan untuk tebus kuari dan operasional HOK supir'}
                 </span>
               </div>
               <div className="text-left sm:text-right">
@@ -426,15 +416,17 @@ export function DashboardPage({
             <button
               type="button"
               onClick={() => onNavigateTab && onNavigateTab('dispatcher', 'new_ticket')}
-              className="bg-white rounded-[10px] p-4 border border-[#eaeaea] hover:border-[#111111] text-left transition-colors cursor-pointer group"
+              className="bg-[#1c1c1e] rounded-[10px] p-4 border border-[#2c2c2e] hover:bg-[#26262a] hover:border-[#3a3a3e] text-left transition-all duration-200 cursor-pointer group shadow-xs"
             >
               <div className="flex items-center space-x-3">
-                <img src="/icons/truck.png" alt="" className="w-6 h-6 object-contain" />
+                <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shrink-0 shadow-xs">
+                  <img src="/icons/truck.png" alt="" className="w-5 h-5 object-contain" />
+                </div>
                 <div>
-                  <h3 className="text-xs font-bold text-[#111111] group-hover:underline">
+                  <h3 className="text-xs font-bold text-white group-hover:underline">
                     Catat Ritase Baru
                   </h3>
-                  <p className="text-[11px] text-[#666666] mt-0.5">
+                  <p className="text-[11px] text-[#e0e0e0] mt-0.5">
                     Input armada keluar-masuk kuari dan penetapan harga tempo
                   </p>
                 </div>
@@ -444,15 +436,17 @@ export function DashboardPage({
             <button
               type="button"
               onClick={() => onNavigateTab && onNavigateTab('dispatcher', 'history')}
-              className="bg-white rounded-[10px] p-4 border border-[#eaeaea] hover:border-[#111111] text-left transition-colors cursor-pointer group"
+              className="bg-[#1c1c1e] rounded-[10px] p-4 border border-[#2c2c2e] hover:bg-[#26262a] hover:border-[#3a3a3e] text-left transition-all duration-200 cursor-pointer group shadow-xs"
             >
               <div className="flex items-center space-x-3">
-                <img src="/icons/chart.png" alt="" className="w-6 h-6 object-contain" />
+                <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shrink-0 shadow-xs">
+                  <img src="/icons/chart.png" alt="" className="w-5 h-5 object-contain" />
+                </div>
                 <div>
-                  <h3 className="text-xs font-bold text-[#111111] group-hover:underline">
+                  <h3 className="text-xs font-bold text-white group-hover:underline">
                     Lihat Riwayat Ritase
                   </h3>
-                  <p className="text-[11px] text-[#666666] mt-0.5">
+                  <p className="text-[11px] text-[#e0e0e0] mt-0.5">
                     Tabel rekap transaksi harian dan verifikasi status pembayaran
                   </p>
                 </div>
@@ -462,15 +456,17 @@ export function DashboardPage({
             <button
               type="button"
               onClick={() => onNavigateTab && onNavigateTab('database', 'vehicles')}
-              className="bg-white rounded-[10px] p-4 border border-[#eaeaea] hover:border-[#111111] text-left transition-colors cursor-pointer group"
+              className="bg-[#1c1c1e] rounded-[10px] p-4 border border-[#2c2c2e] hover:bg-[#26262a] hover:border-[#3a3a3e] text-left transition-all duration-200 cursor-pointer group shadow-xs"
             >
               <div className="flex items-center space-x-3">
-                <img src="/icons/database.png" alt="" className="w-6 h-6 object-contain" />
+                <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shrink-0 shadow-xs">
+                  <img src="/icons/database.png" alt="" className="w-5 h-5 object-contain" />
+                </div>
                 <div>
-                  <h3 className="text-xs font-bold text-[#111111] group-hover:underline">
+                  <h3 className="text-xs font-bold text-white group-hover:underline">
                     Master Database
                   </h3>
-                  <p className="text-[11px] text-[#666666] mt-0.5">
+                  <p className="text-[11px] text-[#e0e0e0] mt-0.5">
                     Kelola data armada plat nomor, supir, klien, dan kuari asal
                   </p>
                 </div>
@@ -502,14 +498,13 @@ export function DashboardPage({
         </div>
 
         <div className="overflow-x-auto select-text">
-          <table className="w-full min-w-[1310px] table-fixed text-left text-xs border-collapse">
+          <table className="w-full min-w-[1120px] table-fixed text-left text-xs border-collapse">
             <thead className="sticky top-0 z-10 bg-[#f9f9f9] border-b border-[#eaeaea] text-[11px] font-semibold text-[#555555] uppercase tracking-wider select-none">
               <tr>
                 <th className="py-2.5 px-3 w-[125px] min-w-[125px] whitespace-nowrap">No. Tiket</th>
                 <th className="py-2.5 px-3 w-[115px] min-w-[115px] whitespace-nowrap">Tanggal Jalan</th>
                 <th className="py-2.5 px-3 w-[130px] min-w-[130px] whitespace-nowrap">Armada & Supir</th>
-                <th className="py-2.5 px-3 w-[130px] min-w-[130px] whitespace-nowrap">Proyek Tujuan</th>
-                <th className="py-2.5 px-3 w-[140px] min-w-[140px] whitespace-nowrap">Klien / Proyek</th>
+                <th className="py-2.5 px-3 w-[160px] min-w-[160px] whitespace-nowrap">Proyek Tujuan</th>
                 <th className="py-2.5 px-3 w-[125px] min-w-[125px] whitespace-nowrap">Material</th>
                 <th className="py-2.5 px-3 w-[90px] min-w-[90px] text-center whitespace-nowrap">Volume</th>
                 <th className="py-2.5 px-3 w-[130px] min-w-[130px] text-right whitespace-nowrap">Nilai Jual</th>
@@ -517,19 +512,18 @@ export function DashboardPage({
                   <th className="py-2.5 px-3 w-[130px] min-w-[130px] text-right whitespace-nowrap">Laba Bersih</th>
                 )}
                 <th className="py-2.5 px-3 w-[185px] min-w-[185px] whitespace-nowrap">Catatan Ritase</th>
-                <th className="py-2.5 px-3 w-[80px] min-w-[80px] text-center whitespace-nowrap">Status</th>
                 <th className="py-2.5 px-3 w-[60px] min-w-[60px] text-right whitespace-nowrap">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#eaeaea]">
               {filteredTransactions.length === 0 ? (
                 <tr>
-                  <td colSpan={hideMargin ? 11 : 12} className="py-10 text-center text-[#888888] whitespace-nowrap">
+                  <td colSpan={hideMargin ? 9 : 10} className="py-10 text-center text-[#888888] whitespace-nowrap">
                     {isLoading ? 'Memuat log aktivitas...' : 'Belum ada transaksi ritase tercatat.'}
                   </td>
                 </tr>
               ) : (
-                filteredTransactions.slice(0, 20).map(tx => (
+                paginatedTransactions.map(tx => (
                   <tr key={tx.id} className="hover:bg-[#fafafa] transition-colors">
                     {/* No. Tiket (Fixed 125px, Zero Wrap) */}
                     <td className="py-2.5 px-3 font-mono font-medium text-[#111111] whitespace-nowrap w-[125px] align-middle">
@@ -551,20 +545,16 @@ export function DashboardPage({
                       </span>
                     </td>
 
-                    {/* Proyek Tujuan (Fixed 130px, Zero Wrap) */}
-                    <td className="py-2.5 px-3 whitespace-nowrap w-[130px] align-middle">
+                    {/* Proyek Tujuan & Konsumen (Fixed 160px, Zero Wrap) */}
+                    <td className="py-2.5 px-3 whitespace-nowrap w-[160px] align-middle">
                       <span className="font-semibold text-[#111111] block truncate">
                         {tx.projectName || 'Proyek Umum'}
                       </span>
-                    </td>
-
-                    {/* Klien / Proyek (Fixed 140px, Zero Wrap, RunningText) */}
-                    <td className="py-2.5 px-3 whitespace-nowrap w-[140px] align-middle">
-                      <RunningText
-                        text={tx.clientName || tx.customerName}
-                        className="font-medium text-[#111111]"
-                        placeholder="Umum"
-                      />
+                      {(tx.clientName || tx.customerName) && (
+                        <span className="text-[11px] text-[#666666] block truncate mt-0.5">
+                          {tx.clientName || tx.customerName}
+                        </span>
+                      )}
                     </td>
 
                     {/* Material (Fixed 125px, Zero Wrap) */}
@@ -605,17 +595,6 @@ export function DashboardPage({
                       />
                     </td>
 
-                    {/* Status (Fixed 80px, Zero Wrap, Tipografi Bersih) */}
-                    <td className="py-2.5 px-3 text-center whitespace-nowrap w-[80px] align-middle">
-                      <span
-                        className={`text-[11px] font-bold tracking-wide ${
-                          tx.status === 'LUNAS' ? 'text-emerald-700' : 'text-amber-700'
-                        }`}
-                      >
-                        {tx.status === 'LUNAS' ? 'LUNAS' : 'TEMPO'}
-                      </span>
-                    </td>
-
                     {/* Aksi (Fixed 60px, Zero Wrap, Popover Context Menu) */}
                     <td className="py-2.5 px-3 align-middle text-right whitespace-nowrap w-[60px]">
                       <div className="flex items-center justify-end">
@@ -641,6 +620,15 @@ export function DashboardPage({
             </tbody>
           </table>
         </div>
+
+        {/* Universal Pagination 20 Baris Per Page */}
+        <TablePagination
+          currentPage={currentPage}
+          totalItems={filteredTransactions.length}
+          itemsPerPage={20}
+          onPageChange={setCurrentPage}
+          itemLabel="ritase"
+        />
       </div>
 
       {/* Modal Detail Rincian Ritase */}
@@ -661,14 +649,6 @@ export function DashboardPage({
         projects={projects}
         quarries={quarries}
         materials={materials}
-      />
-
-      {/* Bottom Sheet Drawer Chart Garis Dashboard */}
-      <DashboardChartDrawer
-        isOpen={isChartDrawerOpen}
-        onClose={() => setIsChartDrawerOpen(false)}
-        transactions={filteredTransactions}
-        hideMargin={hideMargin}
       />
     </div>
   );

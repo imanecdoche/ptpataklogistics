@@ -14,7 +14,7 @@ export function formatRupiah(amount: number): string {
   const isNegative = (amount || 0) < 0;
   const absVal = Math.abs(Math.round(amount || 0));
   const formatted = absVal.toLocaleString('id-ID');
-  return `${isNegative ? '-Rp ' : 'Rp '}${formatted}`;
+  return `${isNegative ? 'Rp -' : 'Rp '}${formatted}`;
 }
 
 /**
@@ -64,7 +64,7 @@ export function formatSimplifiedCurrency(amount: number): SimplifiedCurrencyResu
       value: formatted,
       suffix: '',
       formatted,
-      withRp: `${isNegative ? '-Rp ' : 'Rp '}${formatted}`
+      withRp: `${isNegative ? 'Rp -' : 'Rp '}${formatted}`
     };
   }
 
@@ -102,7 +102,7 @@ export function formatSimplifiedCurrency(amount: number): SimplifiedCurrencyResu
     value: valueStr,
     suffix,
     formatted,
-    withRp: `${isNegative ? '-Rp ' : 'Rp '}${formatted}`
+    withRp: `${isNegative ? 'Rp -' : 'Rp '}${formatted}`
   };
 }
 

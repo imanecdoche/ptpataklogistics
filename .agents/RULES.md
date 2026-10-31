@@ -1468,3 +1468,30 @@ Dokumen ini adalah hukum tertinggi operasional sistem. Kegagalan mematuhi aturan
       * Wadah tabel WAJIB dibungkus dengan kontainer scroll horizontal: `overflow-x-auto`.
       * Tabel WAJIB menetapkan batas lebar minimum (`min-w-[650px]` hingga `min-w-[720px]`).
       * Seluruh sel header (`<th>`) dan sel isi data (`<td>`) WAJIB memiliki kelas **`whitespace-nowrap`** sehingga informasi tersusun rapi dalam 1 baris lurus tanpa kata yang terpotong secara vertikal.
+
+126. **Standar Peletakan Tanda Minus (Rp -), Presistensi Tab, Inline Chart Monokrom, Universal Pagination 20 Baris, Desain Header Investor, & Integrasi Kolom Ritase (Tanpa Kolom Status/Konsumen)**:
+    - **Format Peletakan Tanda Minus Mata Uang (`Rp -`)**:
+      * Pada seluruh tampilan nominal mata uang negatif, tanda minus (-) WAJIB diletakkan **setelah simbol Rp** (contoh: `Rp -17.136.500`), BUKAN di depan Rp (`-Rp 17.136.500`).
+      * Aturan ini berlaku mutlak pada utility `src/lib/currencyUtils.ts` (`formatRupiah` & `formatSimplifiedCurrency`) serta komponen `<MetricCardCurrency />` dan `<AdaptiveCurrency />`.
+    - **Presistensi Halaman & Subtab Saat Refresh (`localStorage`)**:
+      * Tab dan subtab navigasi yang sedang dibuka oleh pengguna WAJIB disimpan secara persisten di `localStorage` (`patak_active_tab` dan `patak_active_subtab`).
+      * Saat browser di-refresh, halaman otomatis kembali ke tab/subtab terakhir yang sedang dibuka. Sesi keluar (*logout*) otomatis membersihkan kedua key tersebut.
+    - **Grafik Garis Tren Dashboard Inline Permanen & Bebas Titik Hijau**:
+      * Grafik garis operasional & finansial di dashboard WAJIB selalu tampil secara inline dan permanen tepat di bawah 4 kartu matriks ringkasan KPI (tanpa tombol drawer atau tombol silang tutup).
+      * Desain chart wajib bernuansa monokrom bersih: titik data berwarna hitam (`#111111`), tanpa titik hijau (`●`), dan tipografi tanggal serta tooltip menggunakan font sans-serif seutuhnya (zero `font-mono`). Default filter operasional di dashboard diset ke "Semua Waktu" (`ALL`).
+    - **Kartu Quick Action Hub Charcoal**:
+      * Kartu ringkasan aksi cepat di dashboard menggunakan latar belakang hitam charcoal (`bg-[#1c1c1e]`), ikon dibungkus lingkaran putih (`w-10 h-10 rounded-full bg-white`), dan teks berwarna putih pekat.
+    - **Standar Universal Pagination 20 Baris Per Halaman (`TablePagination`)**:
+      * Seluruh tabel transaksi berkapasitas data banyak (Dashboard, Riwayat Dispatcher, Rekapitulasi, dan Buku Kas) WAJIB menggunakan komponen universal `<TablePagination />` (`src/components/ui/TablePagination.tsx`).
+      * Batasan baris aktif tepat **20 baris per halaman**, dilengkapi ringkasan baris (*Menampilkan X - Y dari Z data*), tombol Sebelumnya & Berikutnya, nomor halaman dinamis dengan ellipsis (...), dan auto-reset ke halaman 1 saat parameter filter atau pencarian diubah.
+    - **Ikon Global & Penyederhanaan Toolbar Header Investor**:
+      * Ikon pencarian diganti secara global di `public/icons/search.png` menggunakan aset kaca pembesar bulat bersih terbaru.
+      * Header tabel Investor: teks deskripsi panjang dihapus, kolom pencarian dipindahkan ke sisi kiri, dan dua tombol aksi (*Transfer Antar-Investor* dan *Tambah Investor*) diseragamkan dengan gaya hitam solid (`bg-[#111111] hover:bg-[#2b2b2b] text-white`) dengan ikon putih (`/icons/transfer.png` dan `/icons/plus.png`).
+      * Tombol "Buku Kas" di baris tabel investor diganti menjadi icon-only button bersih (`w-7 h-7`) menggunakan aset `/icons/ledger.png`.
+      * Persentase bagi hasil pada kolom proyek terdanai investor dibungkus dalam pill badge warna hijau tua dengan teks putih (`bg-[#15803d] text-white rounded-full px-2 py-0.5 text-[10px] font-bold`).
+    - **Penyederhanaan Kolom Tabel & Integrasi Relasi (Proyek, Lokasi, dan Konsumen)**:
+      * **Tabel Master Proyek**: Kolom "Lokasi" dihapus dari header; alamat lokasi proyek dipindahkan tepat di bawah nama proyek dalam ukuran font sekunder (`text-[11px] text-[#666666]`).
+      * **Tabel Riwayat Ritase (Dashboard, Riwayat Dispatcher, Input Ritase, Rekap Operasional & Finansial, dan Detail Ritase Proyek)**:
+        1. Kolom **"Status"** (Tempo / Lunas) dihapus total dari tabel-tabel transaksi ritase (kecuali pada tabel Piutang Buku Kas yang memerlukan aksi pelunasan tombol "Lunasi").
+        2. Kolom **"Konsumen"** dihapus total dari tabel-tabel transaksi ritase; nama konsumen / klien dipindahkan tepat di bawah nama proyek tujuan dalam ukuran font sekunder (`text-[11px] text-[#666666]`).
+

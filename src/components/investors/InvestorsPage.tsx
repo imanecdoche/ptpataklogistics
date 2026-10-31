@@ -20,14 +20,12 @@ import {
 } from '@/lib/investorService';
 import { subscribeProjects } from '@/lib/projectService';
 import { subscribeAllTransactions } from '@/lib/dispatcherService';
-import { RunningText } from '@/components/ui/RunningText';
 import { TableActionMenu } from '@/components/ui/TableActionMenu';
 import { PinAuthModal } from '@/components/ui/PinAuthModal';
 import { CurrencyInput } from '@/components/ui/CurrencyInput';
 import { useProjectFilter } from '@/context/ProjectFilterContext';
 import { MetricCardCurrency } from '@/components/ui/MetricCardCurrency';
 import { PhoneInput } from '@/components/ui/PhoneInput';
-import { formatPhoneNumber } from '@/lib/phoneUtils';
 import { formatEntityNameLive } from '@/lib/nameUtils';
 import { MobileTitlebarAction } from '@/components/ui/MobileTitlebarAction';
 import { InvestorLedgerModal } from './InvestorLedgerModal';
@@ -485,16 +483,26 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
             <button
               type="button"
               onClick={() => setIsTransferModalOpen(true)}
-              className="px-2 py-1 bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-[11px] font-semibold rounded transition-colors cursor-pointer whitespace-nowrap"
+              className="px-2.5 py-1 bg-[#111111] hover:bg-[#2b2b2b] text-white text-[11px] font-semibold rounded transition-colors cursor-pointer whitespace-nowrap flex items-center gap-1"
             >
-              ⇄ Transfer
+              <img
+                src="/icons/transfer.png"
+                alt=""
+                className="w-3 h-3 object-contain brightness-0 invert pointer-events-none"
+              />
+              <span>Transfer</span>
             </button>
             <button
               type="button"
               onClick={handleOpenAdd}
-              className="px-2 py-1 bg-[#111111] hover:bg-[#2b2b2b] text-white text-[11px] font-semibold rounded transition-colors cursor-pointer whitespace-nowrap"
+              className="px-2.5 py-1 bg-[#111111] hover:bg-[#2b2b2b] text-white text-[11px] font-semibold rounded transition-colors cursor-pointer whitespace-nowrap flex items-center gap-1"
             >
-              + Investor
+              <img
+                src="/icons/plus.png"
+                alt=""
+                className="w-3 h-3 object-contain brightness-0 invert pointer-events-none"
+              />
+              <span>Investor</span>
             </button>
           </div>
         </MobileTitlebarAction>
@@ -541,58 +549,60 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
       <div className="bg-white border border-[#eaeaea] rounded-[10px] overflow-hidden">
         {/* Toolbar Baris Atas */}
         <div className="p-3.5 border-b border-[#eaeaea] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-[#fafafa]">
-          <div className="text-xs text-[#666666]">
-            Daftar profil pemodal tetap. Operasional ritase dibiayai terpusat melalui <span className="font-semibold text-[#111111]">Buku Kas Utama</span>.
+          {/* Search Input di Kiri (Rule 98) */}
+          <div className="relative w-full sm:w-72">
+            <img
+              src="/icons/search.png"
+              alt="Search"
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 object-contain pointer-events-none opacity-60"
+            />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="Cari investor, kontak, bank..."
+              className="w-full bg-white border border-[#eaeaea] rounded-[6px] pl-9 pr-3 py-1.5 text-xs text-[#111111] placeholder:text-[#999999] outline-none focus:border-[#111111] transition-colors"
+            />
           </div>
 
-          <div className="flex items-center gap-2">
-            {/* Search Input (Rule 98) */}
-            <div className="relative flex-1 sm:w-64">
-              <img
-                src="/icons/search.png"
-                alt="Search"
-                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 object-contain pointer-events-none opacity-60"
-              />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                placeholder="Cari investor, kontak, bank..."
-                className="w-full bg-white border border-[#eaeaea] rounded-[6px] pl-9 pr-3 py-1.5 text-xs text-[#111111] placeholder:text-[#999999] outline-none focus:border-[#111111] transition-colors"
-              />
+          {!isInvestorUser && !isWatcherUser && (
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setIsTransferModalOpen(true)}
+                className="px-3 py-1.5 bg-[#111111] hover:bg-[#2b2b2b] text-white text-xs font-semibold rounded-[6px] transition-colors cursor-pointer whitespace-nowrap flex items-center gap-1.5 shadow-xs"
+              >
+                <img
+                  src="/icons/transfer.png"
+                  alt=""
+                  className="w-3.5 h-3.5 object-contain brightness-0 invert pointer-events-none"
+                />
+                <span>Transfer Antar-Investor</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleOpenAdd}
+                className="px-3 py-1.5 bg-[#111111] hover:bg-[#2b2b2b] text-white text-xs font-semibold rounded-[6px] transition-colors cursor-pointer whitespace-nowrap flex items-center gap-1.5 shadow-xs"
+              >
+                <img
+                  src="/icons/plus.png"
+                  alt=""
+                  className="w-3.5 h-3.5 object-contain brightness-0 invert pointer-events-none"
+                />
+                <span>Tambah Investor</span>
+              </button>
             </div>
-
-            {!isInvestorUser && !isWatcherUser && (
-              <div className="hidden md:flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setIsTransferModalOpen(true)}
-                  className="px-3 py-1.5 bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-xs font-semibold rounded-[6px] transition-colors cursor-pointer whitespace-nowrap"
-                >
-                  ⇄ Transfer Antar-Investor
-                </button>
-                <button
-                  type="button"
-                  onClick={handleOpenAdd}
-                  className="px-3 py-1.5 bg-[#111111] hover:bg-[#2b2b2b] text-white text-xs font-semibold rounded-[6px] transition-colors cursor-pointer whitespace-nowrap"
-                >
-                  + Tambah Investor
-                </button>
-              </div>
-            )}
-          </div>
+          )}
         </div>
 
         {/* Tabel Master Investor */}
         <div className="overflow-x-auto select-text">
-          <table className="w-full min-w-[1100px] table-fixed text-left text-xs border-collapse">
+          <table className="w-full min-w-[760px] table-fixed text-left text-xs border-collapse">
             <thead className="sticky top-0 z-10 bg-[#f9f9f9] border-b border-[#eaeaea] text-[#555555] font-semibold text-[11px] uppercase tracking-wider select-none">
               <tr>
-                <th className="py-2.5 px-3 w-[200px] min-w-[200px] whitespace-nowrap">Nama Investor</th>
-                <th className="py-2.5 px-3 w-[150px] min-w-[150px] whitespace-nowrap">No. WhatsApp / HP</th>
-                <th className="py-2.5 px-3 w-[170px] min-w-[170px] whitespace-nowrap">Rekening Bank</th>
-                <th className="py-2.5 px-3 w-[210px] min-w-[210px] whitespace-nowrap">Proyek Terkait & Profit Share</th>
-                <th className="py-2.5 px-3 w-[150px] min-w-[150px] text-right whitespace-nowrap" title="Modal disetor disesuaikan transfer dan talangan aktif">Modal Bersih Berjalan</th>
+                <th className="py-2.5 px-3 w-[220px] min-w-[220px] whitespace-nowrap">Nama Investor</th>
+                <th className="py-2.5 px-3 w-[240px] min-w-[240px] whitespace-nowrap">Proyek Terkait & Profit Share</th>
+                <th className="py-2.5 px-3 w-[160px] min-w-[160px] text-right whitespace-nowrap" title="Modal disetor disesuaikan transfer dan talangan aktif">Modal Bersih Berjalan</th>
                 <th className="py-2.5 px-3 w-[140px] min-w-[140px] text-right whitespace-nowrap">Hak Bagi Hasil</th>
                 <th className="py-2.5 px-3 w-[100px] min-w-[100px] text-right whitespace-nowrap">Aksi</th>
               </tr>
@@ -600,13 +610,13 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
             <tbody className="divide-y divide-[#eaeaea]">
               {isLoading ? (
                 <tr>
-                  <td colSpan={7} className="py-10 text-center text-xs text-[#888888] whitespace-nowrap">
+                  <td colSpan={5} className="py-10 text-center text-xs text-[#888888] whitespace-nowrap">
                     Memuat data master investor...
                   </td>
                 </tr>
               ) : filteredInvestors.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-10 text-center text-xs text-[#888888] whitespace-nowrap">
+                  <td colSpan={5} className="py-10 text-center text-xs text-[#888888] whitespace-nowrap">
                     Tidak ada data investor yang sesuai.
                   </td>
                 </tr>
@@ -618,23 +628,24 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
 
                   return (
                     <tr key={inv.id} className="hover:bg-[#fafafa] transition-colors">
-                      <td className="py-2.5 px-3 whitespace-nowrap w-[200px] align-middle">
-                        <span className="font-bold text-[#111111] block truncate">{inv.name}</span>
+                      <td className="py-2.5 px-3 whitespace-nowrap w-[220px] align-middle">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedLedgerInvestor(inv)}
+                          className="font-bold text-[#111111] hover:text-[#008060] hover:underline text-left block truncate cursor-pointer"
+                          title="Buka Buku Kas & Detail Investor"
+                        >
+                          {inv.name}
+                        </button>
                       </td>
-                      <td className="py-2.5 px-3 font-mono text-[#444444] whitespace-nowrap w-[150px] align-middle">
-                        {inv.phoneNumber ? formatPhoneNumber(inv.phoneNumber) : '-'}
-                      </td>
-                      <td className="py-2.5 px-3 text-[#444444] whitespace-nowrap w-[170px] align-middle">
-                        <RunningText text={inv.bankAccount} placeholder="-" className="text-[#444444]" />
-                      </td>
-                      <td className="py-2.5 px-3 text-[#111111] whitespace-nowrap w-[210px] align-middle">
+                      <td className="py-2.5 px-3 text-[#111111] whitespace-nowrap w-[240px] align-middle">
                         {linkedProjects.length > 0 ? (
                           <div className="flex flex-col gap-1">
                             {linkedProjects.map(p => (
                               <div key={p.id} className="text-xs truncate">
                                 <span className="font-semibold text-[#111111]">{p.name}</span>
                                 {p.profitSharePercentage ? (
-                                  <span className="ml-1.5 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1 py-0.5 rounded border border-emerald-200">
+                                  <span className="ml-1.5 text-[10px] font-bold text-white bg-[#15803d] px-2 py-0.5 rounded-full inline-block">
                                     {p.profitSharePercentage}%
                                   </span>
                                 ) : null}
@@ -681,10 +692,14 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
                           <button
                             type="button"
                             onClick={() => setSelectedLedgerInvestor(inv)}
-                            className="px-2 py-1 bg-[#f0fdf4] hover:bg-[#dcfce7] text-[#166534] border border-[#bbf7d0] rounded text-[11px] font-semibold cursor-pointer"
+                            className="w-7 h-7 inline-flex items-center justify-center rounded-[6px] transition-colors cursor-pointer select-none hover:bg-[#f0f0f0] active:bg-[#e5e5e5]"
                             title="Buku Kas & Rekap Ekuitas"
                           >
-                            Buku Kas
+                            <img
+                              src="/icons/ledger.png"
+                              alt="Buku Kas"
+                              className="w-4 h-4 object-contain pointer-events-none"
+                            />
                           </button>
                           {!isInvestorUser && (
                             <TableActionMenu

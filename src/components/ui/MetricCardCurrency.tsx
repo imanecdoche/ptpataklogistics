@@ -88,7 +88,7 @@ export function MetricCardCurrency({
   }, [amount, forceCompact, size]);
 
   const shouldUseCompact = canCompact && (forceCompact || isOverflowing);
-  const fullTooltip = `${isNegative ? '-Rp ' : 'Rp '}${fullFormatted}`;
+  const fullTooltip = `Rp ${isNegative ? '-' : ''}${fullFormatted}`;
 
   return (
     <span
@@ -104,13 +104,13 @@ export function MetricCardCurrency({
         aria-hidden="true"
         className="invisible fixed left-[-9999px] top-[-9999px] pointer-events-none whitespace-nowrap inline-flex items-baseline gap-0.5"
       >
-        {isNegative && <span className="font-bold -mr-0.5">-</span>}
         <span className={`${rpSizeClass} font-semibold opacity-50`}>Rp</span>
+        {isNegative && <span className="font-bold -ml-0.5 mr-0.5">-</span>}
         <span>{fullFormatted}</span>
       </span>
 
-      {isNegative && <span className="font-bold -mr-0.5">-</span>}
       <span className={`${rpSizeClass} font-semibold opacity-50 select-none`}>Rp</span>
+      {isNegative && <span className="font-bold -ml-0.5 mr-0.5">-</span>}
       <span className="truncate">{shouldUseCompact ? simplified.value : fullFormatted}</span>
       {shouldUseCompact && simplified.suffix && (
         <span className="font-bold text-[0.85em] opacity-90 select-none ml-0.5">

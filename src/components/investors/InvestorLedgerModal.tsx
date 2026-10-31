@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Investor, Project, DispatchTransaction, InvestorPayout } from '@/types/database';
 import { CurrencyInput } from '@/components/ui/CurrencyInput';
+import { formatPhoneNumber } from '@/lib/phoneUtils';
 
 interface InvestorLedgerModalProps {
   investor: Investor;
@@ -138,6 +139,19 @@ export function InvestorLedgerModal({
             <p className="text-xs text-[#666666] mt-0.5">
               Transparansi perputaran modal, performa ritase proyek yang didanai, dan riwayat penyerahan bagi hasil.
             </p>
+            <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-4 gap-y-1 text-xs text-[#555555] mt-2 pt-2 border-t border-[#eaeaea]">
+              <span>
+                No. WhatsApp / HP: <strong className="text-[#111111] font-mono">{investor.phoneNumber ? formatPhoneNumber(investor.phoneNumber) : '-'}</strong>
+              </span>
+              <span>
+                Rekening Bank: <strong className="text-[#111111]">{investor.bankAccount || '-'}</strong>
+              </span>
+              {investor.notes && (
+                <span className="text-[#777777] italic">
+                  Catatan: {investor.notes}
+                </span>
+              )}
+            </div>
           </div>
           <button
             type="button"
@@ -264,7 +278,7 @@ export function InvestorLedgerModal({
                             <span className="font-bold text-xs text-[#111111] block">{p.name}</span>
                             <span className="text-[10px] text-[#888888] block">{p.location || 'Lokasi'}</span>
                           </div>
-                          <span className="text-[10px] font-bold bg-[#f0fdf4] text-[#166534] border border-[#bbf7d0] px-1.5 py-0.5 rounded">
+                          <span className="text-[10px] font-bold bg-[#15803d] text-white px-2 py-0.5 rounded-full">
                             Bagi Hasil: {sharePct}%
                           </span>
                         </div>

@@ -43,6 +43,7 @@ import {
   DispatchFilterState
 } from '@/components/dispatcher/DispatchFilterPopover';
 import { formatRupiah, formatRupiahCompact } from '@/lib/currencyUtils';
+import { TablePagination } from '@/components/ui/TablePagination';
 
 interface DispatchHistoryPageProps {
   userEmail: string;
@@ -76,6 +77,14 @@ export function DispatchHistoryPage({ userEmail }: DispatchHistoryPageProps): Re
     materialId: 'ALL',
     status: 'ALL'
   });
+
+  // Pagination State (Rule 126: 20 baris per halaman)
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Auto-reset halaman ke 1 saat filter atau pencarian berubah
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters, searchQuery, selectedProjectId]);
 
   // Modals Detail, Edit, Settle & PIN
   const [selectedDetailTx, setSelectedDetailTx] = useState<DispatchTransaction | null>(null);
@@ -293,6 +302,12 @@ export function DispatchHistoryPage({ userEmail }: DispatchHistoryPageProps): Re
 
     return result;
   }, [transactions, selectedProjectId, filters, searchQuery, entityMaps, systemUsersMap]);
+
+  // Transaksi terpotong per halaman (Rule 126: 20 per halaman)
+  const paginatedTransactions = useMemo(() => {
+    const start = (currentPage - 1) * 20;
+    return filteredTransactions.slice(start, start + 20);
+  }, [filteredTransactions, currentPage]);
 
   // 4 Kartu Metrik Ringkasan KPI
   const metrics = useMemo(() => {
@@ -541,15 +556,14 @@ export function DispatchHistoryPage({ userEmail }: DispatchHistoryPageProps): Re
       {/* 3. TABEL DATA RIWAYAT RITASE FULL-WIDTH */}
       <div className="w-full bg-white border border-[#dcdcdc] rounded-[10px] overflow-hidden shadow-xs">
         <div className="overflow-x-auto select-text max-h-[720px] w-full">
-          <table className="w-full min-w-[1720px] table-fixed text-left text-xs border-collapse">
+          <table className="w-full min-w-[1495px] table-fixed text-left text-xs border-collapse">
             <thead className="sticky top-0 z-10 bg-[#f8f8f8] border-b border-[#eaeaea] text-[#555555] font-semibold text-[11px] uppercase tracking-wider select-none">
               <tr>
                 <th className="py-2.5 px-3 w-[140px] min-w-[140px] whitespace-nowrap">No. Tiket</th>
                 <th className="py-2.5 px-3 w-[105px] min-w-[105px] whitespace-nowrap">Tanggal</th>
                 <th className="py-2.5 px-3 w-[110px] min-w-[110px] whitespace-nowrap">No. Plat</th>
                 <th className="py-2.5 px-3 w-[130px] min-w-[130px] whitespace-nowrap">Supir</th>
-                <th className="py-2.5 px-3 w-[150px] min-w-[150px] whitespace-nowrap">Proyek Tujuan</th>
-                <th className="py-2.5 px-3 w-[160px] min-w-[160px] whitespace-nowrap">Konsumen</th>
+                <th className="py-2.5 px-3 w-[170px] min-w-[170px] whitespace-nowrap">Proyek Tujuan</th>
                 <th className="py-2.5 px-3 w-[130px] min-w-[130px] whitespace-nowrap">Kuari Asal</th>
                 <th className="py-2.5 px-3 w-[140px] min-w-[140px] whitespace-nowrap">Material</th>
                 <th className="py-2.5 px-3 w-[90px] min-w-[90px] whitespace-nowrap">Vol</th>
@@ -562,7 +576,6 @@ export function DispatchHistoryPage({ userEmail }: DispatchHistoryPageProps): Re
                 {!hideMargin && (
                   <th className="py-2.5 px-3 w-[125px] min-w-[125px] whitespace-nowrap">Laba Bersih</th>
                 )}
-                <th className="py-2.5 px-3 w-[85px] min-w-[85px] text-center whitespace-nowrap">Status</th>
                 <th className="py-2.5 px-3 w-[180px] min-w-[180px] whitespace-nowrap">Catatan Ritase</th>
                 <th className="py-2.5 px-3 w-[105px] min-w-[105px] whitespace-nowrap">Dibuat Oleh</th>
                 {!isWatcherUser && <th className="py-2.5 px-3 w-[60px] min-w-[60px] text-right whitespace-nowrap">Aksi</th>}
@@ -572,7 +585,7 @@ export function DispatchHistoryPage({ userEmail }: DispatchHistoryPageProps): Re
               {filteredTransactions.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={hideMargin ? 16 : 18}
+                    colSpan={hideMargin ? 14 : 16}
                     className="py-12 text-center text-xs text-[#888888] whitespace-nowrap"
                   >
                     {isLoading
@@ -581,7 +594,7 @@ export function DispatchHistoryPage({ userEmail }: DispatchHistoryPageProps): Re
                   </td>
                 </tr>
               ) : (
-                filteredTransactions.map(tx => {
+                paginatedTransactions.map(tx => {
                   const ent = resolveTransactionEntities(tx, entityMaps);
                   const creatorName = resolveCreatorName(tx.createdBy, systemUsersMap);
 
@@ -627,21 +640,21 @@ export function DispatchHistoryPage({ userEmail }: DispatchHistoryPageProps): Re
                           className="text-[#444444]"
                         />
                       </td>
-                      <td className="py-2.5 px-3 whitespace-nowrap w-[150px] align-middle">
+                      <td className="py-2.5 px-3 whitespace-nowrap w-[170px] align-middle">
                         <DynamicEntityText
                           name={ent.project.name}
                           isOrphan={ent.project.isOrphan}
                           tooltipText={ent.project.tooltipText}
-                          className="text-[#444444]"
+                          className="font-medium text-[#111111] block truncate"
                         />
-                      </td>
-                      <td className="py-2.5 px-3 whitespace-nowrap w-[160px] align-middle">
-                        <DynamicEntityText
-                          name={ent.client.name}
-                          isOrphan={ent.client.isOrphan}
-                          tooltipText={ent.client.tooltipText}
-                          className="font-medium text-[#111111]"
-                        />
+                        {ent.client.name && (
+                          <DynamicEntityText
+                            name={ent.client.name}
+                            isOrphan={ent.client.isOrphan}
+                            tooltipText={ent.client.tooltipText}
+                            className="text-[11px] text-[#666666] block truncate mt-0.5"
+                          />
+                        )}
                       </td>
                       <td className="py-2.5 px-3 whitespace-nowrap w-[130px] align-middle">
                         <DynamicEntityText
@@ -685,15 +698,6 @@ export function DispatchHistoryPage({ userEmail }: DispatchHistoryPageProps): Re
                           {formatRupiah(tx.netProfit)}
                         </td>
                       )}
-                      <td className="py-2.5 px-3 whitespace-nowrap w-[85px] align-middle text-center">
-                        <span
-                          className={`text-[11px] font-bold tracking-wide ${
-                            tx.status === 'LUNAS' ? 'text-emerald-700' : 'text-amber-700'
-                          }`}
-                        >
-                          {tx.status === 'LUNAS' ? 'LUNAS' : 'TEMPO'}
-                        </span>
-                      </td>
                       <td className="py-2.5 px-3 text-[#666666] whitespace-nowrap w-[180px] align-middle">
                         <RunningText text={tx.notes} placeholder="-" className="text-[#666666]" />
                       </td>
@@ -743,6 +747,15 @@ export function DispatchHistoryPage({ userEmail }: DispatchHistoryPageProps): Re
             </tbody>
           </table>
         </div>
+
+        {/* Kontrol Pagination 20 Baris Universal (Rule 126) */}
+        <TablePagination
+          currentPage={currentPage}
+          totalItems={filteredTransactions.length}
+          itemsPerPage={20}
+          onPageChange={setCurrentPage}
+          itemLabel="ritase"
+        />
       </div>
 
       {/* MODAL EDIT TIKET RITASE */}

@@ -521,7 +521,6 @@ export function ProjectFinancialsModal({
                         <th className="py-2.5 px-3 whitespace-nowrap">Kuari Asal</th>
                         <th className="py-2.5 px-3 text-right whitespace-nowrap">Harga Jual</th>
                         <th className="py-2.5 px-3 text-right whitespace-nowrap">Total Omset</th>
-                        <th className="py-2.5 px-3 text-center whitespace-nowrap">Status</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#eaeaea]">
@@ -541,13 +540,6 @@ export function ProjectFinancialsModal({
                           <td className="py-2 px-3 text-[#666666] whitespace-nowrap">{tx.quarryName || '-'}</td>
                           <td className="py-2 px-3 text-right font-mono whitespace-nowrap">{formatRupiah(tx.sellPricePerUnit)}</td>
                           <td className="py-2 px-3 text-right font-mono font-bold text-[#111111] whitespace-nowrap">{formatRupiah(tx.totalRevenue)}</td>
-                          <td className="py-2 px-3 text-center whitespace-nowrap">
-                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
-                              tx.status === 'LUNAS' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
-                            }`}>
-                              {tx.status}
-                            </span>
-                          </td>
                         </tr>
                       ))}
                     </tbody>

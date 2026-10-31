@@ -378,11 +378,10 @@ export function ProjectsPage({ userEmail: _userEmail }: ProjectsPageProps): Reac
 
         {/* Tabel Master Proyek (Rule 66: Table-fixed, zero-wrap, sticky header) */}
         <div className="overflow-x-auto select-text">
-          <table className={`w-full ${isDispatcherUser ? 'min-w-[700px]' : 'min-w-[1070px]'} table-fixed text-left text-xs border-collapse`}>
+          <table className={`w-full ${isDispatcherUser ? 'min-w-[540px]' : 'min-w-[910px]'} table-fixed text-left text-xs border-collapse`}>
             <thead className="sticky top-0 z-10 bg-[#f9f9f9] border-b border-[#eaeaea] text-[#555555] font-semibold text-[11px] uppercase tracking-wider select-none">
               <tr>
-                <th className="py-2.5 px-3 w-[200px] min-w-[200px] whitespace-nowrap">Nama Proyek</th>
-                <th className="py-2.5 px-3 w-[160px] min-w-[160px] whitespace-nowrap">Lokasi</th>
+                <th className="py-2.5 px-3 w-[240px] min-w-[240px] whitespace-nowrap">Nama Proyek</th>
                 {!isDispatcherUser && !isWatcherUser && (
                   <th className="py-2.5 px-3 w-[160px] min-w-[160px] whitespace-nowrap">Investor Pendana</th>
                 )}
@@ -402,13 +401,13 @@ export function ProjectsPage({ userEmail: _userEmail }: ProjectsPageProps): Reac
             <tbody className="divide-y divide-[#eaeaea]">
               {isLoading ? (
                 <tr>
-                  <td colSpan={isDispatcherUser ? 5 : isInvestorUser ? 7 : 8} className="py-10 text-center text-xs text-[#888888] whitespace-nowrap">
+                  <td colSpan={isDispatcherUser ? 4 : isInvestorUser ? 6 : 7} className="py-10 text-center text-xs text-[#888888] whitespace-nowrap">
                     Memuat data master proyek...
                   </td>
                 </tr>
               ) : filteredProjects.length === 0 ? (
                 <tr>
-                  <td colSpan={isDispatcherUser ? 5 : isInvestorUser ? 7 : 8} className="py-10 text-center text-xs text-[#888888] whitespace-nowrap">
+                  <td colSpan={isDispatcherUser ? 4 : isInvestorUser ? 6 : 7} className="py-10 text-center text-xs text-[#888888] whitespace-nowrap">
                     Tidak ada data proyek yang sesuai.
                   </td>
                 </tr>
@@ -424,9 +423,11 @@ export function ProjectsPage({ userEmail: _userEmail }: ProjectsPageProps): Reac
                       >
                         {proj.name}
                       </button>
-                    </td>
-                    <td className="py-2.5 px-3 text-[#444444] whitespace-nowrap w-[160px] align-middle">
-                      <RunningText text={proj.location} placeholder="-" className="text-[#444444]" />
+                      {proj.location && (
+                        <span className="text-[11px] text-[#666666] block truncate mt-0.5">
+                          {proj.location}
+                        </span>
+                      )}
                     </td>
                     {!isDispatcherUser && (
                       <td className="py-2.5 px-3 text-[#111111] whitespace-nowrap w-[160px] align-middle font-medium">

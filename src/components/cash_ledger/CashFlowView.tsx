@@ -1,9 +1,11 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { CashLedgerEntry } from '@/types/database';
 import { resolveCreatorName } from '@/lib/entityResolver';
 import { PayDebtModal } from './PayDebtModal';
 import { useProjectFilter } from '@/context/ProjectFilterContext';
 import { RecordMutationModal } from './RecordMutationModal';
+import { TablePagination } from '@/components/ui/TablePagination';
+import { formatRupiah } from '@/lib/currencyUtils';
 
 interface CashFlowViewProps {
   entries: CashLedgerEntry[];
@@ -12,9 +14,6 @@ interface CashFlowViewProps {
 }
 
 const PEI_INITIAL_DEBT = 18000000;
-
-const formatRupiah = (val: number): string =>
-  'Rp ' + Math.round(val).toLocaleString('id-ID');
 
 export function CashFlowView({
   entries,
@@ -58,6 +57,13 @@ export function CashFlowView({
   }, [entries]);
 
   // Filter Search
+  // Pagination State (Rule 126: 20 baris per halaman)
+  const [currentPage, setCurrentPage] = useState(1);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, entries]);
+
   const filteredEntries = useMemo(() => {
     if (!searchQuery.trim()) return entries;
     const q = searchQuery.toLowerCase().trim();
@@ -69,6 +75,11 @@ export function CashFlowView({
         (e.createdByName && e.createdByName.toLowerCase().includes(q))
     );
   }, [entries, searchQuery]);
+
+  const paginatedEntries = useMemo(() => {
+    const start = (currentPage - 1) * 20;
+    return filteredEntries.slice(start, start + 20);
+  }, [filteredEntries, currentPage]);
 
   return (
     <div className="space-y-4">
@@ -221,7 +232,7 @@ export function CashFlowView({
                   </td>
                 </tr>
               ) : (
-                filteredEntries.map(e => (
+                paginatedEntries.map(e => (
                   <tr key={e.id} className="hover:bg-[#fafafa] transition-colors">
                     <td className="py-2.5 px-3 font-mono text-[#555555] whitespace-nowrap align-middle">
                       {e.date ? e.date.slice(0, 10) : '-'}
@@ -261,6 +272,15 @@ export function CashFlowView({
             </tbody>
           </table>
         </div>
+
+        {/* Kontrol Pagination 20 Baris Universal (Rule 126) */}
+        <TablePagination
+          currentPage={currentPage}
+          totalItems={filteredEntries.length}
+          itemsPerPage={20}
+          onPageChange={setCurrentPage}
+          itemLabel="mutasi kas"
+        />
       </div>
 
       {/* Modal Bayar Hutang Pak Pei */}

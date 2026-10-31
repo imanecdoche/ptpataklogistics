@@ -162,33 +162,31 @@ export function DispatchTable({
 
       {/* Area Tabel Data */}
       <div className="flex-1 overflow-x-auto overflow-y-auto mt-2 min-h-[280px] border border-[#eaeaea] rounded-[10px] bg-white">
-        <table className="w-full min-w-[1295px] table-fixed text-left text-xs border-collapse">
+        <table className="w-full min-w-[1095px] table-fixed text-left text-xs border-collapse">
           <thead className="sticky top-0 z-10 bg-[#f9f9f9] border-b border-[#eaeaea] text-[11px] font-semibold text-[#555555] uppercase tracking-wider select-none">
             <tr>
               <th className="py-2.5 px-3 w-[155px] min-w-[155px] whitespace-nowrap">Waktu & No. Tiket</th>
               <th className="py-2.5 px-3 w-[130px] min-w-[130px] whitespace-nowrap">Armada / Sopir</th>
-              <th className="py-2.5 px-3 w-[130px] min-w-[130px] whitespace-nowrap">Proyek Tujuan</th>
-              <th className="py-2.5 px-3 w-[140px] min-w-[140px] whitespace-nowrap">Konsumen</th>
+              <th className="py-2.5 px-3 w-[160px] min-w-[160px] whitespace-nowrap">Proyek Tujuan</th>
               <th className="py-2.5 px-3 w-[130px] min-w-[130px] whitespace-nowrap">Kuari Asal</th>
               <th className="py-2.5 px-3 w-[130px] min-w-[130px] whitespace-nowrap">Material & Muatan</th>
               <th className="py-2.5 px-3 w-[190px] min-w-[190px] whitespace-nowrap">Catatan Ritase</th>
               <th className="py-2.5 px-3 w-[140px] min-w-[140px] text-right whitespace-nowrap">
                 {hideMargin ? 'Nilai Tagihan' : 'Penjualan & Laba'}
               </th>
-              <th className="py-2.5 px-3 w-[90px] min-w-[90px] text-center whitespace-nowrap">Status</th>
               <th className="py-2.5 px-3 w-[60px] min-w-[60px] text-right whitespace-nowrap">Aksi</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#eaeaea]">
             {isLoading ? (
               <tr>
-                <td colSpan={10} className="py-10 text-center text-xs text-[#888888] whitespace-nowrap">
+                <td colSpan={8} className="py-10 text-center text-xs text-[#888888] whitespace-nowrap">
                   Memuat data ritase...
                 </td>
               </tr>
             ) : filteredTransactions.length === 0 ? (
               <tr>
-                <td colSpan={10} className="py-10 text-center text-xs text-[#888888] whitespace-nowrap">
+                <td colSpan={8} className="py-10 text-center text-xs text-[#888888] whitespace-nowrap">
                   Tidak ada catatan ritase pada tanggal ini ({selectedDate}).
                 </td>
               </tr>
@@ -241,22 +239,16 @@ export function DispatchTable({
                       </div>
                     </td>
 
-                    {/* Proyek Tujuan (Fixed 130px, Zero Wrap, RunningText) */}
-                    <td className="py-2.5 px-3 align-middle whitespace-nowrap w-[130px]">
-                      <RunningText
-                        text={tx.projectName}
-                        className="font-medium text-[#111111]"
-                        placeholder="-"
-                      />
-                    </td>
-
-                    {/* Konsumen (Fixed 140px, Zero Wrap, RunningText) */}
-                    <td className="py-2.5 px-3 align-middle whitespace-nowrap w-[140px]">
-                      <RunningText
-                        text={tx.clientName || tx.customerName}
-                        className="font-medium text-[#111111]"
-                        placeholder="Umum"
-                      />
+                    {/* Proyek Tujuan & Konsumen (Fixed 160px, Zero Wrap) */}
+                    <td className="py-2.5 px-3 align-middle whitespace-nowrap w-[160px]">
+                      <span className="font-semibold text-[#111111] block truncate">
+                        {tx.projectName || '-'}
+                      </span>
+                      {(tx.clientName || tx.customerName) && (
+                        <span className="text-[11px] text-[#666666] block truncate mt-0.5">
+                          {tx.clientName || tx.customerName}
+                        </span>
+                      )}
                     </td>
 
                     {/* Kuari Asal (Fixed 130px, Zero Wrap, RunningText) */}
@@ -297,17 +289,6 @@ export function DispatchTable({
                           +{formatRupiah(tx.netProfit)}
                         </div>
                       )}
-                    </td>
-
-                    {/* Status (Fixed 90px, Zero Wrap, Tipografi Semantik Bersih) */}
-                    <td className="py-2.5 px-3 align-middle text-center whitespace-nowrap w-[90px]">
-                      <span
-                        className={`text-[11px] font-bold tracking-wide ${
-                          tx.status === 'LUNAS' ? 'text-emerald-700' : 'text-amber-700'
-                        }`}
-                      >
-                        {tx.status === 'LUNAS' ? 'LUNAS' : 'TEMPO'}
-                      </span>
                     </td>
 
                     {/* Aksi (Fixed 60px, Zero Wrap, Popover Context Menu) */}

@@ -7,6 +7,8 @@ import { RunningText } from '@/components/ui/RunningText';
 import { DispatchDetailModal } from '@/components/dispatcher/DispatchDetailModal';
 import { NavigationTab } from '@/components/layout/Sidebar';
 import { CustomSelectCombobox, SelectOption } from '@/components/ui/CustomSelectCombobox';
+import { TablePagination } from '@/components/ui/TablePagination';
+import { formatRupiah } from '@/lib/currencyUtils';
 
 interface RecapPageProps {
   userEmail: string;
@@ -108,6 +110,14 @@ export function RecapPage({
   const [selectedMaterial, setSelectedMaterial] = useState<string>('ALL');
   const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState<string>('');
+
+  // Pagination State (Rule 126: 20 baris per halaman)
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Auto-reset halaman ke 1 saat filter atau pencarian berubah
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedCycle, selectedProjectId, selectedQuarry, selectedMaterial, selectedStatus, searchQuery, activeSubTab]);
 
   // Selected Detail Modal
   const [selectedDetailTx, setSelectedDetailTx] = useState<DispatchTransaction | null>(null);
@@ -262,9 +272,11 @@ export function RecapPage({
     return filteredTransactions.reduce((acc, t) => acc + (t.netProfit || 0), 0);
   }, [filteredTransactions]);
 
-  const formatRupiah = (val: number): string => {
-    return 'Rp ' + Math.round(val || 0).toLocaleString('id-ID');
-  };
+  // Transaksi ritase terpotong per halaman (Rule 126: 20 per halaman)
+  const paginatedTransactions = useMemo(() => {
+    const start = (currentPage - 1) * 20;
+    return filteredTransactions.slice(start, start + 20);
+  }, [filteredTransactions, currentPage]);
 
   const activeRangeText = useMemo(() => {
     const { start, end } = getDateRangeForCycle(selectedCycle);
@@ -559,11 +571,10 @@ export function RecapPage({
                   <th className="py-2.5 px-3 whitespace-nowrap min-w-[140px]">Kuari Asal</th>
                   <th className="py-2.5 px-3 whitespace-nowrap min-w-[140px]">Material</th>
                   <th className="py-2.5 px-3 whitespace-nowrap min-w-[95px] text-right">Volume</th>
-                  <th className="py-2.5 px-3 whitespace-nowrap min-w-[90px] text-center">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#eaeaea]">
-                {filteredTransactions.map(tx => (
+                {paginatedTransactions.map(tx => (
                   <tr
                     key={tx.id}
                     onClick={() => setSelectedDetailTx(tx)}
@@ -594,9 +605,16 @@ export function RecapPage({
                       <RunningText text={tx.driverName || '—'} className="max-w-[120px]" />
                     </td>
 
-                    {/* 6. Proyek Tujuan */}
+                    {/* 6. Proyek Tujuan & Konsumen */}
                     <td className="py-2.5 px-3 whitespace-nowrap font-medium text-[#111111]">
-                      <RunningText text={tx.projectName || 'Proyek Umum'} className="max-w-[160px]" />
+                      <span className="font-semibold block truncate">
+                        {tx.projectName || 'Proyek Umum'}
+                      </span>
+                      {(tx.clientName || tx.customerName) && (
+                        <span className="text-[11px] text-[#666666] block truncate font-normal mt-0.5">
+                          {tx.clientName || tx.customerName}
+                        </span>
+                      )}
                     </td>
 
                     {/* 7. Kuari Asal */}
@@ -614,19 +632,6 @@ export function RecapPage({
                       {tx.quantity?.toLocaleString('id-ID')}{' '}
                       <span className="text-[11px] font-normal text-[#777777]">{tx.unit}</span>
                     </td>
-
-                    {/* 10. Status (Rule 4/24: Pure Typography, NO badges/pills/dots) */}
-                    <td className="py-2.5 px-3 whitespace-nowrap text-center">
-                      <span
-                        className={`text-[11px] font-bold tracking-wide ${
-                          tx.status === 'LUNAS'
-                            ? 'text-emerald-700'
-                            : 'text-amber-700'
-                        }`}
-                      >
-                        {tx.status === 'LUNAS' ? 'LUNAS' : 'TEMPO'}
-                      </span>
-                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -641,17 +646,16 @@ export function RecapPage({
                   <th className="py-2.5 px-3 whitespace-nowrap min-w-[105px]">Tanggal</th>
                   <th className="py-2.5 px-3 whitespace-nowrap min-w-[145px]">No. Tiket</th>
                   <th className="py-2.5 px-3 whitespace-nowrap min-w-[125px]">No. Surat Jalan</th>
-                  <th className="py-2.5 px-3 whitespace-nowrap min-w-[150px]">Proyek / Klien</th>
+                  <th className="py-2.5 px-3 whitespace-nowrap min-w-[170px]">Proyek Tujuan</th>
                   <th className="py-2.5 px-3 whitespace-nowrap min-w-[140px]">Komoditas & Vol</th>
                   <th className="py-2.5 px-3 whitespace-nowrap min-w-[115px] text-right">Beli Kuari</th>
                   <th className="py-2.5 px-3 whitespace-nowrap min-w-[115px] text-right">HOK & Operasional</th>
                   <th className="py-2.5 px-3 whitespace-nowrap min-w-[120px] text-right">Omset Tempo</th>
                   <th className="py-2.5 px-3 whitespace-nowrap min-w-[120px] text-right">Laba Bersih</th>
-                  <th className="py-2.5 px-3 whitespace-nowrap min-w-[90px] text-center">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#eaeaea]">
-                {filteredTransactions.map(tx => (
+                {paginatedTransactions.map(tx => (
                   <tr
                     key={tx.id}
                     onClick={() => setSelectedDetailTx(tx)}
@@ -672,12 +676,16 @@ export function RecapPage({
                       {tx.suratJalan ? tx.suratJalan : <span className="text-[#aaaaaa] font-sans">—</span>}
                     </td>
 
-                    {/* Proyek / Klien */}
+                    {/* Proyek Tujuan & Konsumen */}
                     <td className="py-2.5 px-3 whitespace-nowrap text-[#111111]">
-                      <RunningText
-                        text={tx.projectName || tx.clientName || tx.customerName}
-                        className="max-w-[150px]"
-                      />
+                      <span className="font-semibold block truncate">
+                        {tx.projectName || 'Proyek Umum'}
+                      </span>
+                      {(tx.clientName || tx.customerName) && (
+                        <span className="text-[11px] text-[#666666] block truncate font-normal mt-0.5">
+                          {tx.clientName || tx.customerName}
+                        </span>
+                      )}
                     </td>
 
                     {/* Komoditas & Volume */}
@@ -711,25 +719,21 @@ export function RecapPage({
                     >
                       {formatRupiah(tx.netProfit)}
                     </td>
-
-                    {/* Status (Rule 4/24: Pure Typography, NO badges/pills/dots) */}
-                    <td className="py-2.5 px-3 whitespace-nowrap text-center">
-                      <span
-                        className={`text-[11px] font-bold tracking-wide ${
-                          tx.status === 'LUNAS'
-                            ? 'text-emerald-700'
-                            : 'text-amber-700'
-                        }`}
-                      >
-                        {tx.status === 'LUNAS' ? 'LUNAS' : 'TEMPO'}
-                      </span>
-                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           )}
         </div>
+
+        {/* Kontrol Pagination 20 Baris Universal (Rule 126) */}
+        <TablePagination
+          currentPage={currentPage}
+          totalItems={filteredTransactions.length}
+          itemsPerPage={20}
+          onPageChange={setCurrentPage}
+          itemLabel="ritase"
+        />
       </div>
 
       {/* 5. Detail Modal Popup (Accessible via row click) */}

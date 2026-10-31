@@ -1,9 +1,11 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { DispatchTransaction, Project } from '@/types/database';
 import { resolveCreatorName } from '@/lib/entityResolver';
 import { RecordProjectPaymentModal } from './RecordProjectPaymentModal';
 import { settleSingleTicket } from '@/lib/cashLedgerService';
 import { useProjectFilter } from '@/context/ProjectFilterContext';
+import { TablePagination } from '@/components/ui/TablePagination';
+import { formatRupiah } from '@/lib/currencyUtils';
 
 interface ReceivablesViewProps {
   transactions: DispatchTransaction[];
@@ -11,9 +13,6 @@ interface ReceivablesViewProps {
   userEmail: string;
   onRefresh: () => void;
 }
-
-const formatRupiah = (val: number): string =>
-  'Rp ' + Math.round(val).toLocaleString('id-ID');
 
 export function ReceivablesView({
   transactions,
@@ -67,6 +66,13 @@ export function ReceivablesView({
     return Array.from(map.entries()).map(([id, val]) => ({ id, ...val }));
   }, [transactions]);
 
+  // Pagination State (Rule 126: 20 baris per halaman)
+  const [currentPage, setCurrentPage] = useState(1);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [statusFilter, searchQuery, transactions]);
+
   // Filter Data
   const filteredTransactions = useMemo(() => {
     return transactions.filter(tx => {
@@ -83,6 +89,12 @@ export function ReceivablesView({
       );
     });
   }, [transactions, statusFilter, searchQuery]);
+
+  // Data per halaman (Rule 126: 20 per halaman)
+  const paginatedTransactions = useMemo(() => {
+    const start = (currentPage - 1) * 20;
+    return filteredTransactions.slice(start, start + 20);
+  }, [filteredTransactions, currentPage]);
 
   const handleSettleTicket = async (ticketId: string) => {
     if (!window.confirm('Tandai tiket ritase ini sebagai LUNAS?')) return;
@@ -256,7 +268,7 @@ export function ReceivablesView({
                   </td>
                 </tr>
               ) : (
-                filteredTransactions.map(tx => (
+                paginatedTransactions.map(tx => (
                   <tr key={tx.id} className="hover:bg-[#fafafa] transition-colors">
                     <td className="py-2.5 px-3 whitespace-nowrap align-middle">
                       <span className="font-mono font-bold text-[#111111] block">
@@ -326,6 +338,15 @@ export function ReceivablesView({
             </tbody>
           </table>
         </div>
+
+        {/* Kontrol Pagination 20 Baris Universal (Rule 126) */}
+        <TablePagination
+          currentPage={currentPage}
+          totalItems={filteredTransactions.length}
+          itemsPerPage={20}
+          onPageChange={setCurrentPage}
+          itemLabel="piutang ritase"
+        />
       </div>
 
       {/* Modal Pelunasan Termin Proyek */}

@@ -347,9 +347,9 @@ export function DashboardChartDrawer({
                     cx={pt.x}
                     cy={pt.y}
                     r={hoveredPoint?.date === pt.date ? 6 : 4}
-                    fill={hoveredPoint?.date === pt.date ? '#0e9f6e' : '#111111'}
+                    fill="#111111"
                     stroke="#ffffff"
-                    strokeWidth="2"
+                    strokeWidth={hoveredPoint?.date === pt.date ? "2.5" : "2"}
                     className="cursor-pointer transition-all duration-150"
                     onMouseEnter={() => setHoveredPoint(pt)}
                     onClick={() => setHoveredPoint(pt)}
@@ -369,7 +369,7 @@ export function DashboardChartDrawer({
             </svg>
 
             {/* X-Axis Date Labels */}
-            <div className="w-full flex justify-between px-6 pt-1 text-[10px] text-[#888888] font-mono">
+            <div className="w-full flex justify-between px-6 pt-1 text-[10px] text-[#888888]">
               <span>{coords[0]?.date || ''}</span>
               {coords.length > 2 && (
                 <span>{coords[Math.floor(coords.length / 2)]?.date || ''}</span>
@@ -379,10 +379,9 @@ export function DashboardChartDrawer({
 
             {/* Floating Tooltip Box */}
             {hoveredPoint && (
-              <div className="mt-2.5 p-2 bg-[#111111] text-white rounded-[6px] shadow-lg text-[11px] flex items-center gap-2 animate-in fade-in duration-150">
-                <span className="text-emerald-400 font-bold">●</span>
-                <span className="font-mono text-zinc-300">{hoveredPoint.date}:</span>
-                <span className="font-bold">{hoveredPoint.formatted}</span>
+              <div className="mt-2.5 px-3 py-1.5 bg-[#111111] text-white rounded-[6px] shadow-lg text-[11px] flex items-center gap-1.5 animate-in fade-in duration-150">
+                <span className="text-zinc-300">{hoveredPoint.date}:</span>
+                <span className="font-bold text-white">{hoveredPoint.formatted}</span>
               </div>
             )}
           </div>

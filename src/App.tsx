@@ -28,10 +28,65 @@ interface AuthenticatedAppProps {
   onLogout: () => void;
 }
 
+const VALID_TABS: NavigationTab[] = [
+  'dashboard',
+  'dispatcher',
+  'database',
+  'materials',
+  'projects',
+  'investors',
+  'quarries',
+  'clients',
+  'recap',
+  'cash_ledger',
+  'hok_labor',
+  'dev'
+];
+
 function AuthenticatedApp({ user, onLogout }: AuthenticatedAppProps): React.JSX.Element {
   const { isDispatcherUser, isInvestorUser, isWatcherUser } = useProjectFilter();
-  const [currentTab, setCurrentTab] = useState<NavigationTab>(() => (isDispatcherUser ? 'dispatcher' : 'dashboard'));
-  const [currentSubTab, setCurrentSubTab] = useState<string>(() => (isDispatcherUser ? 'new_ticket' : 'overview'));
+
+  const [currentTab, setCurrentTab] = useState<NavigationTab>(() => {
+    try {
+      const saved = localStorage.getItem('patak_active_tab') as NavigationTab | null;
+      if (saved && VALID_TABS.includes(saved)) {
+        return saved;
+      }
+    } catch {
+      // fallback
+    }
+    return isDispatcherUser ? 'dispatcher' : 'dashboard';
+  });
+
+  const [currentSubTab, setCurrentSubTab] = useState<string>(() => {
+    try {
+      const savedSub = localStorage.getItem('patak_active_subtab');
+      if (savedSub) return savedSub;
+    } catch {
+      // fallback
+    }
+    return isDispatcherUser ? 'new_ticket' : 'overview';
+  });
+
+  // Presistensi tab aktif ke localStorage saat berpindah halaman
+  useEffect(() => {
+    try {
+      localStorage.setItem('patak_active_tab', currentTab);
+    } catch {
+      // ignore
+    }
+  }, [currentTab]);
+
+  // Presistensi sub-tab aktif ke localStorage saat berpindah sub-halaman
+  useEffect(() => {
+    try {
+      if (currentSubTab) {
+        localStorage.setItem('patak_active_subtab', currentSubTab);
+      }
+    } catch {
+      // ignore
+    }
+  }, [currentSubTab]);
 
   // Keamanan Route Protection: dispatcher & investor
   useEffect(() => {
@@ -222,6 +277,8 @@ export default function App(): React.JSX.Element {
 
     setTimeout(async () => {
       try {
+        localStorage.removeItem('patak_active_tab');
+        localStorage.removeItem('patak_active_subtab');
         await signOut(auth);
       } catch (err) {
         console.error('Logout error:', err);

@@ -101,9 +101,9 @@ export function AdaptiveCurrency({
         {fullText}
       </span>
 
-      {isNegative && <span className="font-semibold -mr-0.5">-</span>}
-      {withSign && isPositive && <span className="font-semibold -mr-0.5">+</span>}
-      {prefix && <span className="opacity-70 text-[0.85em] font-semibold">{prefix} </span>}
+      {prefix && <span className="opacity-70 text-[0.85em] font-semibold mr-0.5">{prefix}</span>}
+      {isNegative && <span className="font-semibold mr-0.5">-</span>}
+      {withSign && isPositive && <span className="font-semibold mr-0.5">+</span>}
       <span className="truncate">
         {shouldUseCompact ? simplified.value : fullFormatted}
       </span>
