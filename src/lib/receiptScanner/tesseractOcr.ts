@@ -90,7 +90,7 @@ export async function performOcr(
 
   // Buat worker Tesseract untuk bahasa Indonesia & Inggris
   const worker = await createWorker('ind+eng', 1, {
-    logger: (m) => {
+    logger: (m: any) => {
       if (onProgress && typeof m.progress === 'number') {
         const pct = Math.round(m.progress * 100);
         onProgress(pct, m.status || 'Membaca teks...');
