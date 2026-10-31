@@ -8,6 +8,7 @@ import { VerifyingScreen } from '@/components/auth/VerifyingScreen';
 import { SessionTerminatingScreen } from '@/components/auth/SessionTerminatingScreen';
 import { DashboardPage } from '@/components/dashboard/DashboardPage';
 import { DispatcherPage } from '@/components/dispatcher/DispatcherPage';
+import { DispatchHistoryPage } from '@/components/dispatcher/DispatchHistoryPage';
 import { DatabasePage } from '@/components/database/DatabasePage';
 import { MasterMaterialPage } from '@/components/materials/MasterMaterialPage';
 import { ProjectsPage } from '@/components/projects/ProjectsPage';
@@ -132,7 +133,7 @@ function AuthenticatedApp({ user, onLogout }: AuthenticatedAppProps): React.JSX.
       )}
 
       {currentTab === 'ritase' && (
-        <DispatcherPage userEmail={user?.email || 'operator@patak.id'} initialView="history" />
+        <DispatchHistoryPage userEmail={user?.email || 'operator@patak.id'} />
       )}
 
       {currentTab === 'database' && (

@@ -269,7 +269,7 @@ export function AppShell({
           </div>
 
           {/* Children Content Body */}
-          <div className="p-4 md:p-6 max-w-6xl w-full flex-1">
+          <div className={`p-4 md:p-6 w-full flex-1 ${activeTab === 'ritase' ? 'max-w-none' : 'max-w-6xl'}`}>
             {children ? (
               children
             ) : (

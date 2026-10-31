@@ -4,7 +4,7 @@
 > **Proyek**: Sistem Logistik & Keuangan Terpadu — **PT Patak Abadi Jaya** (`patak-logistics-system`)  
 > **Agen Pelaksana**: `antigravity-nizar` (Autonomous Pair-Programming & Systems Engineering Agent)  
 > **Penerima Laporan**: `Antigravity Utama` (Primary AI Agent / System Architect)  
-> **Waktu Pembaruan Terakhir**: 31 Oktober 2026, 01:45 WIB  
+> **Waktu Pembaruan Terakhir**: 31 Oktober 2026, 16:50 WIB
 
 ---
 
@@ -249,6 +249,46 @@ User baru saja memberi arahan bahwa beliau akan berpindah perangkat ke laptop ke
 8. **Sinkronisasi Aturan Mutlak & Git**:
    - Seluruh aturan baru (Rules 113 s/d 122) telah dicatat di `.agents/RULES.md` dan disinkronkan ke `RULES.md` dengan kesetaraan 0-diff.
    - `npm run build` lulus 100% tanpa error TypeScript.
+
+
+### FASE 10: Pemisahan Mandiri Halaman Riwayat Ritase, Full-width Desktop, 4 Kartu KPI, dan Desktop Anchored Popover Filter (Rules 123-125)
+Dikerjakan oleh **`antigravity-nizar`** merespons arahan User untuk kenyamanan tampilan desktop:
+
+1. **Pemisahan Penuh Halaman Riwayat Ritase Tanpa Duplikasi Form**:
+   - Di tab **Riwayat Ritase** (`currentTab === 'ritase'`), form pencatatan ritase baru (`DispatchForm`) di bawah tabel telah **sepenuhnya dieliminasi**.
+   - Input ritase baru kini 100% terisolasi di tab khususnya sendiri (**Dispatcher**).
+   - Dibuat komponen halaman mandiri baru: `src/components/dispatcher/DispatchHistoryPage.tsx`.
+
+2. **Full-Width Canvas Desktop (Bebas dari Pembungkus max-w-6xl)**:
+   - Di `src/components/layout/AppShell.tsx`, pembungkus children kini dinamis: jika `activeTab === 'ritase'`, kontainer menggunakan `w-full max-w-none` sehingga 18 kolom tabel riwayat ritase dapat merentang penuh selebar resolusi layar desktop monitor user secara leluasa, lega, dan modern.
+
+3. **4 Kartu Metrik Ringkasan KPI di Puncak Riwayat Ritase**:
+   - **Total Ritase**: Menghitung total trip ritase terfilter.
+   - **Total Volume**: Memisahkan format DT (integer bulat via Math.round) dan Ton (1 desimal) sesuai **Rule 116**.
+   - **Total Omzet / Tagihan**: Otomatis meringkas nominal uang panjang dengan suffix `K` jika menyentuh overflow sesuai **Rule 119**.
+   - **Estimasi Laba Bersih**: Terintegrasi proteksi RBAC ketat (hanya tampil untuk Superadmin/Keuangan, disembunyikan untuk Dispatcher/Investor).
+
+4. **Toolbar Navigasi Terintegrasi & Filter Cepat (Quick Preset Pills)**:
+   - **Search Box Global Multi-Atribut**: Dilengkapi tombol clear `✕`. Mendukung pencarian instan terhadap nomor tiket, surat jalan, plat nomor armada, nama supir, kuari asal, nama proyek tujuan, nama klien konsumen, jenis material, catatan ritase, dan nama operator/creator tiket.
+   - **Pill Preset Cepat**: `Hari Ini`, `15 Hari Terakhir`, `30 Hari Terakhir`, `Bulan Ini`, dan `Semua Waktu`.
+
+5. **Desktop Anchored Filter Popover & Mobile Bottom Sheet**:
+   - Dibuat komponen arsitektur baru: `src/components/dispatcher/DispatchFilterPopover.tsx`.
+   - **Desktop UI**: Berupa **Anchored Popover** melayang elegan berukuran lebar (`w-[440px]`) tepat di bawah tombol Filter. Dilengkapi deteksi otomatis klik di luar (*blur/click-outside*) dan shortcut tombol `Escape` untuk menutup seketika.
+   - **Mobile UI**: Responsif otomatis beralih menjadi bottom-sheet drawer modal dengan backdrop gelap.
+   - **Opsi Filter Menyeluruh**: Tanggal Kustom (Start & End Date Picker), Pilihan Proyek, Pilihan Jenis Material, Pilihan Kuari Asal, dan Pilihan Status Pembayaran (Lunas/Tempo).
+
+6. **Integrasi TableActionMenu & Universal Context Menu (Rule 122)**:
+   - Seluruh baris transaksi di tabel riwayat mendukung klik kanan (*context menu*) maupun tombol aksi 3-titik untuk:
+     - 👁️ Buka Detail Ritase (`DispatchDetailModal`)
+     - ✏️ Edit Data Ritase (`EditDispatchModal`)
+     - 💳 Tandai Lunas (`handleSettle`)
+     - 🗑️ Hapus Ritase (dengan proteksi PIN Otorisasi 6 digit)
+
+7. **Status Build & Runtime**:
+   - `npm run build` lulus **100% Clean** (141 modules transformed, PWA service worker generated, 0 error TypeScript).
+   - Vite Dev Server aktif berjalan di background daemon.
+
 
 ### 🚀 Instruksi untuk Nizar saat Menerima Sesi di Windows:
 Cukup jalankan perintah git pull standar di direktori proyek Windows:
