@@ -6,6 +6,7 @@ node_modules/
 # Production build outputs
 dist/
 dist-ssr/
+dev-dist/
 
 # Local environment files
 .env.local

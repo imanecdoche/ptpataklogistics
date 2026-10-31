@@ -1289,3 +1289,28 @@ Dokumen ini adalah hukum tertinggi operasional sistem. Kegagalan mematuhi aturan
         2. **HOK & Uang Jalan Supir (Cash)**: Total uang jalan dan upah operasional armada.
       * Memberikan visibilitas langsung dan instan kepada manajemen perseroan mengenai pemakaian modal riil investor per hari.
 
+110. **Standar Arsitektur Progressive Web App (PWA) Standalone**:
+    - **Identitas & Penamaan Aplikasi**:
+      * Nama Lengkap: `PT Patak Abadi Jaya — Logistics System`
+      * Nama Pendek (Home Screen): `Patak` (ringkas, tepat, dan bebas pemotongan titik-titik elipsis pada layar smartphone).
+      * Deskripsi: `Sistem Logistik & Keuangan Terpadu PT Patak Abadi Jaya`
+      * Bahasa: `id` (Bahasa Indonesia)
+    - **Tampilan & Tema Visual**:
+      * `display: 'standalone'` (berjalan tanpa bilah URL / address bar peramban, menyerupai aplikasi natif).
+      * `orientation: 'portrait-primary'`
+      * `theme_color: '#ffffff'` & `background_color: '#ffffff'`
+    - **Standar Aset Ikon PWA (`public/icons/pwa/`)**:
+      * Seluruh ikon menggunakan canvas latar belakang putih bersih (`#ffffff`) yang kontras dengan logo resmi PT Patak Abadi Jaya.
+      * `pwa-192x192.png`: Resolusi 192×192 px untuk Android home screen.
+      * `pwa-512x512.png`: Resolusi 512×512 px untuk desktop dan splash screen.
+      * `maskable-icon-512x512.png`: Resolusi 512×512 px dengan *safe-zone padding* 20% agar terhindar dari pemotongan lingkaran/tupai (*squircle*) pada sistem operasi Android.
+      * `apple-touch-icon.png`: Resolusi 180×180 px canvas RGB solid putih untuk perangkat iOS / iPadOS.
+      * `favicon-64x64.png`: Favicon tab browser.
+    - **Mekanisme Pembaruan & Caching (Vite PWA & Workbox)**:
+      * `registerType: 'autoUpdate'`: Pembaruan service worker terjadi secara otomatis dan mulus di latar belakang tanpa memunculkan pop-up yang mengganggu konsentrasi operator penginput ritase lapangan.
+      * Batas precache Workbox disetel hingga 5 MiB (`maximumFileSizeToCacheInBytes: 5 * 1024 * 1024`) untuk memastikan aset animasi offline (`offline-disconnected.gif`) tersimpan penuh dan aplikasi dapat dibuka saat kondisi sinyal nol di area kuari.
+      * Runtime caching untuk Google Fonts (`fonts.googleapis.com` via `StaleWhileRevalidate` dan `fonts.gstatic.com` via `CacheFirst`).
+    - **Pemasangan Mandiri (Native Install Standard)**:
+      * Menghindari penambahan tombol install kustom yang memadati antarmuka pengguna (sesuai aturan `ai-anti-patterns.md`), sepenuhnya mengandalkan pemicu instalasi natif dari browser (Chrome/Edge/Safari).
+
+
