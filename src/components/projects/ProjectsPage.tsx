@@ -18,6 +18,7 @@ import { MetricCardCurrency } from '@/components/ui/MetricCardCurrency';
 import { formatEntityNameLive } from '@/lib/nameUtils';
 import { CustomSelectCombobox, SelectOption } from '@/components/ui/CustomSelectCombobox';
 import { MobileTitlebarAction } from '@/components/ui/MobileTitlebarAction';
+import { ProjectFinancialsModal } from './ProjectFinancialsModal';
 
 const PROJECT_STATUS_OPTIONS: SelectOption[] = [
   { id: 'ACTIVE', label: 'AKTIF' },
@@ -49,6 +50,7 @@ export function ProjectsPage({ userEmail: _userEmail }: ProjectsPageProps): Reac
 
   // Modal State Edit Proyek
   const [editTarget, setEditTarget] = useState<Project | null>(null);
+  const [selectedFinanceProject, setSelectedFinanceProject] = useState<Project | null>(null);
 
   // Pin Auth Modal State
   const [isPinModalOpen, setIsPinModalOpen] = useState(false);
@@ -413,8 +415,18 @@ export function ProjectsPage({ userEmail: _userEmail }: ProjectsPageProps): Reac
               ) : (
                 filteredProjects.map(proj => (
                   <tr key={proj.id} className="hover:bg-[#fafafa] transition-colors">
-                    <td className="py-2.5 px-3 whitespace-nowrap w-[200px] align-middle">
-                      <span className="font-bold text-[#111111] block truncate">{proj.name}</span>
+                    <td className="py-2.5 px-3 whitespace-nowrap w-[240px] align-middle">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-[#111111] block truncate">{proj.name}</span>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedFinanceProject(proj)}
+                          className="px-2 py-0.5 rounded bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-[10px] font-bold border border-emerald-200 transition-colors cursor-pointer whitespace-nowrap"
+                          title="Buka rincian sub-pekerjaan fisik (MCK, Paving, Drainase), logistik ritase, kasbon tukang & pelunasan klien"
+                        >
+                          📊 Sub-Proyek & Kasbon
+                        </button>
+                      </div>
                     </td>
                     <td className="py-2.5 px-3 text-[#444444] whitespace-nowrap w-[160px] align-middle">
                       <RunningText text={proj.location} placeholder="-" className="text-[#444444]" />
@@ -459,6 +471,10 @@ export function ProjectsPage({ userEmail: _userEmail }: ProjectsPageProps): Reac
                         <div className="flex items-center justify-end">
                           <TableActionMenu
                             items={[
+                              {
+                                label: '📊 Kelola Sub-Pekerjaan & Kasbon',
+                                onClick: () => setSelectedFinanceProject(proj)
+                              },
                               {
                                 label: 'Edit Data Proyek',
                                 onClick: () => setEditTarget(proj)
@@ -738,6 +754,15 @@ export function ProjectsPage({ userEmail: _userEmail }: ProjectsPageProps): Reac
           </div>
         </div>
       )}
+
+      {/* Modal Finansial & Sub-Pekerjaan Terpadu */}
+      <ProjectFinancialsModal
+        isOpen={Boolean(selectedFinanceProject)}
+        onClose={() => setSelectedFinanceProject(null)}
+        project={selectedFinanceProject}
+        projects={projects}
+        userEmail={_userEmail}
+      />
 
       {/* Pin Authorization Modal */}
       <PinAuthModal

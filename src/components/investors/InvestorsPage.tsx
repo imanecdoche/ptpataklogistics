@@ -185,6 +185,34 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
     return map;
   }, [investors, projects, transactions, payouts]);
 
+
+  // Hitung akumulasi transfer & talangan aktif per investor
+  const investorTransferBalanceMap = useMemo(() => {
+    const map = new Map<string, { totalIn: number; totalOut: number; net: number }>();
+
+    transfers.forEach(tr => {
+      // Hitung mutasi aktif (talangan belum lunas atau realokasi modal)
+      const isEffective = tr.status === 'BELUM_LUNAS' || tr.category === 'MIGRASI_MODAL';
+      if (!isEffective) return;
+
+      if (tr.fromInvestorId) {
+        const cur = map.get(tr.fromInvestorId) || { totalIn: 0, totalOut: 0, net: 0 };
+        cur.totalOut += (tr.amount || 0);
+        cur.net -= (tr.amount || 0);
+        map.set(tr.fromInvestorId, cur);
+      }
+
+      if (tr.toInvestorId) {
+        const cur = map.get(tr.toInvestorId) || { totalIn: 0, totalOut: 0, net: 0 };
+        cur.totalIn += (tr.amount || 0);
+        cur.net += (tr.amount || 0);
+        map.set(tr.toInvestorId, cur);
+      }
+    });
+
+    return map;
+  }, [transfers]);
+
   // Total talangan aktif yang belum lunas
   const totalUnsettledTalangan = useMemo(() => {
     return transfers
@@ -564,7 +592,7 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
                 <th className="py-2.5 px-3 w-[150px] min-w-[150px] whitespace-nowrap">No. WhatsApp / HP</th>
                 <th className="py-2.5 px-3 w-[170px] min-w-[170px] whitespace-nowrap">Rekening Bank</th>
                 <th className="py-2.5 px-3 w-[210px] min-w-[210px] whitespace-nowrap">Proyek Terkait & Profit Share</th>
-                <th className="py-2.5 px-3 w-[130px] min-w-[130px] text-right whitespace-nowrap">Modal Disetor</th>
+                <th className="py-2.5 px-3 w-[150px] min-w-[150px] text-right whitespace-nowrap" title="Modal disetor disesuaikan transfer dan talangan aktif">Modal Bersih Berjalan</th>
                 <th className="py-2.5 px-3 w-[140px] min-w-[140px] text-right whitespace-nowrap">Hak Bagi Hasil</th>
                 <th className="py-2.5 px-3 w-[100px] min-w-[100px] text-right whitespace-nowrap">Aksi</th>
               </tr>
@@ -617,8 +645,33 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
                           <span className="text-[#888888]">-</span>
                         )}
                       </td>
-                      <td className="py-2.5 px-3 font-bold tracking-tight text-[#111111] text-right whitespace-nowrap w-[130px] align-middle">
-                        {formatRupiah(inv.initialCapital || 0)}
+                      <td className="py-2.5 px-3 text-right whitespace-nowrap w-[150px] align-middle">
+                        {(() => {
+                          const base = inv.initialCapital || 0;
+                          const tInfo = investorTransferBalanceMap.get(inv.id) || { totalIn: 0, totalOut: 0, net: 0 };
+                          const effective = base + tInfo.net;
+                          return (
+                            <div className="flex flex-col items-end">
+                              <span className="font-bold tracking-tight text-[#111111]">
+                                {formatRupiah(effective)}
+                              </span>
+                              {tInfo.net !== 0 ? (
+                                <span
+                                  className={`text-[10px] font-semibold mt-0.5 ${
+                                    tInfo.net > 0 ? 'text-emerald-700' : 'text-amber-700'
+                                  }`}
+                                  title={`Modal Awal: ${formatRupiah(base)} | Mutasi Transfer: ${tInfo.net > 0 ? '+' : ''}${formatRupiah(tInfo.net)}`}
+                                >
+                                  {tInfo.net > 0
+                                    ? `(+ ${formatRupiah(tInfo.net)})`
+                                    : `(- ${formatRupiah(Math.abs(tInfo.net))})`}
+                                </span>
+                              ) : (
+                                <span className="text-[10px] text-[#888888] mt-0.5">Modal Murni</span>
+                              )}
+                            </div>
+                          );
+                        })()}
                       </td>
                       <td className="py-2.5 px-3 font-bold tracking-tight text-right whitespace-nowrap w-[140px] align-middle text-[#008060]">
                         {formatRupiah(profitShareRemaining)}

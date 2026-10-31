@@ -592,7 +592,7 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
           </div>
 
           <div className="flex items-center gap-2">
-            {activeSubTab === 'vehicles' && (
+            {activeSubTab === 'vehicles' && !isDispatcherUser && (
               <button
                 type="button"
                 onClick={() => setIsVehicleModalOpen(true)}
@@ -602,7 +602,7 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
               </button>
             )}
 
-            {activeSubTab === 'drivers' && (
+            {activeSubTab === 'drivers' && !isDispatcherUser && (
               <button
                 type="button"
                 onClick={() => setIsDriverModalOpen(true)}

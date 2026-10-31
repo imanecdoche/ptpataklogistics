@@ -33,6 +33,9 @@ import { RunningText } from '@/components/ui/RunningText';
 import { TableActionMenu } from '@/components/ui/TableActionMenu';
 import { CustomDialog } from '@/components/ui/CustomDialog';
 import { PinAuthModal } from '@/components/ui/PinAuthModal';
+import { TicketApprovalRequest } from '@/types/database';
+import { submitApprovalRequest, subscribePendingApprovals } from '@/lib/approvalService';
+import { RequestDeleteModal } from '@/components/dispatcher/RequestDeleteModal';
 import { DispatchDetailModal } from '@/components/dispatcher/DispatchDetailModal';
 import { EditDispatchModal } from '@/components/dispatcher/EditDispatchModal';
 import {
@@ -91,6 +94,21 @@ export function DispatchHistoryPage({ userEmail }: DispatchHistoryPageProps): Re
     targetLabel: '',
     onExecute: async () => {}
   });
+
+
+  // State Permohonan Approval Tiket
+  const [pendingApprovals, setPendingApprovals] = useState<TicketApprovalRequest[]>([]);
+  const [requestDeleteTx, setRequestDeleteTx] = useState<DispatchTransaction | null>(null);
+
+  useEffect(() => {
+    const unsub = subscribePendingApprovals(setPendingApprovals);
+    return () => unsub();
+  }, []);
+
+  const pendingApprovalsMap = useMemo(
+    () => new Map(pendingApprovals.map(r => [r.ticketId, r])),
+    [pendingApprovals]
+  );
 
   // Subscribe seluruh master & transaksi
   useEffect(() => {
@@ -573,7 +591,22 @@ export function DispatchHistoryPage({ userEmail }: DispatchHistoryPageProps): Re
                       className="hover:bg-[#fafafa] transition-colors group cursor-default"
                     >
                       <td className="py-2.5 px-3 font-mono font-bold text-[#111111] whitespace-nowrap w-[140px] align-middle">
-                        {tx.ticketNumber}
+                        <div className="flex items-center gap-1.5">
+                          <span>{tx.ticketNumber}</span>
+                          {pendingApprovalsMap.has(tx.id) && (
+                            <span
+                              className={`text-[9px] font-sans font-bold px-1.5 py-0.2 rounded border flex items-center gap-1 ${
+                                pendingApprovalsMap.get(tx.id)?.type === 'DELETE'
+                                  ? 'bg-red-50 text-red-700 border-red-200'
+                                  : 'bg-amber-50 text-amber-700 border-amber-200'
+                              }`}
+                              title={`Sedang diajukan oleh ${pendingApprovalsMap.get(tx.id)?.requestedByName}: "${pendingApprovalsMap.get(tx.id)?.reason}"`}
+                            >
+                              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                              <span>Menunggu ACC {pendingApprovalsMap.get(tx.id)?.type === 'DELETE' ? 'Hapus' : 'Edit'}</span>
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="py-2.5 px-3 font-mono text-[#555555] whitespace-nowrap w-[105px] align-middle">
                         {(tx.deliveryDate || '').slice(0, 10)}
@@ -676,12 +709,12 @@ export function DispatchHistoryPage({ userEmail }: DispatchHistoryPageProps): Re
                                 onClick: () => setSelectedDetailTx(tx)
                               },
                               {
-                                label: 'Edit Tiket',
+                                label: isDispatcherUser ? 'Ajukan Koreksi Tiket' : 'Edit Tiket',
                                 onClick: () => setSelectedEditTx(tx)
                               },
                               {
                                 label: 'Tandai Lunas',
-                                hidden: tx.status === 'LUNAS',
+                                hidden: isDispatcherUser || tx.status === 'LUNAS',
                                 onClick: () => setSettleTarget(tx)
                               },
                               {
@@ -689,9 +722,15 @@ export function DispatchHistoryPage({ userEmail }: DispatchHistoryPageProps): Re
                                 onClick: () => navigator.clipboard.writeText(tx.ticketNumber)
                               },
                               {
-                                label: 'Hapus Tiket',
+                                label: isDispatcherUser ? 'Ajukan Hapus Tiket' : 'Hapus Tiket',
                                 variant: 'danger',
-                                onClick: () => handleDeleteRitase(tx)
+                                onClick: () => {
+                                  if (isDispatcherUser) {
+                                    setRequestDeleteTx(tx);
+                                  } else {
+                                    handleDeleteRitase(tx);
+                                  }
+                                }
                               }
                             ]}
                           />
@@ -738,6 +777,28 @@ export function DispatchHistoryPage({ userEmail }: DispatchHistoryPageProps): Re
         confirmText="Tandai Lunas"
         cancelText="Batal"
         onConfirm={handleConfirmSettle}
+      />
+
+
+      {/* MODAL PERMOHONAN HAPUS TIKET KHUSUS DISPATCHER */}
+      <RequestDeleteModal
+        isOpen={Boolean(requestDeleteTx)}
+        transaction={requestDeleteTx}
+        onClose={() => setRequestDeleteTx(null)}
+        onSubmit={async reason => {
+          if (!requestDeleteTx) return;
+          await submitApprovalRequest({
+            ticketId: requestDeleteTx.id,
+            ticketNumber: requestDeleteTx.ticketNumber,
+            type: 'DELETE',
+            reason,
+            currentData: requestDeleteTx,
+            requestedBy: userEmail,
+            requestedByName: userEmail.split('@')[0] || 'Dispatcher' || 'Dispatcher'
+          });
+          alert('Permohonan penghapusan tiket #' + requestDeleteTx.ticketNumber + ' telah dikirim ke Atasan untuk di-ACC.');
+          setRequestDeleteTx(null);
+        }}
       />
 
       {/* PIN AUTH MODAL UNTUK PENGHAPUSAN TIKET */}

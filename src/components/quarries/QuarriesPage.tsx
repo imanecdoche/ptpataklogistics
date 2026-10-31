@@ -19,7 +19,7 @@ interface QuarriesPageProps {
 }
 
 export function QuarriesPage({ userEmail: _userEmail }: QuarriesPageProps): React.JSX.Element {
-  const { isInvestorUser } = useProjectFilter();
+  const { isInvestorUser, isDispatcherUser } = useProjectFilter();
   const [quarries, setQuarries] = useState<MasterQuarry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -145,7 +145,7 @@ export function QuarriesPage({ userEmail: _userEmail }: QuarriesPageProps): Reac
   return (
     <div className="space-y-4">
       {/* Mobile Titlebar Action Button (Rule 108) */}
-      {!isInvestorUser && (
+      {!isInvestorUser && !isDispatcherUser && (
         <MobileTitlebarAction>
           <button
             type="button"
@@ -206,7 +206,7 @@ export function QuarriesPage({ userEmail: _userEmail }: QuarriesPageProps): Reac
               />
             </div>
 
-            {!isInvestorUser && (
+            {!isInvestorUser && !isDispatcherUser && (
               <button
                 type="button"
                 onClick={handleOpenAdd}
@@ -228,7 +228,7 @@ export function QuarriesPage({ userEmail: _userEmail }: QuarriesPageProps): Reac
                 <th className="py-2.5 px-3 w-[160px] min-w-[160px] whitespace-nowrap">Kontak Person (PIC)</th>
                 <th className="py-2.5 px-3 w-[150px] min-w-[150px] whitespace-nowrap">Nomor Telepon</th>
                 <th className="py-2.5 px-3 w-[120px] min-w-[120px] whitespace-nowrap">Status Mitra</th>
-                {!isInvestorUser && (
+                {!isInvestorUser && !isDispatcherUser && (
                   <th className="py-2.5 px-3 w-[60px] min-w-[60px] text-right whitespace-nowrap">Aksi</th>
                 )}
               </tr>
@@ -236,13 +236,13 @@ export function QuarriesPage({ userEmail: _userEmail }: QuarriesPageProps): Reac
             <tbody className="divide-y divide-[#eaeaea]">
               {isLoading ? (
                 <tr>
-                  <td colSpan={isInvestorUser ? 5 : 6} className="py-10 text-center text-xs text-[#888888] whitespace-nowrap">
+                  <td colSpan={(isInvestorUser || isDispatcherUser) ? 5 : 6} className="py-10 text-center text-xs text-[#888888] whitespace-nowrap">
                     Memuat data kuari tambang...
                   </td>
                 </tr>
               ) : filteredQuarries.length === 0 ? (
                 <tr>
-                  <td colSpan={isInvestorUser ? 5 : 6} className="py-10 text-center text-xs text-[#888888] whitespace-nowrap">
+                  <td colSpan={(isInvestorUser || isDispatcherUser) ? 5 : 6} className="py-10 text-center text-xs text-[#888888] whitespace-nowrap">
                     Tidak ada data kuari yang sesuai.
                   </td>
                 </tr>
@@ -266,7 +266,7 @@ export function QuarriesPage({ userEmail: _userEmail }: QuarriesPageProps): Reac
                         AKTIF
                       </span>
                     </td>
-                    {!isInvestorUser && (
+                    {!isInvestorUser && !isDispatcherUser && (
                       <td className="py-2.5 px-3 text-right whitespace-nowrap w-[60px] align-middle">
                         <div className="flex items-center justify-end">
                           <TableActionMenu

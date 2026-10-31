@@ -298,3 +298,41 @@ git pull origin main
 ```
 Dev server dapat langsung diakses di `http://localhost:5173/`. Selamat bertugas kembali bersama User, Nizar! 🤝
 
+
+
+### FASE 11: Pusat Persetujuan Tiket (Approval Center), Master Data Read-Only Dispatcher, Desktop Full-Width, Custom Scrollbar UI, Sub-Pekerjaan Fisik, Kasbon Mandor & Pool Pembayaran Klien
+Dikerjakan oleh **`antigravity-nizar`** merespons arahan User:
+
+1. **Role Dispatcher Read-Only Master & Sistem Persetujuan Tiket (Approval Center)**:
+   - Dispatcher dikunci read-only pada seluruh data Master (`DatabasePage`, `ProjectsPage`, `QuarriesPage`, `ClientsPage`, `MasterMaterialPage`). Tombol tambah/edit/hapus disembunyikan.
+   - Pada riwayat ritase, Dispatcher tidak dapat langsung mengedit atau menghapus tiket. Dispatcher mengajukan *"Permohonan Koreksi (Edit)"* atau *"Permohonan Hapus"* dengan alasan wajib.
+   - Pihak Atasan (Admin/Founder/Dev) memiliki tombol **"Pusat Persetujuan"** di header navigasi desktop dengan badge indikator jumlah permohonan pending.
+   - Atasan dapat membandingkan data lama vs usulan perubahan, lalu melakukan **ACC (Setujui)** yang otomatis memperbarui data transaksi dan menyinkronkan kas sentral, atau **Tolak (Reject)** dengan alasan.
+
+2. **Tampilan Desktop 100% Full-Width**:
+   - Pembatasan `max-w-6xl` pada pembungkus kontainer utama `AppShell.tsx` telah dihilangkan sehingga seluruh tab navigasi (`database`, `materials`, `projects`, `quarries`, `clients`, `dashboard`, `cash_ledger`, dll.) merentang penuh selebar resolusi layar desktop pengguna dengan padding yang nyaman (`p-4 md:p-6 w-full flex-1`).
+
+3. **Custom Global UI Scrollbar**:
+   - Scrollbar di seluruh aplikasi (`src/index.css`) kini menggunakan tombol navigasi panah berputar sesuai arah (up, down, left, right) dengan aset `/icons/scrollbar-arrow-*.png` dan track transparan serta handle berbentuk pil abu-abu tipis pendek.
+
+4. **Pembersihan Halaman Login**:
+   - Menghapus tombol non-fungsional "Lanjutkan dengan Google" dan divider dari `LoginPage.tsx` agar tampilan login lebih bersih dan fokus pada otentikasi Email/Password serta pengajuan akses baru.
+
+5. **Pelacakan Transfer Internal Antar Investor (Modal Bersih Berjalan)**:
+   - Tabel investor kini menampilkan kolom **"Modal Bersih Berjalan"** yang memperhitungkan mutasi transfer modal antar investor (kategori `MIGRASI_MODAL`).
+   - Setiap baris investor menampilkan badge penambahan/pengurangan nominal transfer (misal: `(- Rp 18.000.000 transfer)` atau `(+ Rp 18.000.000 transfer)`) dan tooltip rincian modal awal.
+
+6. **Sistem Sub-Pekerjaan Fisik Proyek, Kasbon Mandor & Pool Pelunasan Klien**:
+   - **Pool Pembayaran Pelunasan Klien (Lump-Sum)**: Klien proyek (misal Kak Angga) melunasi pembayaran proyek secara borongan/lump-sum (misal Rp 80.000.000). Dana ini langsung memotong total akumulasi tagihan piutang proyek (material ritase + sub-pekerjaan) tanpa perlu mencentang satu-satu tiket, serta otomatis dicatat sebagai pemasukan di Kas Sentral (`cash_ledger`).
+   - **Sub-Pekerjaan Fisik Multi-Satuan**:
+     - *MCK*: Borongan paket lump-sum (misal nilai dari proyek Rp 15 jt, plafon tukang Rp 12 jt).
+     - *Paving Block*: Satuan meter persegi ($m^2$) $\rightarrow$ luas $\times$ tarif per meter.
+     - *Drainase*: Satuan kubikasi ($m^3$) $\rightarrow$ volume $\times$ tarif per kubik.
+   - **Buku Kasbon Mandor/Tukang & Pengurangan Plafon Upah**:
+     - Setiap kasbon yang dicatat dari buku fisik otomatis memotong sisa hak bayar tukang (misal plafon Rp 12 jt dikurangi kasbon Rp 2 jt = sisa hak bayar Rp 10 jt) dan otomatis dicatat sebagai pengeluaran kas di Kas Sentral (`cash_ledger`).
+   - **Lembar Audit Siap Cetak (Print / PDF Ready)**:
+     - Komponen `WorkerKasbonPrintModal.tsx` menyediakan lembar rekapitulasi resmi siap cetak (Ctrl+P / Simpan PDF) untuk kontrak kerja borongan dan seluruh bukti tarikan kasbon tukang sebelum proyek berakhir.
+
+7. **Status Build & Runtime**:
+   - `npm run build` lulus **100% Clean** (150 modules transformed, 0 error TypeScript, PWA service worker generated).
+   - Vite Dev Server aktif berjalan di background daemon.

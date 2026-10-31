@@ -63,3 +63,53 @@ html, body {
 .animate-smooth-marquee:hover {
   animation-play-state: paused !important;
 }
+
+
+/* Custom Global Scrollbar UI dengan Icon Panah & Pil Pendek Abu-Abu */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #b5b5b5;
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #888888;
+}
+
+/* Tombol Panah Scrollbar Berputar Sesuai Arah */
+::-webkit-scrollbar-button {
+  display: block;
+  width: 12px;
+  height: 12px;
+  background-size: 10px 10px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-color: transparent;
+  cursor: pointer;
+}
+
+::-webkit-scrollbar-button:single-button:vertical:decrement {
+  background-image: url('/icons/scrollbar-arrow-up.png');
+}
+
+::-webkit-scrollbar-button:single-button:vertical:increment {
+  background-image: url('/icons/scrollbar-arrow-down.png');
+}
+
+::-webkit-scrollbar-button:single-button:horizontal:decrement {
+  background-image: url('/icons/scrollbar-arrow-left.png');
+}
+
+::-webkit-scrollbar-button:single-button:horizontal:increment {
+  background-image: url('/icons/scrollbar-arrow-right.png');
+}

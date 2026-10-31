@@ -5,6 +5,9 @@ import { Icons8Menu } from '@/components/icons/Icons8';
 import { MobileRubberBand } from '@/components/ui/MobileRubberBand';
 import { useProjectFilter } from '@/context/ProjectFilterContext';
 import { CustomSelectCombobox } from '@/components/ui/CustomSelectCombobox';
+import { ApprovalCenterModal } from '@/components/approval/ApprovalCenterModal';
+import { subscribePendingApprovals } from '@/lib/approvalService';
+import { TicketApprovalRequest } from '@/types/database';
 
 interface AppShellProps {
   user?: User | null;
@@ -104,8 +107,18 @@ export function AppShell({
     projects,
     selectedProjectId,
     setSelectedProjectId,
-    isInvestorUser
+    isInvestorUser,
+    isDispatcherUser
   } = useProjectFilter();
+
+  const [isApprovalModalOpen, setIsApprovalModalOpen] = useState(false);
+  const [pendingApprovals, setPendingApprovals] = useState<TicketApprovalRequest[]>([]);
+
+  useEffect(() => {
+    if (isDispatcherUser || isInvestorUser) return;
+    const unsub = subscribePendingApprovals(setPendingApprovals);
+    return () => unsub();
+  }, [isDispatcherUser, isInvestorUser]);
 
   // Reset scroll dan state saat ganti tab navigasi
   useEffect(() => {
@@ -179,7 +192,28 @@ export function AppShell({
           </div>
 
           {/* Global Project Switcher Dropdown (Contextual per Rule 107) */}
-          {showProjectFilter && (
+          <div className="flex items-center gap-3">
+            {!isDispatcherUser && !isInvestorUser && (
+              <button
+                type="button"
+                onClick={() => setIsApprovalModalOpen(true)}
+                className={`relative px-3 py-1.5 text-xs font-bold rounded-[8px] flex items-center gap-1.5 transition-colors cursor-pointer ${
+                  pendingApprovals.length > 0
+                    ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-xs animate-pulse'
+                    : 'bg-[#f0f0f0] hover:bg-[#e4e4e4] text-[#444444]'
+                }`}
+                title="Buka Pusat Persetujuan Tiket (Approval Center)"
+              >
+                <span>Pusat Persetujuan</span>
+                {pendingApprovals.length > 0 && (
+                  <span className="bg-white text-amber-900 font-mono text-[10px] font-bold px-1.5 py-0.2 rounded-full">
+                    {pendingApprovals.length}
+                  </span>
+                )}
+              </button>
+            )}
+
+            {showProjectFilter && (
             <div className="flex items-center gap-2 w-72">
               <span className="text-xs text-[#666666] font-medium whitespace-nowrap">Proyek:</span>
               <div className="flex-1">
@@ -201,6 +235,7 @@ export function AppShell({
               </div>
             </div>
           )}
+          </div>
         </div>
 
         {/* Main Workspace Body & Mobile Natural Scrolling Flow */}
@@ -269,7 +304,7 @@ export function AppShell({
           </div>
 
           {/* Children Content Body */}
-          <div className={`p-4 md:p-6 w-full flex-1 ${activeTab === 'ritase' ? 'max-w-none' : 'max-w-6xl'}`}>
+          <div className="p-4 md:p-6 w-full flex-1">
             {children ? (
               children
             ) : (
@@ -280,6 +315,14 @@ export function AppShell({
             )}
           </div>
         </main>
+
+        {/* Modal Pusat Persetujuan Tiket */}
+        <ApprovalCenterModal
+          isOpen={isApprovalModalOpen}
+          onClose={() => setIsApprovalModalOpen(false)}
+          currentUserEmail={user?.email || 'admin@patak.id'}
+          currentUserName={user?.displayName || user?.email?.split('@')[0] || 'Atasan'}
+        />
 
         {/* Mobile Stretch Overscroll / Rubber Banding Effect */}
         <MobileRubberBand

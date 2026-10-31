@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Client, ClientType } from '@/types/database';
 import { subscribeClients, deleteClient } from '@/lib/clientService';
 import { isDeveloperEmail } from '@/lib/userManagementService';
+import { useProjectFilter } from '@/context/ProjectFilterContext';
 import { RunningText } from '@/components/ui/RunningText';
 import { TableActionMenu } from '@/components/ui/TableActionMenu';
 import { PinAuthModal } from '@/components/ui/PinAuthModal';
@@ -15,7 +16,8 @@ interface ClientsPageProps {
 }
 
 export function ClientsPage({ userEmail }: ClientsPageProps): React.JSX.Element {
-  const [clients, setClients] = useState<Client[]>([]);
+  const { isDispatcherUser } = useProjectFilter();
+const [clients, setClients] = useState<Client[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<'ALL' | ClientType>('ALL');
@@ -92,15 +94,17 @@ export function ClientsPage({ userEmail }: ClientsPageProps): React.JSX.Element 
   return (
     <div className="space-y-4">
       {/* Mobile Titlebar Action Button (Rule 108) */}
-      <MobileTitlebarAction>
-        <button
-          type="button"
-          onClick={() => setIsNewClientModalOpen(true)}
+      {!isDispatcherUser && (
+        <MobileTitlebarAction>
+          <button
+            type="button"
+            onClick={() => setIsNewClientModalOpen(true)}
           className="px-2.5 py-1 bg-[#111111] hover:bg-[#2b2b2b] text-white text-xs font-semibold rounded-[6px] transition-colors cursor-pointer whitespace-nowrap"
         >
           + Tambah Klien
-        </button>
-      </MobileTitlebarAction>
+          </button>
+        </MobileTitlebarAction>
+      )}
 
       {/* 1. METRIC CARDS (Rule 99: Sans-serif tebal non-monospace) */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -209,6 +213,7 @@ export function ClientsPage({ userEmail }: ClientsPageProps): React.JSX.Element 
               />
             </div>
 
+            {!isDispatcherUser && (
             <button
               type="button"
               onClick={() => setIsNewClientModalOpen(true)}
@@ -216,6 +221,7 @@ export function ClientsPage({ userEmail }: ClientsPageProps): React.JSX.Element 
             >
               + Tambah Klien
             </button>
+            )}
           </div>
         </div>
 
@@ -259,6 +265,7 @@ export function ClientsPage({ userEmail }: ClientsPageProps): React.JSX.Element 
                           items={[
                             {
                               label: 'Ubah Data',
+                              hidden: isDispatcherUser,
                               onClick: () => setEditClientTarget(c)
                             },
                             {
@@ -284,7 +291,7 @@ export function ClientsPage({ userEmail }: ClientsPageProps): React.JSX.Element 
                             {
                               label: 'Hapus Klien',
                               // Restriksi Keamanan (Rule 100): HANYA untuk Founder & Developer
-                              hidden: !canDeleteClient,
+                              hidden: isDispatcherUser || !canDeleteClient,
                               variant: 'danger',
                               onClick: () => {
                                 setPendingDeleteTarget(c);

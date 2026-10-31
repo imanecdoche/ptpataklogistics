@@ -65,6 +65,8 @@ export function EditDispatchModal({
   const [buyPricePerUnit, setBuyPricePerUnit] = useState<number>(transaction?.buyPricePerUnit || 0);
   const [sellPricePerUnit, setSellPricePerUnit] = useState<number>(transaction?.sellPricePerUnit || 0);
   const [operationalCost, setOperationalCost] = useState<number>(transaction?.operationalCost || 0);
+  const [approvalReason, setApprovalReason] = useState<string>("");
+  const [approvalError, setApprovalError] = useState<string>("");
   const [notes, setNotes] = useState<string>(transaction?.notes || '');
   const [status, setStatus] = useState<'TEMPO' | 'LUNAS'>(transaction?.status || 'TEMPO');
 
@@ -490,6 +492,29 @@ export function EditDispatchModal({
             </div>
           </div>
 
+
+          {/* Field Alasan Khusus Pengajuan Koreksi Dispatcher */}
+          {isDispatcherUser && (
+            <div className="p-4 sm:p-5 bg-amber-50/50 border-t border-amber-200 space-y-2">
+              <label className="text-xs font-bold text-amber-900 block">
+                Alasan Pengajuan Koreksi Tiket <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                value={approvalReason}
+                onChange={e => {
+                  setApprovalReason(e.target.value);
+                  if (approvalError) setApprovalError("");
+                }}
+                rows={2}
+                placeholder="Jelaskan alasan perubahan, contoh: salah pilih kuari asal, revisi volume muatan sesuai struk..."
+                className="w-full text-xs p-2.5 rounded-[8px] border border-amber-300 bg-white focus:border-amber-600 outline-none text-[#111111] resize-none"
+              />
+              {approvalError && (
+                <p className="text-[11px] font-medium text-red-600">{approvalError}</p>
+              )}
+            </div>
+          )}
+
           {/* Sticky Bottom Action Bar */}
           <div className="p-4 px-5 border-t border-[#eaeaea] bg-white sticky bottom-0 flex-shrink-0 flex items-center justify-end gap-3 z-10">
             <button
@@ -506,7 +531,7 @@ export function EditDispatchModal({
               disabled={!isFormValid || isSubmitting}
               className="flex-1 md:flex-none px-5 py-2.5 md:py-2 text-xs font-semibold text-white bg-[#111111] hover:bg-black rounded-[8px] md:rounded-[6px] transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
             >
-              {isSubmitting ? 'Menyimpan...' : 'Simpan Perubahan'}
+              {isSubmitting ? 'Memproses...' : isDispatcherUser ? 'Kirim Pengajuan Koreksi' : 'Simpan Perubahan'}
             </button>
           </div>
         </div>

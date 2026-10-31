@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import { 
   signInWithEmailAndPassword, 
-  signInWithPopup,
+  
   signOut,
   User 
 } from 'firebase/auth';
-import { auth, googleProvider } from '@/lib/firebase';
-import { OfficialGoogleIcon } from '@/components/icons/Icons8';
+import { auth, } from '@/lib/firebase';
 import { EyeToggleIcon } from '@/components/auth/EyeToggleIcon';
 import loginMainGif from '../../../assets/login-main.gif';
 import { 
@@ -91,27 +90,7 @@ export function LoginPage({ user }: LoginPageProps): React.JSX.Element {
     }
   }
 
-  async function handleGoogleLogin() {
-    setIsLoading(true);
-    setAuthError(null);
-
-    try {
-      await signInWithPopup(auth, googleProvider);
-    } catch (err: unknown) {
-      console.error('Google login error:', err);
-      if (err instanceof Error) {
-        if (err.message.includes('auth/popup-closed-by-user')) {
-          setAuthError('Jendela login Google ditutup sebelum selesai.');
-        } else {
-          setAuthError('Gagal masuk dengan Google.');
-        }
-      } else {
-        setAuthError('Terjadi kesalahan autentikasi Google.');
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  }
+  
 
   async function handleSignOut() {
     try {
@@ -357,26 +336,7 @@ export function LoginPage({ user }: LoginPageProps): React.JSX.Element {
             </button>
           </form>
 
-          {/* Divider */}
-          <div className="relative flex items-center justify-center my-3">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-[#eaeaea]"></div>
-            </div>
-            <div className="relative bg-white px-3 text-[11px] text-[#888888] uppercase tracking-wider">
-              atau
-            </div>
-          </div>
-
-          {/* Google Sign In Button (Filled Secondary Style, Borderless) */}
-          <button
-            type="button"
-            onClick={handleGoogleLogin}
-            disabled={isLoading}
-            className="w-full h-10 flex items-center justify-center space-x-2 bg-[#f5f5f5] hover:bg-[#ebebeb] active:bg-[#e0e0e0] text-[#171717] text-sm font-medium rounded-[6px] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-          >
-            <OfficialGoogleIcon size={18} />
-            <span>Lanjutkan dengan Google</span>
-          </button>
+          
 
           {/* Tombol Minta Akses Akun Baru */}
           <div className="pt-2 text-center">

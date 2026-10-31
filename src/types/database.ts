@@ -9,7 +9,9 @@ export type CashFlowType =
   | 'HUTANG_PIHAK_KETIGA'
   | 'CICILAN_HUTANG'
   | 'BAGI_HASIL_INVESTOR'
-  | 'TRANSFER_INVESTOR';
+  | 'TRANSFER_INVESTOR'
+  | 'PEMBAYARAN_PROYEK'
+  | 'KASBON_TUKANG';
 
 export type ClientType = 'PT' | 'CV' | 'UD' | 'PERORANGAN';
 
@@ -269,3 +271,85 @@ export interface LaborPayment {
 
 // 12. Re-export Tipe Master Material & Matriks Rute Operasional 3 Titik
 export * from './materialMaster';
+
+
+// 13. Koleksi: ticket_approval_requests (Sistem Pengajuan Koreksi & Hapus Tiket Ritase)
+export type ApprovalRequestType = 'EDIT' | 'DELETE';
+export type ApprovalRequestStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+
+export interface TicketApprovalRequest {
+  id: string;
+  ticketId: string;
+  ticketNumber: string;
+  type: ApprovalRequestType;
+  status: ApprovalRequestStatus;
+  requestedBy: string;             // Email dispatcher
+  requestedByName: string;         // Nama dispatcher
+  requestedAt: string;             // ISO Timestamp
+  reason: string;                  // Alasan wajib pengajuan
+  currentData: Partial<DispatchTransaction>;
+  proposedData?: Partial<DispatchTransaction>; // Khusus tipe EDIT
+  reviewedBy?: string | null;      // Email atasan yang me-review
+  reviewedByName?: string | null;  // Nama atasan yang me-review
+  reviewedAt?: string | null;      // ISO Timestamp review
+  rejectionReason?: string | null; // Catatan penolakan jika ditolak
+}
+
+
+// 14. Koleksi: project_sub_jobs, worker_kasbon_logs & client_project_payments
+export type ProjectSubJobUnit = 'PAKET' | 'M2' | 'M3';
+export type ProjectSubJobType = 'MCK' | 'PAVING_BLOCK' | 'DRAINASE' | 'LAINNYA';
+export type ProjectSubJobStatus = 'BERJALAN' | 'SELESAI' | 'HOLD';
+
+export interface ProjectSubJob {
+  id: string;
+  projectId: string;
+  projectName: string;
+  clientId?: string;
+  clientName?: string;
+  jobType: ProjectSubJobType;
+  jobName: string;
+  unit: ProjectSubJobUnit;
+  volume: number;
+  clientRatePerUnit: number;
+  contractAmountClient: number; // volume * clientRatePerUnit
+  workerRatePerUnit: number;
+  contractAmountWorker: number; // volume * workerRatePerUnit
+  workerLeaderName: string;
+  workerLeaderPhone?: string;
+  status: ProjectSubJobStatus;
+  totalKasbonPaid: number;      // Akumulasi kasbon yang sudah ditarik
+  remainingWorkerPay: number;   // Sisa hak upah = contractAmountWorker - totalKasbonPaid
+  companyMargin: number;        // contractAmountClient - contractAmountWorker
+  notes?: string;
+  createdAt: string;
+}
+
+export interface WorkerKasbonLog {
+  id: string;
+  subJobId: string;
+  subJobName: string;
+  projectId: string;
+  projectName: string;
+  workerLeaderName: string;
+  date: string;                 // YYYY-MM-DD
+  amount: number;               // Nominal kasbon
+  note?: string;                // Keterangan kasbon
+  recordedBy: string;
+  createdAt: string;
+}
+
+export interface ClientProjectPayment {
+  id: string;
+  paymentDate: string;          // YYYY-MM-DD
+  clientId?: string;
+  clientName: string;           // e.g. "Kak Angga"
+  projectId?: string;
+  projectName?: string;
+  amount: number;               // e.g. Rp 80.000.000
+  paymentMethod?: string;       // Transfer Bank / Tunai
+  referenceNumber?: string;
+  note?: string;
+  recordedBy: string;
+  createdAt: string;
+}
