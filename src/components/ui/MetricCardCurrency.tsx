@@ -1,4 +1,5 @@
-import React, { useRef, useState, useLayoutEffect } from 'react';
+import React, { useRef, useState, useLayoutEffect, useMemo } from 'react';
+import { formatSimplifiedCurrency } from '@/lib/currencyUtils';
 
 interface MetricCardCurrencyProps {
   amount: number;
@@ -10,13 +11,13 @@ interface MetricCardCurrencyProps {
 
 /**
  * Komponen khusus untuk menampilkan angka nominal uang pada Kartu Metrik (KPI Cards)
- * Mematuhi Rule 99 dan Rule 116:
+ * Mematuhi Rule 99, Rule 119, dan Rule 125:
  * 1. Font sans-serif tebal (font-bold tracking-tight), tanpa font-mono.
  * 2. Simbol "Rp" lebih kecil (text-xs / text-sm), font-semibold, semi-transparan (opacity-50).
  * 3. Menempel rapat tanpa spasi dengan jarak mikro (gap-0.5).
  * 4. Untuk nilai negatif, tanda minus diletakkan paling depan sebelum "Rp" (-Rp500.000) dengan warna merah (#cf1124).
  * 5. Deteksi overflow otomatis: jika nominal terlalu panjang untuk wadah / tidak muat,
- *    otomatis dipotong 3 digit nol terakhir dengan akhiran 'K' (contoh: 1.000.000.000 -> 1.000.000K).
+ *    otomatis disederhanakan berjenjang: K, Jt, Mil, Tri (misal: 125.230.000.000 -> 125,23 Mil).
  */
 export function MetricCardCurrency({
   amount,
@@ -33,9 +34,8 @@ export function MetricCardCurrency({
   const absVal = Math.abs(Math.round(amount || 0));
   const fullFormatted = absVal.toLocaleString('id-ID');
 
-  // Format ringkas K (potong 3 digit nol)
-  const compactVal = Math.round(absVal / 1000);
-  const compactFormatted = compactVal.toLocaleString('id-ID');
+  // Format ringkas berjenjang (K, Jt, Mil, Tri)
+  const simplified = useMemo(() => formatSimplifiedCurrency(amount || 0), [amount]);
   const canCompact = absVal >= 1000;
 
   const sizeClass =
@@ -61,7 +61,7 @@ export function MetricCardCurrency({
       const availableWidth = parent ? parent.clientWidth : container.clientWidth;
       const fullWidth = measure.scrollWidth;
 
-      // Jika teks penuh melebihi ruang yang tersedia, aktifkan format ringkas K
+      // Jika teks penuh melebihi ruang yang tersedia, aktifkan format ringkas
       if (availableWidth > 0 && fullWidth > availableWidth) {
         setIsOverflowing(true);
       } else {
@@ -88,7 +88,6 @@ export function MetricCardCurrency({
   }, [amount, forceCompact, size]);
 
   const shouldUseCompact = canCompact && (forceCompact || isOverflowing);
-  const displayValue = shouldUseCompact ? compactFormatted : fullFormatted;
   const fullTooltip = `${isNegative ? '-Rp ' : 'Rp '}${fullFormatted}`;
 
   return (
@@ -112,9 +111,11 @@ export function MetricCardCurrency({
 
       {isNegative && <span className="font-bold -mr-0.5">-</span>}
       <span className={`${rpSizeClass} font-semibold opacity-50 select-none`}>Rp</span>
-      <span className="truncate">{displayValue}</span>
-      {shouldUseCompact && (
-        <span className="font-bold text-[0.85em] opacity-90 select-none -ml-0.5">K</span>
+      <span className="truncate">{shouldUseCompact ? simplified.value : fullFormatted}</span>
+      {shouldUseCompact && simplified.suffix && (
+        <span className="font-bold text-[0.85em] opacity-90 select-none ml-0.5">
+          {simplified.suffix}
+        </span>
       )}
     </span>
   );

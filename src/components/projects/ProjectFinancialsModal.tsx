@@ -136,14 +136,14 @@ export function ProjectFinancialsModal({
             {/* Baris Atas: Info Proyek & Tombol Close di Pojok Kanan */}
             <div className="flex items-start justify-between gap-3">
               <div>
-                <div className="flex items-center gap-2">
-                  <h2 className="text-base sm:text-lg font-bold text-[#111111]">
-                    {project.name}
-                  </h2>
-                  <span className="text-xs text-[#666666] font-normal">
-                    • {project.location}
-                  </span>
-                </div>
+                <h2 className="text-base sm:text-lg font-bold text-[#111111]">
+                  {project.name}
+                </h2>
+                {project.location && (
+                  <p className="text-xs text-[#666666] mt-0.5">
+                    {project.location}
+                  </p>
+                )}
                 <p className="text-xs text-[#666666] mt-0.5">
                   Klien / Pihak Proyek: <span className="font-bold text-[#111111]">{project.clientName || 'Mitra Proyek'}</span> • Investor: <span className="font-semibold text-[#111111]">{project.investorName}</span>
                 </p>
@@ -511,37 +511,37 @@ export function ProjectFinancialsModal({
                   Belum ada catatan ritase material armada untuk proyek ini.
                 </div>
               ) : (
-                <div className="bg-white border border-[#eaeaea] rounded-[10px] overflow-hidden">
-                  <table className="w-full text-xs text-left border-collapse">
+                <div className="bg-white border border-[#eaeaea] rounded-[10px] overflow-x-auto">
+                  <table className="w-full min-w-[720px] text-xs text-left border-collapse">
                     <thead className="bg-[#f9f9f9] border-b border-[#eaeaea] text-[#555555] font-semibold text-[10px] uppercase">
                       <tr>
-                        <th className="py-2.5 px-3">Tanggal & Tiket</th>
-                        <th className="py-2.5 px-3">Armada / Sopir</th>
-                        <th className="py-2.5 px-3">Material & Muatan</th>
-                        <th className="py-2.5 px-3">Kuari Asal</th>
-                        <th className="py-2.5 px-3 text-right">Harga Jual</th>
-                        <th className="py-2.5 px-3 text-right">Total Omset</th>
-                        <th className="py-2.5 px-3 text-center">Status</th>
+                        <th className="py-2.5 px-3 whitespace-nowrap">Tanggal & Tiket</th>
+                        <th className="py-2.5 px-3 whitespace-nowrap">Armada / Sopir</th>
+                        <th className="py-2.5 px-3 whitespace-nowrap">Material & Muatan</th>
+                        <th className="py-2.5 px-3 whitespace-nowrap">Kuari Asal</th>
+                        <th className="py-2.5 px-3 text-right whitespace-nowrap">Harga Jual</th>
+                        <th className="py-2.5 px-3 text-right whitespace-nowrap">Total Omset</th>
+                        <th className="py-2.5 px-3 text-center whitespace-nowrap">Status</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#eaeaea]">
                       {transactions.map(tx => (
                         <tr key={tx.id} className="hover:bg-[#fafafa]">
-                          <td className="py-2 px-3 font-mono">
+                          <td className="py-2 px-3 font-mono whitespace-nowrap">
                             <span className="font-bold text-[#111111] block">{tx.ticketNumber}</span>
                             <span className="text-[10px] text-[#888888]">{tx.deliveryDate || tx.date}</span>
                           </td>
-                          <td className="py-2 px-3 font-medium text-[#111111]">
+                          <td className="py-2 px-3 font-medium text-[#111111] whitespace-nowrap">
                             {tx.truckPlate} {tx.driverName ? `(${tx.driverName})` : ''}
                           </td>
-                          <td className="py-2 px-3">
+                          <td className="py-2 px-3 whitespace-nowrap">
                             <span className="font-semibold block text-[#111111]">{tx.materialName}</span>
                             <span className="text-[10px] text-[#666666] font-mono">{tx.quantity} {tx.unit}</span>
                           </td>
-                          <td className="py-2 px-3 text-[#666666]">{tx.quarryName || '-'}</td>
-                          <td className="py-2 px-3 text-right font-mono">{formatRupiah(tx.sellPricePerUnit)}</td>
-                          <td className="py-2 px-3 text-right font-mono font-bold text-[#111111]">{formatRupiah(tx.totalRevenue)}</td>
-                          <td className="py-2 px-3 text-center">
+                          <td className="py-2 px-3 text-[#666666] whitespace-nowrap">{tx.quarryName || '-'}</td>
+                          <td className="py-2 px-3 text-right font-mono whitespace-nowrap">{formatRupiah(tx.sellPricePerUnit)}</td>
+                          <td className="py-2 px-3 text-right font-mono font-bold text-[#111111] whitespace-nowrap">{formatRupiah(tx.totalRevenue)}</td>
+                          <td className="py-2 px-3 text-center whitespace-nowrap">
                             <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
                               tx.status === 'LUNAS' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
                             }`}>
@@ -577,34 +577,36 @@ export function ProjectFinancialsModal({
                       <span>Cetak Lembar Bon</span>
                     </button>
                   </div>
-                  <table className="w-full text-xs text-left border-collapse">
-                    <thead className="bg-[#f9f9f9] border-b border-[#eaeaea] text-[#555555] font-semibold text-[10px] uppercase">
-                      <tr>
-                        <th className="py-2.5 px-3">Tanggal</th>
-                        <th className="py-2.5 px-3">Mandor / Kepala Tukang</th>
-                        <th className="py-2.5 px-3">Sub-Pekerjaan</th>
-                        <th className="py-2.5 px-3 text-right">Nominal Kasbon</th>
-                        <th className="py-2.5 px-3">Catatan / Keperluan</th>
-                        <th className="py-2.5 px-3">Dicatat Oleh</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[#eaeaea]">
-                      {kasbonLogs.map(bon => (
-                        <tr key={bon.id} className="hover:bg-[#fafafa]">
-                          <td className="py-2 px-3 font-mono font-medium">{bon.date}</td>
-                          <td className="py-2 px-3 font-bold text-[#111111]">{bon.workerLeaderName}</td>
-                          <td className="py-2 px-3 text-[#555555]">{bon.subJobName}</td>
-                          <td className="py-2 px-3 text-right font-mono font-bold text-[#cf1124]">
-                            {formatRupiah(bon.amount)}
-                          </td>
-                          <td className="py-2 px-3 text-[#666666]">{bon.note || '-'}</td>
-                          <td className="py-2 px-3 font-mono text-[10px] text-[#888888]">
-                            {bon.recordedBy?.split('@')[0] || 'Admin'}
-                          </td>
+                  <div className="overflow-x-auto">
+                    <table className="w-full min-w-[650px] text-xs text-left border-collapse">
+                      <thead className="bg-[#f9f9f9] border-b border-[#eaeaea] text-[#555555] font-semibold text-[10px] uppercase">
+                        <tr>
+                          <th className="py-2.5 px-3 whitespace-nowrap">Tanggal</th>
+                          <th className="py-2.5 px-3 whitespace-nowrap">Mandor / Kepala Tukang</th>
+                          <th className="py-2.5 px-3 whitespace-nowrap">Sub-Pekerjaan</th>
+                          <th className="py-2.5 px-3 text-right whitespace-nowrap">Nominal Kasbon</th>
+                          <th className="py-2.5 px-3 whitespace-nowrap">Catatan / Keperluan</th>
+                          <th className="py-2.5 px-3 whitespace-nowrap">Dicatat Oleh</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="divide-y divide-[#eaeaea]">
+                        {kasbonLogs.map(bon => (
+                          <tr key={bon.id} className="hover:bg-[#fafafa]">
+                            <td className="py-2 px-3 font-mono font-medium whitespace-nowrap">{bon.date}</td>
+                            <td className="py-2 px-3 font-bold text-[#111111] whitespace-nowrap">{bon.workerLeaderName}</td>
+                            <td className="py-2 px-3 text-[#555555] whitespace-nowrap">{bon.subJobName}</td>
+                            <td className="py-2 px-3 text-right font-mono font-bold text-[#cf1124] whitespace-nowrap">
+                              {formatRupiah(bon.amount)}
+                            </td>
+                            <td className="py-2 px-3 text-[#666666] whitespace-nowrap">{bon.note || '-'}</td>
+                            <td className="py-2 px-3 font-mono text-[10px] text-[#888888] whitespace-nowrap">
+                              {bon.recordedBy?.split('@')[0] || 'Admin'}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )
             ) : (
@@ -620,39 +622,41 @@ export function ProjectFinancialsModal({
                       Daftar Pembayaran Termin Masuk ({clientPayments.length} Pembukuan)
                     </span>
                   </div>
-                  <table className="w-full text-xs text-left border-collapse">
-                    <thead className="bg-[#f9f9f9] border-b border-[#eaeaea] text-[#555555] font-semibold text-[10px] uppercase">
-                      <tr>
-                        <th className="py-2.5 px-3">Tanggal Masuk</th>
-                        <th className="py-2.5 px-3">Klien / Pembayar</th>
-                        <th className="py-2.5 px-3 text-right">Nominal Masuk</th>
-                        <th className="py-2.5 px-3">Metode & Referensi</th>
-                        <th className="py-2.5 px-3">Catatan</th>
-                        <th className="py-2.5 px-3">Pencatat</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[#eaeaea]">
-                      {clientPayments.map(pay => (
-                        <tr key={pay.id} className="hover:bg-[#fafafa]">
-                          <td className="py-2 px-3 font-mono font-medium">{pay.paymentDate}</td>
-                          <td className="py-2 px-3 font-bold text-[#111111]">{pay.clientName}</td>
-                          <td className="py-2 px-3 text-right font-mono font-bold text-emerald-700">
-                            +{formatRupiah(pay.amount)}
-                          </td>
-                          <td className="py-2 px-3">
-                            <span className="font-medium text-[#111111] block">{pay.paymentMethod || 'Transfer'}</span>
-                            {pay.referenceNumber && (
-                              <span className="font-mono text-[10px] text-[#777777]">{pay.referenceNumber}</span>
-                            )}
-                          </td>
-                          <td className="py-2 px-3 text-[#666666]">{pay.note || '-'}</td>
-                          <td className="py-2 px-3 font-mono text-[10px] text-[#888888]">
-                            {pay.recordedBy?.split('@')[0] || 'Admin'}
-                          </td>
+                  <div className="overflow-x-auto">
+                    <table className="w-full min-w-[650px] text-xs text-left border-collapse">
+                      <thead className="bg-[#f9f9f9] border-b border-[#eaeaea] text-[#555555] font-semibold text-[10px] uppercase">
+                        <tr>
+                          <th className="py-2.5 px-3 whitespace-nowrap">Tanggal Masuk</th>
+                          <th className="py-2.5 px-3 whitespace-nowrap">Klien / Pembayar</th>
+                          <th className="py-2.5 px-3 text-right whitespace-nowrap">Nominal Masuk</th>
+                          <th className="py-2.5 px-3 whitespace-nowrap">Metode & Referensi</th>
+                          <th className="py-2.5 px-3 whitespace-nowrap">Catatan</th>
+                          <th className="py-2.5 px-3 whitespace-nowrap">Pencatat</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="divide-y divide-[#eaeaea]">
+                        {clientPayments.map(pay => (
+                          <tr key={pay.id} className="hover:bg-[#fafafa]">
+                            <td className="py-2 px-3 font-mono font-medium whitespace-nowrap">{pay.paymentDate}</td>
+                            <td className="py-2 px-3 font-bold text-[#111111] whitespace-nowrap">{pay.clientName}</td>
+                            <td className="py-2 px-3 text-right font-mono font-bold text-emerald-700 whitespace-nowrap">
+                              +{formatRupiah(pay.amount)}
+                            </td>
+                            <td className="py-2 px-3 whitespace-nowrap">
+                              <span className="font-medium text-[#111111] block">{pay.paymentMethod || 'Transfer'}</span>
+                              {pay.referenceNumber && (
+                                <span className="font-mono text-[10px] text-[#777777]">{pay.referenceNumber}</span>
+                              )}
+                            </td>
+                            <td className="py-2 px-3 text-[#666666] whitespace-nowrap">{pay.note || '-'}</td>
+                            <td className="py-2 px-3 font-mono text-[10px] text-[#888888] whitespace-nowrap">
+                              {pay.recordedBy?.split('@')[0] || 'Admin'}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )
             )}

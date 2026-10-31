@@ -1448,10 +1448,23 @@ Dokumen ini adalah hukum tertinggi operasional sistem. Kegagalan mematuhi aturan
       * Seluruh modal wajib memiliki lapisan backdrop terpisah: `<div className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity" onClick={onClose} />`.
       * Menyentuh/tap pada area blur di luar panel drawer (*tap on blur*) otomatis menutup modal secara instan dan responsif.
 
-
-
-
-
-
-
-
+125. **Penyederhanaan Adaptif Nominal Uang Berjenjang (K, Jt, Mil, Tri), Layout Header Modal, & Anti-Wrapping Tabel Modal**:
+    - **Penyederhanaan Adaptif Nominal Uang Saat Wadah Sempit / Mentok**:
+      * Jika parent pembungkus sempit, teks nominal uang kepanjangan, atau mentok komponen lain, teks nominal uang WAJIB disederhanakan secara berjenjang (*tiered adaptive simplification*) menggunakan akhiran skala Indonesia:
+        1. **< 1.000**: Ditampilkan angka bulat murni (contoh: `500`).
+        2. **1.000 s/d < 1.000.000 (Ribu)**: Akhiran **`K`** tanpa spasi (contoh: `750K`, `12,5K`).
+        3. **1.000.000 s/d < 1.000.000.000 (Juta)**: Akhiran **`Jt`** dengan spasi (contoh: `12,5 Jt`, `50 Jt`).
+        4. **1.000.000.000 s/d < 1.000.000.000.000 (Miliar)**: Akhiran **`Mil`** dengan spasi (contoh: `125,23 Mil`, `2,5 Mil`).
+        5. **>= 1.000.000.000.000 (Triliun)**: Akhiran **`Tri`** dengan spasi (contoh: `1,5 Tri`).
+      * **Presisi & Pemisah Desimal**: Maksimal 2 angka di belakang koma dengan pemisah koma khas Indonesia (`,`), memotong angka nol mubazir di akhir (contoh: `125,23 Mil`, bukan `125,230 Mil` atau `125,00 Mil`).
+      * **Komponen & Helper**:
+        - Tersedia fungsi utility `formatSimplifiedCurrency(amount)` dan `formatRupiahSimplified(amount)` di `src/lib/currencyUtils.ts`.
+        - Komponen universal `<AdaptiveCurrency amount={...} />` di `src/components/ui/AdaptiveCurrency.tsx` dan `<MetricCardCurrency />` di `src/components/ui/MetricCardCurrency.tsx` yang menggunakan `ResizeObserver` tersembunyi untuk mendeteksi kapasitas ruang parent wadah secara otomatis.
+      * **Tooltip Presisi Utuh**: Elemen pembungkus nominal WAJIB menyertakan atribut `title` yang memuat nominal penuh tanpa singkatan (misalnya `title="Rp 125.230.000.000"`), sehingga pengguna dapat melihat nilai rupiah presisi saat cursor melayang (hover).
+    - **Penempatan Alamat Proyek pada Header Modal**:
+      * Alamat proyek WAJIB diposisikan berdiri sendiri pada 1 baris mandiri tepat di bawah judul nama proyek (`<p className="text-xs text-[#666666] mt-0.5">{project.location}</p>`), TANPA tanda titik/bullet/dot (`•`) di bagian awal kalimat.
+    - **Pencegahan Konten Ter-Wrap pada Tabel Data Modal (Anti-Wrapping Table Standard)**:
+      * Seluruh tabel data di dalam tab modal (misalnya Ritase Material, Kasbon Tukang, Pembayaran Klien) DILARANG KERAS membiarkan teks sel patah / wrap ke bawah secara berantakan di layar kecil.
+      * Wadah tabel WAJIB dibungkus dengan kontainer scroll horizontal: `overflow-x-auto`.
+      * Tabel WAJIB menetapkan batas lebar minimum (`min-w-[650px]` hingga `min-w-[720px]`).
+      * Seluruh sel header (`<th>`) dan sel isi data (`<td>`) WAJIB memiliki kelas **`whitespace-nowrap`** sehingga informasi tersusun rapi dalam 1 baris lurus tanpa kata yang terpotong secara vertikal.
