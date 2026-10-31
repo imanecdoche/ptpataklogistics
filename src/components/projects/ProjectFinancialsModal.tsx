@@ -126,31 +126,45 @@ export function ProjectFinancialsModal({
           onClick={e => e.stopPropagation()}
         >
           {/* Header Panel */}
-          <div className="p-4 sm:p-5 border-b border-[#eaeaea] bg-white flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 flex-shrink-0">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 inline-block flex-shrink-0" />
-                <h2 className="text-base sm:text-lg font-bold text-[#111111]">
-                  {project.name}
-                </h2>
-                <span className="text-xs text-[#666666] font-normal">
-                  • {project.location}
-                </span>
+          <div className="p-4 sm:p-5 border-b border-[#eaeaea] bg-white flex flex-col gap-3.5 flex-shrink-0">
+            {/* Baris Atas: Info Proyek & Tombol Close di Pojok Kanan */}
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-base sm:text-lg font-bold text-[#111111]">
+                    {project.name}
+                  </h2>
+                  <span className="text-xs text-[#666666] font-normal">
+                    • {project.location}
+                  </span>
+                </div>
+                <p className="text-xs text-[#666666] mt-0.5">
+                  Klien / Pihak Proyek: <span className="font-bold text-[#111111]">{project.clientName || 'Mitra Proyek'}</span> • Investor: <span className="font-semibold text-[#111111]">{project.investorName}</span>
+                </p>
               </div>
-              <p className="text-xs text-[#666666] mt-0.5">
-                Klien / Pihak Proyek: <span className="font-bold text-[#111111]">{project.clientName || 'Mitra Proyek'}</span> • Investor: <span className="font-semibold text-[#111111]">{project.investorName}</span>
-              </p>
+
+              {/* Tombol Tutup Modal di Pojok Kanan Atas */}
+              <button
+                type="button"
+                onClick={onClose}
+                className="p-1.5 text-[#666666] hover:text-[#111111] hover:bg-[#f0f0f0] rounded-[8px] transition-colors cursor-pointer -mr-1 -mt-1"
+                title="Tutup Modal"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
 
-            {/* Quick Action Buttons */}
-            <div className="flex items-center gap-2 flex-wrap">
+            {/* Baris Bawah: Deretan Tombol Aksi 1 Row Berjejer */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-0.5">
               <button
                 type="button"
                 onClick={() => {
                   setEditingSubJob(null);
                   setIsSubJobModalOpen(true);
                 }}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#111111] hover:bg-black text-white text-xs font-semibold rounded-[8px] transition-colors shadow-xs cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#111111] hover:bg-black text-white text-xs font-semibold rounded-[8px] transition-colors shadow-xs cursor-pointer whitespace-nowrap"
               >
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <line x1="12" y1="5" x2="12" y2="19" strokeLinecap="round" strokeLinejoin="round" />
@@ -162,7 +176,7 @@ export function ProjectFinancialsModal({
               <button
                 type="button"
                 onClick={() => setIsPaymentModalOpen(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-[#f9fafb] text-[#111111] border border-[#d1d5db] text-xs font-semibold rounded-[8px] transition-colors shadow-xs cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-[#f9fafb] text-[#111111] border border-[#d1d5db] text-xs font-semibold rounded-[8px] transition-colors shadow-xs cursor-pointer whitespace-nowrap"
               >
                 <svg className="w-3.5 h-3.5 text-[#555555]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
                   <rect x="2" y="5" width="20" height="14" rx="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -177,7 +191,7 @@ export function ProjectFinancialsModal({
                   setTargetSubJobForKasbon(undefined);
                   setIsKasbonModalOpen(true);
                 }}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-[#f9fafb] text-[#111111] border border-[#d1d5db] text-xs font-semibold rounded-[8px] transition-colors shadow-xs cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-[#f9fafb] text-[#111111] border border-[#d1d5db] text-xs font-semibold rounded-[8px] transition-colors shadow-xs cursor-pointer whitespace-nowrap"
               >
                 <svg className="w-3.5 h-3.5 text-[#555555]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -188,24 +202,13 @@ export function ProjectFinancialsModal({
               <button
                 type="button"
                 onClick={() => setIsPrintModalOpen(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-[#f9fafb] text-[#111111] border border-[#d1d5db] text-xs font-semibold rounded-[8px] transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-[#f9fafb] text-[#111111] border border-[#d1d5db] text-xs font-semibold rounded-[8px] transition-colors cursor-pointer whitespace-nowrap"
                 title="Cetak Rekap Kasbon & Borongan Mandor"
               >
                 <svg className="w-3.5 h-3.5 text-[#555555]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4H7v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                 </svg>
                 <span>Cetak Rekap</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={onClose}
-                className="p-1.5 text-[#666666] hover:text-[#111111] hover:bg-[#f0f0f0] rounded-[8px] transition-colors ml-1 cursor-pointer"
-                title="Tutup Modal"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
               </button>
             </div>
           </div>
