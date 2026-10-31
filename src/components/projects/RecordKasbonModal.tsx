@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { ProjectSubJob } from '@/types/database';
 import { recordWorkerKasbon } from '@/lib/projectFinanceService';
 import { formatRupiah } from '@/lib/currencyUtils';
+import { CurrencyInput } from '@/components/ui/CurrencyInput';
 
 interface RecordKasbonModalProps {
   isOpen: boolean;
@@ -180,15 +181,12 @@ export function RecordKasbonModal({
               <label className="font-bold text-[#111111] block">
                 Nominal Kasbon (Rp) <span className="text-red-500">*</span>
               </label>
-              <input
-                type="number"
-                min="1000"
-                step="10000"
-                value={amount || ''}
-                onChange={e => setAmount(parseFloat(e.target.value) || 0)}
+              <CurrencyInput
+                value={amount}
+                onChange={setAmount}
                 placeholder="0"
-                className="w-full p-2.5 bg-white border border-[#dcdcdc] rounded-[8px] text-xs font-mono font-bold text-[#111111] outline-none focus:border-[#111111]"
-                autoFocus
+                required
+                className="w-full"
               />
             </div>
           </div>

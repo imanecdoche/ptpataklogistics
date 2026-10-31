@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Project, Client } from '@/types/database';
 import { recordClientPayment } from '@/lib/projectFinanceService';
 import { formatRupiah } from '@/lib/currencyUtils';
+import { CurrencyInput } from '@/components/ui/CurrencyInput';
 import { X, Info } from 'lucide-react';
 
 interface RecordClientPaymentModalProps {
@@ -199,15 +200,12 @@ export function RecordClientPaymentModal({
               <label className="font-bold text-[#111111] block">
                 Nominal Bayar (Rp) <span className="text-red-500">*</span>
               </label>
-              <input
-                type="number"
-                min="1000"
-                step="50000"
-                value={amount || ''}
-                onChange={e => setAmount(parseFloat(e.target.value) || 0)}
+              <CurrencyInput
+                value={amount}
+                onChange={setAmount}
                 placeholder="0"
-                className="w-full p-2.5 bg-white border border-[#dcdcdc] rounded-[8px] text-xs font-mono font-bold text-emerald-700 outline-none focus:border-[#111111]"
-                autoFocus
+                required
+                className="w-full"
               />
             </div>
           </div>

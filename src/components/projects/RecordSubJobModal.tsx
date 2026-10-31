@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Project, ProjectSubJob, ProjectSubJobType, ProjectSubJobUnit } from '@/types/database';
 import { saveProjectSubJob, SaveSubJobPayload } from '@/lib/projectFinanceService';
 import { formatRupiah } from '@/lib/currencyUtils';
+import { CurrencyInput } from '@/components/ui/CurrencyInput';
 
 interface RecordSubJobModalProps {
   isOpen: boolean;
@@ -274,13 +275,11 @@ export function RecordSubJobModal({
               <label className="font-bold text-[#111111] block">
                 Tarif Klien / {unit} (Rp)
               </label>
-              <input
-                type="number"
-                min="0"
-                step="1000"
+              <CurrencyInput
                 value={clientRate}
-                onChange={e => setClientRate(parseFloat(e.target.value) || 0)}
-                className="w-full p-2 bg-white border border-[#dcdcdc] rounded-[6px] text-xs font-mono font-bold text-emerald-800 outline-none focus:border-[#111111]"
+                onChange={setClientRate}
+                placeholder="0"
+                className="w-full"
               />
             </div>
 
@@ -288,13 +287,11 @@ export function RecordSubJobModal({
               <label className="font-bold text-[#111111] block">
                 Tarif Borongan Tukang (Rp)
               </label>
-              <input
-                type="number"
-                min="0"
-                step="1000"
+              <CurrencyInput
                 value={workerRate}
-                onChange={e => setWorkerRate(parseFloat(e.target.value) || 0)}
-                className="w-full p-2 bg-white border border-[#dcdcdc] rounded-[6px] text-xs font-mono font-bold text-amber-800 outline-none focus:border-[#111111]"
+                onChange={setWorkerRate}
+                placeholder="0"
+                className="w-full"
               />
             </div>
           </div>
