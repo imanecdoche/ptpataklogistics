@@ -290,7 +290,7 @@ export function CashFlowView({
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Search Input (Rule 98) */}
+            {/* Search Input (Rule 98 & Audit Solid Filled) */}
             <div className="relative flex-1 sm:w-64">
               <img
                 src="/icons/search.png"
@@ -302,24 +302,24 @@ export function CashFlowView({
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 placeholder="Cari transaksi, deskripsi, ref, tanggal (misal 28-10-26)..."
-                className="w-full bg-white border border-[#eaeaea] rounded-[6px] pl-9 pr-3 py-1.5 text-xs text-[#111111] placeholder:text-[#999999] outline-none focus:border-[#111111] transition-colors"
+                className="w-full bg-[#f4f4f4] border-none rounded-[6px] pl-9 pr-3 py-1.5 text-xs text-[#111111] placeholder:text-[#888888] outline-none focus:bg-[#ebebeb] transition-colors"
               />
             </div>
 
-            {/* Filter & Sorting Drawer Trigger Button */}
+            {/* Filter & Sorting Drawer Trigger Button (Solid-Filled per auditaislop) */}
             <button
               type="button"
               onClick={() => setIsFilterDrawerOpen(true)}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-[6px] border transition-colors cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
+              className={`px-3 py-1.5 text-xs font-semibold rounded-[6px] border-none transition-colors cursor-pointer flex items-center gap-1.5 whitespace-nowrap flex-shrink-0 ${
                 activeFiltersCount > 0
-                  ? 'bg-[#111111] text-white border-[#111111] shadow-xs'
-                  : 'bg-white text-[#444444] border-[#eaeaea] hover:bg-[#f8f8f8]'
+                  ? 'bg-[#111111] text-white shadow-xs'
+                  : 'bg-[#eeeeee] text-[#222222] hover:bg-[#e2e2e2]'
               }`}
             >
               <SlidersHorizontal className="w-3.5 h-3.5" />
               <span>Filter & Urutkan</span>
               {activeFiltersCount > 0 && (
-                <span className="ml-0.5 px-1.5 py-0.2 rounded-full bg-emerald-500 text-white text-[10px] font-bold">
+                <span className="ml-0.5 px-1.5 py-0.2 rounded-full bg-emerald-700 text-white text-[10px] font-bold border-none">
                   {activeFiltersCount}
                 </span>
               )}
@@ -329,7 +329,7 @@ export function CashFlowView({
               <button
                 type="button"
                 onClick={() => setIsRecordMutationOpen(true)}
-                className="px-3 py-1.5 bg-[#111111] hover:bg-[#2b2b2b] text-white text-xs font-semibold rounded-[6px] transition-colors cursor-pointer whitespace-nowrap"
+                className="px-3 py-1.5 bg-[#111111] hover:bg-[#2b2b2b] text-white text-xs font-semibold rounded-[6px] border-none transition-colors cursor-pointer whitespace-nowrap flex-shrink-0"
               >
                 + Catat Mutasi Kas Manual
               </button>
@@ -337,16 +337,16 @@ export function CashFlowView({
           </div>
         </div>
 
-        {/* Active Filter Chips */}
+        {/* Active Filter Chips (Solid Filled, Zero Outlines per auditaislop) */}
         {activeFiltersCount > 0 && (
           <div className="px-3.5 py-2 border-b border-[#eaeaea] bg-white flex flex-wrap items-center gap-1.5 text-xs">
-            <span className="text-[11px] font-semibold text-[#888888] mr-1">
+            <span className="text-[11px] font-semibold text-[#666666] mr-1 whitespace-nowrap">
               Filter Aktif:
             </span>
 
             {/* Sorting Chip */}
             {filters.sortBy !== 'DATE_DESC' && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-[#f5f5f5] text-[#333333] border border-[#eaeaea] text-[11px] font-medium rounded-full">
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-[#ededed] text-[#111111] border-none text-[11px] font-semibold rounded-full whitespace-nowrap flex-shrink-0">
                 {filters.sortBy === 'DATE_ASC' && 'Urut: Terlama'}
                 {filters.sortBy === 'AMOUNT_DESC' && 'Urut: Nominal Terbesar'}
                 {filters.sortBy === 'AMOUNT_ASC' && 'Urut: Nominal Terkecil'}
@@ -362,7 +362,7 @@ export function CashFlowView({
 
             {/* Flow Direction Chip */}
             {filters.flowDirection !== 'ALL' && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-[#f5f5f5] text-[#333333] border border-[#eaeaea] text-[11px] font-medium rounded-full">
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-[#ededed] text-[#111111] border-none text-[11px] font-semibold rounded-full whitespace-nowrap flex-shrink-0">
                 {filters.flowDirection === 'IN' ? 'Kas Masuk (+)' : 'Kas Keluar (-)'}
                 <button
                   type="button"
@@ -376,7 +376,7 @@ export function CashFlowView({
 
             {/* Category Chip */}
             {filters.category !== 'ALL' && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-[#f5f5f5] text-[#333333] border border-[#eaeaea] text-[11px] font-medium rounded-full">
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-[#ededed] text-[#111111] border-none text-[11px] font-semibold rounded-full whitespace-nowrap flex-shrink-0">
                 Kat: {filters.category.replace(/_/g, ' ')}
                 <button
                   type="button"
@@ -390,7 +390,7 @@ export function CashFlowView({
 
             {/* Project Chip */}
             {filters.projectId !== 'ALL' && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-[#f5f5f5] text-[#333333] border border-[#eaeaea] text-[11px] font-medium rounded-full">
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-[#ededed] text-[#111111] border-none text-[11px] font-semibold rounded-full whitespace-nowrap flex-shrink-0">
                 Proyek: {projects.find(p => p.id === filters.projectId)?.name || filters.projectId}
                 <button
                   type="button"
@@ -404,7 +404,7 @@ export function CashFlowView({
 
             {/* Date Range Chip */}
             {(filters.startDate || filters.endDate || filters.datePreset !== 'ALL') && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-[#f5f5f5] text-[#333333] border border-[#eaeaea] text-[11px] font-medium rounded-full">
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-[#ededed] text-[#111111] border-none text-[11px] font-semibold rounded-full whitespace-nowrap flex-shrink-0">
                 Tanggal: {filters.startDate || 'Awal'} s/d {filters.endDate || 'Akhir'}
                 <button
                   type="button"
@@ -418,7 +418,7 @@ export function CashFlowView({
 
             {/* Amount Range Chip */}
             {(filters.minAmount || filters.maxAmount) && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-[#f5f5f5] text-[#333333] border border-[#eaeaea] text-[11px] font-medium rounded-full">
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-[#ededed] text-[#111111] border-none text-[11px] font-semibold rounded-full whitespace-nowrap flex-shrink-0">
                 Nominal: {filters.minAmount ? formatRupiah(filters.minAmount) : 'Rp 0'} - {filters.maxAmount ? formatRupiah(filters.maxAmount) : '∞'}
                 <button
                   type="button"
@@ -432,7 +432,7 @@ export function CashFlowView({
 
             {/* Receipt Status Chip */}
             {filters.receiptStatus !== 'ALL' && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-[#f5f5f5] text-[#333333] border border-[#eaeaea] text-[11px] font-medium rounded-full">
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-[#ededed] text-[#111111] border-none text-[11px] font-semibold rounded-full whitespace-nowrap flex-shrink-0">
                 {filters.receiptStatus === 'WITH_RECEIPT' ? 'Ada Bukti Struk' : 'Tanpa Bukti Struk'}
                 <button
                   type="button"
@@ -446,7 +446,7 @@ export function CashFlowView({
 
             {/* Creator Chip */}
             {filters.createdByName !== 'ALL' && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-[#f5f5f5] text-[#333333] border border-[#eaeaea] text-[11px] font-medium rounded-full">
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-[#ededed] text-[#111111] border-none text-[11px] font-semibold rounded-full whitespace-nowrap flex-shrink-0">
                 PIC: {filters.createdByName}
                 <button
                   type="button"
@@ -462,7 +462,7 @@ export function CashFlowView({
             <button
               type="button"
               onClick={() => setFilters(DEFAULT_CASH_FILTERS)}
-              className="ml-auto text-[11px] font-semibold text-[#cf1124] hover:underline flex items-center gap-1 cursor-pointer"
+              className="ml-auto text-[11px] font-bold text-[#cf1124] bg-[#fee2e2] hover:bg-[#fecaca] px-2.5 py-0.5 rounded-full border-none flex items-center gap-1 cursor-pointer whitespace-nowrap flex-shrink-0 transition-colors"
             >
               <RotateCcw className="w-3 h-3" />
               Reset Semua
@@ -499,7 +499,7 @@ export function CashFlowView({
                       {formatDateID(e.date)}
                     </td>
                     <td className="py-2.5 px-3 whitespace-nowrap align-middle">
-                      <span className="font-semibold text-[#111111] block">
+                      <span className="inline-block px-2 py-0.5 rounded-[4px] bg-[#f0f0f0] text-[#111111] font-semibold text-[11px] border-none whitespace-nowrap">
                         {e.type.replace(/_/g, ' ')}
                       </span>
                     </td>
