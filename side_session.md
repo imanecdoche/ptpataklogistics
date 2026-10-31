@@ -456,3 +456,37 @@ Dicatat oleh **`antigravity`** untuk sinkronisasi konteks bersama **Argon**:
     - Pada layar ponsel (`< md`), drawer otomatis bertransformasi menjadi **Bottom Drawer Panel** menempel di dasar layar (`h-[85dvh]`, header tanpa drag pill, sticky footer).
     - Seluruh angka nominal, tanggal, chip, dan tombol aksi dijamin tidak terpotong atau patah baris (*anti-wrapping* via `whitespace-nowrap` & `flex-shrink-0`).
     - Efek `backdrop-blur` digantikan oleh solid dimmed `bg-black/50`.
+
+
+### FASE 15: Dokumentasi Skill Kustom Baru `/auditaislop` untuk Argon
+Dicatat oleh **`antigravity`** untuk sinkronisasi kapabilitas sistem bersama **Argon**:
+
+* **Nama Skill**: `auditaislop` (dapat dipicu langsung menggunakan slash command **`/auditaislop`**).
+* **Lokasi File**: `~/.gemini/config/skills/auditaislop/SKILL.md` (Skill global sistem Antigravity).
+* **Fungsi & Peran Utama**:
+  Sebagai *Principal UI/UX Design System Engineer* yang bertugas mengaudit dan merefaktor kode antarmuka frontend secara otomatis untuk menegakkan standar *"Extreme Minimalism"*, solid-filled design tokens, dan membersihkan seluruh elemen *AI-Slop*.
+
+* **7 Pilar Aturan Wajib `/auditaislop`**:
+  1. **Solid Filled Only (Zero Outline Strokes)**:
+     - Seluruh tombol, badge, chip, input, dan select **wajib menggunakan background solid padat** dengan `border-none`.
+     - Dilarang keras menggunakan border stroke/outline (`border`, `border-*`, `ring-*`, `bg-*-50/50`).
+  2. **Eliminasi Dot Dekoratif & Status Bullet**:
+     - Hapus semua dot/lingkaran kecil di sebelah judul, label, atau badge (`w-1.5 h-1.5 rounded-full`, simbol `•`).
+  3. **Zero Emojis & Ikon SVG Solid**:
+     - Dilarang keras menggunakan emoji di dalam template UI atau string teks JSX/TSX.
+     - Gunakan ikon SVG (`lucide-react`) bergaya *filled glyph* yang warnanya menyatu dengan teks tanpa dibungkus kotak/lingkaran warna-warni.
+  4. **Pembersihan AI-Slop & Glassmorphism**:
+     - Hapus semua efek `backdrop-blur`, gradasi tombol/teks (`bg-gradient-*`), neon glow, shadow dekoratif berwarna, dan animasi denyut non-skeleton.
+     - Backdrop modal/drawer wajib menggunakan dimmed solid murni (`bg-black/50`).
+  5. **Anti-Wrapping & Container Fit**:
+     - Terapkan `whitespace-nowrap` dan `flex-shrink-0` pada seluruh tombol, badge, chip, nominal uang, tanggal/waktu, ID transaksi, dan header tabel agar tidak patah baris canggung.
+     - Seluruh tabel wajib dibungkus kontainer responsif `w-full overflow-x-auto`.
+  6. **Standar Modal Desktop (`>= md`)**:
+     - Wajib terkunci pada ukuran lebar dan tinggi tetap (*locked fixed width & height*, contoh: `md:w-[540px] md:h-[620px] flex flex-col`).
+     - Tidak boleh melompat atau memanjang (*jumping/growing*) saat konten berubah atau dropdown terbuka.
+     - Penutupan via klik backdrop dan tombol `Escape`. Submit via `Enter`.
+  7. **Standar Bottom Drawer Mobile (`< md`)**:
+     - Seluruh modal/popup desktop otomatis bertransformasi menjadi **Bottom Drawer Panel** di layar ponsel.
+     - Menempel di dasar layar (`fixed inset-x-0 bottom-0 z-50 w-full rounded-t-[16px] rounded-b-none`, tinggi tetap `h-[82dvh]` atau `h-[85dvh]`).
+     - Judul header berada di tengah (*centered title*), **dilarang keras menggunakan pill/drag handle bar**.
+     - Tombol aksi konfirmasi/batal wajib menempel secara **sticky di bagian paling bawah drawer** (`sticky bottom-0 inset-x-0 z-10 mt-auto bg-white p-4`).
