@@ -120,7 +120,7 @@ export function ApprovalCenterModal({
 
         {/* Modal Window */}
         <div 
-          className="relative w-full max-w-3xl bg-white rounded-[16px] shadow-2xl flex flex-col max-h-[90vh] overflow-hidden z-10 animate-in fade-in zoom-in-95 duration-200"
+          className="relative w-full max-w-3xl bg-white rounded-[16px] shadow-2xl flex flex-col h-[92vh] sm:h-[88vh] max-h-[92vh] sm:max-h-[88vh] overflow-hidden z-10 animate-in fade-in zoom-in-95 duration-200"
           onClick={e => e.stopPropagation()}
         >
           {/* Header */}
@@ -195,7 +195,7 @@ export function ApprovalCenterModal({
           </div>
 
           {/* List Content Area */}
-          <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 bg-[#f8f8f8]">
+          <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-5 space-y-4 bg-[#f8f8f8]">
             {isLoading ? (
               <div className="py-12 text-center text-xs text-[#888888] flex flex-col items-center gap-2">
                 <span className="w-5 h-5 border-2 border-[#111111]/30 border-t-[#111111] rounded-full animate-spin" />

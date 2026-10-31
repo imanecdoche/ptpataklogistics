@@ -122,7 +122,7 @@ export function ProjectFinancialsModal({
       <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-xs select-none">
         {/* Modal Window Container */}
         <div 
-          className="relative w-full max-w-5xl bg-white rounded-[16px] shadow-2xl flex flex-col max-h-[92vh] overflow-hidden z-10 animate-in fade-in zoom-in-95 duration-200"
+          className="relative w-full max-w-5xl bg-white rounded-[16px] shadow-2xl flex flex-col h-[92vh] sm:h-[88vh] max-h-[92vh] sm:max-h-[88vh] overflow-hidden z-10 animate-in fade-in zoom-in-95 duration-200"
           onClick={e => e.stopPropagation()}
         >
           {/* Header Panel */}
@@ -340,7 +340,7 @@ export function ProjectFinancialsModal({
           </div>
 
           {/* Tab Content Body */}
-          <div className="flex-1 overflow-y-auto p-4 sm:p-5 bg-[#f8f8f8]">
+          <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-5 bg-[#f8f8f8]">
             {isLoading ? (
               <div className="py-16 text-center text-xs text-[#888888] flex flex-col items-center gap-2">
                 <span className="w-5 h-5 border-2 border-[#111111]/30 border-t-[#111111] rounded-full animate-spin" />

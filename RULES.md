@@ -1412,6 +1412,15 @@ Dokumen ini adalah hukum tertinggi operasional sistem. Kegagalan mematuhi aturan
       * Seluruh ikon tombol aksi dan kontrol WAJIB menggunakan ikon SVG garis mikro yang presisi (`strokeWidth={1.75}` atau `{2}`).
       * Tanda tambah pada tombol aksi utama ("Tambah Sub-Pekerjaan", "Daftarkan Sub-Pekerjaan Pertama", dll.) WAJIB berupa elemen ikon SVG plus, DILARANG berupa karakter string teks biasa (`+`).
       * DILARANG menampilkan ornamen bullet/dot/bulat berwarna (seperti titik hijau) di samping nama proyek; judul proyek tampil bersih dan langsung (*clean text heading*).
+    - **Pemicu Modal Rincian pada Tabel Master (Clickable Entity Name & Action Menu)**:
+      * DILARANG KERAS menjejalkan tombol badge/pill warna-warni (misalnya `📊 Sub-Proyek & Kasbon`) di samping teks nama entitas yang merusak lebar kolom dan memotong nama entitas menjadi terpotong (`Pr...`).
+      * Pembukaan modal rincian komprehensif dilakukan secara elegan melalui:
+        1. Teks Nama Entitas yang dapat diklik langsung (`text-[#111111] hover:text-[#008060] hover:underline cursor-pointer block truncate`).
+        2. Menu Aksi tabel resmi (`TableActionMenu` via titik tiga, klik kanan desktop, atau tap-and-hold baris tabel).
+    - **Standar Tinggi Fixed Modal Besar di Desktop (`h-[88vh]`)**:
+      * Seluruh modal data besar dengan navigasi tab atau rekapitulasi data komprehensif (`ProjectFinancialsModal`, `InvestorLedgerModal`, `ApprovalCenterModal`) WAJIB menggunakan tinggi fixed pada layar desktop: **`h-[92vh] md:h-[88vh] max-h-[92vh] md:max-h-[88vh]`**.
+      * Area badan tab/konten WAJIB menggunakan **`flex-1 min-h-0 overflow-y-auto`** sehingga wadah modal tetap stabil, kokoh, dan tidak berubah-ubah tinggi (*zero layout jumping*) saat pengguna berpindah tab dengan jumlah baris data yang berbeda-beda.
+      * Modal form input ringkas dan dialog konfirmasi tetap menggunakan tinggi proporsional sesuai kebutuhan formulir.
     - **Hierarki & Layout Tombol Aksi Header Modal (Single-Row Baris Bawah)**:
       * Header modal hanya memiliki 1 tombol aksi utama (*Primary Button*) bertema monokrom hitam solid (`bg-[#111111] hover:bg-black text-white`) dengan ikon SVG plus.
       * Tombol aksi pendukung (*Secondary Buttons*: Catat Bayar, Kasbon Mandor, Cetak Rekap) diformat sebagai tombol outline bersih (`bg-white hover:bg-[#f9fafb] text-[#111111] border border-[#d1d5db]`).

@@ -123,7 +123,7 @@ export function InvestorLedgerModal({
         onClick={onClose} 
       />
       
-      <div className="relative w-full md:max-w-4xl bg-white rounded-t-[20px] md:rounded-[12px] max-h-[92vh] md:max-h-[90vh] flex flex-col overflow-hidden z-10 shadow-2xl animate-in slide-in-from-bottom duration-300 ease-out select-text">
+      <div className="relative w-full md:max-w-4xl bg-white rounded-t-[20px] md:rounded-[12px] h-[92vh] md:h-[88vh] max-h-[92vh] md:max-h-[88vh] flex flex-col overflow-hidden z-10 shadow-2xl animate-in slide-in-from-bottom duration-300 ease-out select-text">
         {/* Header Modal */}
         <div className="p-4 sm:p-5 border-b border-[#eaeaea] flex items-center justify-between bg-[#fafafa] flex-shrink-0">
           <div className="w-full text-center md:text-left">
@@ -231,7 +231,7 @@ export function InvestorLedgerModal({
         </div>
 
         {/* Konten Tab */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-5">
+        <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-5">
           {activeTab === 'ringkasan' && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
