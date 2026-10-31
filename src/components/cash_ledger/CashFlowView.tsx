@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { CashLedgerEntry } from '@/types/database';
 import { resolveCreatorName } from '@/lib/entityResolver';
 import { PayDebtModal } from './PayDebtModal';
+import { useProjectFilter } from '@/context/ProjectFilterContext';
 import { RecordMutationModal } from './RecordMutationModal';
 
 interface CashFlowViewProps {
@@ -23,6 +24,7 @@ export function CashFlowView({
   const [searchQuery, setSearchQuery] = useState('');
   const [isPayDebtOpen, setIsPayDebtOpen] = useState(false);
   const [isRecordMutationOpen, setIsRecordMutationOpen] = useState(false);
+  const { isWatcherUser } = useProjectFilter();
 
   // Kalkulasi Hutang Bpk. Pei
   const peiDebtPayments = useMemo(() => {
@@ -120,6 +122,7 @@ export function CashFlowView({
             Hutang Bpk. Pei
           </h3>
 
+          {!isWatcherUser && (
           <button
             type="button"
             onClick={() => setIsPayDebtOpen(true)}
@@ -128,6 +131,7 @@ export function CashFlowView({
           >
             + Bayar Cicilan
           </button>
+        )}
         </div>
 
         <div className="grid grid-cols-3 gap-2 sm:gap-4 pt-3">
@@ -183,13 +187,15 @@ export function CashFlowView({
               />
             </div>
 
-            <button
-              type="button"
-              onClick={() => setIsRecordMutationOpen(true)}
-              className="px-3 py-1.5 bg-[#111111] hover:bg-[#2b2b2b] text-white text-xs font-semibold rounded-[6px] transition-colors cursor-pointer whitespace-nowrap"
-            >
-              + Catat Mutasi Kas Manual
-            </button>
+            {!isWatcherUser && (
+              <button
+                type="button"
+                onClick={() => setIsRecordMutationOpen(true)}
+                className="px-3 py-1.5 bg-[#111111] hover:bg-[#2b2b2b] text-white text-xs font-semibold rounded-[6px] transition-colors cursor-pointer whitespace-nowrap"
+              >
+                + Catat Mutasi Kas Manual
+              </button>
+            )}
           </div>
         </div>
 

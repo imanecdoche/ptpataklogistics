@@ -163,7 +163,7 @@ export function Sidebar({
   onOpenSettings,
   onLogout
 }: SidebarProps): React.JSX.Element {
-  const { isInvestorUser, isDispatcherUser } = useProjectFilter();
+  const { isInvestorUser, isDispatcherUser, isWatcherUser } = useProjectFilter();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -319,6 +319,9 @@ export function Sidebar({
             return null;
           }
           if (isDispatcherUser && !['dispatcher', 'ritase', 'projects', 'quarries', 'clients', 'materials', 'database', 'recap'].includes(item.id)) {
+            return null;
+          }
+          if (isWatcherUser && item.id === 'dispatcher') {
             return null;
           }
 

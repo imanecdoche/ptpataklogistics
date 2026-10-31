@@ -16,7 +16,7 @@ interface ClientsPageProps {
 }
 
 export function ClientsPage({ userEmail }: ClientsPageProps): React.JSX.Element {
-  const { isDispatcherUser } = useProjectFilter();
+  const { isDispatcherUser, isWatcherUser } = useProjectFilter();
 const [clients, setClients] = useState<Client[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -94,7 +94,7 @@ const [clients, setClients] = useState<Client[]>([]);
   return (
     <div className="space-y-4">
       {/* Mobile Titlebar Action Button (Rule 108) */}
-      {!isDispatcherUser && (
+      {!isDispatcherUser && !isWatcherUser && (
         <MobileTitlebarAction>
           <button
             type="button"

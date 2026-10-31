@@ -3,6 +3,7 @@ import { DispatchTransaction, Project } from '@/types/database';
 import { resolveCreatorName } from '@/lib/entityResolver';
 import { RecordProjectPaymentModal } from './RecordProjectPaymentModal';
 import { settleSingleTicket } from '@/lib/cashLedgerService';
+import { useProjectFilter } from '@/context/ProjectFilterContext';
 
 interface ReceivablesViewProps {
   transactions: DispatchTransaction[];
@@ -24,6 +25,7 @@ export function ReceivablesView({
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'TEMPO' | 'LUNAS'>('ALL');
   const [isRecordPaymentOpen, setIsRecordPaymentOpen] = useState(false);
   const [settlingTicketId, setSettlingTicketId] = useState<string | null>(null);
+  const { isWatcherUser } = useProjectFilter();
 
   // Kalkulasi Ringkasan Piutang
   const stats = useMemo(() => {
@@ -221,13 +223,13 @@ export function ReceivablesView({
               />
             </div>
 
-            <button
+            {!isWatcherUser && <button
               type="button"
               onClick={() => setIsRecordPaymentOpen(true)}
               className="px-3 py-1.5 bg-[#111111] hover:bg-[#2b2b2b] text-white text-xs font-semibold rounded-[6px] transition-colors cursor-pointer whitespace-nowrap"
             >
               + Catat Pelunasan Termin Proyek
-            </button>
+            </button>}
           </div>
         </div>
 
@@ -243,7 +245,7 @@ export function ReceivablesView({
                 <th className="py-2.5 px-3 w-[130px] text-right whitespace-nowrap">Nilai Tagihan</th>
                 <th className="py-2.5 px-3 w-[100px] text-center whitespace-nowrap">Status</th>
                 <th className="py-2.5 px-3 w-[105px] whitespace-nowrap">Dibuat Oleh</th>
-                <th className="py-2.5 px-3 w-[110px] text-right whitespace-nowrap">Aksi</th>
+                {!isWatcherUser && <th className="py-2.5 px-3 w-[110px] text-right whitespace-nowrap">Aksi</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-[#eaeaea]">
@@ -302,7 +304,7 @@ export function ReceivablesView({
                     <td className="py-2.5 px-3 font-medium text-[#111111] whitespace-nowrap align-middle">
                       {resolveCreatorName(tx.createdBy)}
                     </td>
-                    <td className="py-2.5 px-3 text-right whitespace-nowrap align-middle">
+                    {!isWatcherUser && (<td className="py-2.5 px-3 text-right whitespace-nowrap align-middle">
                       {tx.status === 'TEMPO' ? (
                         <button
                           type="button"
@@ -317,7 +319,7 @@ export function ReceivablesView({
                           ✓ Selesai
                         </span>
                       )}
-                    </td>
+                    </td>)}
                   </tr>
                 ))
               )}

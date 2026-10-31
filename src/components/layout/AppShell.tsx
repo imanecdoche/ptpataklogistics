@@ -108,17 +108,18 @@ export function AppShell({
     selectedProjectId,
     setSelectedProjectId,
     isInvestorUser,
-    isDispatcherUser
+    isDispatcherUser,
+    isWatcherUser
   } = useProjectFilter();
 
   const [isApprovalModalOpen, setIsApprovalModalOpen] = useState(false);
   const [pendingApprovals, setPendingApprovals] = useState<TicketApprovalRequest[]>([]);
 
   useEffect(() => {
-    if (isDispatcherUser || isInvestorUser) return;
+    if (isDispatcherUser || isInvestorUser || isWatcherUser) return;
     const unsub = subscribePendingApprovals(setPendingApprovals);
     return () => unsub();
-  }, [isDispatcherUser, isInvestorUser]);
+  }, [isDispatcherUser, isInvestorUser, isWatcherUser]);
 
   // Reset scroll dan state saat ganti tab navigasi
   useEffect(() => {
@@ -193,7 +194,7 @@ export function AppShell({
 
           {/* Global Project Switcher Dropdown (Contextual per Rule 107) */}
           <div className="flex items-center gap-3">
-            {!isDispatcherUser && !isInvestorUser && (
+            {!isDispatcherUser && !isInvestorUser && !isWatcherUser && (
               <button
                 type="button"
                 onClick={() => setIsApprovalModalOpen(true)}

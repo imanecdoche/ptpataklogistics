@@ -218,7 +218,7 @@ export interface FundTransferLog {
 }
 
 // 10. Koleksi: system_users (Manajemen Akun Sistem, Akses, dan Sesi)
-export type UserRole = 'developer' | 'founder' | 'admin' | 'dispatcher' | 'investor' | 'viewer';
+export type UserRole = 'developer' | 'founder' | 'admin' | 'dispatcher' | 'investor' | 'watcher' | 'viewer';
 export type UserStatus = 'ACTIVE' | 'PENDING' | 'INACTIVE';
 
 export interface SystemUser {

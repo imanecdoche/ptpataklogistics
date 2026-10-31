@@ -31,7 +31,7 @@ interface ProjectsPageProps {
 }
 
 export function ProjectsPage({ userEmail: _userEmail }: ProjectsPageProps): React.JSX.Element {
-  const { isInvestorUser, isDispatcherUser, lockedInvestorId, selectedProjectId } = useProjectFilter();
+  const { isInvestorUser, isDispatcherUser, lockedInvestorId, selectedProjectId, isWatcherUser } = useProjectFilter();
   const [projects, setProjects] = useState<Project[]>([]);
   const [investors, setInvestors] = useState<Investor[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
@@ -383,7 +383,7 @@ export function ProjectsPage({ userEmail: _userEmail }: ProjectsPageProps): Reac
               <tr>
                 <th className="py-2.5 px-3 w-[200px] min-w-[200px] whitespace-nowrap">Nama Proyek</th>
                 <th className="py-2.5 px-3 w-[160px] min-w-[160px] whitespace-nowrap">Lokasi</th>
-                {!isDispatcherUser && (
+                {!isDispatcherUser && !isWatcherUser && (
                   <th className="py-2.5 px-3 w-[160px] min-w-[160px] whitespace-nowrap">Investor Pendana</th>
                 )}
                 <th className="py-2.5 px-3 w-[160px] min-w-[160px] whitespace-nowrap">Klien / Pemilik</th>

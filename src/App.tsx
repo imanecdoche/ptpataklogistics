@@ -29,7 +29,7 @@ interface AuthenticatedAppProps {
 }
 
 function AuthenticatedApp({ user, onLogout }: AuthenticatedAppProps): React.JSX.Element {
-  const { isDispatcherUser, isInvestorUser } = useProjectFilter();
+  const { isDispatcherUser, isInvestorUser, isWatcherUser } = useProjectFilter();
   const [currentTab, setCurrentTab] = useState<NavigationTab>(() => (isDispatcherUser ? 'dispatcher' : 'dashboard'));
   const [currentSubTab, setCurrentSubTab] = useState<string>(() => (isDispatcherUser ? 'new_ticket' : 'overview'));
 
@@ -42,7 +42,7 @@ function AuthenticatedApp({ user, onLogout }: AuthenticatedAppProps): React.JSX.
       setCurrentTab('dashboard');
       setCurrentSubTab('overview');
     }
-  }, [isDispatcherUser, isInvestorUser, currentTab]);
+  }, [isDispatcherUser, isInvestorUser, isWatcherUser, currentTab]);
 
   const handleSelectTab = (tab: NavigationTab): void => {
     // Keamanan: tab dev hanya untuk akun developer
@@ -56,6 +56,13 @@ function AuthenticatedApp({ user, onLogout }: AuthenticatedAppProps): React.JSX.
     if (isDispatcherUser && (tab === 'dashboard' || tab === 'investors' || tab === 'cash_ledger' || tab === 'hok_labor')) {
       setCurrentTab('dispatcher');
       setCurrentSubTab('new_ticket');
+      return;
+    }
+
+    // Keamanan RBAC: watcher tidak boleh mengakses tab dispatcher (input tiket)
+    if (isWatcherUser && tab === 'dispatcher') {
+      setCurrentTab('dashboard');
+      setCurrentSubTab('overview');
       return;
     }
 

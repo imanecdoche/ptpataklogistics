@@ -41,7 +41,7 @@ interface InvestorsPageProps {
 }
 
 export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPageProps): React.JSX.Element {
-  const { isInvestorUser, lockedInvestorId, selectedProjectId, projects: allProjects } = useProjectFilter();
+  const { isInvestorUser, lockedInvestorId, selectedProjectId, projects: allProjects, isWatcherUser } = useProjectFilter();
   const [investors, setInvestors] = useState<Investor[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [transactions, setTransactions] = useState<DispatchTransaction[]>([]);
@@ -479,7 +479,7 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
   return (
     <div className="space-y-4">
       {/* Mobile Titlebar Action Button */}
-      {!isInvestorUser && (
+      {!isInvestorUser && !isWatcherUser && (
         <MobileTitlebarAction>
           <div className="flex items-center gap-1.5">
             <button
@@ -562,7 +562,7 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
               />
             </div>
 
-            {!isInvestorUser && (
+            {!isInvestorUser && !isWatcherUser && (
               <div className="hidden md:flex items-center gap-2">
                 <button
                   type="button"

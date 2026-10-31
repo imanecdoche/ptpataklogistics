@@ -15,6 +15,7 @@ interface ProjectFilterContextValue {
   isInvestorUser: boolean;
   isDispatcherUser: boolean;
   isManagementUser: boolean;
+  isWatcherUser: boolean;
 }
 
 const ProjectFilterContext = createContext<ProjectFilterContextValue | null>(null);
@@ -89,6 +90,7 @@ export function ProjectFilterProvider({
   const isInvestorUser = userRole === 'investor';
   const isDispatcherUser = userRole === 'dispatcher';
   const isManagementUser = userRole === 'developer' || userRole === 'founder' || userRole === 'admin';
+  const isWatcherUser = userRole === 'watcher' || userRole === 'viewer';
 
   // Isolasi data proyek: investor hanya bisa melihat proyek yang didanainya
   const visibleProjects = useMemo(() => {
@@ -127,7 +129,8 @@ export function ProjectFilterProvider({
         lockedInvestorId,
         isInvestorUser,
         isDispatcherUser,
-        isManagementUser
+        isManagementUser,
+        isWatcherUser
       }}
     >
       {children}

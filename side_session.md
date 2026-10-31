@@ -336,3 +336,46 @@ Dikerjakan oleh **`antigravity-nizar`** merespons arahan User:
 7. **Status Build & Runtime**:
    - `npm run build` lulus **100% Clean** (150 modules transformed, 0 error TypeScript, PWA service worker generated).
    - Vite Dev Server aktif berjalan di background daemon.
+
+
+### FASE 12: Pembaruan Favicon & PWA Icons, Akun Khusus Watcher (All-Seeing Read-Only Auditor), dan Animasi SVG VerifyingScreen
+Dikerjakan oleh **`antigravity-nizar`** merespons arahan User:
+
+1. **Pembaruan Aset Ikon Aplikasi PWA & Favicon Browser**:
+   - Diambil dari logo resmi squircle resolusi tinggi (1024x1024) yang diunggah User.
+   - Digenerate ke format standar PWA dan multi-size ICO menggunakan interpolasi bicubic berkualitas tinggi:
+     - `public/favicon.ico` (Multi-frame 16x16, 32x32, 48x48)
+     - `public/icons/pwa/favicon-64x64.png` (64x64)
+     - `public/icons/pwa/pwa-192x192.png` (192x192)
+     - `public/icons/pwa/pwa-512x512.png` (512x512)
+     - `public/icons/pwa/maskable-icon-512x512.png` (512x512 maskable)
+     - `public/icons/pwa/apple-touch-icon.png` (180x180)
+     - `public/icons/pt-logo.png` (512x512 resolusi tajam)
+   - Disinkronkan ke seluruh UI aplikasi (`LoginPage.tsx`, `Sidebar.tsx`, `AppShell.tsx` mobile header).
+
+2. **Penyediaan Akun Khusus & Role Watcher (`watcher@patak.id`)**:
+   - **Kredensial Login**:
+     - Email: `watcher@patak.id`
+     - Password: `1234565789`
+     - Role: `watcher`
+     - Status: `ACTIVE`
+     - Terdaftar resmi di Firebase Auth (`UID: fo3aH3i9S1Y8XFuaCkuh7DOvJaB2`) dan Firestore collection `system_users/usr-watcher-patak-id`.
+   - **Hak Akses & Pengawasan (All-Seeing Auditor)**:
+     - Watcher dapat melihat **SELURUH** alur keuangan kas riil PT, piutang tempo, investor & modal berjalan, riwayat ritase armada, master proyek, kuari, klien, master material, HOK tukang, rekapitulasi periode, dan master database secara global tanpa restriksi scoping.
+     - **Tab Dispatcher Dieliminasi**: Watcher tidak memiliki tab `dispatcher` (form input ritase baru), halaman awal otomatis diarahkan ke `dashboard` (Ringkasan Utama & Cashflow) dan memantau logistik di tab `ritase`.
+     - **100% Read-Only (Murni Pemantau)**:
+       - Seluruh kolom **"AKSI"** pada seluruh tabel disembunyikan total untuk Watcher.
+       - Seluruh tombol `+ Tambah`, `+ Mutasi`, `+ Sub-Proyek`, `+ Komoditas`, `+ Cicilan`, dll. disembunyikan.
+       - Tombol **"Pusat Persetujuan"** di topbar disembunyikan untuk Watcher.
+
+3. **Komponen Layar Animasi Verifikasi Kredensial (`VerifyingScreen.tsx`)**:
+   - Menggantikan GIF statis sidik jari dengan vektor SVG animasi asli logo PT Patak Abadi Jaya:
+     - **Layar Overlay**: `bg-white/75 backdrop-blur-md` (efek kaca blur transparan elegan).
+     - **Logo Monokrom Hitam Transparan**: Seluruh elemen vektor logo berwarna hitam pekat (`#111111`) tanpa background solid putih.
+     - **Animasi Putaran Looping**: 4 bilah lingkaran luar berputar halus looping agak cepat (`1.2s linear infinite`) mengelilingi titik pusat `(463px, 456px)`.
+     - **Teks Statis**: Teks "PAJ" di tengah tetap diam/statis tidak ikut berputar.
+     - Teks keterangan bawah: `Memverifikasi Kredensial... Harap Tunggu`.
+
+4. **Status Build & Runtime**:
+   - `npm run build` lulus **100% Clean** (150 modules transformed, 0 error TypeScript, PWA service worker generated).
+   - Vite Dev Server aktif berjalan di background daemon.

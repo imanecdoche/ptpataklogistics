@@ -49,7 +49,7 @@ interface DispatchHistoryPageProps {
 }
 
 export function DispatchHistoryPage({ userEmail }: DispatchHistoryPageProps): React.JSX.Element {
-  const { projects, selectedProjectId, isDispatcherUser, isInvestorUser } = useProjectFilter();
+  const { projects, selectedProjectId, isDispatcherUser, isInvestorUser, isWatcherUser } = useProjectFilter();
   const hideMargin = isDispatcherUser || isInvestorUser;
 
   // Data Collections
@@ -565,7 +565,7 @@ export function DispatchHistoryPage({ userEmail }: DispatchHistoryPageProps): Re
                 <th className="py-2.5 px-3 w-[85px] min-w-[85px] text-center whitespace-nowrap">Status</th>
                 <th className="py-2.5 px-3 w-[180px] min-w-[180px] whitespace-nowrap">Catatan Ritase</th>
                 <th className="py-2.5 px-3 w-[105px] min-w-[105px] whitespace-nowrap">Dibuat Oleh</th>
-                <th className="py-2.5 px-3 w-[60px] min-w-[60px] text-right whitespace-nowrap">Aksi</th>
+                {!isWatcherUser && <th className="py-2.5 px-3 w-[60px] min-w-[60px] text-right whitespace-nowrap">Aksi</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-[#eaeaea]">

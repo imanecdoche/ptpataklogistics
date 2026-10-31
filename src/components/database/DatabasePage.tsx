@@ -65,7 +65,7 @@ interface DatabasePageProps {
 }
 
 export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Element {
-  const { projects, isDispatcherUser } = useProjectFilter();
+  const { projects, isDispatcherUser, isWatcherUser } = useProjectFilter();
   const [activeSubTab, setActiveSubTab] = useState<SubTab>('ritase');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -361,7 +361,7 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
         { id: 'revenue_desc', label: 'Omset Tertinggi' },
         { id: 'revenue_asc', label: 'Omset Terendah' }
       ];
-      if (!isDispatcherUser) {
+      if (!isDispatcherUser && !isWatcherUser) {
         base.push(
           { id: 'profit_desc', label: 'Laba Tertinggi' },
           { id: 'profit_asc', label: 'Laba Terendah' }
@@ -592,7 +592,7 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
           </div>
 
           <div className="flex items-center gap-2">
-            {activeSubTab === 'vehicles' && !isDispatcherUser && (
+            {activeSubTab === 'vehicles' && !isDispatcherUser && !isWatcherUser && (
               <button
                 type="button"
                 onClick={() => setIsVehicleModalOpen(true)}
@@ -602,7 +602,7 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
               </button>
             )}
 
-            {activeSubTab === 'drivers' && !isDispatcherUser && (
+            {activeSubTab === 'drivers' && !isDispatcherUser && !isWatcherUser && (
               <button
                 type="button"
                 onClick={() => setIsDriverModalOpen(true)}
@@ -766,7 +766,7 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
                   <th className="py-2.5 px-3 w-[85px] min-w-[85px] text-center whitespace-nowrap">Status</th>
                   <th className="py-2.5 px-3 w-[180px] min-w-[180px] whitespace-nowrap">Catatan Ritase</th>
                   <th className="py-2.5 px-3 w-[105px] min-w-[105px] whitespace-nowrap">Dibuat Oleh</th>
-                  <th className="py-2.5 px-3 w-[60px] min-w-[60px] text-right whitespace-nowrap">Aksi</th>
+                  {!isWatcherUser && <th className="py-2.5 px-3 w-[60px] min-w-[60px] text-right whitespace-nowrap">Aksi</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#eaeaea]">
