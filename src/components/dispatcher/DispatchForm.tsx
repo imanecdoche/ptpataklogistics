@@ -143,7 +143,7 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
   const [quantityInput, setQuantityInput] = useState<string>('1');
   const [buyPricePerUnit, setBuyPricePerUnit] = useState<number>(0);
   const [sellPricePerUnit, setSellPricePerUnit] = useState<number>(0);
-  const [operationalCost, setOperationalCost] = useState<number>(150000);
+  const [operationalCost, setOperationalCost] = useState<number>(0);
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [knownTrucks, setKnownTrucks] = useState<KnownTruck[]>([]);
@@ -229,10 +229,10 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
       r => r.quarryId === selectedQuarryId && r.projectId === formProjectId
     );
     setMatchedRoute(found || null);
-
-    if (found) {
-      setOperationalCost(found.standardOperationalCost);
-    }
+    // Sesuai kesepakatan: Kolom ops selalu default 0 (tidak otomatis ditimpa matriks)
+    // if (found) {
+    //   setOperationalCost(found.standardOperationalCost);
+    // }
   }, [selectedQuarryId, formProjectId, routeTariffs]);
 
   const handleSelectClient = (client: Client | null) => {
@@ -441,6 +441,7 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
         setNotes('');
         setQuantity(1);
         setQuantityInput('1');
+        setOperationalCost(0);
         setIsNegativeConfirmOpen(false);
 
         dialog.showAlert({
