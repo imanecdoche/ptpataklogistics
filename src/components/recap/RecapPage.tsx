@@ -10,7 +10,7 @@ import { CustomSelectCombobox, SelectOption } from '@/components/ui/CustomSelect
 import { TablePagination } from '@/components/ui/TablePagination';
 import { formatRupiah } from '@/lib/currencyUtils';
 import { PricePerVolCell } from '@/components/ui/PricePerVolCell';
-import { matchesDateQuery } from '@/lib/dateSearchUtils';
+import { matchesDateQuery, formatDateID } from '@/lib/dateSearchUtils';
 
 interface RecapPageProps {
   userEmail: string;
@@ -585,8 +585,8 @@ export function RecapPage({
                     className="hover:bg-[#fafafa] transition-colors cursor-pointer group"
                   >
                     {/* 1. Tanggal Jalan */}
-                    <td className="py-2.5 px-3 whitespace-nowrap font-mono text-[#555555]">
-                      {tx.deliveryDate || (tx.date ? tx.date.slice(0, 10) : '—')}
+                    <td className="py-2.5 px-3 whitespace-nowrap font-mono font-medium text-[#555555]">
+                      {formatDateID(tx.deliveryDate || tx.date)}
                     </td>
 
                     {/* 2. No. Tiket */}
@@ -666,8 +666,8 @@ export function RecapPage({
                     className="hover:bg-[#fafafa] transition-colors cursor-pointer group"
                   >
                     {/* Tanggal */}
-                    <td className="py-2.5 px-3 whitespace-nowrap font-mono text-[#555555]">
-                      {tx.deliveryDate || (tx.date ? tx.date.slice(0, 10) : '—')}
+                    <td className="py-2.5 px-3 whitespace-nowrap font-mono font-medium text-[#555555]">
+                      {formatDateID(tx.deliveryDate || tx.date)}
                     </td>
 
                     {/* No. Tiket */}

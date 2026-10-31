@@ -44,7 +44,7 @@ import {
 } from '@/components/dispatcher/DispatchFilterPopover';
 import { formatRupiah, formatRupiahCompact } from '@/lib/currencyUtils';
 import { PricePerVolCell } from '@/components/ui/PricePerVolCell';
-import { matchesDateQuery } from '@/lib/dateSearchUtils';
+import { matchesDateQuery, formatDateID } from '@/lib/dateSearchUtils';
 import { X } from 'lucide-react';
 import { TablePagination } from '@/components/ui/TablePagination';
 
@@ -623,8 +623,8 @@ export function DispatchHistoryPage({ userEmail }: DispatchHistoryPageProps): Re
                           )}
                         </div>
                       </td>
-                      <td className="py-2.5 px-3 font-mono text-[#555555] whitespace-nowrap w-[105px] align-middle">
-                        {(tx.deliveryDate || '').slice(0, 10)}
+                      <td className="py-2.5 px-3 font-mono font-medium text-[#555555] whitespace-nowrap w-[105px] align-middle">
+                        {formatDateID(tx.deliveryDate || tx.date)}
                       </td>
                       <td className="py-2.5 px-3 whitespace-nowrap w-[110px] align-middle">
                         <DynamicEntityText

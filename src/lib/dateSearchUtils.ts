@@ -97,3 +97,20 @@ export function matchesDateQuery(
 
   return false;
 }
+
+/**
+ * Format tanggal standar Indonesia DD-MM-YY murni (contoh: "28-10-26").
+ * Menerima tanggal ISO ("2026-10-28", "2026-10-28T14:30:00Z", dsb.)
+ */
+export function formatDateID(
+  rawDate: string | undefined | null,
+  fallback = '-'
+): string {
+  if (!rawDate) return fallback;
+  const match = String(rawDate).match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (!match) return String(rawDate);
+  const yearShort = (match[1] ?? '').slice(-2);
+  const month = (match[2] ?? '').padStart(2, '0');
+  const day = (match[3] ?? '').padStart(2, '0');
+  return `${day}-${month}-${yearShort}`;
+}

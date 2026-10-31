@@ -8,6 +8,7 @@ import { RunningText } from '@/components/ui/RunningText';
 import { TableActionMenu } from '@/components/ui/TableActionMenu';
 import { useProjectFilter } from '@/context/ProjectFilterContext';
 import { MetricCardCurrency } from '@/components/ui/MetricCardCurrency';
+import { formatDateID } from '@/lib/dateSearchUtils';
 
 interface DispatchTableProps {
   transactions: DispatchTransaction[];
@@ -192,15 +193,6 @@ export function DispatchTable({
               </tr>
             ) : (
               filteredTransactions.map(tx => {
-                const deliveryDateObj = tx.deliveryDate
-                  ? new Date(tx.deliveryDate + 'T00:00:00')
-                  : new Date(tx.createdAt || tx.date || '');
-                const formattedDeliveryDate = deliveryDateObj.toLocaleDateString('id-ID', {
-                  day: 'numeric',
-                  month: 'short',
-                  year: 'numeric'
-                });
-
                 const createdDateObj = new Date(tx.createdAt || tx.date || '');
                 const formattedCreatedDate = createdDateObj.toLocaleDateString('id-ID', {
                   day: 'numeric',
@@ -222,7 +214,7 @@ export function DispatchTable({
                         {tx.ticketNumber}
                       </div>
                       <div className="text-[11px] font-medium text-[#111111] mt-0.5">
-                        <span className="text-[#888888]">Jalan:</span> {formattedDeliveryDate}
+                        <span className="text-[#888888]">Jalan:</span> {formatDateID(tx.deliveryDate || tx.date)}
                       </div>
                       <div className="text-[10px] text-[#888888] mt-0.5">
                         <span>Dibuat:</span> {formattedCreatedDate}, {createdTimeStr} WIB

@@ -11,6 +11,7 @@ import {
 import { useProjectFilter } from '@/context/ProjectFilterContext';
 import { DynamicEntityText } from '@/components/ui/DynamicEntityText';
 import { resolveTransactionEntities, resolveCreatorName } from '@/lib/entityResolver';
+import { formatDateID } from '@/lib/dateSearchUtils';
 
 interface DispatchDetailModalProps {
   transaction: DispatchTransaction | null;
@@ -212,13 +213,7 @@ export function DispatchDetailModal({
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-0.5">
               <span className="text-[#888888]">Tanggal Pelaksanaan (Jalan):</span>
               <span className="font-mono font-medium text-[#111111] whitespace-nowrap">
-                {transaction.deliveryDate
-                  ? new Date(transaction.deliveryDate + 'T00:00:00').toLocaleDateString('id-ID', {
-                      day: 'numeric',
-                      month: 'long',
-                      year: 'numeric'
-                    })
-                  : '-'}
+                {formatDateID(transaction.deliveryDate || transaction.date)}
               </span>
             </div>
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-0.5">

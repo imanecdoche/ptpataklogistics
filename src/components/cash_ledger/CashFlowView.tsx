@@ -6,7 +6,7 @@ import { useProjectFilter } from '@/context/ProjectFilterContext';
 import { RecordMutationModal } from './RecordMutationModal';
 import { TablePagination } from '@/components/ui/TablePagination';
 import { formatRupiah } from '@/lib/currencyUtils';
-import { matchesDateQuery } from '@/lib/dateSearchUtils';
+import { matchesDateQuery, formatDateID } from '@/lib/dateSearchUtils';
 import { ReceiptLightboxModal } from '@/components/ui/ReceiptLightboxModal';
 import { EditCashLedgerModal } from './EditCashLedgerModal';
 import { DeleteCashLedgerModal } from './DeleteCashLedgerModal';
@@ -244,8 +244,8 @@ export function CashFlowView({
               ) : (
                 paginatedEntries.map(e => (
                   <tr key={e.id} className="hover:bg-[#fafafa] transition-colors">
-                    <td className="py-2.5 px-3 font-mono text-[#555555] whitespace-nowrap align-middle">
-                      {e.date ? e.date.slice(0, 10) : '-'}
+                    <td className="py-2.5 px-3 font-mono font-medium text-[#555555] whitespace-nowrap align-middle">
+                      {formatDateID(e.date)}
                     </td>
                     <td className="py-2.5 px-3 whitespace-nowrap align-middle">
                       <span className="font-semibold text-[#111111] block">

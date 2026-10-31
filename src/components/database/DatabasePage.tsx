@@ -38,7 +38,7 @@ import { CustomSelectCombobox } from '@/components/ui/CustomSelectCombobox';
 import { MetricCardCurrency } from '@/components/ui/MetricCardCurrency';
 import { PhoneInput } from '@/components/ui/PhoneInput';
 import { PricePerVolCell } from '@/components/ui/PricePerVolCell';
-import { matchesDateQuery } from '@/lib/dateSearchUtils';
+import { matchesDateQuery, formatDateID } from '@/lib/dateSearchUtils';
 import { DynamicEntityText } from '@/components/ui/DynamicEntityText';
 import {
   resolveTransactionEntities,
@@ -786,8 +786,8 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
                         <td className="py-2.5 px-3 font-mono font-bold text-[#111111] whitespace-nowrap w-[140px] align-middle">
                           {tx.ticketNumber}
                         </td>
-                        <td className="py-2.5 px-3 font-mono text-[#555555] whitespace-nowrap w-[105px] align-middle">
-                          {tx.deliveryDate}
+                        <td className="py-2.5 px-3 font-mono font-medium text-[#555555] whitespace-nowrap w-[105px] align-middle">
+                          {formatDateID(tx.deliveryDate || tx.date)}
                         </td>
                         <td className="py-2.5 px-3 whitespace-nowrap w-[110px] align-middle">
                           <DynamicEntityText

@@ -9,6 +9,7 @@ import {
   rejectRequest
 } from '@/lib/approvalService';
 import { formatRupiah } from '@/lib/currencyUtils';
+import { formatDateID } from '@/lib/dateSearchUtils';
 import { X, Check, CheckCircle2, Loader2 } from 'lucide-react';
 
 interface ApprovalCenterModalProps {
@@ -255,7 +256,7 @@ export function ApprovalCenterModal({
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs bg-red-50/40 p-3 rounded-[8px] border border-red-100">
                           <div>
                             <span className="text-[10px] text-[#777777] block">Tanggal</span>
-                            <span className="font-medium text-[#111111]">{req.currentData.deliveryDate || '-'}</span>
+                            <span className="font-mono font-medium text-[#111111]">{formatDateID(req.currentData.deliveryDate)}</span>
                           </div>
                           <div>
                             <span className="text-[10px] text-[#777777] block">Armada & Sopir</span>
@@ -299,6 +300,9 @@ export function ApprovalCenterModal({
                                     if (v === null || v === undefined || v === '') return '-';
                                     if (typeof v === 'number' && (key.toLowerCase().includes('price') || key.toLowerCase().includes('cost') || key.toLowerCase().includes('revenue'))) {
                                       return formatRupiah(v);
+                                    }
+                                    if (typeof v === 'string' && key.toLowerCase().includes('date')) {
+                                      return formatDateID(v);
                                     }
                                     return String(v);
                                   };

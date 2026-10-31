@@ -8,7 +8,7 @@ import {
 import { subscribeProjects } from '@/lib/projectService';
 import { LaborPaymentFormModal } from './LaborPaymentFormModal';
 import { LaborJobTypeModal } from './LaborJobTypeModal';
-import { matchesDateQuery } from '@/lib/dateSearchUtils';
+import { matchesDateQuery, formatDateID } from '@/lib/dateSearchUtils';
 
 interface LaborPageProps {
   userEmail: string;
@@ -246,8 +246,8 @@ export function LaborPage({
                   ) : (
                     filteredPayments.map(p => (
                       <tr key={p.id} className="hover:bg-[#fafafa] transition-colors">
-                        <td className="py-2.5 px-3 font-mono text-[#555555] whitespace-nowrap align-middle">
-                          {p.paymentDate || '-'}
+                        <td className="py-2.5 px-3 font-mono font-medium text-[#555555] whitespace-nowrap align-middle">
+                          {formatDateID(p.paymentDate)}
                         </td>
                         <td className="py-2.5 px-3 whitespace-nowrap align-middle">
                           <span className="font-bold text-[#111111] block">{p.workerName}</span>

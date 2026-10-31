@@ -23,6 +23,7 @@ import { subscribeAllTransactions } from '@/lib/dispatcherService';
 import { TableActionMenu } from '@/components/ui/TableActionMenu';
 import { PinAuthModal } from '@/components/ui/PinAuthModal';
 import { CurrencyInput } from '@/components/ui/CurrencyInput';
+import { formatDateID } from '@/lib/dateSearchUtils';
 import { useProjectFilter } from '@/context/ProjectFilterContext';
 import { MetricCardCurrency } from '@/components/ui/MetricCardCurrency';
 import { PhoneInput } from '@/components/ui/PhoneInput';
@@ -834,7 +835,7 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
                 filteredTransfers.map(tr => (
                   <tr key={tr.id} className="hover:bg-[#fafafa]">
                     <td className="py-2.5 px-3 whitespace-nowrap">
-                      <span className="font-semibold text-[#111111]">{tr.date}</span>
+                      <span className="font-mono font-medium text-[#111111]">{formatDateID(tr.date)}</span>
                     </td>
                     <td className="py-2.5 px-3">
                       <span className="font-bold text-[#111111] block">{tr.fromInvestorName}</span>

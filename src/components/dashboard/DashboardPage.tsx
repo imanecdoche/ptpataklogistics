@@ -13,6 +13,7 @@ import { DashboardFilterDrawer, DashboardFilterState } from '@/components/dashbo
 import { DashboardInlineChart } from '@/components/dashboard/DashboardInlineChart';
 import { TablePagination } from '@/components/ui/TablePagination';
 import { PricePerVolCell } from '@/components/ui/PricePerVolCell';
+import { formatDateID } from '@/lib/dateSearchUtils';
 import { subscribeMasterQuarries } from '@/lib/databaseMasterService';
 import { subscribeCommodities } from '@/lib/materialMasterService';
 
@@ -532,8 +533,8 @@ export function DashboardPage({
                     </td>
 
                     {/* Tanggal Jalan (Fixed 115px, Zero Wrap) */}
-                    <td className="py-2.5 px-3 font-mono text-[#666666] whitespace-nowrap w-[115px] align-middle">
-                      {tx.deliveryDate || (tx.date ? tx.date.slice(0, 10) : '-')}
+                    <td className="py-2.5 px-3 font-mono font-medium text-[#666666] whitespace-nowrap w-[115px] align-middle">
+                      {formatDateID(tx.deliveryDate || tx.date)}
                     </td>
 
                     {/* Armada & Supir (Fixed 130px, Zero Wrap) */}

@@ -15,6 +15,7 @@ import {
 import { subscribeAllTransactions } from '@/lib/dispatcherService';
 import { formatRupiah } from '@/lib/currencyUtils';
 import { PricePerVolCell } from '@/components/ui/PricePerVolCell';
+import { formatDateID } from '@/lib/dateSearchUtils';
 import { MetricCardCurrency } from '@/components/ui/MetricCardCurrency';
 import { RecordSubJobModal } from './RecordSubJobModal';
 import { RecordKasbonModal } from './RecordKasbonModal';
@@ -530,7 +531,7 @@ export function ProjectFinancialsModal({
                         <tr key={tx.id} className="hover:bg-[#fafafa]">
                           <td className="py-2 px-3 font-mono whitespace-nowrap">
                             <span className="font-bold text-[#111111] block">{tx.ticketNumber}</span>
-                            <span className="text-[10px] text-[#888888]">{tx.deliveryDate || tx.date}</span>
+                            <span className="text-[10px] text-[#888888]">{formatDateID(tx.deliveryDate || tx.date)}</span>
                           </td>
                           <td className="py-2 px-3 font-medium text-[#111111] whitespace-nowrap">
                             {tx.truckPlate} {tx.driverName ? `(${tx.driverName})` : ''}
@@ -602,7 +603,7 @@ export function ProjectFinancialsModal({
                       <tbody className="divide-y divide-[#eaeaea]">
                         {kasbonLogs.map(bon => (
                           <tr key={bon.id} className="hover:bg-[#fafafa]">
-                            <td className="py-2 px-3 font-mono font-medium whitespace-nowrap">{bon.date}</td>
+                            <td className="py-2 px-3 font-mono font-medium whitespace-nowrap">{formatDateID(bon.date)}</td>
                             <td className="py-2 px-3 font-bold text-[#111111] whitespace-nowrap">{bon.workerLeaderName}</td>
                             <td className="py-2 px-3 text-[#555555] whitespace-nowrap">{bon.subJobName}</td>
                             <td className="py-2 px-3 text-right font-mono font-bold text-[#cf1124] whitespace-nowrap">
@@ -647,7 +648,7 @@ export function ProjectFinancialsModal({
                       <tbody className="divide-y divide-[#eaeaea]">
                         {clientPayments.map(pay => (
                           <tr key={pay.id} className="hover:bg-[#fafafa]">
-                            <td className="py-2 px-3 font-mono font-medium whitespace-nowrap">{pay.paymentDate}</td>
+                            <td className="py-2 px-3 font-mono font-medium whitespace-nowrap">{formatDateID(pay.paymentDate)}</td>
                             <td className="py-2 px-3 font-bold text-[#111111] whitespace-nowrap">{pay.clientName}</td>
                             <td className="py-2 px-3 text-right font-mono font-bold text-emerald-700 whitespace-nowrap">
                               +{formatRupiah(pay.amount)}

@@ -7,7 +7,7 @@ import { useProjectFilter } from '@/context/ProjectFilterContext';
 import { TablePagination } from '@/components/ui/TablePagination';
 import { formatRupiah } from '@/lib/currencyUtils';
 import { PricePerVolCell } from '@/components/ui/PricePerVolCell';
-import { matchesDateQuery } from '@/lib/dateSearchUtils';
+import { matchesDateQuery, formatDateID } from '@/lib/dateSearchUtils';
 
 interface ReceivablesViewProps {
   transactions: DispatchTransaction[];
@@ -283,8 +283,8 @@ export function ReceivablesView({
                         </span>
                       ) : null}
                     </td>
-                    <td className="py-2.5 px-3 font-mono text-[#555555] whitespace-nowrap align-middle">
-                      {tx.deliveryDate || '-'}
+                    <td className="py-2.5 px-3 font-mono font-medium text-[#555555] whitespace-nowrap align-middle">
+                      {formatDateID(tx.deliveryDate || tx.date)}
                     </td>
                     <td className="py-2.5 px-3 whitespace-nowrap align-middle">
                       <span className="font-semibold text-[#111111] block truncate">

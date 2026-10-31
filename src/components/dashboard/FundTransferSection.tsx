@@ -11,6 +11,7 @@ import { PinAuthModal } from '@/components/ui/PinAuthModal';
 import { CurrencyInput } from '@/components/ui/CurrencyInput';
 import { ProjectCombobox } from '@/components/ui/ProjectCombobox';
 import { TableActionMenu } from '@/components/ui/TableActionMenu';
+import { formatDateID } from '@/lib/dateSearchUtils';
 
 interface FundTransferSectionProps {
   projects: Project[];
@@ -183,8 +184,8 @@ export function FundTransferSection({ projects, userEmail }: FundTransferSection
                 const isPinjam = t.status === 'PINJAM';
                 return (
                   <tr key={t.id} className="hover:bg-[#fafafa] transition-colors">
-                    <td className="py-2.5 px-3 font-mono text-[#555555] whitespace-nowrap w-[110px] align-middle">
-                      {t.date}
+                    <td className="py-2.5 px-3 font-mono font-medium text-[#555555] whitespace-nowrap w-[110px] align-middle">
+                      {formatDateID(t.date)}
                     </td>
                     <td className="py-2.5 px-3 whitespace-nowrap w-[160px] align-middle">
                       <span className="font-semibold text-[#111111] block truncate">

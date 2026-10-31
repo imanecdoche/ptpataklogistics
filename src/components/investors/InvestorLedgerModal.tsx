@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Investor, Project, DispatchTransaction, InvestorPayout } from '@/types/database';
 import { CurrencyInput } from '@/components/ui/CurrencyInput';
 import { PricePerVolCell } from '@/components/ui/PricePerVolCell';
+import { formatDateID } from '@/lib/dateSearchUtils';
 import { formatPhoneNumber } from '@/lib/phoneUtils';
 import { X } from 'lucide-react';
 
@@ -350,7 +351,7 @@ export function InvestorLedgerModal({
                           <tr key={tx.id} className="hover:bg-[#fafafa]">
                             <td className="py-2 px-2.5">
                               <span className="font-mono font-medium text-[#111111] block">{tx.ticketNumber}</span>
-                              <span className="text-[10px] text-[#888888] block">{tx.deliveryDate}</span>
+                              <span className="text-[10px] text-[#888888] block">{formatDateID(tx.deliveryDate || tx.date)}</span>
                             </td>
                             <td className="py-2 px-2.5">
                               <span className="font-bold text-[#111111] block">{tx.truckPlate}</span>
@@ -514,8 +515,8 @@ export function InvestorLedgerModal({
                     ) : (
                       investorPayouts.map(p => (
                         <tr key={p.id} className="hover:bg-[#fafafa]">
-                          <td className="py-2.5 px-3 whitespace-nowrap font-medium text-[#111111]">
-                            {p.date}
+                          <td className="py-2.5 px-3 whitespace-nowrap font-mono font-medium text-[#111111]">
+                            {formatDateID(p.date)}
                           </td>
                           <td className="py-2.5 px-3 text-[#333333]">
                             {p.note}

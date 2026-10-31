@@ -2,6 +2,7 @@ import { Printer } from 'lucide-react';
 import React, { useRef } from 'react';
 import { ProjectSubJob, WorkerKasbonLog } from '@/types/database';
 import { formatRupiah } from '@/lib/currencyUtils';
+import { formatDateID } from '@/lib/dateSearchUtils';
 
 interface WorkerKasbonPrintModalProps {
   isOpen: boolean;
@@ -204,7 +205,7 @@ export function WorkerKasbonPrintModal({
                   kasbonLogs.map((bon, idx) => (
                     <tr key={bon.id} className="border-b border-[#e5e5e5]">
                       <td className="py-1.5 px-2.5 border-r border-black text-center font-mono">{idx + 1}</td>
-                      <td className="py-1.5 px-2.5 border-r border-black text-center font-mono">{bon.date}</td>
+                      <td className="py-1.5 px-2.5 border-r border-black text-center font-mono">{formatDateID(bon.date)}</td>
                       <td className="py-1.5 px-2.5 border-r border-black">
                         <span className="font-bold block text-black">{bon.workerLeaderName}</span>
                         <span className="text-[10px] text-[#666666]">{bon.subJobName}</span>
