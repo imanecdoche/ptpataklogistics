@@ -1393,6 +1393,20 @@ Dokumen ini adalah hukum tertinggi operasional sistem. Kegagalan mematuhi aturan
     - **Standardisasi Warna Latar Workspace Global**:
       * Latar belakang kanvas workspace aplikasi global (`AppShell.tsx`) distandarisasi menggunakan warna netral sejuk **`bg-[#ededed]`** (menggantikan latar lama yang terlalu terang `#fafafa`), sehingga seluruh isian formulir input putih (`bg-white`) tampak kontras, tegas, dan tidak tenggelam.
 
+121. **Bilah Kontrol Atas Dashboard (Filter Drawer & Line Chart Drawer)**:
+    - **Bilah Kontrol Khusus & Touch Target Luas**:
+      * Pada halaman Dashboard (`DashboardPage.tsx`), disediakan bilah kontrol khusus di atas kartu KPI dengan dua tombol berukuran besar dan *touch target* nyaman (min-h: 52px):
+        1. **Tombol Filter** (menggunakan ikon `/icons/filter-slider.png`): Membuka panel drawer dari bawah (*bottom sheet*) dengan parameter filter lengkap (rentang tanggal, proyek, kuari, jenis material, dan status pembayaran) yang secara dinamis memperbarui metrik KPI dan tabel dashboard.
+        2. **Tombol Chart** (menggunakan ikon `/icons/chart-line.png`): Membuka panel drawer dari bawah (*bottom sheet*) berisi grafik garis SVG interaktif dengan switcher antara 'Tren Ritase & Volume' (Trip, DT, Ton) dan 'Tren Finansial' (Omzet & Laba Bersih), dilengkapi titik sentuh interaktif dan ringkasan statistik puncak, rata-rata, dan total.
+
+122. **Universal Table Row Context Menu (Klik Kanan & Tap-and-Hold 500ms)**:
+    - **Interaksi Baris Tabel (<tr>)**:
+      * Pada seluruh tabel data di sistem (diimplementasikan via `TableActionMenu.tsx`), setiap baris tabel (`<tr>`) dapat memicu menu konteks popover aksi:
+        1. **Desktop**: Melalui klik kanan (`contextmenu`) tepat di posisi kursor mouse dengan pencegahan context menu browser default.
+        2. **Mobile / Touchscreen**: Melalui *tap and hold* (sentuh dan tahan) selama 500 ms di posisi sentuhan jari, dilengkapi getaran mikro (*haptic vibration*) jika didukung peramban. Jika jari bergeser > 10px untuk scrolling, gesture long-press otomatis dibatalkan.
+        3. Baris tabel yang aktif menampilkan menu konteks otomatis diberi highlight warna seleksi halus (`bg-[#f0f0f0]`) selama popover terbuka.
+
+
 
 
 

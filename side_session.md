@@ -195,3 +195,66 @@ ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICtflpHh+XzAWdfhb0QyRQbYPwBtB06AtfVU6yD1cJ1f
 > 
 > Salam hangat,  
 > **`antigravity-nizar`** 🚀
+
+---
+
+## 🔄 7. LAPORAN RESMI HANDOVER: ARGON (LINUX UTAMA) KE ANTIGRAVITY NIZAR
+
+> **Dokumen Serah Terima Teknis & Catatan Konteks Arsitektur**  
+> **Pengirim**: **Argon** (A R G O N) — Primary AI Agent (Linux Workstation)  
+> **Penerima**: **Antigravity Nizar** (Secondary AI Agent / Windows Device)  
+> **Waktu Handover**: 31 Oktober 2026, 16:05 WIB  
+> **Status Repositori**: 🟢 **100% Up-to-Date & Pushed ke GitHub (`main`)**  
+> **Kompilasi TypeScript & Vite Build**: 🟢 **100% Clean (`tsc -b && vite build` lulus sempurna)**  
+
+Halo rekan seperjuangan **Antigravity Nizar**! 👋  
+User baru saja memberi arahan bahwa beliau akan berpindah perangkat ke laptop kedua (lingkungan kerja Windows Anda). Berikut adalah rangkuman lengkap dari seluruh fitur, arsitektur, dan perbaikan visual yang telah saya selesaikan dan dorong (*push*) ke remote branch `main`:
+
+### 📌 Ringkasan Pembaruan Besar Sesi Ini:
+
+1. **Universal Table Row Context Menu (Klik Kanan & Tap-and-Hold 500ms) — Rule 122**:
+   - Diimplementasikan langsung secara terpusat di `src/components/ui/TableActionMenu.tsx`.
+   - **Desktop**: Klik kanan (`contextmenu`) di baris tabel mana saja (`<tr>`) membuka popover menu aksi tepat di koordinat mouse `(clientX, clientY)`.
+   - **Mobile / Layar Sentuh**: *Tap and hold* (sentuh dan tahan) selama 500 ms membuka menu aksi tepat di titik sentuhan jari dengan getaran mikro (*haptic feedback*). Gesture scrolling alami tidak terganggu karena timer otomatis dibatalkan jika jari bergeser > 10px.
+   - **Visual Feedback**: Baris tabel yang menu aksinya sedang aktif otomatis diberi highlight seleksi `bg-[#f0f0f0]`.
+   - **Zero Boilerplate**: Seluruh tabel di aplikasi (`DispatchTable`, `DatabasePage`, `DashboardPage`, `MasterMaterialPage`, `ProjectsPage`, `QuarriesPage`, dll.) otomatis langsung menikmati fitur ini tanpa perlu mengubah kode tabel masing-masing!
+
+2. **Bilah Kontrol Atas Dashboard (Filter Drawer & Line Chart Drawer) — Rule 121**:
+   - Menambahkan dua tombol besar di atas kartu metrik KPI Dashboard (`DashboardPage.tsx`) dengan *touch target* nyaman (min-h: 52px):
+     - **Tombol Filter** (ikon `/icons/filter-slider.png`): Membuka bottom sheet drawer dari bawah (`DashboardFilterDrawer.tsx`) dengan filter lengkap: Rentang Tanggal (Hari Ini, 7 Hari, 30 Hari, Bulan Ini, Semua, Kustom), Proyek, Kuari Asal, Jenis Material, dan Status Pembayaran (Lunas/Tempo). Filter ini secara dinamis memperbarui angka kartu metrik KPI dan daftar tabel dashboard.
+     - **Tombol Chart** (ikon `/icons/chart-line.png`): Membuka bottom sheet drawer dari bawah (`DashboardChartDrawer.tsx`) yang menampilkan grafik garis (Pure SVG Line Chart) responsif, ringan, dan interaktif dengan switcher antara:
+       - **Tab 1: Tren Ritase & Volume** (Trip, DT, Ton).
+       - **Tab 2: Tren Finansial** (Omzet & Estimasi Laba Bersih, terproteksi RBAC).
+       - Dilengkapi titik data interaktif (hover/touch tooltip) dan kartu statistik ringkasan (Puncak, Rata-rata, Total Periode).
+
+3. **Form Pencatatan Ritase Dibuat Boxless & Latar Kanvas #ededed — Rule 120**:
+   - Formulir dispatcher (`DispatchForm.tsx`) dibuat sepenuhnya *boxless* tanpa wadah card pembungkus (`bg-[#f5f5f5]` dihapus) agar sangat lapang dan lega (*breathing space*).
+   - Header desktop flat tanpa border. Kotak kalkulasi live diformat sebagai kartu putih solid bersih (`bg-white border border-[#dcdcdc]`).
+   - Latar belakang kanvas workspace global (`AppShell.tsx`) distandarisasi ke **`bg-[#ededed]`** (netral sejuk) sehingga seluruh field input isian putih (`bg-white`) tampak kontras, tegas, dan tidak tenggelam.
+
+4. **Ikon Mandiri Riwayat Ritase & Penataan Sidebar — Rule 117**:
+   - Menambahkan ikon tiket/struk mandiri (`/icons/ritase.png`) untuk tab **Riwayat Ritase** di `Sidebar.tsx`.
+   - Tab `Dispatcher` dan `Riwayat Ritase` berdiri sendiri sebagai menu tingkat atas tanpa accordion/sub-tab yang kolaps.
+   - Posisi tab **Kas & Piutang Tempo** (`cash_ledger`) dipindahkan tepat di bawah tab Dashboard.
+
+5. **Penyingkatan Otomatis Suffix 'K' pada Nominal Uang — Rule 119**:
+   - Komponen `<MetricCardCurrency />` dan utilitas `src/lib/currencyUtils.ts`: Jika nominal angka terlalu panjang dan kontainer sempit / layar mobile (*overflow*), 3 digit nol terakhir otomatis dipotong menjadi akhiran `K` (contoh: `1.000.000.000` $\rightarrow$ `1.000.000K`), dengan simbol `Rp` kecil semi-transparan dan atribut `title` untuk tooltip nominal penuh.
+
+6. **Pemisahan Metrik Volume DT & Ton — Rule 116**:
+   - Metrik volume di kartu dashboard diformat: `Volume: n DT | n Ton` (DT bilangan bulat murni via `Math.round`, Ton maksimal 1 desimal).
+
+7. **Pembersihan ID Teknis Database Master — Rule 118**:
+   - Teks kecil ID teknis (`prj-...`, `qry-...`, `inv-...`) di bawah nama entitas master telah dihapus bersih.
+
+8. **Sinkronisasi Aturan Mutlak & Git**:
+   - Seluruh aturan baru (Rules 113 s/d 122) telah dicatat di `.agents/RULES.md` dan disinkronkan ke `RULES.md` dengan kesetaraan 0-diff.
+   - `npm run build` lulus 100% tanpa error TypeScript.
+
+### 🚀 Instruksi untuk Nizar saat Menerima Sesi di Windows:
+Cukup jalankan perintah git pull standar di direktori proyek Windows:
+```bash
+cd C:\Users\user\Documents\PATAK
+git pull origin main
+```
+Dev server dapat langsung diakses di `http://localhost:5173/`. Selamat bertugas kembali bersama User, Nizar! 🤝
+

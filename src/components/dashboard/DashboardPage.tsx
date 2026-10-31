@@ -9,6 +9,10 @@ import { DispatchDetailModal } from '@/components/dispatcher/DispatchDetailModal
 import { useProjectFilter } from '@/context/ProjectFilterContext';
 import { FundTransferSection } from '@/components/dashboard/FundTransferSection';
 import { MetricCardCurrency } from '@/components/ui/MetricCardCurrency';
+import { DashboardFilterDrawer, DashboardFilterState } from '@/components/dashboard/DashboardFilterDrawer';
+import { DashboardChartDrawer } from '@/components/dashboard/DashboardChartDrawer';
+import { subscribeMasterQuarries } from '@/lib/databaseMasterService';
+import { subscribeCommodities } from '@/lib/materialMasterService';
 
 interface DashboardPageProps {
   userEmail: string;
@@ -107,35 +111,102 @@ export function DashboardPage({
     };
   }, []);
 
-  // Filter transaksi berdasarkan proyek yang dipilih di Header Switcher
-  const filteredTransactions = useMemo(() => {
-    if (selectedProjectId === 'ALL') return transactions;
-    return transactions.filter(t => t.projectId === selectedProjectId);
-  }, [transactions, selectedProjectId]);
+  const defaultFilters: DashboardFilterState = {
+    datePreset: 'TODAY',
+    startDate: todayStr,
+    endDate: todayStr,
+    projectId: 'ALL',
+    quarryName: 'ALL',
+    materialName: 'ALL',
+    status: 'ALL'
+  };
 
-  // Metrik Utama Hari Ini
-  const todayMetrics = useMemo(() => {
-    const todayTx = filteredTransactions.filter(
-      t => (t.deliveryDate && t.deliveryDate === todayStr) || (t.date && t.date.slice(0, 10) === todayStr)
+  const [filters, setFilters] = useState<DashboardFilterState>(defaultFilters);
+  const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
+  const [isChartDrawerOpen, setIsChartDrawerOpen] = useState(false);
+  const [quarries, setQuarries] = useState<{ id: string; name: string }[]>([]);
+  const [materials, setMaterials] = useState<{ id: string; name: string }[]>([]);
+
+  useEffect(() => {
+    const unsubQuarries = subscribeMasterQuarries(list => {
+      setQuarries(list.map(q => ({ id: q.id, name: q.name })));
+    });
+    const unsubMaterials = subscribeCommodities(list => {
+      setMaterials(list.map(m => ({ id: m.id, name: m.name })));
+    });
+
+    return () => {
+      unsubQuarries();
+      unsubMaterials();
+    };
+  }, []);
+
+  const isFilterActive = useMemo(() => {
+    return (
+      filters.datePreset !== 'TODAY' ||
+      filters.projectId !== 'ALL' ||
+      filters.quarryName !== 'ALL' ||
+      filters.materialName !== 'ALL' ||
+      filters.status !== 'ALL'
     );
+  }, [filters]);
 
-    const totalTrips = todayTx.length;
-    const totalVolumeDt = todayTx
+  // Filter transaksi berdasarkan filter drawer & global project filter
+  const filteredTransactions = useMemo(() => {
+    return transactions.filter(t => {
+      // 1. Proyek
+      const targetProjId = filters.projectId !== 'ALL' ? filters.projectId : selectedProjectId;
+      if (targetProjId && targetProjId !== 'ALL' && t.projectId !== targetProjId) {
+        return false;
+      }
+
+      // 2. Rentang tanggal
+      const txDate = t.deliveryDate || (t.date ? t.date.slice(0, 10) : t.createdAt?.slice(0, 10));
+      if (filters.datePreset !== 'ALL') {
+        if (filters.startDate && txDate && txDate < filters.startDate) return false;
+        if (filters.endDate && txDate && txDate > filters.endDate) return false;
+      }
+
+      // 3. Kuari asal
+      if (filters.quarryName !== 'ALL' && t.quarryName !== filters.quarryName) {
+        return false;
+      }
+
+      // 4. Jenis material
+      if (filters.materialName !== 'ALL' && t.materialName !== filters.materialName) {
+        return false;
+      }
+
+      // 5. Status pembayaran
+      if (filters.status !== 'ALL' && t.status !== filters.status) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [transactions, selectedProjectId, filters]);
+
+  // Metrik Utama Berdasarkan Filter Aktif
+  const todayMetrics = useMemo(() => {
+    const activeTx = filteredTransactions;
+
+    const totalTrips = activeTx.length;
+    const totalVolumeDt = activeTx
       .filter(t => t.unit === 'DT' || !t.unit)
       .reduce((acc, t) => acc + (Number(t.quantity) || 0), 0);
-    const totalVolumeTon = todayTx
+    const totalVolumeTon = activeTx
       .filter(t => t.unit === 'Ton')
       .reduce((acc, t) => acc + (Number(t.quantity) || 0), 0);
-    const totalRevenue = todayTx.reduce((acc, t) => acc + (Number(t.totalRevenue) || 0), 0);
-    const totalProfit = todayTx.reduce((acc, t) => acc + (Number(t.netProfit) || 0), 0);
-    const totalBuyCost = todayTx.reduce((acc, t) => acc + (Number(t.totalBuyCost) || 0), 0);
-    const totalOperationalCost = todayTx.reduce((acc, t) => acc + (Number(t.operationalCost) || 0), 0);
+    const totalRevenue = activeTx.reduce((acc, t) => acc + (Number(t.totalRevenue) || 0), 0);
+    const totalProfit = activeTx.reduce((acc, t) => acc + (Number(t.netProfit) || 0), 0);
+    const totalBuyCost = activeTx.reduce((acc, t) => acc + (Number(t.totalBuyCost) || 0), 0);
+    const totalOperationalCost = activeTx.reduce((acc, t) => acc + (Number(t.operationalCost) || 0), 0);
     const totalCashOut = totalBuyCost + totalOperationalCost;
 
-    const activePlates = new Set(todayTx.map(t => t.truckPlate?.trim().toUpperCase()).filter(Boolean));
+    const activePlates = new Set(activeTx.map(t => t.truckPlate?.trim().toUpperCase()).filter(Boolean));
 
     // Total Piutang Tempo Keseluruhan (transaksi dengan status 'TEMPO')
-    const pendingReceivables = filteredTransactions
+    const pendingReceivables = transactions
       .filter(t => t.status === 'TEMPO')
       .reduce((acc, t) => acc + (Number(t.totalRevenue) || 0), 0);
 
@@ -157,18 +228,82 @@ export function DashboardPage({
       pendingReceivables,
       latestCash
     };
-  }, [filteredTransactions, cashEntries, todayStr, selectedProject]);
+  }, [filteredTransactions, transactions, cashEntries, selectedProject]);
 
   return (
     <div className="space-y-6 w-full">
+      {/* BILAH KONTROL ATAS DASHBOARD (FILTER & CHART DENGAN TOUCH TARGET LUAS) */}
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 select-none">
+        {/* Tombol 1: Filter Operasional (Membuka Bottom Sheet Drawer) */}
+        <button
+          type="button"
+          onClick={() => setIsFilterDrawerOpen(true)}
+          className={`flex items-center justify-between p-3.5 sm:p-4 rounded-[10px] border transition-all cursor-pointer min-h-[52px] ${
+            isFilterActive
+              ? 'bg-[#111111] text-white border-[#111111] shadow-md'
+              : 'bg-white text-[#111111] border-[#eaeaea] hover:bg-[#f9f9f9] shadow-xs active:scale-[0.99]'
+          }`}
+        >
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+            <div className={`w-8 h-8 rounded-[8px] flex-shrink-0 flex items-center justify-center ${isFilterActive ? 'bg-white/15' : 'bg-[#f0f0f0]'}`}>
+              <img
+                src="/icons/filter-slider.png"
+                alt="Filter"
+                className={`w-4 h-4 object-contain ${isFilterActive ? 'brightness-0 invert' : ''}`}
+              />
+            </div>
+            <div className="text-left truncate">
+              <span className="text-xs sm:text-sm font-bold block leading-tight truncate">Filter Operasional</span>
+              <span className={`text-[10px] block mt-0.5 truncate ${isFilterActive ? 'text-zinc-300' : 'text-[#777777]'}`}>
+                {filters.datePreset === 'TODAY' ? 'Hari Ini' : filters.datePreset === '7D' ? '7 Hari Terakhir' : filters.datePreset === '30D' ? '30 Hari' : filters.datePreset === 'THIS_MONTH' ? 'Bulan Ini' : filters.datePreset === 'ALL' ? 'Semua Waktu' : 'Kustom'}
+                {filters.projectId !== 'ALL' ? ' • Proyek' : ''}
+              </span>
+            </div>
+          </div>
+          {isFilterActive ? (
+            <span className="text-[10px] font-bold bg-white text-[#111111] px-2 py-0.5 rounded-full flex-shrink-0">
+              Aktif
+            </span>
+          ) : (
+            <svg className="w-4 h-4 text-[#888888] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          )}
+        </button>
+
+        {/* Tombol 2: Lihat Grafik Garis (Membuka Bottom Sheet Drawer) */}
+        <button
+          type="button"
+          onClick={() => setIsChartDrawerOpen(true)}
+          className="flex items-center justify-between p-3.5 sm:p-4 rounded-[10px] border border-[#eaeaea] bg-white text-[#111111] hover:bg-[#f9f9f9] shadow-xs active:scale-[0.99] transition-all cursor-pointer min-h-[52px]"
+        >
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+            <div className="w-8 h-8 rounded-[8px] bg-[#f0f0f0] flex-shrink-0 flex items-center justify-center">
+              <img
+                src="/icons/chart-line.png"
+                alt="Chart"
+                className="w-4 h-4 object-contain"
+              />
+            </div>
+            <div className="text-left truncate">
+              <span className="text-xs sm:text-sm font-bold block leading-tight truncate">Lihat Grafik Garis</span>
+              <span className="text-[10px] text-[#777777] block mt-0.5 truncate">Tren Ritase & Keuangan</span>
+            </div>
+          </div>
+          <svg className="w-4 h-4 text-[#888888] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+          </svg>
+        </button>
+      </div>
+
       {/* 1. SECTION: KPI CARDS RINGKASAN UTAMA */}
       {activeSubTab === 'overview' && (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-            {/* Card 1: Ritase Hari Ini */}
+            {/* Card 1: Ritase */}
             <div className="bg-white rounded-[10px] p-4 border border-[#eaeaea] flex flex-col justify-between">
               <span className="text-[11px] font-medium text-[#666666]">
-                Ritase Hari Ini
+                {filters.datePreset === 'TODAY' ? 'Ritase Hari Ini' : 'Ritase Periode Terpilih'}
               </span>
               <div className="mt-2 flex items-baseline gap-1.5">
                 <span className="text-2xl font-bold tracking-tight text-[#111111]">
@@ -515,6 +650,26 @@ export function DashboardPage({
           onClose={() => setSelectedTx(null)}
         />
       )}
+
+      {/* Bottom Sheet Drawer Filter Dashboard */}
+      <DashboardFilterDrawer
+        isOpen={isFilterDrawerOpen}
+        onClose={() => setIsFilterDrawerOpen(false)}
+        filters={filters}
+        onApply={newFilters => setFilters(newFilters)}
+        onReset={() => setFilters(defaultFilters)}
+        projects={projects}
+        quarries={quarries}
+        materials={materials}
+      />
+
+      {/* Bottom Sheet Drawer Chart Garis Dashboard */}
+      <DashboardChartDrawer
+        isOpen={isChartDrawerOpen}
+        onClose={() => setIsChartDrawerOpen(false)}
+        transactions={filteredTransactions}
+        hideMargin={hideMargin}
+      />
     </div>
   );
 }
