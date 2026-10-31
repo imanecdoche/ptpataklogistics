@@ -322,9 +322,9 @@ export async function seedDefaultCashLedger(): Promise<void> {
     await setDoc(doc(colRef, 'ledger-debt-bpk-pei'), {
       date: datePei,
       type: 'HUTANG_PIHAK_KETIGA' as CashFlowType,
-      amount: 18000000,
+      amount: 23000000,
       isCredit: true,
-      runningBalance: 44500000,
+      runningBalance: 49500000,
       referenceId: '',
       description: 'Pinjaman Pihak Ketiga / Hutang Perseroan Bpk. Pei',
       createdByName: 'System / Management'

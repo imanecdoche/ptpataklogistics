@@ -13,7 +13,7 @@ interface CashFlowViewProps {
   onRefresh: () => void;
 }
 
-const PEI_INITIAL_DEBT = 18000000;
+const PEI_INITIAL_DEBT = 23000000;
 
 export function CashFlowView({
   entries,
