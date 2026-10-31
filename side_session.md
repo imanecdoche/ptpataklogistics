@@ -379,3 +379,22 @@ Dikerjakan oleh **`antigravity-nizar`** merespons arahan User:
 4. **Status Build & Runtime**:
    - `npm run build` lulus **100% Clean** (150 modules transformed, 0 error TypeScript, PWA service worker generated).
    - Vite Dev Server aktif berjalan di background daemon.
+
+
+### FASE 13: Integrasi Domain Kustom Produksi & Konfigurasi DNS Vercel
+Dicatat oleh **`antigravity-nizar`** untuk sinkronisasi konteks bersama **Argon**:
+
+1. **Domain Kustom Resmi Perusahaan**:
+   - Domain produksi resmi telah aktif dan terhubung dari Hostinger ke Vercel:
+     - Root Domain: **`pataklogistics.com`**
+     - Subdomain: **`www.pataklogistics.com`**
+   - DNS Zone Records (Hostinger):
+     - **Record A** (`@`) $\rightarrow$ `216.198.79.1`
+     - **Record CNAME** (`www`) $\rightarrow$ `f5f53dbb14c4a86d.vercel-dns-017.com`
+   - Status SSL Certificate Let's Encrypt (HTTPS): **100% Valid & Active**.
+
+2. **Daftar Fitur Inti yang Telah Siap Digunakan Secara Live**:
+   - **Pool Pelunasan Klien Lump-Sum**: Pelunasan uang masuk dari klien (contoh Rp 80.000.000) langsung memotong akumulasi total tagihan piutang proyek (material + MCK + paving + drainase) dan otomatis membukukan kas masuk di Kas Sentral (`cash_ledger`).
+   - **Sub-Pekerjaan Fisik & Buku Kasbon Tukang**: Manajemen borongan paket MCK, Paving ($m^2$), Drainase ($m^3$) dengan pencatatan bon fisik tukang yang memotong plafon upah mandor serta lembar audit siap cetak.
+   - **Role Watcher**: Akun auditor `watcher@patak.id` (password `1234565789`) dengan akses melihat seluruh alur kas, riwayat, dan database secara global dengan hak akses murni read-only.
+   - **UI Modern**: Layar verifikasi animasi vektor SVG, ikon PWA/Favicon tajam, custom UI scrollbar, dan layout desktop 100% full-width.
