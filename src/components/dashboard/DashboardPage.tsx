@@ -14,6 +14,7 @@ import { DashboardInlineChart } from '@/components/dashboard/DashboardInlineChar
 import { TablePagination } from '@/components/ui/TablePagination';
 import { PricePerVolCell } from '@/components/ui/PricePerVolCell';
 import { formatDateID } from '@/lib/dateSearchUtils';
+import { formatVolumeDisplay } from '@/lib/volumeUtils';
 import { subscribeMasterQuarries } from '@/lib/databaseMasterService';
 import { subscribeCommodities } from '@/lib/materialMasterService';
 
@@ -568,7 +569,7 @@ export function DashboardPage({
 
                     {/* Volume (Fixed 90px, Zero Wrap) */}
                     <td className="py-2.5 px-3 text-center whitespace-nowrap w-[90px] align-middle">
-                      <span className="font-bold tracking-tight text-[#111111]">{tx.quantity}</span>{' '}
+                      <span className="font-bold tracking-tight text-[#111111]">{formatVolumeDisplay(tx.quantity)}</span>{' '}
                       <span className="text-[#666666] text-[11px]">{tx.unit}</span>
                     </td>
 

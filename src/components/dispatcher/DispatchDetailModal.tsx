@@ -12,6 +12,7 @@ import { useProjectFilter } from '@/context/ProjectFilterContext';
 import { DynamicEntityText } from '@/components/ui/DynamicEntityText';
 import { resolveTransactionEntities, resolveCreatorName } from '@/lib/entityResolver';
 import { formatDateID } from '@/lib/dateSearchUtils';
+import { formatVolumeDisplay } from '@/lib/volumeUtils';
 
 interface DispatchDetailModalProps {
   transaction: DispatchTransaction | null;
@@ -158,7 +159,7 @@ export function DispatchDetailModal({
             <div>
               <span className="text-[#888888] block text-[11px]">Volume</span>
               <span className="font-mono font-semibold text-xs md:text-sm text-[#111111]">
-                {transaction.quantity} {transaction.unit}
+                {formatVolumeDisplay(transaction.quantity, transaction.unit)}
               </span>
             </div>
           </div>

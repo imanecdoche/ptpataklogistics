@@ -39,6 +39,7 @@ import { MetricCardCurrency } from '@/components/ui/MetricCardCurrency';
 import { PhoneInput } from '@/components/ui/PhoneInput';
 import { PricePerVolCell } from '@/components/ui/PricePerVolCell';
 import { matchesDateQuery, formatDateID } from '@/lib/dateSearchUtils';
+import { formatVolumeDisplay } from '@/lib/volumeUtils';
 import { DynamicEntityText } from '@/components/ui/DynamicEntityText';
 import {
   resolveTransactionEntities,
@@ -838,7 +839,7 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
                           />
                         </td>
                       <td className="py-2.5 px-3 font-bold tracking-tight text-[#111111] whitespace-nowrap w-[90px] align-middle">
-                        {tx.quantity} {tx.unit}
+                        {formatVolumeDisplay(tx.quantity, tx.unit)}
                       </td>
                       <td className="py-2.5 px-3 whitespace-nowrap w-[130px] align-middle">
                         <PricePerVolCell

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { DispatchTransaction, MaterialItem, Client, MasterQuarry } from '@/types/database';
+import { DispatchTransaction, MaterialItem, Client, MasterQuarry, UnitType } from '@/types/database';
+import { sanitizeDecimalInput, numberToIndonesianInput } from '@/lib/volumeUtils';
 import { UpdateDispatchPayload } from '@/lib/dispatcherService';
 import { subscribeMasterQuarries } from '@/lib/databaseMasterService';
 import { TruckPlateInput, isCompleteValidTruckPlate } from '@/components/ui/TruckPlateInput';
@@ -60,8 +61,9 @@ export function EditDispatchModal({
   const [quarries, setQuarries] = useState<MasterQuarry[]>(propQuarries || []);
   const [materialId, setMaterialId] = useState<string>(transaction?.materialId || '');
   const [materialName, setMaterialName] = useState<string>(transaction?.materialName || '');
-  const [unit, setUnit] = useState<'DT' | 'Ton'>(transaction?.unit || 'DT');
+  const [unit, setUnit] = useState<UnitType>(transaction?.unit || 'DT');
   const [quantity, setQuantity] = useState<number>(transaction?.quantity || 1);
+  const [quantityInput, setQuantityInput] = useState<string>(numberToIndonesianInput(transaction?.quantity || 1));
   const [buyPricePerUnit, setBuyPricePerUnit] = useState<number>(transaction?.buyPricePerUnit || 0);
   const [sellPricePerUnit, setSellPricePerUnit] = useState<number>(transaction?.sellPricePerUnit || 0);
   const [operationalCost, setOperationalCost] = useState<number>(transaction?.operationalCost || 0);
@@ -97,6 +99,7 @@ export function EditDispatchModal({
       setMaterialName(transaction.materialName || '');
       setUnit(transaction.unit || 'DT');
       setQuantity(transaction.quantity || 1);
+      setQuantityInput(numberToIndonesianInput(transaction.quantity || 1));
       setBuyPricePerUnit(transaction.buyPricePerUnit || 0);
       setSellPricePerUnit(transaction.sellPricePerUnit || 0);
       setOperationalCost(transaction.operationalCost || 0);
@@ -388,12 +391,23 @@ export function EditDispatchModal({
                   Volume / Muatan:
                 </label>
                 <input
-                  type="number"
-                  min="1"
-                  step="1"
-                  value={quantity}
+                  type="text"
+                  inputMode="decimal"
+                  placeholder="1"
+                  value={quantityInput}
+
                   onFocus={e => e.target.select()}
-                  onChange={e => setQuantity(parseFloat(e.target.value) || 0)}
+                  onChange={e => {
+                    const { displayVal, numericVal } = sanitizeDecimalInput(e.target.value);
+                    setQuantityInput(displayVal);
+                    setQuantity(numericVal);
+                  }}
+                  onBlur={() => {
+                    if (!quantityInput.trim() || quantity === 0) {
+                      setQuantityInput('1');
+                      setQuantity(1);
+                    }
+                  }}
                   className="w-full px-3 py-2 text-xs font-mono font-bold bg-white border border-[#dddddd] rounded-[6px] focus:outline-none focus:border-[#111111]"
                 />
               </div>
@@ -405,10 +419,12 @@ export function EditDispatchModal({
                 <CustomSelectCombobox
                   options={[
                     { id: 'DT', label: 'DT (Dump Truck)' },
-                    { id: 'Ton', label: 'Ton' }
+                    { id: 'Ton', label: 'Ton' },
+                    { id: 'Tonase', label: 'Tonase' },
+                    { id: 'M3', label: 'M3 (Meter Kubik)' }
                   ]}
                   value={unit}
-                  onChange={val => setUnit(val as 'DT' | 'Ton')}
+                  onChange={val => setUnit(val as UnitType)}
                   variant="white"
                   searchable={false}
                 />

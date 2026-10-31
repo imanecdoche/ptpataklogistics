@@ -45,6 +45,7 @@ import {
 import { formatRupiah, formatRupiahCompact } from '@/lib/currencyUtils';
 import { PricePerVolCell } from '@/components/ui/PricePerVolCell';
 import { matchesDateQuery, formatDateID } from '@/lib/dateSearchUtils';
+import { formatVolumeDisplay } from '@/lib/volumeUtils';
 import { X } from 'lucide-react';
 import { TablePagination } from '@/components/ui/TablePagination';
 
@@ -323,7 +324,7 @@ export function DispatchHistoryPage({ userEmail }: DispatchHistoryPageProps): Re
     filteredTransactions.forEach(tx => {
       if (tx.unit === 'DT') {
         dtVolume += Number(tx.quantity || 0);
-      } else if (tx.unit === 'Ton') {
+      } else if (tx.unit === 'Ton' || tx.unit === 'Tonase') {
         tonVolume += Number(tx.quantity || 0);
       }
       totalOmset += Number(tx.totalRevenue || 0);
@@ -675,7 +676,7 @@ export function DispatchHistoryPage({ userEmail }: DispatchHistoryPageProps): Re
                         />
                       </td>
                       <td className="py-2.5 px-3 font-bold tracking-tight text-[#111111] whitespace-nowrap w-[90px] align-middle">
-                        {tx.quantity} {tx.unit}
+                        {formatVolumeDisplay(tx.quantity, tx.unit)}
                       </td>
                       <td className="py-2.5 px-3 whitespace-nowrap w-[130px] align-middle">
                         <PricePerVolCell

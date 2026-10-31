@@ -1,4 +1,4 @@
-export type UnitType = 'DT' | 'Ton'; // DT = Dump Truck standar 6 m³
+export type UnitType = 'DT' | 'Ton' | 'Tonase' | 'M3' | (string & {}); // DT = Dump Truck standar 6 m³, Ton, Tonase, M3, dll.
 export type PaymentStatus = 'TEMPO' | 'LUNAS';
 export type CashFlowType =
   | 'MODAL_AWAL'

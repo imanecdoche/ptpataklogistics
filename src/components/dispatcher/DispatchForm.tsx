@@ -14,6 +14,8 @@ import { TruckPlateInput, extractRegionCode, isValidRegionCode, isCompleteValidT
 import { ClientCombobox } from '@/components/ui/ClientCombobox';
 import { QuarryCombobox } from '@/components/ui/QuarryCombobox';
 import { ProjectCombobox } from '@/components/ui/ProjectCombobox';
+import { CustomSelectCombobox } from '@/components/ui/CustomSelectCombobox';
+import { sanitizeDecimalInput, AVAILABLE_UNITS } from '@/lib/volumeUtils';
 import { FlexibleTextarea } from '@/components/ui/FlexibleTextarea';
 import { NegativeProfitConfirmModal } from '@/components/ui/NegativeProfitConfirmModal';
 import { useProjectFilter } from '@/context/ProjectFilterContext';
@@ -270,17 +272,19 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
 
   const handleSelectMaterial = (m: MaterialItem): void => {
     setSelectedMaterialId(m.id);
-    setUnit(m.unit);
+    if (m.unit) {
+      setUnit(m.unit);
+    }
     setBuyPricePerUnit(m.defaultBuyPrice);
     setSellPricePerUnit(m.defaultSellPrice);
   };
 
-  // Handler Volume: Mengizinkan field kosong saat diedit/dihapus, dan baru mengisi '0' saat unfocused
+  // Handler Volume: Mengizinkan desimal, otomatis konversi titik (.) ke koma (,), dan sanitasi input
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
-    const val = e.target.value;
-    setQuantityInput(val);
-    const parsed = parseFloat(val);
-    setQuantity(isNaN(parsed) ? 0 : parsed);
+    const rawVal = e.target.value;
+    const { displayVal, numericVal } = sanitizeDecimalInput(rawVal);
+    setQuantityInput(displayVal);
+    setQuantity(numericVal);
   };
 
   const handleQuantityFocus = (): void => {
@@ -290,9 +294,9 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
   };
 
   const handleQuantityBlur = (): void => {
-    if (!quantityInput || quantityInput.trim() === '') {
-      setQuantityInput('0');
-      setQuantity(0);
+    if (!quantityInput || quantityInput.trim() === '' || quantity === 0) {
+      setQuantityInput('1');
+      setQuantity(1);
     }
   };
 
@@ -865,9 +869,13 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-[#666666] font-medium mb-1">Satuan</label>
-              <div className="w-full bg-white border border-[#e5e5e5] rounded-[6px] px-3 py-2 text-xs font-semibold text-[#111111]">
-                {unit === 'DT' ? 'Dump Truck (DT)' : 'Tonase (Ton)'}
-              </div>
+              <CustomSelectCombobox
+                options={AVAILABLE_UNITS.map(u => ({ id: u.id, label: u.label }))}
+                value={unit}
+                onChange={val => setUnit(val as UnitType)}
+                variant="white"
+                searchable={false}
+              />
             </div>
 
             <div>
@@ -876,9 +884,8 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
               </label>
               <input
                 ref={volumeInputRef}
-                type="number"
-                step="1"
-                min="1"
+                type="text"
+                inputMode="decimal"
                 placeholder="1"
                 value={quantityInput}
                 onChange={handleQuantityChange}
@@ -902,7 +909,7 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
                     }
                   }
                 }}
-                className="w-full bg-white border-none outline-none focus:outline-none focus:ring-0 rounded-[6px] px-3 py-2 text-xs font-bold text-black text-right transition-colors"
+                className="w-full bg-white border border-[#e5e5e5] outline-none focus:outline-none focus:border-[#111111] rounded-[6px] px-3 py-2 text-xs font-bold text-black text-right transition-colors"
               />
             </div>
           </div>

@@ -8,6 +8,7 @@ import { TablePagination } from '@/components/ui/TablePagination';
 import { formatRupiah } from '@/lib/currencyUtils';
 import { PricePerVolCell } from '@/components/ui/PricePerVolCell';
 import { matchesDateQuery, formatDateID } from '@/lib/dateSearchUtils';
+import { formatVolumeDisplay } from '@/lib/volumeUtils';
 
 interface ReceivablesViewProps {
   transactions: DispatchTransaction[];
@@ -296,7 +297,7 @@ export function ReceivablesView({
                     </td>
                     <td className="py-2.5 px-3 whitespace-nowrap align-middle">
                       <span className="font-medium text-[#111111] block">
-                        {tx.materialName} ({tx.quantity} {tx.unit})
+                        {tx.materialName} ({formatVolumeDisplay(tx.quantity, tx.unit)})
                       </span>
                       <span className="text-[10px] font-mono text-[#888888] block">
                         {tx.truckPlate} {tx.driverName ? `- ${tx.driverName}` : ''}

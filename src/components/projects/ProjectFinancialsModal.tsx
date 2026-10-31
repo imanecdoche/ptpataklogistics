@@ -16,6 +16,7 @@ import { subscribeAllTransactions } from '@/lib/dispatcherService';
 import { formatRupiah } from '@/lib/currencyUtils';
 import { PricePerVolCell } from '@/components/ui/PricePerVolCell';
 import { formatDateID } from '@/lib/dateSearchUtils';
+import { formatVolumeDisplay } from '@/lib/volumeUtils';
 import { MetricCardCurrency } from '@/components/ui/MetricCardCurrency';
 import { RecordSubJobModal } from './RecordSubJobModal';
 import { RecordKasbonModal } from './RecordKasbonModal';
@@ -538,7 +539,7 @@ export function ProjectFinancialsModal({
                           </td>
                           <td className="py-2 px-3 whitespace-nowrap">
                             <span className="font-semibold block text-[#111111]">{tx.materialName}</span>
-                            <span className="text-[10px] text-[#666666] font-mono">{tx.quantity} {tx.unit}</span>
+                            <span className="text-[10px] text-[#666666] font-mono">{formatVolumeDisplay(tx.quantity, tx.unit)}</span>
                           </td>
                           <td className="py-2 px-3 text-[#666666] whitespace-nowrap">{tx.quarryName || '-'}</td>
                           <td className="py-2 px-3 text-right whitespace-nowrap">

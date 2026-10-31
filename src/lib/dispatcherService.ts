@@ -13,7 +13,7 @@ import {
   onSnapshot
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { MaterialItem, DispatchTransaction } from '@/types/database';
+import { MaterialItem, DispatchTransaction, UnitType } from '@/types/database';
 import { updateProjectBalance } from '@/lib/projectService';
 
 const DEFAULT_MATERIALS: (Omit<MaterialItem, 'id' | 'createdAt'> & { id: string })[] = [
@@ -108,7 +108,7 @@ export interface CreateDispatchPayload {
   investorName?: string;
   materialId: string;
   materialName: string;
-  unit: 'DT' | 'Ton';
+  unit: UnitType;
   quantity: number;
   buyPricePerUnit: number;
   sellPricePerUnit: number;
@@ -455,7 +455,7 @@ export interface UpdateDispatchPayload {
   projectName?: string;
   materialId: string;
   materialName: string;
-  unit: 'DT' | 'Ton';
+  unit: UnitType;
   quantity: number;
   buyPricePerUnit: number;
   sellPricePerUnit: number;

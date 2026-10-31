@@ -714,7 +714,7 @@ export function MasterMaterialPage({
                             )}
                           </td>
                           <td className="py-2.5 px-3 text-[#555555] whitespace-nowrap">
-                            {rate.unit === 'DT' ? 'DT (6 m³)' : 'Ton'}
+                            {rate.unit === 'DT' ? 'DT (6 m³)' : rate.unit || 'Ton'}
                           </td>
                           <td className="py-2.5 px-3 text-right font-bold tracking-tight text-[#111111] whitespace-nowrap">
                             {formatRupiah(rate.buyPriceCash)}
@@ -899,7 +899,7 @@ export function MasterMaterialPage({
                           {item.name}
                         </td>
                         <td className="py-2.5 px-3 text-[#555555] whitespace-nowrap">
-                          {item.unit === 'DT' ? 'DT (6 m³)' : 'Ton'}
+                          {item.unit === 'DT' ? 'DT (6 m³)' : item.unit || 'Ton'}
                         </td>
                         {!isDispatcherUser && (
                           <td className="py-2.5 px-3 text-right font-bold tracking-tight text-[#333333] whitespace-nowrap">
@@ -1030,25 +1030,19 @@ export function MasterMaterialPage({
               {/* Satuan Segmented Control (Custom UI) */}
               <div>
                 <label className="block text-[#666666] font-medium mb-1">Satuan Ukur</label>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setRateUnit('DT')}
-                    className={`flex-1 py-1.5 rounded-[6px] text-xs font-semibold transition-colors ${
-                      rateUnit === 'DT' ? 'bg-[#111111] text-white' : 'bg-[#f5f5f5] text-[#555555]'
-                    }`}
-                  >
-                    DT (Dump Truck 6 m³)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setRateUnit('Ton')}
-                    className={`flex-1 py-1.5 rounded-[6px] text-xs font-semibold transition-colors ${
-                      rateUnit === 'Ton' ? 'bg-[#111111] text-white' : 'bg-[#f5f5f5] text-[#555555]'
-                    }`}
-                  >
-                    Tonase (Timbangan)
-                  </button>
+                <div className="grid grid-cols-4 gap-1 p-1 bg-[#eeeeee] rounded-[8px]">
+                  {(['DT', 'Ton', 'Tonase', 'M3'] as const).map(u => (
+                    <button
+                      key={u}
+                      type="button"
+                      onClick={() => setRateUnit(u)}
+                      className={`py-1.5 text-xs font-semibold rounded-[6px] transition-colors cursor-pointer border-none ${
+                        rateUnit === u ? 'bg-[#111111] text-white shadow-sm' : 'bg-transparent text-[#555555] hover:text-[#111111]'
+                      }`}
+                    >
+                      {u}
+                    </button>
+                  ))}
                 </div>
               </div>
 
@@ -1306,25 +1300,19 @@ export function MasterMaterialPage({
 
               <div>
                 <label className="block text-[#666666] font-medium mb-1">Satuan Dasar</label>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setCommUnit('DT')}
-                    className={`flex-1 py-1.5 rounded-[6px] text-xs font-semibold transition-colors ${
-                      commUnit === 'DT' ? 'bg-[#111111] text-white' : 'bg-[#f5f5f5] text-[#555555]'
-                    }`}
-                  >
-                    DT (Dump Truck 6 m³)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setCommUnit('Ton')}
-                    className={`flex-1 py-1.5 rounded-[6px] text-xs font-semibold transition-colors ${
-                      commUnit === 'Ton' ? 'bg-[#111111] text-white' : 'bg-[#f5f5f5] text-[#555555]'
-                    }`}
-                  >
-                    Tonase (Timbangan)
-                  </button>
+                <div className="grid grid-cols-4 gap-1 p-1 bg-[#eeeeee] rounded-[8px]">
+                  {(['DT', 'Ton', 'Tonase', 'M3'] as const).map(u => (
+                    <button
+                      key={u}
+                      type="button"
+                      onClick={() => setCommUnit(u)}
+                      className={`py-1.5 text-xs font-semibold rounded-[6px] transition-colors cursor-pointer border-none ${
+                        commUnit === u ? 'bg-[#111111] text-white shadow-sm' : 'bg-transparent text-[#555555] hover:text-[#111111]'
+                      }`}
+                    >
+                      {u}
+                    </button>
+                  ))}
                 </div>
               </div>
 

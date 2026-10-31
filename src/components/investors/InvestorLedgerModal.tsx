@@ -3,6 +3,7 @@ import { Investor, Project, DispatchTransaction, InvestorPayout } from '@/types/
 import { CurrencyInput } from '@/components/ui/CurrencyInput';
 import { PricePerVolCell } from '@/components/ui/PricePerVolCell';
 import { formatDateID } from '@/lib/dateSearchUtils';
+import { formatVolumeDisplay } from '@/lib/volumeUtils';
 import { calculateInvestorFinancials } from '@/lib/investorFinanceUtils';
 import { formatPhoneNumber } from '@/lib/phoneUtils';
 import { X } from 'lucide-react';
@@ -356,7 +357,7 @@ export function InvestorLedgerModal({
                             </td>
                             <td className="py-2 px-2.5">
                               <span className="text-[#111111] block font-medium">{tx.materialName}</span>
-                              <span className="text-[10px] text-[#888888] block">{tx.quantity} {tx.unit}</span>
+                              <span className="text-[10px] text-[#888888] block">{formatVolumeDisplay(tx.quantity, tx.unit)}</span>
                             </td>
                             <td className="py-2 px-2.5 text-right">
                               <PricePerVolCell

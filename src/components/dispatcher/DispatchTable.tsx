@@ -9,6 +9,7 @@ import { TableActionMenu } from '@/components/ui/TableActionMenu';
 import { useProjectFilter } from '@/context/ProjectFilterContext';
 import { MetricCardCurrency } from '@/components/ui/MetricCardCurrency';
 import { formatDateID } from '@/lib/dateSearchUtils';
+import { formatVolumeDisplay } from '@/lib/volumeUtils';
 
 interface DispatchTableProps {
   transactions: DispatchTransaction[];
@@ -258,7 +259,7 @@ export function DispatchTable({
                         {tx.materialName}
                       </div>
                       <div className="text-[11px] text-[#666666] mt-0.5 whitespace-nowrap">
-                        <span className="font-bold tracking-tight text-[#111111]">{tx.quantity}</span> {tx.unit}
+                        <span className="font-bold tracking-tight text-[#111111]">{formatVolumeDisplay(tx.quantity)}</span> {tx.unit}
                       </div>
                     </td>
 

@@ -10,6 +10,7 @@ import {
 } from '@/lib/approvalService';
 import { formatRupiah } from '@/lib/currencyUtils';
 import { formatDateID } from '@/lib/dateSearchUtils';
+import { formatVolumeDisplay } from '@/lib/volumeUtils';
 import { X, Check, CheckCircle2, Loader2 } from 'lucide-react';
 
 interface ApprovalCenterModalProps {
@@ -267,7 +268,7 @@ export function ApprovalCenterModal({
                           <div>
                             <span className="text-[10px] text-[#777777] block">Material & Muatan</span>
                             <span className="font-medium text-[#111111]">
-                              {req.currentData.materialName} ({req.currentData.quantity} {req.currentData.unit})
+                              {req.currentData.materialName} ({formatVolumeDisplay(req.currentData.quantity, req.currentData.unit)})
                             </span>
                           </div>
                           <div>
@@ -300,6 +301,9 @@ export function ApprovalCenterModal({
                                     if (v === null || v === undefined || v === '') return '-';
                                     if (typeof v === 'number' && (key.toLowerCase().includes('price') || key.toLowerCase().includes('cost') || key.toLowerCase().includes('revenue'))) {
                                       return formatRupiah(v);
+                                    }
+                                    if (key === 'quantity' && typeof v === 'number') {
+                                      return formatVolumeDisplay(v);
                                     }
                                     if (typeof v === 'string' && key.toLowerCase().includes('date')) {
                                       return formatDateID(v);
