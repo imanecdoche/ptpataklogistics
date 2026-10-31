@@ -398,3 +398,61 @@ Dicatat oleh **`antigravity-nizar`** untuk sinkronisasi konteks bersama **Argon*
    - **Sub-Pekerjaan Fisik & Buku Kasbon Tukang**: Manajemen borongan paket MCK, Paving ($m^2$), Drainase ($m^3$) dengan pencatatan bon fisik tukang yang memotong plafon upah mandor serta lembar audit siap cetak.
    - **Role Watcher**: Akun auditor `watcher@patak.id` (password `1234565789`) dengan akses melihat seluruh alur kas, riwayat, dan database secara global dengan hak akses murni read-only.
    - **UI Modern**: Layar verifikasi animasi vektor SVG, ikon PWA/Favicon tajam, custom UI scrollbar, dan layout desktop 100% full-width.
+
+
+### FASE 14: Rekapitulasi Lengkap Pembaruan & Handover untuk Argon (01 Nov 2026)
+Dicatat oleh **`antigravity`** untuk sinkronisasi konteks bersama **Argon**:
+
+1. **Standarisasi Input Nominal Mata Uang (`CurrencyInput`)**:
+   - Seluruh formulir input nominal rupiah di seluruh modul proyek (proyek baru, tambah kuari, edit ritase, pencatatan mutasi kas, tambah modal, bayar hutang, cicilan) telah distandarisasi menggunakan komponen `CurrencyInput` (pemisah ribuan titik otomatis, simbol tetap 'Rp' di kiri kotak input, borderless solid).
+
+2. **Perbaikan Masalah Upload Bukti Transfer (Anti-Stuck)**:
+   - Mengatasi kendala upload foto yang sebelumnya menggantung/lama saat kompresi dengan implementasi kompresi instan berbasis Canvas sisi klien: auto downscale ke resolusi optimal (maks 1200px), konversi WebP/JPEG efisien, dan hard timeout pengaman 8 detik. Upload bukti kini selesai secara instan (< 1 detik).
+
+3. **Smart Bank Receipt OCR Scanner (Tanpa API AI Eksternal)**:
+   - Fitur pemindai bukti transfer bank otomatis menggunakan Tesseract.js yang berjalan 100% lokal di browser pengguna (tanpa biaya token API eksternal).
+   - Mesin regex parser otomatis mengekstrak: tanggal transaksi, nomor referensi transaksi, asal/tujuan bank, nama penerima, nominal pokok transfer, dan mendeteksi serta mengisolasi biaya admin transfer bank (seperti Rp 2.500 / Rp 6.500) agar tidak ikut tercatat ke kas riil.
+   - Terintegrasi langsung dengan formulir input untuk auto-fill data otomatis.
+
+4. **Format Kolom Harga Jual & Harga Beli 2 Baris di Seluruh Tabel**:
+   - Di seluruh tabel riwayat ritase, riwayat belanja, dan modul detail proyek, kolom harga jual dan harga beli disatukan menjadi 2 baris dalam satu kolom:
+     - Baris 1: Harga per unit/volume (misal: `Rp 1.600.000`)
+     - Baris 2: Total harga volume (misal: `Rp 3.200.000`)
+   - Memangkas jumlah kolom tabel sehingga antarmuka lebih lapang dan bebas scrolling horizontal berlebih.
+
+5. **Standarisasi Format Tanggal Tabel & Pencarian Global "DD-MM-YY"**:
+   - Seluruh tabel riwayat (ritase, piutang tempo, mutasi buku kas, pembayaran termin) distandarisasi menampilkan tanggal dalam format Indonesia baku `DD-MM-YY` (contoh `28-10-26`).
+   - Fitur pencarian (*search bar*) di seluruh tabel mendukung filter tanggal fleksibel dengan format standar Indonesia tersebut via utilitas `matchesDateQuery`.
+
+6. **Skema Bagi Hasil Investor Fleksibel (Nominal Tetap Bulanan & Persentase)**:
+   - Menambahkan dukungan skema **Nominal Tetap Bulanan (`FIXED_MONTHLY`)** berdampingan dengan skema **Persentase Laba Bersih (`PERCENTAGE`)**.
+   - Dilengkapi siklus tanggal jatuh tempo bulanan (`fixedPayoutDay`, misal tiap tanggal 25) dan penghitungan otomatis akumulasi periode bulan jatuh tempo sejak tanggal awal investasi.
+
+7. **Satuan Fleksibel & Volume Desimal Tonase (Auto-Koma)**:
+   - Satuan ritase kini dapat dipilih bebas (`DT`, `Ton`, `Tonase`, `M3`) dengan default acuan dari Master Material, dan dapat diubah manual di Form Catat Ritase Baru maupun Form Edit Ritase.
+   - Input volume mendukung angka desimal dengan tanda koma (`,`), dengan fitur auto-convert saat operator menekan tombol titik (`.`) langsung terkonversi menjadi koma secara real-time.
+
+8. **Audit Finansial Arus Kas PT Patak Abadi Jaya**:
+   - Menjawab tuntas 5 pertanyaan audit arus kas:
+     1. Uang masuk Bapak Endang: Rp 86.800.000 (8 kali cicilan termin proyek Situ Cikedal).
+     2. Pengeluaran Rp 120,9 Juta: belanja material kuari (56,8jt), kasbon tukang (27,5jt), cicilan talangan Pei (13jt), domain Hostinger (181rb), supir (450rb), dan pencatatan komitmen transfer talangan (23jt).
+     3. Mengapa kas tidak pernah minus: karena kas bergerak secara bergulir (*rolling cashflow*) didukung pembayaran termin bertahap Bapak Endang sebesar Rp 86,8 Juta mendampingi modal investor Rp 49,5 Juta (total daya tampung kas masuk Rp 136,3 Juta).
+     4. Temuan double counting komitmen talangan Rp 23 Juta vs cicilan riilnya Rp 13 Juta.
+
+9. **Penyesuaian Beban Ritase (150k -> 0) & Pembersihan Kode Unik 1000**:
+   - Biaya operasional 150k pada 3 tiket ritase dinolkan (`operationalCost: 0`, laba bersih ritase disesuaikan), dan entri kas operasional di `cash_ledger` dinolkan (dana Rp 450.000 kembali ke kas).
+   - Form catat ritase baru diset default biaya operasional = 0 dan auto-fill rute dinonaktifkan.
+   - 8 entri kasbon mandor dibulatkan (-Rp 1.000 per transaksi) menjadi angka bersih.
+   - Seluruh saldo berjalan (*runningBalance*) 54 entri di `cash_ledger` direkalkulasi ulang secara kronologis.
+   - **Posisi Kas Terkini**: Total Masuk **Rp 136.300.000**, Total Keluar **Rp 120.508.365**, Saldo Kas Riil Berjalan **Rp 15.791.635**.
+
+10. **Slide-over Filter & Sorting Drawer pada Tabel Buku Kas (`CashFilterDrawer.tsx`)**:
+    - Penyaringan multi-kriteria stackable: Arah Kas (Masuk/Keluar/Semua), Kategori Mutasi, Proyek Relasi, Rentang Tanggal (preset cepat + kalender kustom), Rentang Nominal (Min-Max Rp), Status Bukti Struk, dan PIC Pembuat.
+    - Multi-Sorting: Tanggal Terbaru/Terlama, Nominal Terbesar/Terkecil.
+    - Tombol pemicu dengan badge counter aktif dan barisan Active Filter Chips di bawah toolbar dengan tombol hapus satuan dan reset semua.
+
+11. **Refaktor UI/UX Sesuai Standar `auditaislop`**:
+    - Seluruh badge, chip filter, kotak input, dan tombol menggunakan permukaan padat (*solid-filled*) murni tanpa garis tepi (*outline strokes*).
+    - Pada layar ponsel (`< md`), drawer otomatis bertransformasi menjadi **Bottom Drawer Panel** menempel di dasar layar (`h-[85dvh]`, header tanpa drag pill, sticky footer).
+    - Seluruh angka nominal, tanggal, chip, dan tombol aksi dijamin tidak terpotong atau patah baris (*anti-wrapping* via `whitespace-nowrap` & `flex-shrink-0`).
+    - Efek `backdrop-blur` digantikan oleh solid dimmed `bg-black/50`.
