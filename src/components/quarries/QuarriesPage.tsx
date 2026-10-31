@@ -251,7 +251,6 @@ export function QuarriesPage({ userEmail: _userEmail }: QuarriesPageProps): Reac
                   <tr key={q.id} className="hover:bg-[#fafafa] transition-colors">
                     <td className="py-2.5 px-3 whitespace-nowrap w-[240px] align-middle">
                       <span className="font-bold text-[#111111] block truncate">{q.name}</span>
-                      <span className="text-[10px] font-mono text-[#888888] block">{q.id}</span>
                     </td>
                     <td className="py-2.5 px-3 text-[#444444] whitespace-nowrap w-[200px] align-middle">
                       <RunningText text={q.location} placeholder="-" className="text-[#444444]" />
@@ -300,20 +299,31 @@ export function QuarriesPage({ userEmail: _userEmail }: QuarriesPageProps): Reac
 
       {/* Modal Tambah Kuari Baru */}
       {isAddOpen && (
-        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
-          <div className="bg-white rounded-[10px] w-full max-w-lg p-5 space-y-4 shadow-xl">
-            <div className="flex items-center justify-between pb-3 border-b border-[#eaeaea]">
-              <h3 className="text-sm font-bold text-[#111111]">Tambah Kuari / Suplier Baru</h3>
+        <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4 select-none">
+          <div 
+            className="fixed inset-0 bg-black/50 transition-opacity" 
+            onClick={() => setIsAddOpen(false)} 
+          />
+          
+          <div className="relative w-full md:max-w-lg bg-white rounded-t-[20px] md:rounded-[12px] max-h-[92vh] md:max-h-[90vh] flex flex-col overflow-hidden z-10 shadow-2xl animate-in slide-in-from-bottom duration-300 ease-out select-text">
+            <div className="px-5 py-3.5 border-b border-[#eaeaea] flex items-center justify-between flex-shrink-0 bg-white">
+              <div className="w-full text-center md:text-left">
+                <h3 className="text-sm font-bold text-[#111111]">Tambah Kuari / Suplier Baru</h3>
+                <p className="text-[11px] text-[#666666] mt-0.5">
+                  Daftarkan entitas sumber tambang dan titik muat material
+                </p>
+              </div>
               <button
                 type="button"
                 onClick={() => setIsAddOpen(false)}
-                className="text-[#888888] hover:text-[#111111] text-sm"
+                className="hidden md:flex text-[#888888] hover:text-[#111111] text-base p-1 cursor-pointer border-none bg-transparent"
               >
                 ✕
               </button>
             </div>
 
-            <form onSubmit={handleInitiateAdd} className="space-y-3 text-xs">
+            <form onSubmit={handleInitiateAdd} className="flex flex-col flex-1 overflow-hidden">
+              <div className="p-5 space-y-3.5 text-xs overflow-y-auto flex-1 overscroll-contain">
               <div>
                 <label className="block text-[#666666] font-medium mb-1">
                   Nama PT / Kuari Tambang <span className="text-red-500">*</span>
@@ -359,18 +369,20 @@ export function QuarriesPage({ userEmail: _userEmail }: QuarriesPageProps): Reac
                   />
                 </div>
               </div>
+              </div>
 
-              <div className="pt-3 border-t border-[#eaeaea] flex items-center justify-end gap-2">
+              {/* Sticky Bottom Actions */}
+              <div className="p-4 bg-white border-t border-[#eaeaea] sticky bottom-0 flex-shrink-0 flex items-center justify-end gap-3 z-10">
                 <button
                   type="button"
                   onClick={() => setIsAddOpen(false)}
-                  className="px-3 py-1.5 text-xs text-[#666666] bg-white border border-[#eaeaea] rounded-[6px] hover:bg-[#f5f5f5]"
+                  className="flex-1 md:flex-none px-4 py-2.5 md:py-2 text-xs font-semibold text-[#666666] bg-white border border-[#eaeaea] rounded-[8px] hover:bg-[#f5f5f5] cursor-pointer"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="px-3 py-1.5 text-xs font-semibold text-white bg-[#111111] hover:bg-[#2b2b2b] rounded-[6px]"
+                  className="flex-1 md:flex-none px-5 py-2.5 md:py-2 text-xs font-semibold text-white bg-[#111111] hover:bg-[#2b2b2b] rounded-[8px] cursor-pointer border-none shadow-sm"
                 >
                   Lanjut Otorisasi
                 </button>
@@ -382,20 +394,31 @@ export function QuarriesPage({ userEmail: _userEmail }: QuarriesPageProps): Reac
 
       {/* Modal Edit Kuari */}
       {editTarget && (
-        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
-          <div className="bg-white rounded-[10px] w-full max-w-lg p-5 space-y-4 shadow-xl">
-            <div className="flex items-center justify-between pb-3 border-b border-[#eaeaea]">
-              <h3 className="text-sm font-bold text-[#111111]">Edit Kuari ({editTarget.id})</h3>
+        <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4 select-none">
+          <div 
+            className="fixed inset-0 bg-black/50 transition-opacity" 
+            onClick={() => setEditTarget(null)} 
+          />
+          
+          <div className="relative w-full md:max-w-lg bg-white rounded-t-[20px] md:rounded-[12px] max-h-[92vh] md:max-h-[90vh] flex flex-col overflow-hidden z-10 shadow-2xl animate-in slide-in-from-bottom duration-300 ease-out select-text">
+            <div className="px-5 py-3.5 border-b border-[#eaeaea] flex items-center justify-between flex-shrink-0 bg-white">
+              <div className="w-full text-center md:text-left">
+                <h3 className="text-sm font-bold text-[#111111]">Edit Kuari: {editTarget.name}</h3>
+                <p className="text-[11px] text-[#666666] mt-0.5">
+                  Perbarui identitas tambang, lokasi muat, dan narahubung
+                </p>
+              </div>
               <button
                 type="button"
                 onClick={() => setEditTarget(null)}
-                className="text-[#888888] hover:text-[#111111] text-sm"
+                className="hidden md:flex text-[#888888] hover:text-[#111111] text-base p-1 cursor-pointer border-none bg-transparent"
               >
                 ✕
               </button>
             </div>
 
-            <form onSubmit={handleInitiateEdit} className="space-y-3 text-xs">
+            <form onSubmit={handleInitiateEdit} className="flex flex-col flex-1 overflow-hidden">
+              <div className="p-5 space-y-3.5 text-xs overflow-y-auto flex-1 overscroll-contain">
               <div>
                 <label className="block text-[#666666] font-medium mb-1">Nama PT / Kuari Tambang</label>
                 <input
@@ -436,18 +459,20 @@ export function QuarriesPage({ userEmail: _userEmail }: QuarriesPageProps): Reac
                   />
                 </div>
               </div>
+              </div>
 
-              <div className="pt-3 border-t border-[#eaeaea] flex items-center justify-end gap-2">
+              {/* Sticky Bottom Actions */}
+              <div className="p-4 bg-white border-t border-[#eaeaea] sticky bottom-0 flex-shrink-0 flex items-center justify-end gap-3 z-10">
                 <button
                   type="button"
                   onClick={() => setEditTarget(null)}
-                  className="px-3 py-1.5 text-xs text-[#666666] bg-white border border-[#eaeaea] rounded-[6px] hover:bg-[#f5f5f5]"
+                  className="flex-1 md:flex-none px-4 py-2.5 md:py-2 text-xs font-semibold text-[#666666] bg-white border border-[#eaeaea] rounded-[8px] hover:bg-[#f5f5f5] cursor-pointer"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="px-3 py-1.5 text-xs font-semibold text-white bg-[#111111] hover:bg-[#2b2b2b] rounded-[6px]"
+                  className="flex-1 md:flex-none px-5 py-2.5 md:py-2 text-xs font-semibold text-white bg-[#111111] hover:bg-[#2b2b2b] rounded-[8px] cursor-pointer border-none shadow-sm"
                 >
                   Simpan Perubahan
                 </button>

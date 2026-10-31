@@ -1313,4 +1313,87 @@ Dokumen ini adalah hukum tertinggi operasional sistem. Kegagalan mematuhi aturan
     - **Pemasangan Mandiri (Native Install Standard)**:
       * Menghindari penambahan tombol install kustom yang memadati antarmuka pengguna (sesuai aturan `ai-anti-patterns.md`), sepenuhnya mengandalkan pemicu instalasi natif dari browser (Chrome/Edge/Safari).
 
+111. **Standar Transformasi Modal Pop-up ke Bottom Sheet Drawer Layar Mobile**:
+    - **Target & Breakpoint Responsif**:
+      * Pada perangkat bergerak / mobile (`< md` atau screen width < 768px), seluruh modal pop-up wajib bertransformasi 100% menjadi panel laci bawah (*bottom sheet drawer*) yang meluncur dari dasar layar (`animate-in slide-in-from-bottom duration-300 ease-out`).
+      * Pada desktop (`md:`), modal tetap ditampilkan sebagai kartu dialog tengah (*centered modal dialog card*) yang rapi dan proporsional (`md:items-center md:rounded-[12px] md:max-w-xl md:max-h-[90vh]`).
+    - **Dimensi Tinggi & Celah Backdrop (Dismiss Tap)**:
+      * Tinggi drawer mobile bersifat adaptif sesuai konten dengan batas maksimal 92% viewport height (`max-h-[92vh] rounded-t-[20px]`).
+      * Menyisakan celah visual ~8vh di bagian atas layar agar pengguna dapat langsung menyentuh area backdrop gelap (`bg-black/50 transition-opacity`) untuk menutup drawer secara instan tanpa harus menggulir form.
+    - **Tata Letak Header & Penutupan Bersih**:
+      * Header drawer mobile dibuat rapi dengan judul dan deskripsi rata tengah (`w-full text-center md:text-left`) guna menghadirkan estetika mobile natif yang simetris.
+      * Tombol silang penutup ('✕') disembunyikan pada layar mobile (`hidden md:flex`) demi kebersihan visual, mengandalkan sentuhan pada celah backdrop atau tombol aksi bawah.
+    - **Bilah Aksi Tempel Bawah (Sticky Bottom Action Bar)**:
+      * Tombol aksi formulir ("Batal / Tutup" dan "Simpan / Konfirmasi") wajib ditempelkan di bagian dasar panel (*sticky bottom*) dengan pembatas border tipis (`sticky bottom-0 bg-white border-t border-[#eaeaea] p-4 flex gap-3 z-10`).
+      * Pada mobile, tombol aksi otomatis melebar setara (`flex-1 md:flex-none py-2.5 md:py-2 text-center rounded-[8px]`) agar nyaman dijangkau oleh ibu jari operator lapangan (*thumb zone friendly*).
+    - **Kontainer Konten & Scroll**:
+      * Kontainer form membungkus area input dengan `flex flex-col flex-1 overflow-hidden`, di mana area isian formulir memakai `overflow-y-auto flex-1 overscroll-contain` untuk memastikan scroll berjalan halus tanpa *body-scroll bleed*.
+
+112. **Larangan Penampilan Kolom Kode Unik / ID Teknis Database di Tabel & Header UI**:
+    - **Pemberian Ruang Lebar untuk Nama Entitas Bisnis**:
+      * Dilarang menampilkan kolom atau sel tabel khusus untuk "Kode Unik", nomor urut buatan (`MAT-01`, `MAT-BATU-AGREGAT`), atau ID internal database (`{tr.id}`, `{investor.id}`) pada seluruh antarmuka publik/operasional.
+      * Seluruh ruang lebar kolom wajib dialokasikan secara proporsional kepada **Nama Entitas Asli** (seperti Nama Komoditas, Nama Kuari, Nama Proyek, atau Nama Mitra) dengan bantalan teks (*padding*) dan pembungkus kata (*whitespace/truncate*) yang aman agar teks tidak saling menabrak di layar ponsel pintar.
+    - **Perbedaan Tegas dengan Dokumen Fisik Operasional**:
+      * Larangan ini **TIDAK BERLAKU** untuk nomor dokumen operasional nyata yang dicetak atau dipegang secara fisik oleh personil lapangan, yaitu: **No. Tiket Ritase** (contoh: `TKT-20261028-001`), **No. Surat Jalan Kuari/Proyek**, dan **Nomor Plat Truk (TNKB)**. Nomor-nomor fisik ini adalah instrumen rekonsiliasi wajib dan tetap ditampilkan secara jelas.
+    - **Judul Formulir & Modal yang Bersih dan Manusiawi**:
+      * Judul modal edit entitas dilarang mencantumkan kode id teknis dalam tanda kurung (misalnya `Edit Investor (inv-xxx)` atau `Edit Kuari (qry-xxx)`).
+      * Judul modal wajib mencantumkan nama entitas yang sedang disunting secara bersih dan manusiawi (contoh: `Edit Investor: [Nama Investor]` atau `Edit Kuari: [Nama Kuari]`).
+
+113. **Penyederhanaan Segmented Control Master Material & Dynamic Entity Resolution Armada**:
+    - **Peniadaan Segmented Button "Biaya Jalan Rute" pada Master Material**:
+      * Pada halaman Master Material (`MasterMaterialPage`), sub-tab navigasi (segmented button) disederhanakan murni untuk manajemen komoditas (`Katalog Komoditas` dan `Harga & Mutu Kuari`), menghapus tombol segmented "BIAYA JALAN RUTE" agar fokus halaman tetap konsisten pada katalog material dan harga tebus kuari.
+      * Sub-tab navigasi sidebar (`Sidebar.tsx`) di bawah modul Master Material diselaraskan secara konsisten (`catalog` dan `pricing`).
+    - **Resolusi Entitas Armada Terintegrasi (Anti-False Orphan Warning)**:
+      * Pemetaan entitas armada (`vehiclesMap`) untuk pengecekan referensi transaksi pada tabel ritase (`DatabasePage.tsx`) wajib mencakup seluruh armada gabungan (`combinedVehicles` yang menggabungkan armada master tersimpan dan seluruh riwayat transaksi aktif), bukan hanya koleksi master statis.
+      * Mencegah munculnya ikon peringatan segitiga merah (*orphan warning triangle*) di samping nomor plat operasional (seperti `B 5000 CAA`) yang sudah aktif dan tercatat secara valid di dalam riwayat database operasional.
+
+114. **Standar Pelabelan Tanggal Operasional Ritase (Tanggal Jalan) & Tata Letak Form**:
+    - **Penamaan Baku Input Tanggal Pengiriman**:
+      * Seluruh label input pengisian tanggal pengiriman ritase pada formulir dispatcher (`DispatchForm.tsx`) dan modal penyesuaian ritase (`EditDispatchModal.tsx`) WAJIB menggunakan penamaan ringkas, lugas, dan padat: **`Tanggal Jalan`** (menggantikan format lama yang redundan seperti `Tanggal Ritase (Jalan)` atau `Tanggal Ritase / Jalan`).
+    - **Tata Letak Bersih & Pemindahan Counter Ritase**:
+      * Label "Tanggal Jalan" berdiri sendiri secara bersih di atas komponen pemilih tanggal (*date picker*).
+      * Indikator penghitung ritase ("Tercatat X ritase pada tanggal ini") wajib diletakkan di **baris bawah komponen date picker** (`mt-1.5`) agar tidak berhimpitan dengan label di layar ponsel pintar.
+      * Menghapus deskripsi bantuan redundan ("Tanggal armada beroperasi/jalan...") di bawah date picker guna memaksimalkan kerapian dan ruang vertikal form mobile.
+
+115. **Standar Penyederhanaan Label Penetapan Harga & Beban Operasional**:
+    - **Penyederhanaan Label Penetapan Harga**:
+      * Pada formulir ritase (`DispatchForm.tsx`) dan modal penyesuaian ritase (`EditDispatchModal.tsx`), label harga wajib disederhanakan murni menjadi **`Harga Beli ({unit})`** dan **`Harga Jual ({unit}) *`** tanpa embel-embel metode pembayaran seperti `(Cash)` atau `(Tempo)`.
+    - **Penyederhanaan Label Beban Operasional**:
+      * Label input biaya jalan dan operasional wajib disederhanakan murni menjadi **`Beban Operasional & HOK`** tanpa daftar panjang dalam tanda kurung seperti `(Uang Jalan / Supir / Solar)`.
+      * Judul seksi pembungkus tetap baku: **`Penetapan Harga & HOK`**.
+
+116. **Pemisahan Tampilan Volume Satuan Ritase (DT & Ton)**:
+    - **Pemisahan Metrik DT dan Ton pada Kartu Dashboard**:
+      * Pada kartu metrik dashboard operasional (`DashboardPage.tsx`), rincian volume ritase wajib dipisah secara tegas per satuan: **`Volume: n DT | n Ton`**.
+      * Volume dengan satuan DT selalu dibulatkan ke bilangan bulat tanpa koma/desimal (`Math.round(totalVolumeDt)`).
+      * Volume dengan satuan Ton menampilkan angka riil dengan maksimal 1 angka di belakang koma desimal jika ada pecahan, atau bilangan bulat jika bulat.
+
+117. **Pembaruan Navigasi Menu & Ikon Mandiri Riwayat Ritase**:
+    - **Struktur Menu Mandiri Non-Collapsible**:
+      * Menu "Dispatcher" dan "Riwayat Ritase" pada bilah navigasi (`Sidebar.tsx`) berdiri sendiri sebagai menu mandiri tingkat atas tanpa sub-menu atau accordion toggle panah bawah.
+      * Urutan tab "Kas & Piutang Tempo" (`cash_ledger`) diposisikan tepat di bawah tab Dashboard pada bilah samping navigasi.
+    - **Ikon Mandiri Riwayat Ritase**:
+      * Menu "Riwayat Ritase" menggunakan ikon grafis mandiri bertema struk/tiket jalan (`/icons/ritase.png`), memberikan diferensiasi visual yang jelas dari menu Dispatcher (`/icons/truck.png`).
+
+118. **Penghapusan Teks ID Teknis Database pada Kartu Master**:
+    - **Kebersihan Teks Identitas Bisnis**:
+      * Pada modul Master Proyek (`ProjectsPage.tsx`), Master Kuari (`QuarriesPage.tsx`), dan Master Investor (`InvestorsPage.tsx`), teks kecil ID database (`prj-...`, `qry-...`, `inv-...`) di bawah nama entitas dilarang ditampilkan guna menjaga kebersihan visual antarmuka pengguna sesuai prinsip *breathing space*.
+
+119. **Standar Format Ringkas Mata Uang Akhiran 'K' (Adaptive Overflow Suffix)**:
+    - **Penyingkatan Otomatis Saat Overflow**:
+      * Pada komponen nominal uang (terutama `<MetricCardCurrency />` pada kartu metrik/KPI dan kolom ringkasan yang rawan overflow teks), jika nominal angka terlalu panjang dan ruang wadah sempit/terpotong, nilai otomatis diringkas dengan memotong 3 digit nol terakhir dan diberi akhiran `K` (contoh: Rp 1.000.000.000 menjadi Rp 1.000.000K).
+      * Simbol mata uang "Rp" tetap disertakan secara rapi dan semi-transparan sesuai Rule 99.
+      * Dilengkapi atribut `title` dengan teks nominal lengkap tanpa singkatan agar pengguna dapat melihat angka eksak sewaktu-waktu melalui tooltip hover atau tap.
+
+120. **Standar Desain Boxless Formulir Ritase & Kontras Latar Workspace (#ededed)**:
+    - **Peniadaan Parent Container Box pada Form Ritase**:
+      * Formulir pencatatan ritase (`DispatchForm.tsx`) dibuat sepenuhnya *boxless* tanpa wadah pembungkus (`bg-[#f5f5f5] rounded-[10px] p-4 md:p-6` dihilangkan) agar tata letak formulir terasa lapang, leluasa, dan tidak terkungkung kotak.
+      * Judul desktop formulir ("Catat Ritase Baru") dipertahankan sebagai teks heading flat yang bersih tanpa garis pembatas bawah (*borderless header*).
+      * Kotak ringkasan kalkulasi finansial di bagian bawah diformat sebagai kartu putih solid bersih (`bg-white rounded-[8px] border border-[#dcdcdc] p-3.5`).
+    - **Standardisasi Warna Latar Workspace Global**:
+      * Latar belakang kanvas workspace aplikasi global (`AppShell.tsx`) distandarisasi menggunakan warna netral sejuk **`bg-[#ededed]`** (menggantikan latar lama yang terlalu terang `#fafafa`), sehingga seluruh isian formulir input putih (`bg-white`) tampak kontras, tegas, dan tidak tenggelam.
+
+
+
+
 

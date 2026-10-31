@@ -8,6 +8,7 @@ import { useProjectFilter } from '@/context/ProjectFilterContext';
 export type NavigationTab =
   | 'dashboard'
   | 'dispatcher'
+  | 'ritase'
   | 'projects'
   | 'investors'
   | 'quarries'
@@ -37,9 +38,19 @@ const MENU_ITEMS: SidebarItem[] = [
     iconSrc: '/icons/dashboard.png'
   },
   {
+    id: 'cash_ledger',
+    label: 'Kas & Piutang Tempo',
+    iconSrc: '/icons/wallet.png'
+  },
+  {
     id: 'dispatcher',
-    label: 'Dispatcher & Ritase',
+    label: 'Dispatcher',
     iconSrc: '/icons/truck.png'
+  },
+  {
+    id: 'ritase',
+    label: 'Riwayat Ritase',
+    iconSrc: '/icons/ritase.png'
   },
   {
     id: 'projects',
@@ -65,11 +76,6 @@ const MENU_ITEMS: SidebarItem[] = [
     id: 'materials',
     label: 'Master Material',
     iconSrc: '/icons/layers.png'
-  },
-  {
-    id: 'cash_ledger',
-    label: 'Kas & Piutang Tempo',
-    iconSrc: '/icons/wallet.png'
   },
   {
     id: 'hok_labor',
@@ -98,18 +104,15 @@ export const SUB_MENU_ITEMS: Record<NavigationTab, SubTabItem[]> = {
     { id: 'overview', label: 'Ringkasan Utama' },
     { id: 'activity', label: 'Aktivitas Terkini' }
   ],
-  dispatcher: [
-    { id: 'new_ticket', label: 'Catat Ritase Baru' },
-    { id: 'history', label: 'Riwayat Ritase Armada' }
-  ],
+  dispatcher: [],
+  ritase: [],
   projects: [],
   investors: [],
   quarries: [],
   clients: [],
   materials: [
     { id: 'catalog', label: 'Katalog Komoditas' },
-    { id: 'pricing', label: 'Harga & Mutu Kuari' },
-    { id: 'routes', label: 'Biaya Jalan Rute' }
+    { id: 'pricing', label: 'Harga & Mutu Kuari' }
   ],
   cash_ledger: [
     { id: 'cash_flow', label: 'Arus Kas Riil' },
@@ -315,7 +318,7 @@ export function Sidebar({
           if (isInvestorUser && !['dashboard', 'projects', 'investors'].includes(item.id)) {
             return null;
           }
-          if (isDispatcherUser && !['dispatcher', 'projects', 'quarries', 'clients', 'materials', 'database', 'recap'].includes(item.id)) {
+          if (isDispatcherUser && !['dispatcher', 'ritase', 'projects', 'quarries', 'clients', 'materials', 'database', 'recap'].includes(item.id)) {
             return null;
           }
 

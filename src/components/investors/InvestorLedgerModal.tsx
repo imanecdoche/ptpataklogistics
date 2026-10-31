@@ -117,16 +117,20 @@ export function InvestorLedgerModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200">
-      <div className="bg-white rounded-[12px] w-full max-w-4xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4 select-none">
+      <div 
+        className="fixed inset-0 bg-black/50 transition-opacity" 
+        onClick={onClose} 
+      />
+      
+      <div className="relative w-full md:max-w-4xl bg-white rounded-t-[20px] md:rounded-[12px] max-h-[92vh] md:max-h-[90vh] flex flex-col overflow-hidden z-10 shadow-2xl animate-in slide-in-from-bottom duration-300 ease-out select-text">
         {/* Header Modal */}
-        <div className="p-4 sm:p-5 border-b border-[#eaeaea] flex items-center justify-between bg-[#fafafa]">
-          <div>
-            <div className="flex items-center gap-2">
+        <div className="p-4 sm:p-5 border-b border-[#eaeaea] flex items-center justify-between bg-[#fafafa] flex-shrink-0">
+          <div className="w-full text-center md:text-left">
+            <div className="flex items-center justify-center md:justify-start gap-2">
               <span className="text-[10px] font-semibold bg-[#111111] text-white px-2 py-0.5 rounded">
                 KARTU REKAP PEMODAL
               </span>
-              <span className="text-[11px] font-mono text-[#888888]">{investor.id}</span>
             </div>
             <h2 className="text-base sm:text-lg font-bold text-[#111111] mt-1">
               Buku Kas & Rekap Ekuitas: {investor.name}
@@ -138,7 +142,7 @@ export function InvestorLedgerModal({
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-full flex items-center justify-center text-[#888888] hover:text-[#111111] hover:bg-[#eaeaea] transition-colors cursor-pointer text-lg"
+            className="hidden md:flex w-8 h-8 rounded-full items-center justify-center text-[#888888] hover:text-[#111111] hover:bg-[#eaeaea] transition-colors cursor-pointer text-lg flex-shrink-0"
           >
             ✕
           </button>
@@ -498,6 +502,17 @@ export function InvestorLedgerModal({
               </div>
             </div>
           )}
+        </div>
+
+        {/* Sticky Mobile Close Bar */}
+        <div className="p-4 bg-white border-t border-[#eaeaea] sticky bottom-0 flex-shrink-0 flex items-center justify-end z-10 md:hidden">
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-full py-2.5 text-xs font-semibold text-[#111111] bg-[#f5f5f5] hover:bg-[#eaeaea] rounded-[8px] transition-colors border border-[#e0e0e0] text-center cursor-pointer"
+          >
+            Tutup Rekap Investor
+          </button>
         </div>
       </div>
     </div>

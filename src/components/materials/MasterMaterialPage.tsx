@@ -623,17 +623,6 @@ export function MasterMaterialPage({
               Harga & Mutu Kuari
             </button>
           )}
-          <button
-            type="button"
-            onClick={() => handleSubTabChange('routes')}
-            className={`px-3.5 py-1.5 text-xs font-semibold rounded-[6px] transition-colors ${
-              currentSubTab === 'routes'
-                ? 'bg-[#111111] text-white'
-                : 'text-[#666666] hover:text-[#111111] hover:bg-[#ebebeb]'
-            }`}
-          >
-            Biaya Jalan Rute
-          </button>
         </div>
 
         {/* Global Search Bar per sub-tab (Rule 98: Universal Search Icon) */}
@@ -863,7 +852,7 @@ export function MasterMaterialPage({
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-[#666666]">
-              Daftar Komoditas Material Terdaftar ({filteredCommodities.length} Jenis)
+              Material Terdaftar
             </span>
             <button
               type="button"
@@ -880,35 +869,31 @@ export function MasterMaterialPage({
               <table className="w-full table-fixed text-left text-xs border-collapse min-w-[700px]">
                 <thead className="sticky top-0 bg-[#f9f9f9] border-b border-[#eaeaea] text-[11px] font-semibold text-[#555555] uppercase tracking-wider select-none z-10">
                   <tr>
-                    <th className="py-2.5 px-3 w-[18%]">Kode Unik</th>
-                    <th className="py-2.5 px-3 w-[32%]">Nama Komoditas</th>
-                    <th className="py-2.5 px-3 w-[14%]">Satuan Acuan</th>
+                    <th className={`py-2.5 px-3 ${isDispatcherUser ? 'w-[50%]' : 'w-[28%]'}`}>Jenis</th>
+                    <th className="py-2.5 px-3 w-[14%]">Satuan</th>
                     {!isDispatcherUser && (
-                      <th className="py-2.5 px-3 w-[18%] text-right">Harga Beli Dasar</th>
+                      <th className="py-2.5 px-3 w-[26%] text-right">Harga Beli</th>
                     )}
-                    <th className={`py-2.5 px-3 ${isDispatcherUser ? 'w-[28%]' : 'w-[18%]'} text-right`}>Harga Jual Dasar</th>
+                    <th className={`py-2.5 px-3 ${isDispatcherUser ? 'w-[35%]' : 'w-[26%]'} text-right`}>Harga Jual</th>
                     <th className="py-2.5 px-3 w-[60px] text-right">Aksi</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#eaeaea]">
                   {isLoading ? (
                     <tr>
-                      <td colSpan={isDispatcherUser ? 5 : 6} className="py-10 text-center text-xs text-[#888888] whitespace-nowrap">
+                      <td colSpan={isDispatcherUser ? 4 : 5} className="py-10 text-center text-xs text-[#888888] whitespace-nowrap">
                         Memuat data komoditas material...
                       </td>
                     </tr>
                   ) : filteredCommodities.length === 0 ? (
                     <tr>
-                      <td colSpan={isDispatcherUser ? 5 : 6} className="py-10 text-center text-xs text-[#888888] whitespace-nowrap">
+                      <td colSpan={isDispatcherUser ? 4 : 5} className="py-10 text-center text-xs text-[#888888] whitespace-nowrap">
                         Belum ada komoditas material. Klik "+ Komoditas Baru" untuk menambahkan.
                       </td>
                     </tr>
                   ) : (
-                    filteredCommodities.map((item, idx) => (
+                    filteredCommodities.map((item) => (
                       <tr key={item.id} className="hover:bg-[#fafafa] transition-colors">
-                        <td className="py-2.5 px-3 font-mono font-semibold text-[#555555] whitespace-nowrap">
-                          {item.id.startsWith('mat-') ? item.id.toUpperCase() : `MAT-${String(idx + 1).padStart(2, '0')}`}
-                        </td>
                         <td className="py-2.5 px-3 font-semibold text-[#111111] truncate">
                           {item.name}
                         </td>
@@ -952,22 +937,33 @@ export function MasterMaterialPage({
 
       {/* MODAL 1: TAMBAH / EDIT HARGA & MUTU KUARI (CUSTOM UI ONLY PER RULE 87) */}
       {isRateModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
-          <div className="w-full max-w-md bg-white rounded-[12px] p-5 shadow-2xl border border-[#eaeaea] space-y-4">
-            <div className="flex items-center justify-between border-b border-[#eaeaea] pb-3">
-              <h3 className="text-sm font-bold text-[#111111]">
-                {editRateTarget ? 'Ubah Harga Tebus Kuari' : 'Atur Harga & Mutu Kuari Baru'}
-              </h3>
+        <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4 select-none">
+          <div 
+            className="fixed inset-0 bg-black/50 transition-opacity" 
+            onClick={() => setIsRateModalOpen(false)} 
+          />
+          
+          <div className="relative w-full md:max-w-md bg-white rounded-t-[20px] md:rounded-[12px] max-h-[92vh] md:max-h-[90vh] flex flex-col overflow-hidden z-10 shadow-2xl animate-in slide-in-from-bottom duration-300 ease-out select-text">
+            <div className="px-5 py-3.5 border-b border-[#eaeaea] flex items-center justify-between flex-shrink-0 bg-white">
+              <div className="w-full text-center md:text-left">
+                <h3 className="text-sm font-bold text-[#111111]">
+                  {editRateTarget ? 'Ubah Harga Tebus Kuari' : 'Atur Harga & Mutu Kuari Baru'}
+                </h3>
+                <p className="text-[11px] text-[#666666] mt-0.5">
+                  Konfigurasi harga tebus beli kuari dan standar jual proyek
+                </p>
+              </div>
               <button
                 type="button"
                 onClick={() => setIsRateModalOpen(false)}
-                className="text-[#888888] hover:text-[#111111] text-sm p-1"
+                className="hidden md:flex text-[#888888] hover:text-[#111111] text-base p-1 cursor-pointer border-none bg-transparent"
               >
                 ✕
               </button>
             </div>
 
-            <form onSubmit={handleSaveRateSubmit} className="space-y-3 text-xs">
+            <form onSubmit={handleSaveRateSubmit} className="flex flex-col flex-1 overflow-hidden">
+              <div className="p-5 space-y-3.5 text-xs overflow-y-auto flex-1 overscroll-contain">
               {/* Komoditas Picker (Custom UI) */}
               <div>
                 <label className="block text-[#666666] font-medium mb-1">
@@ -1101,18 +1097,20 @@ export function MasterMaterialPage({
                   className="w-full bg-[#f5f5f5] rounded-[6px] px-3 py-2 text-xs text-[#111111] outline-none"
                 />
               </div>
+              </div>
 
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#eaeaea]">
+              {/* Sticky Bottom Actions */}
+              <div className="p-4 bg-white border-t border-[#eaeaea] sticky bottom-0 flex-shrink-0 flex items-center justify-end gap-3 z-10">
                 <button
                   type="button"
                   onClick={() => setIsRateModalOpen(false)}
-                  className="px-3 py-1.5 rounded-[6px] border border-[#dcdcdc] text-xs font-medium text-[#666666] hover:bg-[#f5f5f5]"
+                  className="flex-1 md:flex-none px-4 py-2.5 md:py-2 rounded-[8px] border border-[#dcdcdc] text-xs font-semibold text-[#666666] hover:bg-[#f5f5f5] cursor-pointer bg-white"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 rounded-[6px] bg-[#111111] hover:bg-[#222222] text-white text-xs font-bold transition-colors"
+                  className="flex-1 md:flex-none px-5 py-2.5 md:py-2 rounded-[8px] bg-[#111111] hover:bg-[#222222] text-white text-xs font-bold transition-colors cursor-pointer border-none shadow-sm"
                 >
                   {editRateTarget ? 'Verifikasi PIN & Simpan' : 'Simpan Konfigurasi'}
                 </button>
@@ -1124,22 +1122,33 @@ export function MasterMaterialPage({
 
       {/* MODAL 2: TAMBAH / EDIT RUTE OPERASIONAL (CUSTOM UI ONLY PER RULE 87) */}
       {isRouteModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
-          <div className="w-full max-w-md bg-white rounded-[12px] p-5 shadow-2xl border border-[#eaeaea] space-y-4">
-            <div className="flex items-center justify-between border-b border-[#eaeaea] pb-3">
-              <h3 className="text-sm font-bold text-[#111111]">
-                {editRouteTarget ? 'Sesuaikan Biaya Jalan Rute' : 'Tambah Rute Operasional Baru'}
-              </h3>
+        <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4 select-none">
+          <div 
+            className="fixed inset-0 bg-black/50 transition-opacity" 
+            onClick={() => setIsRouteModalOpen(false)} 
+          />
+          
+          <div className="relative w-full md:max-w-md bg-white rounded-t-[20px] md:rounded-[12px] max-h-[92vh] md:max-h-[90vh] flex flex-col overflow-hidden z-10 shadow-2xl animate-in slide-in-from-bottom duration-300 ease-out select-text">
+            <div className="px-5 py-3.5 border-b border-[#eaeaea] flex items-center justify-between flex-shrink-0 bg-white">
+              <div className="w-full text-center md:text-left">
+                <h3 className="text-sm font-bold text-[#111111]">
+                  {editRouteTarget ? 'Sesuaikan Biaya Jalan Rute' : 'Tambah Rute Operasional Baru'}
+                </h3>
+                <p className="text-[11px] text-[#666666] mt-0.5">
+                  Standar biaya jalan acuan (solar, supir, uang jalan) rute kuari ke proyek
+                </p>
+              </div>
               <button
                 type="button"
                 onClick={() => setIsRouteModalOpen(false)}
-                className="text-[#888888] hover:text-[#111111] text-sm p-1"
+                className="hidden md:flex text-[#888888] hover:text-[#111111] text-base p-1 cursor-pointer border-none bg-transparent"
               >
                 ✕
               </button>
             </div>
 
-            <form onSubmit={handleSaveRouteSubmit} className="space-y-3 text-xs">
+            <form onSubmit={handleSaveRouteSubmit} className="flex flex-col flex-1 overflow-hidden">
+              <div className="p-5 space-y-3.5 text-xs overflow-y-auto flex-1 overscroll-contain">
               {/* Titik Muat (Kuari Combobox) */}
               <div>
                 <label className="block text-[#666666] font-medium mb-1">
@@ -1228,18 +1237,20 @@ export function MasterMaterialPage({
                   onChange={setRouteStandardCost}
                 />
               </div>
+              </div>
 
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#eaeaea]">
+              {/* Sticky Bottom Actions */}
+              <div className="p-4 bg-white border-t border-[#eaeaea] sticky bottom-0 flex-shrink-0 flex items-center justify-end gap-3 z-10">
                 <button
                   type="button"
                   onClick={() => setIsRouteModalOpen(false)}
-                  className="px-3 py-1.5 rounded-[6px] border border-[#dcdcdc] text-xs font-medium text-[#666666] hover:bg-[#f5f5f5]"
+                  className="flex-1 md:flex-none px-4 py-2.5 md:py-2 rounded-[8px] border border-[#dcdcdc] text-xs font-semibold text-[#666666] hover:bg-[#f5f5f5] cursor-pointer bg-white"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 rounded-[6px] bg-[#111111] hover:bg-[#222222] text-white text-xs font-bold transition-colors"
+                  className="flex-1 md:flex-none px-5 py-2.5 md:py-2 rounded-[8px] bg-[#111111] hover:bg-[#222222] text-white text-xs font-bold transition-colors cursor-pointer border-none shadow-sm"
                 >
                   {editRouteTarget ? 'Verifikasi PIN & Sesuaikan' : 'Simpan Rute Acuan'}
                 </button>
@@ -1251,22 +1262,33 @@ export function MasterMaterialPage({
 
       {/* MODAL 3: TAMBAH / EDIT KOMODITAS DASAR (CUSTOM UI ONLY PER RULE 87) */}
       {isCommodityModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
-          <div className="w-full max-w-md bg-white rounded-[12px] p-5 shadow-2xl border border-[#eaeaea] space-y-4">
-            <div className="flex items-center justify-between border-b border-[#eaeaea] pb-3">
-              <h3 className="text-sm font-bold text-[#111111]">
-                {editCommodityTarget ? 'Edit Komoditas Material' : 'Daftarkan Komoditas Baru'}
-              </h3>
+        <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4 select-none">
+          <div 
+            className="fixed inset-0 bg-black/50 transition-opacity" 
+            onClick={() => setIsCommodityModalOpen(false)} 
+          />
+          
+          <div className="relative w-full md:max-w-md bg-white rounded-t-[20px] md:rounded-[12px] max-h-[92vh] md:max-h-[90vh] flex flex-col overflow-hidden z-10 shadow-2xl animate-in slide-in-from-bottom duration-300 ease-out select-text">
+            <div className="px-5 py-3.5 border-b border-[#eaeaea] flex items-center justify-between flex-shrink-0 bg-white">
+              <div className="w-full text-center md:text-left">
+                <h3 className="text-sm font-bold text-[#111111]">
+                  {editCommodityTarget ? 'Edit Komoditas Material' : 'Daftarkan Komoditas Baru'}
+                </h3>
+                <p className="text-[11px] text-[#666666] mt-0.5">
+                  Spesifikasi tipe material tambang dan satuan pengukuran dasar
+                </p>
+              </div>
               <button
                 type="button"
                 onClick={() => setIsCommodityModalOpen(false)}
-                className="text-[#888888] hover:text-[#111111] text-sm p-1"
+                className="hidden md:flex text-[#888888] hover:text-[#111111] text-base p-1 cursor-pointer border-none bg-transparent"
               >
                 ✕
               </button>
             </div>
 
-            <form onSubmit={handleSaveCommoditySubmit} className="space-y-3 text-xs">
+            <form onSubmit={handleSaveCommoditySubmit} className="flex flex-col flex-1 overflow-hidden">
+              <div className="p-5 space-y-3.5 text-xs overflow-y-auto flex-1 overscroll-contain">
               <div>
                 <label className="block text-[#666666] font-medium mb-1">
                   Nama Komoditas <span className="text-red-500">*</span>
@@ -1328,18 +1350,20 @@ export function MasterMaterialPage({
                   onChange={setCommDefaultSellPrice}
                 />
               </div>
+              </div>
 
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#eaeaea]">
+              {/* Sticky Bottom Actions */}
+              <div className="p-4 bg-white border-t border-[#eaeaea] sticky bottom-0 flex-shrink-0 flex items-center justify-end gap-3 z-10">
                 <button
                   type="button"
                   onClick={() => setIsCommodityModalOpen(false)}
-                  className="px-3 py-1.5 rounded-[6px] border border-[#dcdcdc] text-xs font-medium text-[#666666] hover:bg-[#f5f5f5]"
+                  className="flex-1 md:flex-none px-4 py-2.5 md:py-2 rounded-[8px] border border-[#dcdcdc] text-xs font-semibold text-[#666666] hover:bg-[#f5f5f5] cursor-pointer bg-white"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 rounded-[6px] bg-[#111111] hover:bg-[#222222] text-white text-xs font-bold transition-colors"
+                  className="flex-1 md:flex-none px-5 py-2.5 md:py-2 rounded-[8px] bg-[#111111] hover:bg-[#222222] text-white text-xs font-bold transition-colors cursor-pointer border-none shadow-sm"
                 >
                   {editCommodityTarget ? 'Verifikasi PIN & Simpan' : 'Daftarkan Komoditas'}
                 </button>

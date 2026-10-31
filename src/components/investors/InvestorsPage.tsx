@@ -592,7 +592,6 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
                     <tr key={inv.id} className="hover:bg-[#fafafa] transition-colors">
                       <td className="py-2.5 px-3 whitespace-nowrap w-[200px] align-middle">
                         <span className="font-bold text-[#111111] block truncate">{inv.name}</span>
-                        <span className="text-[10px] font-mono text-[#888888] block">{inv.id}</span>
                       </td>
                       <td className="py-2.5 px-3 font-mono text-[#444444] whitespace-nowrap w-[150px] align-middle">
                         {inv.phoneNumber ? formatPhoneNumber(inv.phoneNumber) : '-'}
@@ -721,7 +720,7 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
           <table className="w-full min-w-[950px] text-left text-xs border-collapse">
             <thead className="bg-[#f9f9f9] border-b border-[#eaeaea] text-[#555555] font-semibold text-[10px] uppercase">
               <tr>
-                <th className="py-2.5 px-3">Tanggal / ID</th>
+                <th className="py-2.5 px-3">Tanggal</th>
                 <th className="py-2.5 px-3">Dari (Pengirim)</th>
                 <th className="py-2.5 px-3">Ke (Penerima)</th>
                 <th className="py-2.5 px-3">Kategori Mutasi</th>
@@ -744,8 +743,7 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
                 filteredTransfers.map(tr => (
                   <tr key={tr.id} className="hover:bg-[#fafafa]">
                     <td className="py-2.5 px-3 whitespace-nowrap">
-                      <span className="font-semibold text-[#111111] block">{tr.date}</span>
-                      <span className="text-[10px] font-mono text-[#888888] block">{tr.id}</span>
+                      <span className="font-semibold text-[#111111]">{tr.date}</span>
                     </td>
                     <td className="py-2.5 px-3">
                       <span className="font-bold text-[#111111] block">{tr.fromInvestorName}</span>
@@ -814,10 +812,15 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
 
       {/* Modal Tambah Investor Baru */}
       {isAddOpen && (
-        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
-          <div className="bg-white rounded-[12px] w-full max-w-xl p-5 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-3 border-b border-[#eaeaea]">
-              <div>
+        <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4 select-none">
+          <div 
+            className="fixed inset-0 bg-black/50 transition-opacity" 
+            onClick={() => setIsAddOpen(false)} 
+          />
+          
+          <div className="relative w-full md:max-w-xl bg-white rounded-t-[20px] md:rounded-[12px] max-h-[92vh] md:max-h-[90vh] flex flex-col overflow-hidden z-10 shadow-2xl animate-in slide-in-from-bottom duration-300 ease-out select-text">
+            <div className="px-5 py-3.5 border-b border-[#eaeaea] flex items-center justify-between flex-shrink-0 bg-white">
+              <div className="w-full text-center md:text-left">
                 <h3 className="text-sm font-bold text-[#111111]">Tambah Investor Baru</h3>
                 <p className="text-[11px] text-[#666666] mt-0.5">
                   Daftarkan profil mitra pemodal tetap dan kaitkan alokasi proyek
@@ -826,13 +829,14 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
               <button
                 type="button"
                 onClick={() => setIsAddOpen(false)}
-                className="text-[#888888] hover:text-[#111111] text-base p-1 cursor-pointer"
+                className="hidden md:flex text-[#888888] hover:text-[#111111] text-base p-1 cursor-pointer border-none bg-transparent"
               >
                 ✕
               </button>
             </div>
 
-            <form onSubmit={handleInitiateAdd} className="space-y-4 text-xs">
+            <form onSubmit={handleInitiateAdd} className="flex flex-col flex-1 overflow-hidden">
+              <div className="p-5 space-y-4 text-xs overflow-y-auto flex-1 overscroll-contain">
               <div>
                 <label className="block text-[#333333] font-semibold mb-1">
                   Nama Investor / Perusahaan <span className="text-red-500">*</span>
@@ -1029,18 +1033,20 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
                   className="w-full bg-white border border-[#eaeaea] rounded-[6px] px-3 py-2 text-xs text-[#111111] outline-none focus:border-[#111111]"
                 />
               </div>
+              </div>
 
-              <div className="pt-3 border-t border-[#eaeaea] flex items-center justify-end gap-2">
+              {/* Sticky Bottom Actions */}
+              <div className="p-4 bg-white border-t border-[#eaeaea] sticky bottom-0 flex-shrink-0 flex items-center justify-end gap-3 z-10">
                 <button
                   type="button"
                   onClick={() => setIsAddOpen(false)}
-                  className="px-3 py-1.5 text-xs text-[#666666] bg-white border border-[#eaeaea] rounded-[6px] hover:bg-[#f5f5f5] cursor-pointer"
+                  className="flex-1 md:flex-none px-4 py-2.5 md:py-2 text-xs font-semibold text-[#666666] bg-white border border-[#eaeaea] rounded-[8px] hover:bg-[#f5f5f5] cursor-pointer"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 text-xs font-semibold text-white bg-[#111111] hover:bg-[#2b2b2b] rounded-[6px] cursor-pointer"
+                  className="flex-1 md:flex-none px-5 py-2.5 md:py-2 text-xs font-semibold text-white bg-[#111111] hover:bg-[#2b2b2b] rounded-[8px] cursor-pointer border-none shadow-sm"
                 >
                   Simpan Investor
                 </button>
@@ -1052,11 +1058,16 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
 
       {/* Modal Edit Investor */}
       {editTarget && (
-        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
-          <div className="bg-white rounded-[12px] w-full max-w-xl p-5 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-3 border-b border-[#eaeaea]">
-              <div>
-                <h3 className="text-sm font-bold text-[#111111]">Edit Investor ({editTarget.id})</h3>
+        <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4 select-none">
+          <div 
+            className="fixed inset-0 bg-black/50 transition-opacity" 
+            onClick={() => setEditTarget(null)} 
+          />
+          
+          <div className="relative w-full md:max-w-xl bg-white rounded-t-[20px] md:rounded-[12px] max-h-[92vh] md:max-h-[90vh] flex flex-col overflow-hidden z-10 shadow-2xl animate-in slide-in-from-bottom duration-300 ease-out select-text">
+            <div className="px-5 py-3.5 border-b border-[#eaeaea] flex items-center justify-between flex-shrink-0 bg-white">
+              <div className="w-full text-center md:text-left">
+                <h3 className="text-sm font-bold text-[#111111]">Edit Investor: {editTarget.name}</h3>
                 <p className="text-[11px] text-[#666666] mt-0.5">
                   Perbarui profil, relasi proyek yang didanai, dan alokasi modal
                 </p>
@@ -1064,13 +1075,14 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
               <button
                 type="button"
                 onClick={() => setEditTarget(null)}
-                className="text-[#888888] hover:text-[#111111] text-base p-1 cursor-pointer"
+                className="hidden md:flex text-[#888888] hover:text-[#111111] text-base p-1 cursor-pointer border-none bg-transparent"
               >
                 ✕
               </button>
             </div>
 
-            <form onSubmit={handleInitiateEdit} className="space-y-4 text-xs">
+            <form onSubmit={handleInitiateEdit} className="flex flex-col flex-1 overflow-hidden">
+              <div className="p-5 space-y-4 text-xs overflow-y-auto flex-1 overscroll-contain">
               <div>
                 <label className="block text-[#333333] font-semibold mb-1">Nama Investor / Perusahaan</label>
                 <input
@@ -1265,18 +1277,20 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
                   className="w-full bg-white border border-[#eaeaea] rounded-[6px] px-3 py-2 text-xs text-[#111111] outline-none focus:border-[#111111]"
                 />
               </div>
+              </div>
 
-              <div className="pt-3 border-t border-[#eaeaea] flex items-center justify-end gap-2">
+              {/* Sticky Bottom Actions */}
+              <div className="p-4 bg-white border-t border-[#eaeaea] sticky bottom-0 flex-shrink-0 flex items-center justify-end gap-3 z-10">
                 <button
                   type="button"
                   onClick={() => setEditTarget(null)}
-                  className="px-3 py-1.5 text-xs text-[#666666] bg-white border border-[#eaeaea] rounded-[6px] hover:bg-[#f5f5f5] cursor-pointer"
+                  className="flex-1 md:flex-none px-4 py-2.5 md:py-2 text-xs font-semibold text-[#666666] bg-white border border-[#eaeaea] rounded-[8px] hover:bg-[#f5f5f5] cursor-pointer"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 text-xs font-semibold text-white bg-[#111111] hover:bg-[#2b2b2b] rounded-[6px] cursor-pointer"
+                  className="flex-1 md:flex-none px-5 py-2.5 md:py-2 text-xs font-semibold text-white bg-[#111111] hover:bg-[#2b2b2b] rounded-[8px] cursor-pointer border-none shadow-sm"
                 >
                   Simpan Perubahan
                 </button>

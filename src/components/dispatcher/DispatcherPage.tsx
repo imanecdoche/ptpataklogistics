@@ -7,13 +7,18 @@ import { MobileTopRubberBand } from '@/components/ui/MobileTopRubberBand';
 
 interface DispatcherPageProps {
   userEmail: string;
+  initialView?: 'form' | 'history';
 }
 
-export function DispatcherPage({ userEmail }: DispatcherPageProps): React.JSX.Element {
+export function DispatcherPage({ userEmail, initialView = 'form' }: DispatcherPageProps): React.JSX.Element {
   const [materials, setMaterials] = useState<MaterialItem[]>([]);
   const [transactions, setTransactions] = useState<DispatchTransaction[]>([]);
   const [isLoadingTx, setIsLoadingTx] = useState(true);
-  const [isHistoryDrawerOpen, setIsHistoryDrawerOpen] = useState(false);
+  const [isHistoryDrawerOpen, setIsHistoryDrawerOpen] = useState(initialView === 'history');
+
+  useEffect(() => {
+    setIsHistoryDrawerOpen(initialView === 'history');
+  }, [initialView]);
 
   const drawerHeaderRef = useRef<HTMLDivElement | null>(null);
   const drawerContentRef = useRef<HTMLDivElement | null>(null);
@@ -67,7 +72,7 @@ export function DispatcherPage({ userEmail }: DispatcherPageProps): React.JSX.El
   return (
     <div className="flex flex-col gap-6 items-start w-full relative">
       {/* Formulir Pencatatan Ritase Baru (Boxless di Mobile, Full-width di Desktop) */}
-      <div className="w-full">
+      <div className={`w-full ${initialView === 'history' ? 'md:order-2' : 'md:order-1'}`}>
         <DispatchForm
           materials={materials}
           userEmail={userEmail}
@@ -79,8 +84,8 @@ export function DispatcherPage({ userEmail }: DispatcherPageProps): React.JSX.El
         />
       </div>
 
-      {/* Tabel Riwayat Ritase (Desktop: Posisikan Vertikal Tepat di Bawah Form Ritase) */}
-      <div className="hidden md:block w-full min-w-0">
+      {/* Tabel Riwayat Ritase (Desktop: Posisikan Mengikuti Tab Aktif) */}
+      <div className={`hidden md:block w-full min-w-0 ${initialView === 'history' ? 'md:order-1' : 'md:order-2'}`}>
         <DispatchTable
           transactions={transactions}
           selectedDate={selectedDate}

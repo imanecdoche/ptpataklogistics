@@ -61,16 +61,16 @@ export function MaterialPickerModal({
     >
       {/* Dim Backdrop tanpa blur */}
       <div
-        className="fixed inset-0 bg-black/40 transition-opacity"
+        className="fixed inset-0 bg-black/50 transition-opacity"
         onClick={onClose}
       />
 
-      {/* Container Picker Window */}
-      <div className="relative w-full md:max-w-xl h-[88vh] md:h-auto md:max-h-[85vh] bg-white rounded-t-[16px] md:rounded-[12px] flex flex-col overflow-hidden z-10 animate-in fade-in slide-in-from-bottom-4 duration-200">
-        {/* Header Modal */}
+      {/* Container Picker Window: Mobile Bottom Sheet Drawer */}
+      <div className="relative w-full md:max-w-xl max-h-[92vh] md:max-h-[85vh] bg-white rounded-t-[20px] md:rounded-[12px] flex flex-col overflow-hidden z-10 shadow-2xl animate-in slide-in-from-bottom duration-300 ease-out">
+        {/* Header Modal Bersih: Judul di tengah pada mobile */}
         <div className="p-4 md:p-5 border-b border-[#eaeaea] flex-shrink-0">
           <div className="flex items-center justify-between">
-            <div>
+            <div className="w-full text-center md:text-left">
               <h3 className="text-sm md:text-base font-semibold text-[#111111]">
                 Jenis Material
               </h3>
@@ -79,11 +79,11 @@ export function MaterialPickerModal({
               </p>
             </div>
 
-            {/* Tombol Tutup X di Header */}
+            {/* Tombol Tutup X di Desktop */}
             <button
               type="button"
               onClick={onClose}
-              className="p-1.5 rounded-full hover:bg-[#f5f5f5] transition-colors"
+              className="hidden md:flex p-1.5 rounded-full hover:bg-[#f5f5f5] transition-colors"
               aria-label="Tutup"
             >
               <img
@@ -173,6 +173,17 @@ export function MaterialPickerModal({
               );
             })
           )}
+        </div>
+
+        {/* Sticky Bottom Close Button on Mobile */}
+        <div className="md:hidden p-3.5 bg-white border-t border-[#eaeaea] sticky bottom-0 flex-shrink-0 flex items-center justify-center z-10">
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-full py-2.5 text-xs font-semibold text-[#666666] bg-[#f5f5f5] hover:bg-[#ebebeb] rounded-[8px] transition-colors"
+          >
+            Tutup
+          </button>
         </div>
       </div>
     </div>

@@ -71,11 +71,18 @@ export function PayDebtModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
-      <div className="bg-white rounded-[12px] border border-[#e5e5e5] w-full max-w-md overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-150">
-        {/* Modal Header */}
-        <div className="px-5 py-4 border-b border-[#f0f0f0] flex items-center justify-between">
-          <div>
+    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4 select-none">
+      {/* Backdrop */}
+      <div 
+        className="fixed inset-0 bg-black/50 transition-opacity"
+        onClick={onClose}
+      />
+
+      {/* Surface: Mobile Bottom Sheet Drawer */}
+      <div className="relative w-full md:max-w-md bg-white rounded-t-[20px] md:rounded-[12px] flex flex-col max-h-[92vh] md:max-h-[90vh] overflow-hidden shadow-2xl animate-in slide-in-from-bottom duration-300 ease-out z-10 border-none">
+        {/* Header Modal Bersih: Judul di tengah pada mobile */}
+        <div className="px-5 py-3.5 border-b border-[#eaeaea] flex items-center justify-between flex-shrink-0">
+          <div className="w-full text-center md:text-left">
             <h3 className="text-sm font-bold text-[#111111]">
               Bayar / Cicil Hutang Bpk. Pei
             </h3>
@@ -86,111 +93,113 @@ export function PayDebtModal({
           <button
             type="button"
             onClick={onClose}
-            className="text-[#888888] hover:text-[#111111] text-base p-1 rounded transition-colors cursor-pointer border-none bg-transparent"
+            className="hidden md:flex text-[#888888] hover:text-[#111111] text-base p-1 rounded transition-colors cursor-pointer border-none bg-transparent"
           >
             ✕
           </button>
         </div>
 
-        {/* Modal Body */}
-        <form onSubmit={handleSubmit} className="p-5 space-y-4">
-          {errorMsg && (
-            <div className="p-2.5 bg-red-50 border border-red-200 text-red-700 text-xs rounded-[6px] font-medium">
-              ⚠️ {errorMsg}
-            </div>
-          )}
+        {/* Modal Body Scrollable */}
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+          <div className="p-4 md:p-5 space-y-4 overflow-y-auto flex-1 overscroll-contain">
+            {errorMsg && (
+              <div className="p-2.5 bg-red-50 border border-red-200 text-red-700 text-xs rounded-[6px] font-medium">
+                ⚠️ {errorMsg}
+              </div>
+            )}
 
-          {/* Info Status Hutang & Kas */}
-          <div className="grid grid-cols-2 gap-2 p-3 bg-[#fafafa] border border-[#eaeaea] rounded-[8px] text-xs">
+            {/* Info Status Hutang & Kas */}
+            <div className="grid grid-cols-2 gap-2 p-3 bg-[#fafafa] border border-[#eaeaea] rounded-[8px] text-xs">
+              <div>
+                <span className="text-[10px] text-[#777777] block font-medium">Sisa Hutang Bpk. Pei:</span>
+                <span className="text-sm font-bold tracking-tight text-[#111111]">
+                  Rp {remainingDebt.toLocaleString('id-ID')}
+                </span>
+              </div>
+              <div>
+                <span className="text-[10px] text-[#777777] block font-medium">Saldo Kas Tersedia:</span>
+                <span className={`text-sm font-bold tracking-tight ${currentCashBalance >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>
+                  Rp {currentCashBalance.toLocaleString('id-ID')}
+                </span>
+              </div>
+            </div>
+
+            {/* Tanggal Pembayaran */}
             <div>
-              <span className="text-[10px] text-[#777777] block font-medium">Sisa Hutang Bpk. Pei:</span>
-              <span className="text-sm font-bold tracking-tight text-[#111111]">
-                Rp {remainingDebt.toLocaleString('id-ID')}
-              </span>
+              <label className="block text-[11px] font-semibold text-[#555555] mb-1">
+                Tanggal Pembayaran / Transfer <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="date"
+                value={date}
+                onChange={e => setDate(e.target.value)}
+                required
+                className="w-full bg-[#f9f9f9] border border-[#e0e0e0] focus:border-[#111111] rounded-[6px] px-3 py-2 text-xs text-[#111111] font-semibold outline-none transition-colors"
+              />
             </div>
+
+            {/* Nominal Pembayaran */}
             <div>
-              <span className="text-[10px] text-[#777777] block font-medium">Saldo Kas Tersedia:</span>
-              <span className={`text-sm font-bold tracking-tight ${currentCashBalance >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>
-                Rp {currentCashBalance.toLocaleString('id-ID')}
-              </span>
+              <label className="block text-[11px] font-semibold text-[#555555] mb-1">
+                Nominal Cicilan / Pelunasan (Rp) <span className="text-red-500">*</span>
+              </label>
+              <CurrencyInput
+                value={amount}
+                onChange={setAmount}
+                placeholder="0"
+                required
+              />
+              <div className="flex items-center justify-between text-[10px] text-[#888888] mt-1">
+                <span>Sisa setelah pembayaran ini:</span>
+                <span className="font-bold text-[#111111]">
+                  Rp {Math.max(0, remainingDebt - (amount || 0)).toLocaleString('id-ID')}
+                </span>
+              </div>
+            </div>
+
+            {/* Nomor Bukti / Referensi */}
+            <div>
+              <label className="block text-[11px] font-semibold text-[#555555] mb-1">
+                No. Referensi / Bukti Transfer (Opsional)
+              </label>
+              <input
+                type="text"
+                placeholder="Contoh: TRF-BCA-20261030-01"
+                value={referenceId}
+                onChange={e => setReferenceId(e.target.value)}
+                className="w-full bg-[#f9f9f9] border border-[#e0e0e0] focus:border-[#111111] rounded-[6px] px-3 py-2 text-xs font-mono text-[#111111] font-medium outline-none transition-colors"
+              />
+            </div>
+
+            {/* Catatan Tambahan */}
+            <div>
+              <label className="block text-[11px] font-semibold text-[#555555] mb-1">
+                Catatan / Keterangan
+              </label>
+              <input
+                type="text"
+                placeholder="Contoh: Pembayaran cicilan tahap 1 via transfer"
+                value={notes}
+                onChange={e => setNotes(e.target.value)}
+                className="w-full bg-[#f9f9f9] border border-[#e0e0e0] focus:border-[#111111] rounded-[6px] px-3 py-2 text-xs text-[#111111] outline-none transition-colors"
+              />
             </div>
           </div>
 
-          {/* Tanggal Pembayaran */}
-          <div>
-            <label className="block text-[11px] font-semibold text-[#555555] mb-1">
-              Tanggal Pembayaran / Transfer <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="date"
-              value={date}
-              onChange={e => setDate(e.target.value)}
-              required
-              className="w-full bg-[#f9f9f9] border border-[#e0e0e0] focus:border-[#111111] rounded-[6px] px-3 py-2 text-xs text-[#111111] font-semibold outline-none transition-colors"
-            />
-          </div>
-
-          {/* Nominal Pembayaran */}
-          <div>
-            <label className="block text-[11px] font-semibold text-[#555555] mb-1">
-              Nominal Cicilan / Pelunasan (Rp) <span className="text-red-500">*</span>
-            </label>
-            <CurrencyInput
-              value={amount}
-              onChange={setAmount}
-              placeholder="0"
-              required
-            />
-            <div className="flex items-center justify-between text-[10px] text-[#888888] mt-1">
-              <span>Sisa setelah pembayaran ini:</span>
-              <span className="font-bold text-[#111111]">
-                Rp {Math.max(0, remainingDebt - (amount || 0)).toLocaleString('id-ID')}
-              </span>
-            </div>
-          </div>
-
-          {/* Nomor Bukti / Referensi */}
-          <div>
-            <label className="block text-[11px] font-semibold text-[#555555] mb-1">
-              No. Referensi / Bukti Transfer (Opsional)
-            </label>
-            <input
-              type="text"
-              placeholder="Contoh: TRF-BCA-20261030-01"
-              value={referenceId}
-              onChange={e => setReferenceId(e.target.value)}
-              className="w-full bg-[#f9f9f9] border border-[#e0e0e0] focus:border-[#111111] rounded-[6px] px-3 py-2 text-xs font-mono text-[#111111] font-medium outline-none transition-colors"
-            />
-          </div>
-
-          {/* Catatan Tambahan */}
-          <div>
-            <label className="block text-[11px] font-semibold text-[#555555] mb-1">
-              Catatan / Keterangan
-            </label>
-            <input
-              type="text"
-              placeholder="Contoh: Pembayaran cicilan tahap 1 via transfer"
-              value={notes}
-              onChange={e => setNotes(e.target.value)}
-              className="w-full bg-[#f9f9f9] border border-[#e0e0e0] focus:border-[#111111] rounded-[6px] px-3 py-2 text-xs text-[#111111] outline-none transition-colors"
-            />
-          </div>
-
-          {/* Modal Actions */}
-          <div className="pt-2 flex items-center justify-end gap-2 border-t border-[#f0f0f0]">
+          {/* Sticky Bottom Action Bar */}
+          <div className="p-4 bg-white border-t border-[#eaeaea] sticky bottom-0 flex-shrink-0 flex items-center justify-end gap-3 z-10">
             <button
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="px-3.5 py-2 text-xs font-medium text-[#666666] hover:bg-[#f5f5f5] rounded-[6px] transition-colors border-none bg-transparent cursor-pointer"
+              className="flex-1 md:flex-none px-4 py-2.5 text-xs font-semibold text-[#666666] bg-[#f5f5f5] hover:bg-[#ebebeb] rounded-[8px] transition-colors"
             >
               Batal
             </button>
             <button
               type="submit"
               disabled={isSubmitting || amount <= 0 || amount > remainingDebt}
-              className="px-4 py-2 bg-[#111111] hover:bg-[#333333] active:scale-[0.99] text-white rounded-[6px] font-semibold text-xs transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer border-none"
+              className="flex-1 md:flex-none py-2.5 px-5 bg-[#111111] hover:bg-[#333333] active:scale-[0.99] text-white rounded-[8px] font-semibold text-xs transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer border-none"
             >
               {isSubmitting ? 'Menyimpan...' : 'Bayar Cicilan'}
             </button>

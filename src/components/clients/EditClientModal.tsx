@@ -96,14 +96,14 @@ export function EditClientModal({
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="px-3.5 py-2 rounded-[8px] border border-[#eaeaea] text-[#666666] hover:bg-[#f5f5f5] transition-colors cursor-pointer"
+              className="flex-1 md:flex-none px-3.5 py-2.5 md:py-2 text-center rounded-[8px] border border-[#eaeaea] text-[#666666] hover:bg-[#f5f5f5] transition-colors cursor-pointer bg-white"
             >
               Batal
             </button>
             <button
               type="submit"
               disabled={isSubmitting || !name.trim()}
-              className="px-4 py-2 rounded-[8px] bg-[#111111] hover:bg-black text-white font-medium transition-colors cursor-pointer disabled:opacity-50"
+              className="flex-1 md:flex-none px-4 py-2.5 md:py-2 text-center rounded-[8px] bg-[#111111] hover:bg-black text-white font-medium transition-colors cursor-pointer disabled:opacity-50 border-none shadow-sm"
             >
               Simpan Perubahan
             </button>

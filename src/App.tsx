@@ -128,7 +128,11 @@ function AuthenticatedApp({ user, onLogout }: AuthenticatedAppProps): React.JSX.
       )}
 
       {currentTab === 'dispatcher' && (
-        <DispatcherPage userEmail={user?.email || 'operator@patak.id'} />
+        <DispatcherPage userEmail={user?.email || 'operator@patak.id'} initialView="form" />
+      )}
+
+      {currentTab === 'ritase' && (
+        <DispatcherPage userEmail={user?.email || 'operator@patak.id'} initialView="history" />
       )}
 
       {currentTab === 'database' && (

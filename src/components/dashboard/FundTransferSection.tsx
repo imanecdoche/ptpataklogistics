@@ -241,13 +241,15 @@ export function FundTransferSection({ projects, userEmail }: FundTransferSection
 
       {/* Modal Input Talangan Baru */}
       {isCreateOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 select-none overflow-y-auto">
-          <div
-            className="w-full max-w-md bg-white rounded-[12px] border border-[#eaeaea] shadow-2xl p-5 my-6 flex flex-col space-y-4"
-            onClick={e => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between pb-3 border-b border-[#eaeaea]">
-              <div>
+        <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4 select-none">
+          <div 
+            className="fixed inset-0 bg-black/50 transition-opacity" 
+            onClick={() => setIsCreateOpen(false)} 
+          />
+          
+          <div className="relative w-full md:max-w-md bg-white rounded-t-[20px] md:rounded-[12px] max-h-[92vh] md:max-h-[90vh] flex flex-col overflow-hidden z-10 shadow-2xl animate-in slide-in-from-bottom duration-300 ease-out select-text">
+            <div className="px-5 py-3.5 border-b border-[#eaeaea] flex items-center justify-between flex-shrink-0 bg-white">
+              <div className="w-full text-center md:text-left">
                 <h3 className="text-sm font-bold text-[#111111]">
                   Catat Kas Talangan Antar-Proyek
                 </h3>
@@ -258,88 +260,91 @@ export function FundTransferSection({ projects, userEmail }: FundTransferSection
               <button
                 type="button"
                 onClick={() => setIsCreateOpen(false)}
-                className="text-[#888888] hover:text-[#111111] p-1 rounded transition-colors"
+                className="hidden md:flex text-[#888888] hover:text-[#111111] p-1 rounded transition-colors cursor-pointer border-none bg-transparent"
               >
                 <img src="/icons/close.png" alt="Tutup" className="w-4 h-4 object-contain" />
               </button>
             </div>
 
-            <div className="space-y-3 text-xs">
-              <div>
-                <label className="block text-xs font-semibold text-[#444444] mb-1">
-                  Tanggal Pencatatan:
-                </label>
-                <CustomDatePicker value={date} onChange={setDate} />
+            <div className="flex flex-col flex-1 overflow-hidden">
+              <div className="p-5 space-y-3.5 text-xs overflow-y-auto flex-1 overscroll-contain">
+                <div>
+                  <label className="block text-xs font-semibold text-[#444444] mb-1">
+                    Tanggal Pencatatan:
+                  </label>
+                  <CustomDatePicker value={date} onChange={setDate} />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-[#444444] mb-1">
+                    Proyek Sumber (Pemberi Pinjaman):
+                  </label>
+                  <ProjectCombobox
+                    projects={projects}
+                    selectedProjectId={fromProjectId}
+                    selectedProjectName={projects.find(p => p.id === fromProjectId)?.name || ''}
+                    onSelect={p => setFromProjectId(p?.id || '')}
+                    placeholder="Pilih proyek sumber..."
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-[#444444] mb-1">
+                    Proyek Peminjam (Ditalangi):
+                  </label>
+                  <ProjectCombobox
+                    projects={projects.filter(p => p.id !== fromProjectId)}
+                    selectedProjectId={toProjectId}
+                    selectedProjectName={projects.find(p => p.id === toProjectId)?.name || ''}
+                    onSelect={p => setToProjectId(p?.id || '')}
+                    placeholder="Pilih proyek peminjam..."
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-[#444444] mb-1">
+                    Nominal Talangan (Rp):
+                  </label>
+                  <CurrencyInput
+                    value={amount}
+                    onChange={setAmount}
+                    placeholder="0"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-[#444444] mb-1">
+                    Keperluan / Catatan Internal:
+                  </label>
+                  <FlexibleTextarea
+                    value={note}
+                    onChange={setNote}
+                    placeholder="Catatan alasan peminjaman modal proyek..."
+                  />
+                </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-[#444444] mb-1">
-                  Proyek Sumber (Pemberi Pinjaman):
-                </label>
-                <ProjectCombobox
-                  projects={projects}
-                  selectedProjectId={fromProjectId}
-                  selectedProjectName={projects.find(p => p.id === fromProjectId)?.name || ''}
-                  onSelect={p => setFromProjectId(p?.id || '')}
-                  placeholder="Pilih proyek sumber..."
-                  required
-                />
+              {/* Sticky Bottom Actions */}
+              <div className="p-4 bg-white border-t border-[#eaeaea] sticky bottom-0 flex-shrink-0 flex items-center justify-end gap-3 z-10">
+                <button
+                  type="button"
+                  onClick={() => setIsCreateOpen(false)}
+                  className="flex-1 md:flex-none px-4 py-2.5 md:py-2 text-xs font-semibold text-[#666666] bg-white border border-[#dddddd] rounded-[8px] hover:bg-[#f5f5f5] cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="button"
+                  onClick={handleInitiateCreate}
+                  disabled={!amount || amount <= 0 || fromProjectId === toProjectId}
+                  className="flex-1 md:flex-none px-5 py-2.5 md:py-2 text-xs font-semibold text-white bg-[#111111] hover:bg-[#2b2b2b] rounded-[8px] disabled:opacity-40 cursor-pointer border-none shadow-sm"
+                >
+                  Lanjutkan Otorisasi
+                </button>
               </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-[#444444] mb-1">
-                  Proyek Peminjam (Ditalangi):
-                </label>
-                <ProjectCombobox
-                  projects={projects.filter(p => p.id !== fromProjectId)}
-                  selectedProjectId={toProjectId}
-                  selectedProjectName={projects.find(p => p.id === toProjectId)?.name || ''}
-                  onSelect={p => setToProjectId(p?.id || '')}
-                  placeholder="Pilih proyek peminjam..."
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-[#444444] mb-1">
-                  Nominal Talangan (Rp):
-                </label>
-                <CurrencyInput
-                  value={amount}
-                  onChange={setAmount}
-                  placeholder="0"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-[#444444] mb-1">
-                  Keperluan / Catatan Internal:
-                </label>
-                <FlexibleTextarea
-                  value={note}
-                  onChange={setNote}
-                  placeholder="Catatan alasan peminjaman modal proyek..."
-                />
-              </div>
-            </div>
-
-            <div className="pt-3 border-t border-[#eaeaea] flex items-center justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setIsCreateOpen(false)}
-                className="px-3 py-1.5 text-xs font-semibold text-[#666666] bg-white border border-[#dddddd] rounded-[6px] hover:bg-[#f5f5f5]"
-              >
-                Batal
-              </button>
-              <button
-                type="button"
-                onClick={handleInitiateCreate}
-                disabled={!amount || amount <= 0 || fromProjectId === toProjectId}
-                className="px-3 py-1.5 text-xs font-semibold text-white bg-[#111111] hover:bg-[#2b2b2b] rounded-[6px] disabled:opacity-40"
-              >
-                Lanjutkan Otorisasi
-              </button>
             </div>
           </div>
         </div>

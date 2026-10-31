@@ -532,7 +532,7 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
   }, [knownDrivers, driverName]);
 
   return (
-    <div className="bg-[#f5f5f5] rounded-[10px] p-4 md:p-6 select-none pb-20 md:pb-6 relative">
+    <div className="select-none pb-20 md:pb-6 relative">
       {/* Floating Success Toast (Non-blocking) */}
       {successToast?.show && (
         <div className="fixed top-5 right-5 z-50 bg-[#111111] text-white px-4 py-3 rounded-[8px] shadow-2xl flex items-center gap-2.5 text-xs animate-in slide-in-from-top-4 duration-200">
@@ -541,7 +541,7 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
         </div>
       )}
 
-      <div className="hidden md:block pb-4 border-b border-[#e5e5e5]">
+      <div className="hidden md:block pb-2">
         <h2 className="text-sm font-semibold text-[#111111]">
           Catat Ritase Baru
         </h2>
@@ -550,23 +550,18 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
         </p>
       </div>
 
-      <form ref={formRef} onSubmit={handleSubmit} className="pt-0 md:pt-4 space-y-4 text-xs">
+      <form ref={formRef} onSubmit={handleSubmit} className="pt-2 md:pt-3 space-y-4 text-xs">
         {/* Section 1: Waktu & Armada Truk */}
         <div className="space-y-3.5">
           <div className="text-[11px] font-bold text-[#888888] uppercase tracking-wider">
             Waktu & Armada Truk
           </div>
 
-          {/* Row 0: Tanggal Ritase (Jalan) & Counter Hari Ini */}
+          {/* Row 0: Tanggal Jalan & Counter Hari Ini */}
           <div>
-            <div className="flex items-center justify-between mb-1">
-              <label className="block text-[#666666] font-medium">
-                Tanggal Ritase (Jalan) <span className="text-red-500">*</span>
-              </label>
-              <span className="text-[11px] font-bold text-[#111111] bg-white px-2 py-0.5 rounded border border-[#e5e5e5]">
-                Tercatat {todayRitaseCount} ritase pada tanggal ini
-              </span>
-            </div>
+            <label className="block text-[#666666] font-medium mb-1">
+              Tanggal Jalan <span className="text-red-500">*</span>
+            </label>
             <CustomDatePicker
               triggerRef={datePickerRef}
               value={deliveryDate}
@@ -580,9 +575,11 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
                 }
               }}
             />
-            <span className="text-[10px] text-[#888888] mt-1 block">
-              Tanggal armada beroperasi/jalan. Waktu pencatatan tiket otomatis terdata hari ini.
-            </span>
+            <div className="mt-1.5">
+              <span className="text-[11px] font-bold text-[#111111] bg-white px-2 py-0.5 rounded border border-[#e5e5e5] inline-block">
+                Tercatat {todayRitaseCount} ritase pada tanggal ini
+              </span>
+            </div>
           </div>
 
           {/* Row 1: No Plat Truk & Sopir */}
@@ -867,7 +864,7 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-[#666666] font-medium mb-1">Satuan</label>
-              <div className="w-full bg-[#f0f0f0] rounded-[6px] px-3 py-2 text-xs font-semibold text-[#111111]">
+              <div className="w-full bg-white border border-[#e5e5e5] rounded-[6px] px-3 py-2 text-xs font-semibold text-[#111111]">
                 {unit === 'DT' ? 'Dump Truck (DT)' : 'Tonase (Ton)'}
               </div>
             </div>
@@ -921,7 +918,7 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
             {!isDispatcherUser && (
               <div>
                 <label className="block text-[#666666] font-medium mb-1">
-                  Harga Beli Kuari / {unit} (Cash)
+                  Harga Beli ({unit})
                 </label>
                 <CurrencyInput
                   inputRef={buyPriceInputRef}
@@ -945,7 +942,7 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
 
             <div className={isDispatcherUser ? 'col-span-2' : ''}>
               <label className="block text-[#666666] font-medium mb-1">
-                Harga Jual Konsumen / {unit} (Tempo) <span className="text-red-500">*</span>
+                Harga Jual ({unit}) <span className="text-red-500">*</span>
               </label>
               <CurrencyInput
                 inputRef={sellPriceInputRef}
@@ -974,7 +971,7 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
           {/* Row 2: Biaya Operasional & HOK */}
           <div>
             <label className="block text-[#666666] font-medium mb-1">
-              Beban Operasional & HOK (Uang Jalan / Supir / Solar)
+              Beban Operasional & HOK
             </label>
             <CurrencyInput
               inputRef={operationalCostInputRef}
@@ -1036,7 +1033,7 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
         </div>
 
         {/* Live Calculation Box */}
-        <div className="bg-[#ebebeb] rounded-[8px] p-3.5 space-y-1.5 mt-2">
+        <div className="bg-white rounded-[8px] border border-[#dcdcdc] p-3.5 space-y-1.5 mt-2 shadow-xs">
           {!isDispatcherUser && (
             <div className="flex justify-between items-center text-[11px] text-[#666666]">
               <span>Saldo Kas Utama PT Patak:</span>

@@ -82,35 +82,35 @@ export function NegativeProfitConfirmModal({
       role="dialog"
       aria-modal="true"
       aria-labelledby="negative-profit-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 select-none"
+      className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4 select-none"
     >
       {/* Solid Dimmed Backdrop (Tanpa Blur / Anti-Glassmorphism) */}
       <div
-        className="fixed inset-0 bg-black/40 transition-opacity"
+        className="fixed inset-0 bg-black/50 transition-opacity"
         onClick={() => {
           if (!isLoading) onClose();
         }}
         aria-hidden="true"
       />
 
-      {/* Dialog Surface (Solid White Card - Flat Borderless) */}
-      <div className="relative w-full max-w-md bg-white rounded-[10px] overflow-hidden z-10 flex flex-col border border-[#eaeaea]">
-        {/* Header */}
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#eaeaea]">
+      {/* Dialog Surface (Solid White Card - Mobile Bottom Sheet Drawer) */}
+      <div className="relative w-full max-w-md bg-white rounded-t-[20px] md:rounded-[10px] max-h-[92vh] md:max-h-[90vh] overflow-hidden z-10 flex flex-col shadow-2xl animate-in slide-in-from-bottom duration-300 ease-out">
+        {/* Header Bersih: Judul di tengah pada mobile */}
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#eaeaea] flex-shrink-0">
           <h2
             id="negative-profit-title"
-            className="text-xs md:text-sm font-semibold tracking-tight text-[#cf1124] truncate"
+            className="text-xs md:text-sm font-semibold tracking-tight text-[#cf1124] truncate text-center w-full md:w-auto md:text-left"
           >
             Laba Bersih Minus, Yakin Nggak Salah Input?
           </h2>
 
-          {/* Close Button (/icons/close.png) */}
+          {/* Close Button on Desktop */}
           <button
             type="button"
             onClick={onClose}
             disabled={isLoading}
             aria-label="Tutup dialog"
-            className="p-1 rounded text-[#666666] hover:text-[#111111] hover:bg-[#fafafa] transition-colors flex-shrink-0 disabled:opacity-50"
+            className="hidden md:flex p-1 rounded text-[#666666] hover:text-[#111111] hover:bg-[#fafafa] transition-colors flex-shrink-0 disabled:opacity-50"
           >
             <img
               src="/icons/close.png"
@@ -120,9 +120,9 @@ export function NegativeProfitConfirmModal({
           </button>
         </div>
 
-        {/* Content Body */}
-        <div className="px-5 py-4 space-y-3">
-          <p className="text-xs text-[#555555] leading-relaxed">
+        {/* Content Body Scrollable */}
+        <div className="px-5 py-4 space-y-3 overflow-y-auto flex-1 overscroll-contain">
+          <p className="text-xs text-[#555555] leading-relaxed text-center md:text-left">
             Estimasi pendapatan tempo lebih kecil daripada total belanja kuari dan operasional lapangan armada.
           </p>
 
@@ -157,19 +157,19 @@ export function NegativeProfitConfirmModal({
           </div>
         </div>
 
-        {/* Footer Actions */}
-        <div className="px-5 py-3 bg-[#fafafa] border-t border-[#eaeaea] flex items-center justify-end space-x-2.5">
+        {/* Sticky Bottom Action Bar */}
+        <div className="p-4 bg-white md:bg-[#fafafa] border-t border-[#eaeaea] sticky bottom-0 flex-shrink-0 flex items-center justify-end space-x-2.5 z-10">
           {/* Tombol Batal */}
           <button
             type="button"
             onClick={onClose}
             disabled={isLoading}
-            className="px-3.5 py-2 text-xs font-medium text-[#171717] bg-[#f5f5f5] hover:bg-[#ebebeb] rounded-[6px] transition-colors disabled:opacity-50"
+            className="flex-1 md:flex-none px-4 py-2.5 md:py-2 text-xs font-semibold md:font-medium text-[#171717] bg-[#f5f5f5] hover:bg-[#ebebeb] rounded-[8px] md:rounded-[6px] transition-colors disabled:opacity-50"
           >
             Batal
           </button>
 
-          {/* Tombol Tetap Simpan dengan Depleting Progress Bar (5 Detik, Tanpa Angka) */}
+          {/* Tombol Tetap Simpan dengan Depleting Progress Bar */}
           <button
             type="button"
             onClick={() => {
@@ -178,13 +178,13 @@ export function NegativeProfitConfirmModal({
               }
             }}
             disabled={!isTimerFinished || isLoading}
-            className={`relative overflow-hidden px-4 py-2 text-xs font-semibold rounded-[6px] transition-all select-none ${
+            className={`flex-1 md:flex-none relative overflow-hidden px-5 py-2.5 md:py-2 text-xs font-semibold rounded-[8px] md:rounded-[6px] transition-all select-none ${
               isTimerFinished
                 ? 'bg-[#cf1124] hover:bg-[#a80e1d] text-white active:scale-[0.99] cursor-pointer'
                 : 'bg-[#fee2e2] text-[#991b1b] cursor-not-allowed opacity-90'
             }`}
           >
-            {/* Depleting Progress Bar Fill (Menyusut dari 100% ke 0%) */}
+            {/* Depleting Progress Bar Fill */}
             {!isTimerFinished && (
               <div
                 className="absolute inset-y-0 left-0 bg-[#ef4444]/30 pointer-events-none"

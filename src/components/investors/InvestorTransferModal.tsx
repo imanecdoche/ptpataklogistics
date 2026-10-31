@@ -96,11 +96,16 @@ export function InvestorTransferModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200">
-      <div className="bg-white rounded-[12px] w-full max-w-xl p-5 space-y-4 shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4 select-none">
+      <div 
+        className="fixed inset-0 bg-black/50 transition-opacity" 
+        onClick={onClose} 
+      />
+      
+      <div className="relative w-full md:max-w-xl bg-white rounded-t-[20px] md:rounded-[12px] max-h-[92vh] md:max-h-[90vh] flex flex-col overflow-hidden z-10 shadow-2xl animate-in slide-in-from-bottom duration-300 ease-out select-text">
         {/* Header Modal */}
-        <div className="flex items-center justify-between pb-3 border-b border-[#eaeaea]">
-          <div>
+        <div className="px-5 py-3.5 border-b border-[#eaeaea] flex items-center justify-between flex-shrink-0 bg-white">
+          <div className="w-full text-center md:text-left">
             <h3 className="text-sm font-bold text-[#111111]">
               Transfer & Realokasi Dana Antar-Investor
             </h3>
@@ -111,13 +116,14 @@ export function InvestorTransferModal({
           <button
             type="button"
             onClick={onClose}
-            className="text-[#888888] hover:text-[#111111] text-base p-1 cursor-pointer"
+            className="hidden md:flex text-[#888888] hover:text-[#111111] text-base p-1 cursor-pointer border-none bg-transparent"
           >
             ✕
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-3.5 text-xs">
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+          <div className="p-5 space-y-3.5 text-xs overflow-y-auto flex-1 overscroll-contain">
           {/* Tanggal & Kategori */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
@@ -242,19 +248,21 @@ export function InvestorTransferModal({
             />
           </div>
 
-          {/* Tombol Aksi */}
-          <div className="flex justify-end gap-2 pt-3 border-t border-[#eaeaea]">
+          </div>
+
+          {/* Sticky Bottom Actions */}
+          <div className="p-4 bg-white border-t border-[#eaeaea] sticky bottom-0 flex-shrink-0 flex items-center justify-end gap-3 z-10">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-[#eaeaea] rounded-[6px] text-xs font-semibold text-[#666666] hover:bg-[#fafafa] cursor-pointer"
+              className="flex-1 md:flex-none px-4 py-2.5 md:py-2 border border-[#eaeaea] rounded-[8px] text-xs font-semibold text-[#666666] hover:bg-[#fafafa] cursor-pointer bg-white"
             >
               Batal
             </button>
             <button
               type="submit"
               disabled={!amount || amount <= 0}
-              className="px-4 py-2 bg-[#111111] hover:bg-[#2b2b2b] text-white rounded-[6px] text-xs font-semibold transition-colors cursor-pointer disabled:opacity-50"
+              className="flex-1 md:flex-none px-5 py-2.5 md:py-2 bg-[#111111] hover:bg-[#2b2b2b] text-white rounded-[8px] text-xs font-semibold transition-colors cursor-pointer disabled:opacity-50 border-none shadow-sm"
             >
               Lanjut Verifikasi PIN
             </button>

@@ -113,58 +113,42 @@ export function CashFlowView({
         </div>
       </div>
 
-      {/* 2. Kartu Liabilitas Khusus: Hutang Perseroan Bpk. Pei (Rule 104) */}
-      <div className="bg-white border border-[#eaeaea] rounded-[10px] p-4 shadow-xs">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-[#f0f0f0]">
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-sm font-bold text-[#111111]">
-                Kartu Kewajiban / Hutang Perseroan — Bpk. Pei
-              </h3>
-              <span
-                className={`text-[10px] font-bold px-2 py-0.5 rounded ${
-                  isPeiDebtSettled
-                    ? 'bg-emerald-100 text-emerald-800'
-                    : 'bg-amber-100 text-amber-800'
-                }`}
-              >
-                {isPeiDebtSettled ? 'LUNAS' : 'BELUM LUNAS'}
-              </span>
-            </div>
-            <p className="text-xs text-[#666666] mt-0.5">
-              Pinjaman modal usaha pihak ketiga kepada PT Patak Abadi Jaya (Hutang Korporasi, non-ritase)
-            </p>
-          </div>
+      {/* 2. Kartu Liabilitas Khusus: Hutang Perseroan Bpk. Pei (Rule 104 & Rule 116) */}
+      <div className="bg-white border border-[#eaeaea] rounded-[10px] p-4">
+        <div className="flex items-center justify-between gap-3 pb-3 border-b border-[#f0f0f0]">
+          <h3 className="text-sm font-bold text-[#111111]">
+            Hutang Bpk. Pei
+          </h3>
 
           <button
             type="button"
             onClick={() => setIsPayDebtOpen(true)}
             disabled={isPeiDebtSettled}
-            className="px-3 py-1.5 bg-[#111111] hover:bg-black text-white text-xs font-semibold rounded-[6px] transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap self-start sm:self-center"
+            className="px-3 py-1.5 bg-[#111111] hover:bg-[#2b2b2b] text-white text-xs font-semibold rounded-[6px] transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
           >
-            + Bayar / Cicil Hutang Pak Pei
+            + Bayar Cicilan
           </button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3">
+        <div className="grid grid-cols-3 gap-2 sm:gap-4 pt-3">
           <div>
-            <span className="text-[11px] text-[#888888] block">Hutang Pokok Awal</span>
-            <span className="text-base font-bold tracking-tight text-[#111111] block mt-0.5">
+            <span className="text-[11px] text-[#888888] block">Hutang Pokok</span>
+            <span className="text-xs sm:text-base font-bold tracking-tight text-[#111111] block mt-0.5">
               {formatRupiah(PEI_INITIAL_DEBT)}
             </span>
           </div>
 
           <div>
-            <span className="text-[11px] text-[#888888] block">Total Cicilan Terbayar</span>
-            <span className="text-base font-bold tracking-tight text-emerald-700 block mt-0.5">
+            <span className="text-[11px] text-[#888888] block">Terbayar</span>
+            <span className="text-xs sm:text-base font-bold tracking-tight text-emerald-700 block mt-0.5">
               {formatRupiah(peiDebtPayments)}
             </span>
           </div>
 
           <div>
-            <span className="text-[11px] text-[#888888] block">Sisa Kewajiban Hutang</span>
+            <span className="text-[11px] text-[#888888] block">Sisa Hutang</span>
             <span
-              className={`text-base font-bold tracking-tight block mt-0.5 ${
+              className={`text-xs sm:text-base font-bold tracking-tight block mt-0.5 ${
                 remainingPeiDebt > 0 ? 'text-[#cf1124]' : 'text-emerald-700'
               }`}
             >

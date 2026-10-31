@@ -83,10 +83,17 @@ export function RecordMutationModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
-      <div className="bg-white rounded-[12px] border border-[#e5e5e5] w-full max-w-md overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-150">
-        <div className="px-5 py-4 border-b border-[#f0f0f0] flex items-center justify-between">
-          <div>
+    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4 select-none">
+      {/* Backdrop */}
+      <div 
+        className="fixed inset-0 bg-black/50 transition-opacity"
+        onClick={onClose}
+      />
+
+      {/* Surface: Mobile Bottom Sheet Drawer */}
+      <div className="relative w-full md:max-w-md bg-white rounded-t-[20px] md:rounded-[12px] flex flex-col max-h-[92vh] md:max-h-[90vh] overflow-hidden shadow-2xl animate-in slide-in-from-bottom duration-300 ease-out z-10 border-none">
+        <div className="px-5 py-3.5 border-b border-[#eaeaea] flex items-center justify-between flex-shrink-0">
+          <div className="w-full text-center md:text-left">
             <h3 className="text-sm font-bold text-[#111111]">
               Catat Mutasi Kas Manual
             </h3>
@@ -97,13 +104,14 @@ export function RecordMutationModal({
           <button
             type="button"
             onClick={onClose}
-            className="text-[#888888] hover:text-[#111111] text-base p-1 rounded transition-colors cursor-pointer border-none bg-transparent"
+            className="hidden md:flex text-[#888888] hover:text-[#111111] text-base p-1 rounded transition-colors cursor-pointer border-none bg-transparent"
           >
             ✕
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-5 space-y-4">
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+          <div className="p-4 md:p-5 space-y-4 overflow-y-auto flex-1 overscroll-contain">
           {errorMsg && (
             <div className="p-2.5 bg-red-50 border border-red-200 text-red-700 text-xs rounded-[6px] font-medium">
               ⚠️ {errorMsg}
@@ -196,19 +204,22 @@ export function RecordMutationModal({
             />
           </div>
 
-          <div className="pt-2 flex items-center justify-end gap-2 border-t border-[#f0f0f0]">
+          </div>
+
+          {/* Sticky Bottom Action Bar */}
+          <div className="p-4 bg-white border-t border-[#eaeaea] sticky bottom-0 flex-shrink-0 flex items-center justify-end gap-3 z-10">
             <button
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="px-3.5 py-2 text-xs font-medium text-[#666666] hover:bg-[#f5f5f5] rounded-[6px] transition-colors border-none bg-transparent cursor-pointer"
+              className="flex-1 md:flex-none px-4 py-2.5 text-xs font-semibold text-[#666666] bg-[#f5f5f5] hover:bg-[#ebebeb] rounded-[8px] transition-colors"
             >
               Batal
             </button>
             <button
               type="submit"
               disabled={isSubmitting || amount <= 0 || !description.trim()}
-              className="px-4 py-2 bg-[#111111] hover:bg-[#333333] active:scale-[0.99] text-white rounded-[6px] font-semibold text-xs transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer border-none"
+              className="flex-1 md:flex-none py-2.5 px-5 bg-[#111111] hover:bg-[#333333] active:scale-[0.99] text-white rounded-[8px] font-semibold text-xs transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer border-none"
             >
               {isSubmitting ? 'Menyimpan...' : 'Simpan Mutasi'}
             </button>

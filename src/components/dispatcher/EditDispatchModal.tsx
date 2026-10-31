@@ -209,15 +209,22 @@ export function EditDispatchModal({
 
   return (
     <>
-      <div className="fixed inset-0 z-40 flex items-center justify-center p-4 bg-black/50 select-none overflow-y-auto">
+      <div className="fixed inset-0 z-40 flex items-end md:items-center justify-center p-0 md:p-4 select-none">
+        {/* Backdrop */}
         <div 
-          className="w-full max-w-2xl bg-white rounded-[12px] border border-[#eaeaea] shadow-2xl my-6 flex flex-col max-h-[92vh] overflow-hidden"
+          className="fixed inset-0 bg-black/50 transition-opacity"
+          onClick={onClose}
+        />
+
+        {/* Surface: Mobile Bottom Sheet Drawer */}
+        <div 
+          className="relative w-full max-w-2xl bg-white rounded-t-[20px] md:rounded-[12px] my-0 md:my-6 flex flex-col max-h-[92vh] overflow-hidden shadow-2xl animate-in slide-in-from-bottom duration-300 ease-out z-10"
           onClick={e => e.stopPropagation()}
         >
-          {/* Header Modal */}
-          <div className="p-4 sm:p-5 border-b border-[#eaeaea] flex items-center justify-between bg-white sticky top-0 z-10">
-            <div>
-              <div className="flex items-center gap-2">
+          {/* Header Modal Bersih: Judul di tengah pada mobile */}
+          <div className="p-4 sm:p-5 border-b border-[#eaeaea] flex items-center justify-between bg-white flex-shrink-0">
+            <div className="w-full text-center md:text-left">
+              <div className="flex items-center justify-center md:justify-start gap-2">
                 <h3 className="text-sm sm:text-base font-bold text-[#111111]">
                   Edit Tiket Ritase
                 </h3>
@@ -233,7 +240,7 @@ export function EditDispatchModal({
               type="button"
               onClick={onClose}
               aria-label="Tutup form edit"
-              className="text-[#888888] hover:text-[#111111] p-1.5 rounded transition-colors cursor-pointer"
+              className="hidden md:flex text-[#888888] hover:text-[#111111] p-1.5 rounded transition-colors cursor-pointer"
             >
               <img src="/icons/close.png" alt="Tutup" className="w-4 h-4 object-contain" />
             </button>
@@ -245,7 +252,7 @@ export function EditDispatchModal({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               <div>
                 <label className="block text-xs font-semibold text-[#444444] mb-1">
-                  Tanggal Ritase / Jalan:
+                  Tanggal Jalan:
                 </label>
                 <CustomDatePicker
                   value={deliveryDate}
@@ -408,7 +415,7 @@ export function EditDispatchModal({
               {!hideMargin && (
                 <div>
                   <label className="block text-xs font-semibold text-[#444444] mb-1">
-                    Harga Beli Kuari:
+                    Harga Beli ({unit}):
                   </label>
                   <CurrencyInput
                     value={buyPricePerUnit}
@@ -420,7 +427,7 @@ export function EditDispatchModal({
 
               <div>
                 <label className="block text-xs font-semibold text-[#444444] mb-1">
-                  Harga Jual Tempo:
+                  Harga Jual ({unit}):
                 </label>
                 <CurrencyInput
                   value={sellPricePerUnit}
@@ -434,7 +441,7 @@ export function EditDispatchModal({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               <div>
                 <label className="block text-xs font-semibold text-[#444444] mb-1">
-                  Beban Operasional & HOK (Uang Jalan / Supir / Solar):
+                  Beban Operasional & HOK:
                 </label>
                 <CurrencyInput
                   value={operationalCost}
@@ -483,13 +490,13 @@ export function EditDispatchModal({
             </div>
           </div>
 
-          {/* Footer Modal */}
-          <div className="p-4 px-5 border-t border-[#eaeaea] bg-white flex items-center justify-end gap-2.5">
+          {/* Sticky Bottom Action Bar */}
+          <div className="p-4 px-5 border-t border-[#eaeaea] bg-white sticky bottom-0 flex-shrink-0 flex items-center justify-end gap-3 z-10">
             <button
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="px-4 py-2 text-xs font-semibold text-[#555555] bg-white border border-[#dddddd] rounded-[6px] hover:bg-[#f5f5f5] transition-colors cursor-pointer"
+              className="flex-1 md:flex-none px-4 py-2.5 md:py-2 text-xs font-semibold text-[#555555] bg-white border border-[#dddddd] rounded-[8px] md:rounded-[6px] hover:bg-[#f5f5f5] transition-colors cursor-pointer"
             >
               Batal
             </button>
@@ -497,7 +504,7 @@ export function EditDispatchModal({
               type="button"
               onClick={handleInitiateSave}
               disabled={!isFormValid || isSubmitting}
-              className="px-5 py-2 text-xs font-semibold text-white bg-[#111111] hover:bg-black rounded-[6px] transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              className="flex-1 md:flex-none px-5 py-2.5 md:py-2 text-xs font-semibold text-white bg-[#111111] hover:bg-black rounded-[8px] md:rounded-[6px] transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
             >
               {isSubmitting ? 'Menyimpan...' : 'Simpan Perubahan'}
             </button>

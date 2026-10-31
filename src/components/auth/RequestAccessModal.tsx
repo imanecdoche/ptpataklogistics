@@ -63,14 +63,16 @@ export function RequestAccessModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 select-none">
+    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4 select-none">
       <div 
-        className="w-full max-w-md bg-white rounded-[12px] border border-[#eaeaea] shadow-2xl overflow-hidden"
-        onClick={e => e.stopPropagation()}
-      >
+        className="fixed inset-0 bg-black/50 transition-opacity" 
+        onClick={isSubmitting ? undefined : onClose} 
+      />
+      
+      <div className="relative w-full md:max-w-md bg-white rounded-t-[20px] md:rounded-[12px] max-h-[92vh] md:max-h-[90vh] flex flex-col overflow-hidden z-10 shadow-2xl animate-in slide-in-from-bottom duration-300 ease-out select-text">
         {/* Header Modal */}
-        <div className="p-5 border-b border-[#eaeaea] flex items-center justify-between">
-          <div>
+        <div className="px-5 py-3.5 border-b border-[#eaeaea] flex items-center justify-between flex-shrink-0 bg-white">
+          <div className="w-full text-center md:text-left">
             <h3 className="text-base font-bold text-[#111111]">
               Minta Akses Sistem
             </h3>
@@ -82,14 +84,15 @@ export function RequestAccessModal({
             type="button"
             onClick={onClose}
             aria-label="Tutup form"
-            className="text-[#888888] hover:text-[#111111] p-1 rounded transition-colors"
+            className="hidden md:flex text-[#888888] hover:text-[#111111] p-1 rounded transition-colors cursor-pointer border-none bg-transparent"
           >
             <img src="/icons/close.png" alt="Tutup" className="w-4 h-4 object-contain" />
           </button>
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-5 space-y-4 text-xs">
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+          <div className="p-5 space-y-4 text-xs overflow-y-auto flex-1 overscroll-contain">
           {/* Input Nama Lengkap */}
           <div>
             <label className="block text-xs font-semibold text-[#444444] mb-1">
@@ -157,26 +160,27 @@ export function RequestAccessModal({
             </div>
           </div>
 
-          {errorMsg && (
-            <div className="p-2.5 bg-red-50 border border-red-200 rounded-[6px] text-red-600 text-[11px] leading-relaxed">
-              {errorMsg}
-            </div>
-          )}
+            {errorMsg && (
+              <div className="p-2.5 bg-red-50 border border-red-200 rounded-[6px] text-red-600 text-[11px] leading-relaxed">
+                {errorMsg}
+              </div>
+            )}
+          </div>
 
-          {/* Tombol Aksi */}
-          <div className="pt-2 flex items-center justify-end gap-2.5 border-t border-[#eaeaea]">
+          {/* Sticky Bottom Actions */}
+          <div className="p-4 bg-white border-t border-[#eaeaea] sticky bottom-0 flex-shrink-0 flex items-center justify-end gap-3 z-10">
             <button
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="px-4 py-2 text-xs font-semibold text-[#555555] bg-white border border-[#dddddd] rounded-[6px] hover:bg-[#f5f5f5] transition-colors cursor-pointer"
+              className="flex-1 md:flex-none px-4 py-2.5 md:py-2 text-xs font-semibold text-[#555555] bg-white border border-[#dddddd] rounded-[8px] hover:bg-[#f5f5f5] transition-colors cursor-pointer"
             >
               Batal
             </button>
             <button
               type="submit"
               disabled={isSubmitting || !name || !username || password.length < 8}
-              className="px-4 py-2 text-xs font-semibold text-white bg-[#111111] hover:bg-black rounded-[6px] transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+              className="flex-1 md:flex-none px-5 py-2.5 md:py-2 text-xs font-semibold text-white bg-[#111111] hover:bg-black rounded-[8px] transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed border-none shadow-sm"
             >
               {isSubmitting ? 'Mengirim...' : 'Kirim Permintaan'}
             </button>

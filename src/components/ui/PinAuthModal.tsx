@@ -128,17 +128,24 @@ export function PinAuthModal({
   const isComplete = digits.every(d => d !== '');
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
+    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4 select-none">
+      {/* Backdrop */}
       <div 
-        className="w-full max-w-md bg-white rounded-[12px] border border-[#eaeaea] shadow-xl overflow-hidden select-none"
+        className="fixed inset-0 bg-black/50 transition-opacity"
+        onClick={onClose}
+      />
+
+      {/* Surface: Mobile Bottom Sheet Drawer */}
+      <div 
+        className="relative w-full md:max-w-md bg-white rounded-t-[20px] md:rounded-[12px] max-h-[92vh] md:max-h-[90vh] flex flex-col overflow-hidden z-10 shadow-2xl animate-in slide-in-from-bottom duration-300 ease-out"
         onClick={e => e.stopPropagation()}
       >
-        {/* Header Dialog */}
-        <div className="p-5 md:p-6 border-b border-[#eaeaea]">
-          <h3 className="text-base font-semibold text-[#111111]">
+        {/* Header Dialog Bersih: Judul di tengah pada mobile */}
+        <div className="p-4 md:p-6 border-b border-[#eaeaea] flex-shrink-0">
+          <h3 className="text-sm md:text-base font-semibold text-[#111111] text-center md:text-left">
             {title}
           </h3>
-          <p className="text-xs text-[#666666] mt-1 leading-relaxed">
+          <p className="text-xs text-[#666666] mt-1 leading-relaxed text-center md:text-left">
             {description}
           </p>
           {targetLabel && (
@@ -151,20 +158,20 @@ export function PinAuthModal({
           )}
         </div>
 
-        {/* Body: 7 Kotak Digit Terpisah dengan Masking Titik (●) */}
-        <div className="p-5 md:p-6 bg-[#fafafa]/50 flex flex-col items-center">
-          <label className="text-xs font-semibold text-[#444444] mb-3 self-start">
+        {/* Body: Scrollable */}
+        <div className="p-5 md:p-6 bg-[#fafafa]/50 flex flex-col items-center overflow-y-auto flex-1 overscroll-contain">
+          <label className="text-xs font-semibold text-[#444444] mb-3 self-center md:self-start">
             Masukkan Sandi Otorisasi (7 Digit):
           </label>
 
-          <div className={`flex items-center justify-center gap-2 sm:gap-2.5 transition-transform duration-100 ${
+          <div className={`flex items-center justify-center gap-1.5 sm:gap-2.5 transition-transform duration-100 ${
             isShaking ? 'translate-x-1 animate-pulse ring-1 ring-red-400 rounded-lg p-1' : ''
           }`}>
             {digits.map((digit, idx) => (
               <div
                 key={idx}
                 onClick={() => inputRefs.current[idx]?.focus()}
-                className={`relative w-10 h-12 sm:w-11 sm:h-13 bg-white rounded-[8px] border flex items-center justify-center cursor-text transition-all ${
+                className={`relative w-9 h-11 sm:w-11 sm:h-13 bg-white rounded-[8px] border flex items-center justify-center cursor-text transition-all ${
                   inputRefs.current[idx] === document.activeElement
                     ? 'border-[#111111] ring-2 ring-[#111111]/10'
                     : digit
@@ -190,7 +197,7 @@ export function PinAuthModal({
 
                 {/* Tampilan Visual Masking Titik (Hidden angka jadi titik) */}
                 {digit ? (
-                  <span className="w-3 h-3 rounded-full bg-[#111111] pointer-events-none transform scale-110" />
+                  <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-[#111111] pointer-events-none transform scale-110" />
                 ) : (
                   <span className="w-1.5 h-1.5 rounded-full bg-[#d0d0d0] pointer-events-none" />
                 )}
@@ -209,12 +216,12 @@ export function PinAuthModal({
           )}
         </div>
 
-        {/* Footer Tombol Aksi */}
-        <div className="p-4 px-5 md:px-6 bg-white border-t border-[#eaeaea] flex items-center justify-end gap-2.5">
+        {/* Sticky Bottom Action Bar */}
+        <div className="p-4 bg-white border-t border-[#eaeaea] sticky bottom-0 flex-shrink-0 flex items-center justify-end gap-2.5 z-10">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-xs font-semibold text-[#555555] bg-white border border-[#dddddd] rounded-[6px] hover:bg-[#f5f5f5] transition-colors cursor-pointer"
+            className="flex-1 md:flex-none px-4 py-2.5 md:py-2 text-xs font-semibold text-[#555555] bg-white border border-[#dddddd] rounded-[8px] md:rounded-[6px] hover:bg-[#f5f5f5] transition-colors cursor-pointer"
           >
             {cancelText}
           </button>
@@ -222,7 +229,7 @@ export function PinAuthModal({
             type="button"
             onClick={handleSubmit}
             disabled={!isComplete}
-            className={`px-4 py-2 text-xs font-semibold text-white rounded-[6px] transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
+            className={`flex-1 md:flex-none px-5 py-2.5 md:py-2 text-xs font-semibold text-white rounded-[8px] md:rounded-[6px] transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
               isDestructive
                 ? 'bg-[#cf1124] hover:bg-[#b00e1e]'
                 : 'bg-[#111111] hover:bg-[#2b2b2b]'

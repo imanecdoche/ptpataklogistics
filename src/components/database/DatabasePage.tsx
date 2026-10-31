@@ -188,12 +188,12 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
   const quarriesMap = useMemo(() => new Map(quarries.map(q => [q.id, q])), [quarries]);
   const vehiclesMap = useMemo(() => {
     const m = new Map<string, MasterVehicle>();
-    masterVehicles.forEach(v => {
-      m.set(v.plateNumber.replace(/\s+/g, '').toUpperCase(), v);
+    combinedVehicles.forEach(v => {
+      if (v.plateNumber) m.set(v.plateNumber.replace(/\s+/g, '').toUpperCase(), v);
       if (v.id) m.set(v.id.replace(/\s+/g, '').toUpperCase(), v);
     });
     return m;
-  }, [masterVehicles]);
+  }, [combinedVehicles]);
   const driversMap = useMemo(() => {
     const m = new Map<string, MasterDriver>();
     drivers.forEach(d => {

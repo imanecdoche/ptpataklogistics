@@ -24,8 +24,13 @@ const TAB_TITLES: Record<NavigationTab, { title: string; mobileTitle?: string; s
     subtitle: ''
   },
   dispatcher: {
-    title: 'Dispatcher & Ritase',
-    mobileTitle: 'Catat Ritase',
+    title: 'Dispatcher',
+    mobileTitle: 'Dispatcher',
+    subtitle: ''
+  },
+  ritase: {
+    title: 'Riwayat Ritase Armada',
+    mobileTitle: 'Riwayat Ritase',
     subtitle: ''
   },
   projects: {
@@ -120,11 +125,11 @@ export function AppShell({
     }
   };
 
-  const PROJECT_FILTER_SUPPORTED_TABS: NavigationTab[] = ['dashboard', 'dispatcher', 'recap'];
+  const PROJECT_FILTER_SUPPORTED_TABS: NavigationTab[] = ['dashboard', 'dispatcher', 'ritase', 'recap'];
   const showProjectFilter = PROJECT_FILTER_SUPPORTED_TABS.includes(activeTab);
 
   return (
-    <div className="h-dvh max-h-dvh overflow-hidden bg-[#fafafa] flex flex-col md:flex-row font-sans text-[#171717]">
+    <div className="h-dvh max-h-dvh overflow-hidden bg-[#ededed] flex flex-col md:flex-row font-sans text-[#171717]">
       {/* Sidebar Component */}
       <Sidebar
         user={user}

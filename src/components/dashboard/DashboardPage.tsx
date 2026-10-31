@@ -55,6 +55,18 @@ export function DashboardPage({
     }).format(val);
   };
 
+  // Format Volume Satuan DT (Integer Murni) & Ton (Maksimal 1 Desimal)
+  const formatVolumeDt = (val: number): string => {
+    return Math.round(val).toLocaleString('id-ID');
+  };
+
+  const formatVolumeTon = (val: number): string => {
+    if (Number.isInteger(val)) {
+      return val.toLocaleString('id-ID');
+    }
+    return Number(val.toFixed(1)).toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 1 });
+  };
+
   // Subscriptions ke Firestore
   useEffect(() => {
     setIsLoading(true);
@@ -108,7 +120,12 @@ export function DashboardPage({
     );
 
     const totalTrips = todayTx.length;
-    const totalVolume = todayTx.reduce((acc, t) => acc + (Number(t.quantity) || 0), 0);
+    const totalVolumeDt = todayTx
+      .filter(t => t.unit === 'DT' || !t.unit)
+      .reduce((acc, t) => acc + (Number(t.quantity) || 0), 0);
+    const totalVolumeTon = todayTx
+      .filter(t => t.unit === 'Ton')
+      .reduce((acc, t) => acc + (Number(t.quantity) || 0), 0);
     const totalRevenue = todayTx.reduce((acc, t) => acc + (Number(t.totalRevenue) || 0), 0);
     const totalProfit = todayTx.reduce((acc, t) => acc + (Number(t.netProfit) || 0), 0);
     const totalBuyCost = todayTx.reduce((acc, t) => acc + (Number(t.totalBuyCost) || 0), 0);
@@ -129,7 +146,8 @@ export function DashboardPage({
 
     return {
       totalTrips,
-      totalVolume,
+      totalVolumeDt,
+      totalVolumeTon,
       totalRevenue,
       totalProfit,
       totalBuyCost,
@@ -159,7 +177,7 @@ export function DashboardPage({
                 <span className="text-xs text-[#777777]">trip</span>
               </div>
               <span className="text-[11px] text-[#888888] mt-1">
-                Volume: <strong className="font-bold text-[#111111]">{todayMetrics.totalVolume}</strong> DT/Ton
+                Volume: <strong className="font-bold text-[#111111]">{formatVolumeDt(todayMetrics.totalVolumeDt)}</strong> DT | <strong className="font-bold text-[#111111]">{formatVolumeTon(todayMetrics.totalVolumeTon)}</strong> Ton
               </span>
             </div>
 
@@ -181,9 +199,13 @@ export function DashboardPage({
                 />
               </div>
               <span className="text-[11px] text-[#888888] mt-1">
-                {hideMargin
-                  ? `Volume: ${todayMetrics.totalVolume} DT/Ton`
-                  : `Omzet: ${formatRupiah(todayMetrics.totalRevenue)}`}
+                {hideMargin ? (
+                  <>
+                    Volume: <strong className="font-bold text-[#111111]">{formatVolumeDt(todayMetrics.totalVolumeDt)}</strong> DT | <strong className="font-bold text-[#111111]">{formatVolumeTon(todayMetrics.totalVolumeTon)}</strong> Ton
+                  </>
+                ) : (
+                  `Omzet: ${formatRupiah(todayMetrics.totalRevenue)}`
+                )}
               </span>
             </div>
 

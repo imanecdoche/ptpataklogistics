@@ -49,15 +49,15 @@ export function DispatchDetailModal({
     >
       {/* Solid Dim Backdrop */}
       <div
-        className="fixed inset-0 bg-black/40 transition-opacity"
+        className="fixed inset-0 bg-black/50 transition-opacity"
         onClick={onClose}
       />
 
-      {/* Solid Container Card (Bottom Sheet di mobile, Center Pop-up di Desktop) */}
-      <div className="relative w-full md:max-w-md bg-white rounded-t-[16px] md:rounded-[12px] p-5 md:p-6 z-10 max-h-[90vh] overflow-y-auto animate-in fade-in slide-in-from-bottom-4 md:zoom-in-95 duration-200 border-none">
-        {/* Header Dialog */}
-        <div className="flex items-center justify-between pb-3 border-b border-[#eaeaea]">
-          <div>
+      {/* Solid Container Card (Bottom Sheet Drawer di mobile, Center Pop-up di Desktop) */}
+      <div className="relative w-full md:max-w-md bg-white rounded-t-[20px] md:rounded-[12px] flex flex-col max-h-[92vh] md:max-h-[90vh] overflow-hidden shadow-2xl animate-in slide-in-from-bottom duration-300 ease-out z-10 border-none">
+        {/* Header Dialog Bersih: Judul di tengah pada mobile */}
+        <div className="p-4 md:p-5 border-b border-[#eaeaea] flex items-center justify-between flex-shrink-0">
+          <div className="w-full text-center md:text-left">
             <h3 className="text-sm md:text-base font-semibold text-[#111111]">
               Rincian Tiket Ritase
             </h3>
@@ -69,7 +69,7 @@ export function DispatchDetailModal({
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-full hover:bg-[#f5f5f5] transition-colors"
+            className="hidden md:flex p-1.5 rounded-full hover:bg-[#f5f5f5] transition-colors"
             aria-label="Tutup dialog"
           >
             <img
@@ -80,8 +80,8 @@ export function DispatchDetailModal({
           </button>
         </div>
 
-        {/* Content Details */}
-        <div className="py-4 space-y-3.5 text-xs">
+        {/* Content Details Scrollable */}
+        <div className="p-4 md:p-5 overflow-y-auto flex-1 overscroll-contain space-y-3.5 text-xs">
           {/* Row Data Armada, Konsumen & Proyek (Stacked di mobile, split di desktop) */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pb-3 border-b border-[#f5f5f5]">
             <div>
@@ -252,6 +252,17 @@ export function DispatchDetailModal({
               </p>
             </div>
           )}
+        </div>
+
+        {/* Sticky Bottom Close Action Bar */}
+        <div className="p-3.5 bg-white border-t border-[#eaeaea] sticky bottom-0 flex-shrink-0 flex items-center justify-center z-10">
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-full py-2.5 text-xs font-semibold text-[#666666] bg-[#f5f5f5] hover:bg-[#ebebeb] rounded-[8px] transition-colors"
+          >
+            Tutup
+          </button>
         </div>
       </div>
     </div>
