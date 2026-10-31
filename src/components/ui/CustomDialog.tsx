@@ -51,9 +51,9 @@ export function CustomDialog({
       aria-labelledby="custom-dialog-title"
       className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4 select-none"
     >
-      {/* Solid Dimmed Backdrop (Tanpa Blur / Anti-Glassmorphism) */}
+      {/* Dimmed Backdrop with Blur (Tap on blur to close) */}
       <div
-        className="fixed inset-0 bg-black/50 transition-opacity"
+        className="fixed inset-0 bg-black/50 backdrop-blur-xs transition-opacity"
         onClick={() => {
           if (!isLoading) onClose();
         }}

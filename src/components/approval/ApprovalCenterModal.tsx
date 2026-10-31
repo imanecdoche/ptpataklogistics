@@ -111,7 +111,7 @@ export function ApprovalCenterModal({
 
   return (
     <>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 select-none">
+      <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4 select-none">
         {/* Backdrop */}
         <div 
           className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
@@ -120,7 +120,7 @@ export function ApprovalCenterModal({
 
         {/* Modal Window */}
         <div 
-          className="relative w-full max-w-3xl bg-white rounded-[16px] shadow-2xl flex flex-col h-[92vh] sm:h-[88vh] max-h-[92vh] sm:max-h-[88vh] overflow-hidden z-10 animate-in fade-in zoom-in-95 duration-200"
+          className="relative w-full md:max-w-3xl bg-white rounded-t-[20px] md:rounded-[16px] shadow-2xl flex flex-col h-[92vh] md:h-[88vh] max-h-[92vh] md:max-h-[88vh] overflow-hidden z-10 animate-in slide-in-from-bottom duration-300 ease-out"
           onClick={e => e.stopPropagation()}
         >
           {/* Header */}

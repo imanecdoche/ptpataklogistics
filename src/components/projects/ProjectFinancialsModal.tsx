@@ -119,10 +119,16 @@ export function ProjectFinancialsModal({
 
   return (
     <>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-xs select-none">
-        {/* Modal Window Container */}
+      <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4 select-none">
+        {/* Backdrop (Tap on blur to close) */}
         <div 
-          className="relative w-full max-w-5xl bg-white rounded-[16px] shadow-2xl flex flex-col h-[92vh] sm:h-[88vh] max-h-[92vh] sm:max-h-[88vh] overflow-hidden z-10 animate-in fade-in zoom-in-95 duration-200"
+          className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
+          onClick={onClose}
+        />
+
+        {/* Modal / Bottom Drawer Container */}
+        <div 
+          className="relative w-full md:max-w-5xl bg-white rounded-t-[20px] md:rounded-[16px] shadow-2xl flex flex-col h-[92vh] md:h-[88vh] max-h-[92vh] md:max-h-[88vh] overflow-hidden z-10 animate-in slide-in-from-bottom duration-300 ease-out"
           onClick={e => e.stopPropagation()}
         >
           {/* Header Panel */}

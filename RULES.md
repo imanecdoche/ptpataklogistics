@@ -1434,6 +1434,21 @@ Dokumen ini adalah hukum tertinggi operasional sistem. Kegagalan mematuhi aturan
       * Label tab menggunakan teks bersih dengan penghitung netral sederhana, contoh: `Sub-Pekerjaan (n)`, `Ritase Material (n)`, `Kasbon Mandor (n)`, `Pembayaran Klien (n)`.
       * Indikator tab aktif ditandai secara elegan dengan garis bawah hitam solid (`border-b-2 border-[#111111] text-[#111111]`).
 
+124. **Standar Universal Modal Mobile (Drawer Bottom Panel / Bottom Sheet)**:
+    - **Pola Bottom Sheet Menempel di Dasar Layar (Mobile)**:
+      * Khusus tampilan mobile (`< md:`), SELURUH modal pop-up window di sistem WAJIB bertransformasi menjadi **drawer bottom panel (bottom sheet)**:
+        1. **Posisi & Margin**: Menempel di dasar layar tanpa margin samping/bawah (`flex items-end md:items-center justify-center p-0 md:p-4`).
+        2. **Lebar Penuh**: Lebar 100% layar mobile penuh (`w-full md:max-w-...`).
+        3. **Sudut Membulat**: Membulat hanya di sisi atas (`rounded-t-[20px] md:rounded-[12px]` atau `md:rounded-[16px]`).
+        4. **Tanpa Pull Handle Bar**: Langsung menampilkan header judul modal yang bersih menempel di bagian atas.
+        5. **Tinggi Fixed Proporsional**: Untuk modal data/rekapitulasi besar (`ProjectFinancialsModal`, `InvestorLedgerModal`), tinggi di mobile ditetapkan **`h-[92vh] max-h-[92vh]`** (memberi sisa ruang gelap ~8vh di bagian atas), sedangkan modal form input ringkas menggunakan `max-h-[92vh]`.
+    - **Animasi Meluncur Mulus (Smooth Slide-In & Slide-Out)**:
+      * Animasi kemunculan drawer di mobile WAJIB menggunakan efek meluncur mulus dari dasar layar: **`animate-in slide-in-from-bottom duration-300 ease-out`**.
+    - **Backdrop & Tap on Blur to Close**:
+      * Seluruh modal wajib memiliki lapisan backdrop terpisah: `<div className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity" onClick={onClose} />`.
+      * Menyentuh/tap pada area blur di luar panel drawer (*tap on blur*) otomatis menutup modal secara instan dan responsif.
+
+
 
 
 
