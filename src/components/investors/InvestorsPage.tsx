@@ -3,6 +3,7 @@ import {
   Investor,
   Project,
   InvestorProjectLink,
+  ProfitShareScheme,
   DispatchTransaction,
   InvestorPayout,
   InvestorTransferLog,
@@ -24,6 +25,7 @@ import { TableActionMenu } from '@/components/ui/TableActionMenu';
 import { PinAuthModal } from '@/components/ui/PinAuthModal';
 import { CurrencyInput } from '@/components/ui/CurrencyInput';
 import { formatDateID } from '@/lib/dateSearchUtils';
+import { calculateInvestorFinancials } from '@/lib/investorFinanceUtils';
 import { useProjectFilter } from '@/context/ProjectFilterContext';
 import { MetricCardCurrency } from '@/components/ui/MetricCardCurrency';
 import { PhoneInput } from '@/components/ui/PhoneInput';
@@ -65,6 +67,13 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
   const [phoneNumber, setPhoneNumber] = useState('');
   const [bankAccount, setBankAccount] = useState('');
   const [initialCapital, setInitialCapital] = useState<number>(0);
+  const [profitShareScheme, setProfitShareScheme] = useState<ProfitShareScheme>('PERCENTAGE');
+  const [profitSharePercentage, setProfitSharePercentage] = useState<number>(50);
+  const [fixedMonthlyAmount, setFixedMonthlyAmount] = useState<number>(0);
+  const [fixedPayoutDay, setFixedPayoutDay] = useState<number>(25);
+  const [investmentStartDate, setInvestmentStartDate] = useState<string>(
+    new Date().toISOString().slice(0, 10)
+  );
   const [notes, setNotes] = useState('');
   const [addLinkedProjects, setAddLinkedProjects] = useState<InvestorProjectLink[]>([]);
   const [addProjectQuery, setAddProjectQuery] = useState('');
@@ -162,34 +171,28 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
     return map;
   }, [projects]);
 
-  // Hitung estimasi hak bagi hasil akumulasi per investor
-  const investorProfitShareMap = useMemo(() => {
-    const map = new Map<string, number>();
-
+  // Hitung estimasi hak bagi hasil akumulasi per investor (Mendukung Persentase & Fixed Bulanan)
+  const investorFinancialsMap = useMemo(() => {
+    const map = new Map<string, ReturnType<typeof calculateInvestorFinancials>>();
     investors.forEach(inv => {
-      const fundedProjects = projects.filter(p => p.investorId === inv.id);
-      let totalEarned = 0;
-
-      fundedProjects.forEach(proj => {
-        const projTxs = transactions.filter(t => t.projectId === proj.id);
-        const projRev = projTxs.reduce((acc, t) => acc + (t.totalRevenue || 0), 0);
-        const projExp = projTxs.reduce((acc, t) => acc + (t.totalBuyCost || 0) + (t.operationalCost || 0), 0);
-        const projNet = projRev - projExp;
-        const sharePct = proj.profitSharePercentage || inv.profitSharePercentage || 50;
-        if (projNet > 0) {
-          totalEarned += projNet * (sharePct / 100);
-        }
+      const fin = calculateInvestorFinancials({
+        investor: inv,
+        projects,
+        transactions,
+        payouts
       });
-
-      const withdrawn = payouts
-        .filter(p => p.investorId === inv.id)
-        .reduce((acc, p) => acc + (p.amount || 0), 0);
-
-      map.set(inv.id, Math.max(0, totalEarned - withdrawn));
+      map.set(inv.id, fin);
     });
-
     return map;
   }, [investors, projects, transactions, payouts]);
+
+  const investorProfitShareMap = useMemo(() => {
+    const map = new Map<string, number>();
+    investorFinancialsMap.forEach((fin, invId) => {
+      map.set(invId, fin.remainingProfitShare);
+    });
+    return map;
+  }, [investorFinancialsMap]);
 
 
   // Hitung akumulasi transfer & talangan aktif per investor
@@ -246,6 +249,11 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
     setPhoneNumber('');
     setBankAccount('');
     setInitialCapital(0);
+    setProfitShareScheme('PERCENTAGE');
+    setProfitSharePercentage(50);
+    setFixedMonthlyAmount(0);
+    setFixedPayoutDay(25);
+    setInvestmentStartDate(new Date().toISOString().slice(0, 10));
     setNotes('');
     setAddLinkedProjects([]);
     setAddProjectQuery('');
@@ -276,7 +284,11 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
         projectId: p.id,
         projectName: p.name,
         capitalAllocation: p.initialDeposit || 0,
-        profitSharePercentage: p.profitSharePercentage || 50
+        profitShareScheme: p.profitShareScheme || profitShareScheme || 'PERCENTAGE',
+        profitSharePercentage: p.profitSharePercentage ?? profitSharePercentage ?? 50,
+        fixedMonthlyAmount: p.fixedMonthlyAmount ?? fixedMonthlyAmount ?? 0,
+        fixedPayoutDay: p.fixedPayoutDay ?? fixedPayoutDay ?? 25,
+        investmentStartDate: p.investmentStartDate || investmentStartDate || new Date().toISOString().slice(0, 10)
       }
     ];
     setAddLinkedProjects(updated);
@@ -302,9 +314,30 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
     setInitialCapital(sum);
   };
 
+  const handleUpdateAddProjectScheme = (projectId: string, scheme: ProfitShareScheme) => {
+    const updated = addLinkedProjects.map(p =>
+      p.projectId === projectId ? { ...p, profitShareScheme: scheme } : p
+    );
+    setAddLinkedProjects(updated);
+  };
+
   const handleUpdateAddProjectProfitShare = (projectId: string, pct: number) => {
     const updated = addLinkedProjects.map(p =>
       p.projectId === projectId ? { ...p, profitSharePercentage: pct } : p
+    );
+    setAddLinkedProjects(updated);
+  };
+
+  const handleUpdateAddProjectFixedAmount = (projectId: string, amt: number) => {
+    const updated = addLinkedProjects.map(p =>
+      p.projectId === projectId ? { ...p, fixedMonthlyAmount: amt } : p
+    );
+    setAddLinkedProjects(updated);
+  };
+
+  const handleUpdateAddProjectFixedDay = (projectId: string, day: number) => {
+    const updated = addLinkedProjects.map(p =>
+      p.projectId === projectId ? { ...p, fixedPayoutDay: day } : p
     );
     setAddLinkedProjects(updated);
   };
@@ -318,6 +351,11 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
         phoneNumber: phoneNumber.trim(),
         bankAccount: bankAccount.trim(),
         initialCapital: initialCapital || 0,
+        profitShareScheme,
+        profitSharePercentage: Number(profitSharePercentage) || 0,
+        fixedMonthlyAmount: Number(fixedMonthlyAmount) || 0,
+        fixedPayoutDay: Number(fixedPayoutDay) || 25,
+        investmentStartDate,
         linkedProjects: addLinkedProjects,
         notes: notes.trim()
       });
@@ -328,7 +366,14 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
 
   // Otorisasi Aksi Edit Investor
   const handleOpenEdit = (inv: Investor) => {
-    setEditTarget(inv);
+    setEditTarget({
+      ...inv,
+      profitShareScheme: inv.profitShareScheme || 'PERCENTAGE',
+      profitSharePercentage: inv.profitSharePercentage ?? 50,
+      fixedMonthlyAmount: inv.fixedMonthlyAmount ?? 0,
+      fixedPayoutDay: inv.fixedPayoutDay ?? 25,
+      investmentStartDate: inv.investmentStartDate || inv.createdAt?.slice(0, 10) || new Date().toISOString().slice(0, 10)
+    });
     const links: InvestorProjectLink[] = (inv.linkedProjects && inv.linkedProjects.length > 0)
       ? inv.linkedProjects
       : projects
@@ -337,7 +382,11 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
             projectId: p.id,
             projectName: p.name,
             capitalAllocation: p.initialDeposit || 0,
-            profitSharePercentage: p.profitSharePercentage || inv.profitSharePercentage || 50
+            profitShareScheme: p.profitShareScheme || inv.profitShareScheme || 'PERCENTAGE',
+            profitSharePercentage: p.profitSharePercentage ?? inv.profitSharePercentage ?? 50,
+            fixedMonthlyAmount: p.fixedMonthlyAmount ?? inv.fixedMonthlyAmount ?? 0,
+            fixedPayoutDay: p.fixedPayoutDay ?? inv.fixedPayoutDay ?? 25,
+            investmentStartDate: p.investmentStartDate || inv.investmentStartDate || inv.createdAt?.slice(0, 10) || new Date().toISOString().slice(0, 10)
           }));
     setEditLinkedProjects(links);
     setEditProjectQuery('');
@@ -351,7 +400,11 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
         projectId: p.id,
         projectName: p.name,
         capitalAllocation: p.initialDeposit || 0,
-        profitSharePercentage: p.profitSharePercentage || 50
+        profitShareScheme: p.profitShareScheme || editTarget?.profitShareScheme || 'PERCENTAGE',
+        profitSharePercentage: p.profitSharePercentage ?? editTarget?.profitSharePercentage ?? 50,
+        fixedMonthlyAmount: p.fixedMonthlyAmount ?? editTarget?.fixedMonthlyAmount ?? 0,
+        fixedPayoutDay: p.fixedPayoutDay ?? editTarget?.fixedPayoutDay ?? 25,
+        investmentStartDate: p.investmentStartDate || editTarget?.investmentStartDate || new Date().toISOString().slice(0, 10)
       }
     ];
     setEditLinkedProjects(updated);
@@ -383,9 +436,30 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
     }
   };
 
+  const handleUpdateEditProjectScheme = (projectId: string, scheme: ProfitShareScheme) => {
+    const updated = editLinkedProjects.map(p =>
+      p.projectId === projectId ? { ...p, profitShareScheme: scheme } : p
+    );
+    setEditLinkedProjects(updated);
+  };
+
   const handleUpdateEditProjectProfitShare = (projectId: string, pct: number) => {
     const updated = editLinkedProjects.map(p =>
       p.projectId === projectId ? { ...p, profitSharePercentage: pct } : p
+    );
+    setEditLinkedProjects(updated);
+  };
+
+  const handleUpdateEditProjectFixedAmount = (projectId: string, amt: number) => {
+    const updated = editLinkedProjects.map(p =>
+      p.projectId === projectId ? { ...p, fixedMonthlyAmount: amt } : p
+    );
+    setEditLinkedProjects(updated);
+  };
+
+  const handleUpdateEditProjectFixedDay = (projectId: string, day: number) => {
+    const updated = editLinkedProjects.map(p =>
+      p.projectId === projectId ? { ...p, fixedPayoutDay: day } : p
     );
     setEditLinkedProjects(updated);
   };
@@ -402,6 +476,11 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
           phoneNumber: editTarget.phoneNumber?.trim(),
           bankAccount: editTarget.bankAccount?.trim(),
           initialCapital: editTarget.initialCapital || 0,
+          profitShareScheme: editTarget.profitShareScheme || 'PERCENTAGE',
+          profitSharePercentage: Number(editTarget.profitSharePercentage) || 0,
+          fixedMonthlyAmount: Number(editTarget.fixedMonthlyAmount) || 0,
+          fixedPayoutDay: Number(editTarget.fixedPayoutDay) || 25,
+          investmentStartDate: editTarget.investmentStartDate || '',
           linkedProjects: editLinkedProjects,
           notes: editTarget.notes?.trim()
         },
@@ -665,19 +744,39 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
                       <td className="py-2.5 px-3 text-[#111111] whitespace-nowrap w-[240px] align-middle">
                         {linkedProjects.length > 0 ? (
                           <div className="flex flex-col gap-1">
-                            {linkedProjects.map(p => (
-                              <div key={p.id} className="text-xs truncate">
-                                <span className="font-semibold text-[#111111]">{p.name}</span>
-                                {p.profitSharePercentage ? (
-                                  <span className="ml-1.5 text-[10px] font-bold text-white bg-[#15803d] px-2 py-0.5 rounded-full inline-block">
-                                    {p.profitSharePercentage}%
-                                  </span>
-                                ) : null}
-                              </div>
-                            ))}
+                            {linkedProjects.map(p => {
+                              const isFixed = p.profitShareScheme === 'FIXED_MONTHLY' || (!p.profitShareScheme && inv.profitShareScheme === 'FIXED_MONTHLY');
+                              const fixedAmt = p.fixedMonthlyAmount ?? inv.fixedMonthlyAmount ?? 0;
+                              const dueDay = p.fixedPayoutDay ?? inv.fixedPayoutDay ?? 25;
+                              const pct = p.profitSharePercentage ?? inv.profitSharePercentage ?? 50;
+                              return (
+                                <div key={p.id} className="text-xs truncate flex items-center gap-1.5">
+                                  <span className="font-semibold text-[#111111]">{p.name}</span>
+                                  {isFixed ? (
+                                    <span className="text-[10px] font-bold text-white bg-[#0284c7] px-2 py-0.5 rounded-full inline-block border-none whitespace-nowrap flex-shrink-0">
+                                      Fixed: {formatRupiah(fixedAmt)}/bln (Tgl {dueDay})
+                                    </span>
+                                  ) : (
+                                    <span className="text-[10px] font-bold text-white bg-[#15803d] px-2 py-0.5 rounded-full inline-block border-none whitespace-nowrap flex-shrink-0">
+                                      {pct}%
+                                    </span>
+                                  )}
+                                </div>
+                              );
+                            })}
                           </div>
                         ) : (
-                          <span className="text-[#888888]">-</span>
+                          inv.profitShareScheme === 'FIXED_MONTHLY' ? (
+                            <span className="text-[10px] font-bold text-white bg-[#0284c7] px-2 py-0.5 rounded-full inline-block border-none whitespace-nowrap flex-shrink-0">
+                              Fixed: {formatRupiah(inv.fixedMonthlyAmount || 0)}/bln (Tgl {inv.fixedPayoutDay || 25})
+                            </span>
+                          ) : inv.profitSharePercentage ? (
+                            <span className="text-[10px] font-bold text-white bg-[#15803d] px-2 py-0.5 rounded-full inline-block border-none whitespace-nowrap flex-shrink-0">
+                              {inv.profitSharePercentage}%
+                            </span>
+                          ) : (
+                            <span className="text-[#888888]">-</span>
+                          )
                         )}
                       </td>
                       <td className="py-2.5 px-3 text-right whitespace-nowrap w-[150px] align-middle">
@@ -992,6 +1091,113 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
                 </div>
               </div>
 
+              {/* Section Skema Bagi Hasil Investor */}
+              <div className="p-3.5 bg-[#fcfcfc] border border-[#eaeaea] rounded-[8px] space-y-3">
+                <div>
+                  <span className="font-semibold text-xs text-[#111111] block">
+                    Skema Bagi Hasil Investor
+                  </span>
+                  <span className="text-[11px] text-[#666666] block">
+                    Pilih skema default bagi hasil: Persentase dari laba ritase atau Nominal tetap bulanan
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-1.5 p-1 bg-[#eeeeee] rounded-[8px]">
+                  <button
+                    type="button"
+                    onClick={() => setProfitShareScheme('PERCENTAGE')}
+                    className={`py-2 px-3 text-xs font-semibold rounded-[6px] transition-colors cursor-pointer border-none ${
+                      profitShareScheme === 'PERCENTAGE'
+                        ? 'bg-[#111111] text-white shadow-sm'
+                        : 'bg-transparent text-[#666666] hover:text-[#111111]'
+                    }`}
+                  >
+                    Persentase Laba (%)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setProfitShareScheme('FIXED_MONTHLY')}
+                    className={`py-2 px-3 text-xs font-semibold rounded-[6px] transition-colors cursor-pointer border-none ${
+                      profitShareScheme === 'FIXED_MONTHLY'
+                        ? 'bg-[#111111] text-white shadow-sm'
+                        : 'bg-transparent text-[#666666] hover:text-[#111111]'
+                    }`}
+                  >
+                    Nominal Tetap Bulanan (Rp)
+                  </button>
+                </div>
+
+                {profitShareScheme === 'PERCENTAGE' ? (
+                  <div>
+                    <label className="block text-[#333333] font-semibold mb-1">
+                      Porsi Bagi Hasil Investor (%) <span className="text-red-500">*</span>
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={profitSharePercentage}
+                        onChange={e => setProfitSharePercentage(Number(e.target.value) || 0)}
+                        className="w-24 bg-white border border-[#eaeaea] rounded-[6px] px-3 py-2 text-xs font-bold text-[#111111] outline-none focus:border-[#111111]"
+                      />
+                      <span className="text-xs text-[#666666]">
+                        % dari laba bersih ritase proyek yang didanai
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[#333333] font-semibold mb-1">
+                          Nominal Tetap per Bulan (Rp) <span className="text-red-500">*</span>
+                        </label>
+                        <CurrencyInput
+                          value={fixedMonthlyAmount}
+                          onChange={setFixedMonthlyAmount}
+                          placeholder="0"
+                          variant="solid-white"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[#333333] font-semibold mb-1">
+                          Tanggal Jatuh Tempo Bulanan <span className="text-red-500">*</span>
+                        </label>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-[#666666]">Tiap tgl</span>
+                          <input
+                            type="number"
+                            min="1"
+                            max="31"
+                            value={fixedPayoutDay}
+                            onChange={e => setFixedPayoutDay(Math.min(31, Math.max(1, Number(e.target.value) || 1)))}
+                            className="w-16 bg-white border border-[#eaeaea] rounded-[6px] px-2 py-2 text-xs font-bold text-center text-[#111111] outline-none focus:border-[#111111]"
+                          />
+                          <span className="text-xs text-[#666666]">per bulan</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[#333333] font-semibold mb-1">
+                        Tanggal Mulai Investasi <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="date"
+                        value={investmentStartDate}
+                        onChange={e => setInvestmentStartDate(e.target.value)}
+                        className="w-full sm:w-48 bg-white border border-[#eaeaea] rounded-[6px] px-3 py-2 text-xs text-[#111111] outline-none focus:border-[#111111]"
+                      />
+                      <span className="text-[11px] text-[#888888] block mt-1">
+                        Periode bagi hasil bulanan dihitung dari tanggal mulai ini.
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {/* Section Pengaitan Proyek & Alokasi Modal */}
               <div className="p-3.5 bg-[#fcfcfc] border border-[#eaeaea] rounded-[8px] space-y-3">
                 <div className="flex items-center justify-between">
@@ -1074,57 +1280,118 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    {addLinkedProjects.map(link => (
-                      <div
-                        key={link.projectId}
-                        className="bg-white border border-[#eaeaea] rounded-[6px] p-2.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5"
-                      >
-                        <div className="flex-1 min-w-0">
-                          <span className="font-bold text-xs text-[#111111] block truncate">
-                            {link.projectName}
-                          </span>
-                          <span className="text-[10px] font-mono text-[#888888] block">
-                            {link.projectId}
-                          </span>
-                        </div>
+                    {addLinkedProjects.map(link => {
+                      const isFixed = link.profitShareScheme === 'FIXED_MONTHLY';
+                      return (
+                        <div
+                          key={link.projectId}
+                          className="bg-white border border-[#eaeaea] rounded-[6px] p-2.5 flex flex-col gap-2"
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                              <span className="font-bold text-xs text-[#111111] block truncate">
+                                {link.projectName}
+                              </span>
+                              <span className="text-[10px] font-mono text-[#888888] block">
+                                {link.projectId}
+                              </span>
+                            </div>
 
-                        <div className="flex items-center gap-2">
-                          <div className="w-32">
-                            <label className="block text-[10px] text-[#666666] font-medium mb-0.5">
-                              Alokasi Modal (Rp)
-                            </label>
-                            <CurrencyInput
-                              value={link.capitalAllocation}
-                              onChange={val => handleUpdateAddProjectAllocation(link.projectId, val)}
-                              className="w-full text-xs font-bold tracking-tight text-[#111111] px-2 py-1 border border-[#eaeaea] rounded"
-                            />
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveAddProjectLink(link.projectId)}
+                              className="text-[#cf1124] hover:bg-red-50 p-1 rounded transition-colors cursor-pointer text-xs"
+                              title="Hapus Kaitan Proyek"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
                           </div>
 
-                          <div className="w-20">
-                            <label className="block text-[10px] text-[#666666] font-medium mb-0.5">
-                              Bagi Hasil (%)
-                            </label>
-                            <input
-                              type="number"
-                              min="0"
-                              max="100"
-                              value={link.profitSharePercentage ?? 50}
-                              onChange={e => handleUpdateAddProjectProfitShare(link.projectId, Number(e.target.value) || 0)}
-                              className="w-full text-xs font-bold text-center px-2 py-1 border border-[#eaeaea] rounded outline-none focus:border-[#111111]"
-                            />
-                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 border-t border-[#f0f0f0] items-end">
+                            <div>
+                              <label className="block text-[10px] text-[#666666] font-medium mb-0.5">
+                                Alokasi Modal (Rp)
+                              </label>
+                              <CurrencyInput
+                                value={link.capitalAllocation}
+                                onChange={val => handleUpdateAddProjectAllocation(link.projectId, val)}
+                                className="w-full text-xs font-bold tracking-tight text-[#111111] px-2 py-1 border border-[#eaeaea] rounded"
+                              />
+                            </div>
 
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveAddProjectLink(link.projectId)}
-                            className="text-[#cf1124] hover:bg-red-50 p-1.5 rounded transition-colors cursor-pointer text-xs self-end sm:self-center"
-                            title="Hapus Kaitan Proyek"
-                          >
-                            <X className="w-3.5 h-3.5" />
-                          </button>
+                            <div>
+                              <label className="block text-[10px] text-[#666666] font-medium mb-0.5">
+                                Skema Proyek
+                              </label>
+                              <div className="flex items-center gap-1 bg-[#eeeeee] p-0.5 rounded-[4px]">
+                                <button
+                                  type="button"
+                                  onClick={() => handleUpdateAddProjectScheme(link.projectId, 'PERCENTAGE')}
+                                  className={`flex-1 py-0.5 text-[10px] font-bold rounded-[3px] border-none cursor-pointer ${
+                                    !isFixed ? 'bg-[#111111] text-white' : 'text-[#666666]'
+                                  }`}
+                                >
+                                  % Laba
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleUpdateAddProjectScheme(link.projectId, 'FIXED_MONTHLY')}
+                                  className={`flex-1 py-0.5 text-[10px] font-bold rounded-[3px] border-none cursor-pointer ${
+                                    isFixed ? 'bg-[#0284c7] text-white' : 'text-[#666666]'
+                                  }`}
+                                >
+                                  Rp Fixed
+                                </button>
+                              </div>
+                            </div>
+
+                            <div>
+                              {isFixed ? (
+                                <div className="flex items-center gap-1">
+                                  <div className="flex-1">
+                                    <label className="block text-[10px] text-[#666666] font-medium mb-0.5">
+                                      Nominal/Bln
+                                    </label>
+                                    <CurrencyInput
+                                      value={link.fixedMonthlyAmount ?? 0}
+                                      onChange={val => handleUpdateAddProjectFixedAmount(link.projectId, val)}
+                                      className="w-full text-xs font-bold tracking-tight text-[#111111] px-2 py-1 border border-[#eaeaea] rounded"
+                                    />
+                                  </div>
+                                  <div className="w-14">
+                                    <label className="block text-[10px] text-[#666666] font-medium mb-0.5">
+                                      Tgl
+                                    </label>
+                                    <input
+                                      type="number"
+                                      min="1"
+                                      max="31"
+                                      value={link.fixedPayoutDay ?? 25}
+                                      onChange={e => handleUpdateAddProjectFixedDay(link.projectId, Math.min(31, Math.max(1, Number(e.target.value) || 1)))}
+                                      className="w-full text-xs font-bold text-center px-1 py-1 border border-[#eaeaea] rounded outline-none"
+                                    />
+                                  </div>
+                                </div>
+                              ) : (
+                                <div>
+                                  <label className="block text-[10px] text-[#666666] font-medium mb-0.5">
+                                    Bagi Hasil (%)
+                                  </label>
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    max="100"
+                                    value={link.profitSharePercentage ?? 50}
+                                    onChange={e => handleUpdateAddProjectProfitShare(link.projectId, Number(e.target.value) || 0)}
+                                    className="w-full text-xs font-bold text-center px-2 py-1 border border-[#eaeaea] rounded outline-none"
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -1237,6 +1504,113 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
                 </div>
               </div>
 
+              {/* Section Skema Bagi Hasil Investor (Edit) */}
+              <div className="p-3.5 bg-[#fcfcfc] border border-[#eaeaea] rounded-[8px] space-y-3">
+                <div>
+                  <span className="font-semibold text-xs text-[#111111] block">
+                    Skema Bagi Hasil Investor
+                  </span>
+                  <span className="text-[11px] text-[#666666] block">
+                    Pilih skema default bagi hasil: Persentase dari laba ritase atau Nominal tetap bulanan
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-1.5 p-1 bg-[#eeeeee] rounded-[8px]">
+                  <button
+                    type="button"
+                    onClick={() => setEditTarget({ ...editTarget, profitShareScheme: 'PERCENTAGE' })}
+                    className={`py-2 px-3 text-xs font-semibold rounded-[6px] transition-colors cursor-pointer border-none ${
+                      editTarget.profitShareScheme !== 'FIXED_MONTHLY'
+                        ? 'bg-[#111111] text-white shadow-sm'
+                        : 'bg-transparent text-[#666666] hover:text-[#111111]'
+                    }`}
+                  >
+                    Persentase Laba (%)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditTarget({ ...editTarget, profitShareScheme: 'FIXED_MONTHLY' })}
+                    className={`py-2 px-3 text-xs font-semibold rounded-[6px] transition-colors cursor-pointer border-none ${
+                      editTarget.profitShareScheme === 'FIXED_MONTHLY'
+                        ? 'bg-[#111111] text-white shadow-sm'
+                        : 'bg-transparent text-[#666666] hover:text-[#111111]'
+                    }`}
+                  >
+                    Nominal Tetap Bulanan (Rp)
+                  </button>
+                </div>
+
+                {editTarget.profitShareScheme !== 'FIXED_MONTHLY' ? (
+                  <div>
+                    <label className="block text-[#333333] font-semibold mb-1">
+                      Porsi Bagi Hasil Investor (%) <span className="text-red-500">*</span>
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={editTarget.profitSharePercentage ?? 50}
+                        onChange={e => setEditTarget({ ...editTarget, profitSharePercentage: Number(e.target.value) || 0 })}
+                        className="w-24 bg-white border border-[#eaeaea] rounded-[6px] px-3 py-2 text-xs font-bold text-[#111111] outline-none focus:border-[#111111]"
+                      />
+                      <span className="text-xs text-[#666666]">
+                        % dari laba bersih ritase proyek yang didanai
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[#333333] font-semibold mb-1">
+                          Nominal Tetap per Bulan (Rp) <span className="text-red-500">*</span>
+                        </label>
+                        <CurrencyInput
+                          value={editTarget.fixedMonthlyAmount || 0}
+                          onChange={val => setEditTarget({ ...editTarget, fixedMonthlyAmount: val })}
+                          placeholder="0"
+                          variant="solid-white"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[#333333] font-semibold mb-1">
+                          Tanggal Jatuh Tempo Bulanan <span className="text-red-500">*</span>
+                        </label>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-[#666666]">Tiap tgl</span>
+                          <input
+                            type="number"
+                            min="1"
+                            max="31"
+                            value={editTarget.fixedPayoutDay || 25}
+                            onChange={e => setEditTarget({ ...editTarget, fixedPayoutDay: Math.min(31, Math.max(1, Number(e.target.value) || 1)) })}
+                            className="w-16 bg-white border border-[#eaeaea] rounded-[6px] px-2 py-2 text-xs font-bold text-center text-[#111111] outline-none focus:border-[#111111]"
+                          />
+                          <span className="text-xs text-[#666666]">per bulan</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[#333333] font-semibold mb-1">
+                        Tanggal Mulai Investasi <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="date"
+                        value={editTarget.investmentStartDate || ''}
+                        onChange={e => setEditTarget({ ...editTarget, investmentStartDate: e.target.value })}
+                        className="w-full sm:w-48 bg-white border border-[#eaeaea] rounded-[6px] px-3 py-2 text-xs text-[#111111] outline-none focus:border-[#111111]"
+                      />
+                      <span className="text-[11px] text-[#888888] block mt-1">
+                        Periode bagi hasil bulanan dihitung dari tanggal mulai ini.
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {/* Section Pengaitan Proyek & Alokasi Modal (Edit) */}
               <div className="p-3.5 bg-[#fcfcfc] border border-[#eaeaea] rounded-[8px] space-y-3">
                 <div className="flex items-center justify-between">
@@ -1319,57 +1693,118 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    {editLinkedProjects.map(link => (
-                      <div
-                        key={link.projectId}
-                        className="bg-white border border-[#eaeaea] rounded-[6px] p-2.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5"
-                      >
-                        <div className="flex-1 min-w-0">
-                          <span className="font-bold text-xs text-[#111111] block truncate">
-                            {link.projectName}
-                          </span>
-                          <span className="text-[10px] font-mono text-[#888888] block">
-                            {link.projectId}
-                          </span>
-                        </div>
+                    {editLinkedProjects.map(link => {
+                      const isFixed = link.profitShareScheme === 'FIXED_MONTHLY';
+                      return (
+                        <div
+                          key={link.projectId}
+                          className="bg-white border border-[#eaeaea] rounded-[6px] p-2.5 flex flex-col gap-2"
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                              <span className="font-bold text-xs text-[#111111] block truncate">
+                                {link.projectName}
+                              </span>
+                              <span className="text-[10px] font-mono text-[#888888] block">
+                                {link.projectId}
+                              </span>
+                            </div>
 
-                        <div className="flex items-center gap-2">
-                          <div className="w-32">
-                            <label className="block text-[10px] text-[#666666] font-medium mb-0.5">
-                              Alokasi Modal (Rp)
-                            </label>
-                            <CurrencyInput
-                              value={link.capitalAllocation}
-                              onChange={val => handleUpdateEditProjectAllocation(link.projectId, val)}
-                              className="w-full text-xs font-bold tracking-tight text-[#111111] px-2 py-1 border border-[#eaeaea] rounded"
-                            />
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveEditProjectLink(link.projectId)}
+                              className="text-[#cf1124] hover:bg-red-50 p-1.5 rounded transition-colors cursor-pointer text-xs"
+                              title="Hapus Kaitan Proyek"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
                           </div>
 
-                          <div className="w-20">
-                            <label className="block text-[10px] text-[#666666] font-medium mb-0.5">
-                              Bagi Hasil (%)
-                            </label>
-                            <input
-                              type="number"
-                              min="0"
-                              max="100"
-                              value={link.profitSharePercentage ?? 50}
-                              onChange={e => handleUpdateEditProjectProfitShare(link.projectId, Number(e.target.value) || 0)}
-                              className="w-full text-xs font-bold text-center px-2 py-1 border border-[#eaeaea] rounded outline-none focus:border-[#111111]"
-                            />
-                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 border-t border-[#f0f0f0] items-end">
+                            <div>
+                              <label className="block text-[10px] text-[#666666] font-medium mb-0.5">
+                                Alokasi Modal (Rp)
+                              </label>
+                              <CurrencyInput
+                                value={link.capitalAllocation}
+                                onChange={val => handleUpdateEditProjectAllocation(link.projectId, val)}
+                                className="w-full text-xs font-bold tracking-tight text-[#111111] px-2 py-1 border border-[#eaeaea] rounded"
+                              />
+                            </div>
 
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveEditProjectLink(link.projectId)}
-                            className="text-[#cf1124] hover:bg-red-50 p-1.5 rounded transition-colors cursor-pointer text-xs self-end sm:self-center"
-                            title="Hapus Kaitan Proyek"
-                          >
-                            <X className="w-3.5 h-3.5" />
-                          </button>
+                            <div>
+                              <label className="block text-[10px] text-[#666666] font-medium mb-0.5">
+                                Skema Proyek
+                              </label>
+                              <div className="flex items-center gap-1 bg-[#eeeeee] p-0.5 rounded-[4px]">
+                                <button
+                                  type="button"
+                                  onClick={() => handleUpdateEditProjectScheme(link.projectId, 'PERCENTAGE')}
+                                  className={`flex-1 py-0.5 text-[10px] font-bold rounded-[3px] border-none cursor-pointer ${
+                                    !isFixed ? 'bg-[#111111] text-white' : 'text-[#666666]'
+                                  }`}
+                                >
+                                  % Laba
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleUpdateEditProjectScheme(link.projectId, 'FIXED_MONTHLY')}
+                                  className={`flex-1 py-0.5 text-[10px] font-bold rounded-[3px] border-none cursor-pointer ${
+                                    isFixed ? 'bg-[#0284c7] text-white' : 'text-[#666666]'
+                                  }`}
+                                >
+                                  Rp Fixed
+                                </button>
+                              </div>
+                            </div>
+
+                            <div>
+                              {isFixed ? (
+                                <div className="flex items-center gap-1">
+                                  <div className="flex-1">
+                                    <label className="block text-[10px] text-[#666666] font-medium mb-0.5">
+                                      Nominal/Bln
+                                    </label>
+                                    <CurrencyInput
+                                      value={link.fixedMonthlyAmount ?? 0}
+                                      onChange={val => handleUpdateEditProjectFixedAmount(link.projectId, val)}
+                                      className="w-full text-xs font-bold tracking-tight text-[#111111] px-2 py-1 border border-[#eaeaea] rounded"
+                                    />
+                                  </div>
+                                  <div className="w-14">
+                                    <label className="block text-[10px] text-[#666666] font-medium mb-0.5">
+                                      Tgl
+                                    </label>
+                                    <input
+                                      type="number"
+                                      min="1"
+                                      max="31"
+                                      value={link.fixedPayoutDay ?? 25}
+                                      onChange={e => handleUpdateEditProjectFixedDay(link.projectId, Math.min(31, Math.max(1, Number(e.target.value) || 1)))}
+                                      className="w-full text-xs font-bold text-center px-1 py-1 border border-[#eaeaea] rounded outline-none"
+                                    />
+                                  </div>
+                                </div>
+                              ) : (
+                                <div>
+                                  <label className="block text-[10px] text-[#666666] font-medium mb-0.5">
+                                    Bagi Hasil (%)
+                                  </label>
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    max="100"
+                                    value={link.profitSharePercentage ?? 50}
+                                    onChange={e => handleUpdateEditProjectProfitShare(link.projectId, Number(e.target.value) || 0)}
+                                    className="w-full text-xs font-bold text-center px-2 py-1 border border-[#eaeaea] rounded outline-none"
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>

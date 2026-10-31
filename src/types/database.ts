@@ -122,12 +122,19 @@ export interface MasterQuarry {
   createdAt: string;
 }
 
+// Skema Pembagian Hasil Investor
+export type ProfitShareScheme = 'PERCENTAGE' | 'FIXED_MONTHLY';
+
 // Relasi Investor dengan Proyek & Alokasi Modal
 export interface InvestorProjectLink {
   projectId: string;
   projectName: string;
   capitalAllocation: number;        // Alokasi modal investor khusus proyek ini (Rp)
-  profitSharePercentage?: number;   // Persentase bagi hasil / profit share (%)
+  profitShareScheme?: ProfitShareScheme; // Skema: 'PERCENTAGE' (default) atau 'FIXED_MONTHLY'
+  profitSharePercentage?: number;   // Persentase bagi hasil jika scheme === 'PERCENTAGE' (%)
+  fixedMonthlyAmount?: number;      // Nominal tetap bulanan jika scheme === 'FIXED_MONTHLY' (Rp)
+  fixedPayoutDay?: number;          // Tanggal jatuh tempo bulanan (1-31), misal: 25
+  investmentStartDate?: string;     // Tanggal mulai investasi/kontrak (YYYY-MM-DD)
 }
 
 // 7. Koleksi: investors (Daftar Investor & Permodalan)
@@ -137,7 +144,11 @@ export interface Investor {
   phoneNumber?: string;      // No HP / WhatsApp
   bankAccount?: string;      // Informasi Bank & Rekening (e.g. "BCA 1234567890 a.n. Fatih")
   initialCapital?: number;   // Nominal Modal / Investasi Awal (Rp)
+  profitShareScheme?: ProfitShareScheme; // Skema default: 'PERCENTAGE' atau 'FIXED_MONTHLY'
   profitSharePercentage?: number; // Persentase bagi hasil default/global (%)
+  fixedMonthlyAmount?: number;    // Nominal tetap bulanan default/global (Rp)
+  fixedPayoutDay?: number;        // Tanggal jatuh tempo bulanan default (1-31)
+  investmentStartDate?: string;   // Tanggal mulai investasi awal (YYYY-MM-DD)
   linkedProjects?: InvestorProjectLink[]; // Daftar proyek yang didanai dan alokasi modalnya
   notes?: string;
   createdAt: string;
@@ -211,7 +222,11 @@ export interface Project {
   clientName: string;        // Snapshot nama klien
   initialDeposit: number;    // Modal awal disetor investor untuk proyek ini
   currentBalance: number;    // Saldo kas berjalan proyek ini (bisa dipotong/ditambah)
+  profitShareScheme?: ProfitShareScheme; // Skema bagi hasil investor: 'PERCENTAGE' atau 'FIXED_MONTHLY'
   profitSharePercentage?: number; // Persentase bagi hasil investor untuk proyek ini (%)
+  fixedMonthlyAmount?: number;    // Nominal tetap bulanan jika fixed (Rp)
+  fixedPayoutDay?: number;        // Tanggal jatuh tempo bulanan (1-31)
+  investmentStartDate?: string;   // Tanggal mulai investasi
   status: 'ACTIVE' | 'COMPLETED' | 'ON_HOLD';
   notes?: string;
   createdAt: string;

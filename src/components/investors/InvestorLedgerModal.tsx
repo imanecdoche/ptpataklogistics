@@ -3,6 +3,7 @@ import { Investor, Project, DispatchTransaction, InvestorPayout } from '@/types/
 import { CurrencyInput } from '@/components/ui/CurrencyInput';
 import { PricePerVolCell } from '@/components/ui/PricePerVolCell';
 import { formatDateID } from '@/lib/dateSearchUtils';
+import { calculateInvestorFinancials } from '@/lib/investorFinanceUtils';
 import { formatPhoneNumber } from '@/lib/phoneUtils';
 import { X } from 'lucide-react';
 
@@ -50,52 +51,15 @@ export function InvestorLedgerModal({
     return payouts.filter(p => p.investorId === investor.id);
   }, [payouts, investor.id]);
 
-  // Kalkulasi Finansial & Bagi Hasil
+  // Kalkulasi Finansial & Bagi Hasil (Persentase & Fixed Monthly)
   const financialSummary = useMemo(() => {
-    let totalRevenue = 0;
-    let totalBuyCost = 0;
-    let totalOperationalCost = 0;
-    let totalVolume = 0;
-
-    investorTransactions.forEach(tx => {
-      totalRevenue += tx.totalRevenue || 0;
-      totalBuyCost += tx.totalBuyCost || 0;
-      totalOperationalCost += tx.operationalCost || 0;
-      totalVolume += tx.quantity || 0;
+    return calculateInvestorFinancials({
+      investor,
+      projects,
+      transactions: investorTransactions,
+      payouts: investorPayouts
     });
-
-    const totalExpense = totalBuyCost + totalOperationalCost;
-    const netProfitTotal = totalRevenue - totalExpense;
-
-    // Kalkulasi bagi hasil per proyek
-    let totalProfitShareEarned = 0;
-    linkedProjects.forEach(proj => {
-      const projTxs = investorTransactions.filter(tx => tx.projectId === proj.id);
-      const projRev = projTxs.reduce((acc, t) => acc + (t.totalRevenue || 0), 0);
-      const projExp = projTxs.reduce((acc, t) => acc + (t.totalBuyCost || 0) + (t.operationalCost || 0), 0);
-      const projNet = projRev - projExp;
-      const sharePct = proj.profitSharePercentage || investor.profitSharePercentage || 50;
-      if (projNet > 0) {
-        totalProfitShareEarned += projNet * (sharePct / 100);
-      }
-    });
-
-    const totalPayoutWithdrawn = investorPayouts.reduce((acc, p) => acc + (p.amount || 0), 0);
-    const remainingProfitShare = Math.max(0, totalProfitShareEarned - totalPayoutWithdrawn);
-
-    return {
-      totalTrips: investorTransactions.length,
-      totalVolume,
-      totalRevenue,
-      totalBuyCost,
-      totalOperationalCost,
-      totalExpense,
-      netProfitTotal,
-      totalProfitShareEarned,
-      totalPayoutWithdrawn,
-      remainingProfitShare
-    };
-  }, [investorTransactions, linkedProjects, investorPayouts, investor.profitSharePercentage]);
+  }, [investor, projects, investorTransactions, investorPayouts]);
 
   const formatRupiah = (val: number): string => {
     return 'Rp ' + Math.round(val).toLocaleString('id-ID');
@@ -253,64 +217,93 @@ export function InvestorLedgerModal({
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-[#111111]">
-                  Daftar Proyek yang Didanai ({linkedProjects.length})
+                  Daftar Proyek yang Didanai ({financialSummary.breakdown.length})
                 </span>
                 <span className="text-[11px] text-[#666666]">
-                  Biaya ritase diambil dari Kas Utama, laba dibagi sesuai persentase kontrak
+                  Biaya operasional dari Kas Utama, hak dihitung dari laba bersih ritase atau nominal tetap bulanan
                 </span>
               </div>
 
-              {linkedProjects.length === 0 ? (
-                <div className="p-8 text-center text-xs text-[#888888] border border-dashed border-[#e5e5e5] rounded-[8px]">
+              {financialSummary.breakdown.length === 0 ? (
+                <div className="p-8 text-center text-xs text-[#888888] bg-[#f5f5f5] rounded-[8px]">
                   Belum ada proyek yang dikaitkan ke investor ini. Edit data investor untuk mengaitkan proyek.
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {linkedProjects.map(p => {
-                    const projTxs = investorTransactions.filter(tx => tx.projectId === p.id);
-                    const projRev = projTxs.reduce((acc, t) => acc + (t.totalRevenue || 0), 0);
-                    const projExp = projTxs.reduce((acc, t) => acc + (t.totalBuyCost || 0) + (t.operationalCost || 0), 0);
-                    const projNet = projRev - projExp;
-                    const sharePct = p.profitSharePercentage || investor.profitSharePercentage || 50;
-                    const investorShare = projNet > 0 ? projNet * (sharePct / 100) : 0;
+                  {financialSummary.breakdown.map((item, idx) => {
+                    const linkedProj = linkedProjects.find(p => p.id === item.projectId);
+                    const projTxs = investorTransactions.filter(tx => tx.projectId === item.projectId);
+                    const isFixed = item.scheme === 'FIXED_MONTHLY';
 
                     return (
-                      <div key={p.id} className="p-3.5 bg-white border border-[#eaeaea] rounded-[8px] space-y-2">
-                        <div className="flex items-start justify-between">
+                      <div key={item.projectId || idx} className="p-3.5 bg-[#f9f9f9] rounded-[8px] space-y-2.5">
+                        <div className="flex items-start justify-between gap-2">
                           <div>
-                            <span className="font-bold text-xs text-[#111111] block">{p.name}</span>
-                            <span className="text-[10px] text-[#888888] block">{p.location || 'Lokasi'}</span>
+                            <span className="font-bold text-xs text-[#111111] block">{item.projectName}</span>
+                            <span className="text-[10px] text-[#888888] block">{linkedProj?.location || 'Portofolio Umum'}</span>
                           </div>
-                          <span className="text-[10px] font-bold bg-[#15803d] text-white px-2 py-0.5 rounded-full">
-                            Bagi Hasil: {sharePct}%
-                          </span>
+                          {isFixed ? (
+                            <span className="text-[10px] font-bold bg-[#0284c7] text-white px-2.5 py-0.5 rounded-full border-none whitespace-nowrap flex-shrink-0">
+                              Fixed: {formatRupiah(item.fixedAmount || 0)}/bln (Tgl {item.dueDay || 25})
+                            </span>
+                          ) : (
+                            <span className="text-[10px] font-bold bg-[#15803d] text-white px-2.5 py-0.5 rounded-full border-none whitespace-nowrap flex-shrink-0">
+                              Bagi Hasil: {item.percentage || 50}%
+                            </span>
+                          )}
                         </div>
 
-                        <div className="pt-2 border-t border-[#f0f0f0] grid grid-cols-2 gap-2 text-[11px]">
+                        <div className="pt-2 border-t border-[#eaeaea] grid grid-cols-2 gap-2 text-[11px]">
                           <div>
                             <span className="text-[#888888] block text-[10px]">Alokasi Modal Pokok:</span>
                             <span className="font-bold tracking-tight text-[#111111]">
-                              {formatRupiah(p.initialDeposit || 0)}
+                              {formatRupiah(linkedProj?.initialDeposit || (item.projectId === 'GLOBAL' ? investor.initialCapital || 0 : 0))}
                             </span>
                           </div>
                           <div>
                             <span className="text-[#888888] block text-[10px]">Total Ritase Berjalan:</span>
                             <span className="font-bold tracking-tight text-[#111111]">
-                              {projTxs.length} Rit
+                              {item.projectId === 'GLOBAL' ? financialSummary.totalTrips : projTxs.length} Rit
                             </span>
                           </div>
-                          <div>
-                            <span className="text-[#888888] block text-[10px]">Laba Bersih Proyek:</span>
-                            <span className={`font-bold tracking-tight ${projNet >= 0 ? 'text-[#111111]' : 'text-red-600'}`}>
-                              {formatRupiah(projNet)}
-                            </span>
-                          </div>
-                          <div>
-                            <span className="text-[#888888] block text-[10px]">Porsi Hak Investor:</span>
-                            <span className="font-bold tracking-tight text-[#008060]">
-                              {formatRupiah(investorShare)}
-                            </span>
-                          </div>
+
+                          {isFixed ? (
+                            <>
+                              <div>
+                                <span className="text-[#888888] block text-[10px]">Periode Jatuh Tempo:</span>
+                                <span className="font-bold tracking-tight text-[#111111]">
+                                  {item.periods || 0} Bulan Terlewati
+                                </span>
+                              </div>
+                              <div>
+                                <span className="text-[#888888] block text-[10px]">Jatuh Tempo Berikutnya:</span>
+                                <span className="font-bold tracking-tight text-[#666666]">
+                                  {item.nextDueDate ? formatDateID(item.nextDueDate) : '-'}
+                                </span>
+                              </div>
+                              <div className="col-span-2 pt-1 border-t border-[#f0f0f0] flex items-center justify-between">
+                                <span className="text-[#888888] text-[10px]">Hak Dividen Terkumpul:</span>
+                                <span className="font-bold tracking-tight text-[#008060] text-xs">
+                                  {formatRupiah(item.totalEarned || 0)}
+                                </span>
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <div>
+                                <span className="text-[#888888] block text-[10px]">Laba Bersih Proyek:</span>
+                                <span className={`font-bold tracking-tight ${(item.netProfitRitase || 0) >= 0 ? 'text-[#111111]' : 'text-red-600'}`}>
+                                  {formatRupiah(item.netProfitRitase || 0)}
+                                </span>
+                              </div>
+                              <div>
+                                <span className="text-[#888888] block text-[10px]">Porsi Hak Investor:</span>
+                                <span className="font-bold tracking-tight text-[#008060]">
+                                  {formatRupiah(item.totalEarned || 0)}
+                                </span>
+                              </div>
+                            </>
+                          )}
                         </div>
                       </div>
                     );

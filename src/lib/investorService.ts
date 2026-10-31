@@ -12,7 +12,7 @@ import {
   where
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { Investor, InvestorProjectLink, InvestorPayout, InvestorTransferLog, InvestorTransferCategory, InvestorTransferInstallment } from '@/types/database';
+import { Investor, InvestorProjectLink, ProfitShareScheme, InvestorPayout, InvestorTransferLog, InvestorTransferCategory, InvestorTransferInstallment } from '@/types/database';
 import { formatPhoneNumber } from '@/lib/phoneUtils';
 import { formatEntityName } from '@/lib/nameUtils';
 import { updateProjectBalance } from '@/lib/projectService';
@@ -52,7 +52,11 @@ export async function saveInvestor(
     phoneNumber?: string;
     bankAccount?: string;
     initialCapital?: number;
+    profitShareScheme?: ProfitShareScheme;
     profitSharePercentage?: number;
+    fixedMonthlyAmount?: number;
+    fixedPayoutDay?: number;
+    investmentStartDate?: string;
     linkedProjects?: InvestorProjectLink[];
     notes?: string;
   },
@@ -73,7 +77,11 @@ export async function saveInvestor(
       phoneNumber: payload.phoneNumber ? formatPhoneNumber(payload.phoneNumber) : '',
       bankAccount: payload.bankAccount?.trim() || '',
       initialCapital: Number(payload.initialCapital) || 0,
+      profitShareScheme: payload.profitShareScheme || 'PERCENTAGE',
       profitSharePercentage: Number(payload.profitSharePercentage) || 0,
+      fixedMonthlyAmount: Number(payload.fixedMonthlyAmount) || 0,
+      fixedPayoutDay: Number(payload.fixedPayoutDay) || 25,
+      investmentStartDate: payload.investmentStartDate || '',
       linkedProjects: payload.linkedProjects || [],
       notes: payload.notes?.trim() || ''
     });
@@ -86,7 +94,11 @@ export async function saveInvestor(
       phoneNumber: payload.phoneNumber ? formatPhoneNumber(payload.phoneNumber) : '',
       bankAccount: payload.bankAccount?.trim() || '',
       initialCapital: Number(payload.initialCapital) || 0,
+      profitShareScheme: payload.profitShareScheme || 'PERCENTAGE',
       profitSharePercentage: Number(payload.profitSharePercentage) || 0,
+      fixedMonthlyAmount: Number(payload.fixedMonthlyAmount) || 0,
+      fixedPayoutDay: Number(payload.fixedPayoutDay) || 25,
+      investmentStartDate: payload.investmentStartDate || new Date().toISOString().slice(0, 10),
       linkedProjects: payload.linkedProjects || [],
       notes: payload.notes?.trim() || '',
       createdAt: new Date().toISOString()
@@ -123,7 +135,11 @@ export async function saveInvestor(
           investorId: finalId,
           investorName: cleanName,
           initialDeposit: Number(link.capitalAllocation) || 0,
-          profitSharePercentage: Number(link.profitSharePercentage) || 0
+          profitShareScheme: link.profitShareScheme || payload.profitShareScheme || 'PERCENTAGE',
+          profitSharePercentage: Number(link.profitSharePercentage ?? payload.profitSharePercentage) || 0,
+          fixedMonthlyAmount: Number(link.fixedMonthlyAmount ?? payload.fixedMonthlyAmount) || 0,
+          fixedPayoutDay: Number(link.fixedPayoutDay ?? payload.fixedPayoutDay) || 25,
+          investmentStartDate: link.investmentStartDate || payload.investmentStartDate || ''
         });
       }
     }
