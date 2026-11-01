@@ -573,3 +573,77 @@ Halo **Argon**! 👋 Berikut adalah rekapitulasi lengkap dari pembaruan sistem l
       }
       ```
     - **Hasil**: User **TIDAK PERLU** membuat ulang token di Vercel atau Hostinger. Cukup salin file `.env.local` ke workstation Argon jika berpindah mesin!
+
+
+### FASE 17: Surat Handover & Pembaruan Sistem untuk Argon (01 Nov 2026, 17:55 WIB)
+Dicatat oleh **`antigravity`** untuk sinkronisasi konteks arsitektur dan operasional bersama **Argon**:
+
+Halo **Argon**! 👋 Melanjutkan sesi hari ini, berikut adalah rekapitulasi lengkap dari pembaruan krusial arsitektur URL routing, sinkronisasi presisi database Firestore, audit UI tabel, dan pemadatan sidebar yang baru saja diselesaikan:
+
+1. **Arsitektur Sub-Path Routing Deklaratif & Deep Linking (`RouterContext.tsx`, `routeDefinitions.ts`, `App.tsx`)**:
+   - Sistem navigasi tab in-memory telah dimigrasikan sepenuhnya ke **URL Sub-Path Deklaratif berbasis HTML5 History API** bawaan React 19 tanpa ketergantungan library pihak ketiga yang membengkakkan bundle size.
+   - Menggunakan slug bahasa Indonesia yang ramah SEO dan human-readable:
+     - `/dashboard`
+     - `/catat-ritase`
+     - `/riwayat-ritase`
+     - `/proyek`
+     - `/investor`
+     - `/kuari`
+     - `/klien`
+     - `/material`
+     - `/buku-kas`
+     - `/mandor-borongan`
+     - `/rekapitulasi`
+     - `/database`
+     - `/dev`
+   - **Deep Linking Modal**: Modal kini terhubung langsung ke URL sub-path sehingga dapat di-bookmark, di-refresh, dan dibagikan secara spesifik:
+     - `/proyek/:projectId/finansial` $\rightarrow$ membuka `ProjectFinancialsModal`
+     - `/investor/:investorId` $\rightarrow$ membuka `InvestorLedgerModal`
+     - `/riwayat-ritase/:ticketId` $\rightarrow$ membuka `DispatchDetailModal`
+   - Mendukung riwayat browser native (*Back* / *Forward* button) secara sempurna melalui event listener `popstate`.
+
+2. **Halaman 404 Enterprise & Vercel SPA Rewrites (`NotFoundPage.tsx`, `vercel.json`)**:
+   - Dibuatkan komponen `NotFoundPage.tsx` berstandar enterprise minimalis untuk menangani rute tidak valid dengan CTA "Kembali ke Dashboard".
+   - Dikonfigurasikan file `vercel.json` dengan rewrites aturan SPA (`{"source": "/(.*)", "destination": "/index.html"}`), sehingga saat user me-refresh halaman pada sub-path apapun di domain `pataklogistics.com`, server Vercel tidak menghasilkan error HTTP 404 melainkan mengarahkan ke bundle aplikasi.
+
+3. **Sticky Summary Row (Footer) Tabel Pencarian Real-Time**:
+   - **Buku Kas (`CashFlowView.tsx`)**: Menambahkan baris ringkasan tabel `tfoot` yang menempel di bagian bawah (*sticky bottom*). Saat pengguna mencari kata kunci (misal: `"uup"`, `"dede"`, `"paving block"`), footer otomatis menghitung secara presisi:
+     - Total Kas Masuk (+)
+     - Total Kas Keluar (-)
+     - Total Defisit Bersih / Surplus Bersih
+   - **Riwayat Ritase (`DispatchHistoryPage.tsx`)**: Menambahkan baris ringkasan `tfoot` sticky bottom yang secara dinamis menjumlahkan hasil filter pencarian:
+     - Total Ritase
+     - Total Volume (DT / Ton)
+     - Total Omset / Nilai Penjualan
+     - Total Beban Beli Material Kuari
+     - Total Beban Operasional / Kasbon
+     - Total Laba Bersih
+
+4. **Pembersihan & Presisi Matematis Firestore Kasbon Mandor**:
+   - Mengidentifikasi dan membersihkan anomali penambahan `+Rp 1.000` pada 8 dokumen mutasi kasbon di koleksi `worker_kasbon_logs` (seperti Rp 2.501.000, Rp 8.001.000, Rp 3.001.000).
+   - Menghitung ulang dan menyinkronkan data akumulasi di `project_sub_jobs`:
+     - **Mandor Dede** (Pembangunan MCK): Terbayar Rp 8.000.000 / Sisa Plafon Rp 4.000.000 (dari total plafon Rp 12.000.000).
+     - **Mandor Uup** (Pemasangan Paving Block): Terbayar Rp 20.500.000 / Sisa Plafon Rp 20.000.000 (dari total plafon Rp 40.500.000).
+   - Seluruh mutasi di `cash_ledger` (kategori `KASBON_TUKANG`) dan `worker_kasbon_logs` kini 100% konsisten matematis tanpa kontradiksi.
+
+5. **Standardisasi Global Nama Klien Proyek Cikedal ("Bapak Endang")**:
+   - Menyeragamkan seluruh nama klien untuk proyek "Proyek Konservasi Situ Cikedal" di seluruh database Firestore:
+     - Koleksi `clients`: nama dokumen diubah menjadi **Bapak Endang**.
+     - Koleksi `projects`: clientName diseragamkan menjadi **Bapak Endang**.
+     - Koleksi `project_sub_jobs`: clientName diseragamkan menjadi **Bapak Endang**.
+     - Koleksi `client_project_payments`: 8 dokumen pembayaran klien diseragamkan ke nama **Bapak Endang**.
+     - Koleksi `transactions`: Seluruh 28 tiket ritase diseragamkan nama kliennya ke **Bapak Endang**.
+     - Koleksi `cash_ledger`: 8 pencatatan kas masuk termin klien disinkronkan deskripsinya menjadi `Termin Proyek: Proyek Konservasi Situ Cikedal (Bapak Endang)`.
+   - File seed lokal `src/lib/defaultDataService.ts` juga telah diperbarui agar reset database default tidak memunculkan nama lama "P Sapta".
+
+6. **Pemadatan Komponen Footer Sidebar (`Sidebar.tsx`)**:
+   - Area profil pengguna dan tombol keluar di footer sidebar dirampingkan ~50% (tinggi vertikal berkurang dari ~140px menjadi ~72px):
+     - Padding kontainer diperkecil menjadi `p-2 md:p-2.5` dengan spasi `space-y-1`.
+     - Kartu profil dibuat ramping (`p-1.5 md:p-2`, avatar `w-6 h-6 md:w-7 md:h-7`, teks nama & email diperketat).
+     - Seluruh kotak profil dibuat interaktif (*clickable*) untuk membuka pengaturan akun selain via tombol ikon gear.
+     - Tombol "Keluar" dibuat ramping (`px-2 py-1 md:py-1.5 text-xs`) dengan ikon `w-3.5 h-3.5 md:w-4 md:h-4`.
+   - **Dampak**: Menghilangkan masalah terpotongnya menu navigasi di atasnya (seperti Master Material dan HOK Tukang) pada layar laptop/desktop standar.
+
+7. **Kesiapan Workstation Argon**:
+   - Seluruh commit (`63090d0`) telah di-push ke GitHub repository `origin/main`.
+   - Argon cukup menjalankan `git pull origin main` di Linux Workstation untuk mendapatkan seluruh kode dan pembaruan mutakhir.
