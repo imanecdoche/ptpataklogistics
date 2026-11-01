@@ -9,6 +9,7 @@
     "preview": "vite preview --host"
   },
   "dependencies": {
+    "@vercel/connect": "^2.7.0",
     "clsx": "^2.1.1",
     "firebase": "^11.3.1",
     "framer-motion": "^12.4.7",
