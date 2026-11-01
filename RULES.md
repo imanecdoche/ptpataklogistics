@@ -1495,3 +1495,20 @@ Dokumen ini adalah hukum tertinggi operasional sistem. Kegagalan mematuhi aturan
         1. Kolom **"Status"** (Tempo / Lunas) dihapus total dari tabel-tabel transaksi ritase (kecuali pada tabel Piutang Buku Kas yang memerlukan aksi pelunasan tombol "Lunasi").
         2. Kolom **"Konsumen"** dihapus total dari tabel-tabel transaksi ritase; nama konsumen / klien dipindahkan tepat di bawah nama proyek tujuan dalam ukuran font sekunder (`text-[11px] text-[#666666]`).
 
+127. **Standar Halaman 404 Not Found (Standalone Full-Screen, Brand Minimalis Elegan, Edge-to-Edge Kanvas Putih)**:
+    - **Tampilan Layar Penuh Mandiri (Standalone Full-Screen)**:
+      * Halaman 404 Not Found WAJIB ditampilkan secara penuh (*full-screen standalone*) tanpa pembungkus `<AppShell>` (tanpa sidebar dan tanpa topbar navigasi) agar pengguna terfokus penuh saat rute tidak dikenali.
+    - **Kanvas Edge-to-Edge Putih Bersih (Zero Card Wrapper)**:
+      * Latar belakang halaman 404 menggunakan `bg-white min-h-screen w-full flex flex-col items-center justify-center p-6 text-center select-none` tanpa kartu pembungkus (boxless edge-to-edge).
+    - **Elemen Brand & Tipografi**:
+      * Di bagian atas terpasang logo resmi squircle PT Patak Abadi Jaya (`/icons/pt-logo.png`, `w-16 h-16 rounded-[14px] mx-auto mb-6 shadow-xs`).
+      * Angka "404" ditampilkan dalam tipografi besar tegas (`text-6xl md:text-7xl font-extrabold text-[#111111] tracking-tight leading-none mb-3`).
+      * Judul "Halaman Tidak Ditemukan" (`text-lg md:text-xl font-bold text-[#111111] mb-2 tracking-tight`) dan deskripsi singkat yang jelas.
+      * Kotak URL yang dicoba diakses menggunakan wadah solid abu-abu terang `bg-[#f5f5f5] rounded-[8px] px-4 py-2.5 max-w-md w-full mx-auto mb-8 font-mono text-xs text-[#333333] break-all select-all` (tanpa border stroke).
+    - **Aksi Tunggal Navigasi**:
+      * Hanya ada 1 tombol aksi utama hitam solid (`bg-[#111111] hover:bg-[#2b2b2b] text-white rounded-[10px] px-6 py-3.5 text-xs md:text-sm font-semibold border-none cursor-pointer inline-flex items-center justify-center gap-2 shadow-xs whitespace-nowrap`) bertuliskan "Kembali ke Dashboard".
+      * Jika pengguna sedang dalam sesi login, tombol mengarahkan ke dashboard utama. Jika pengguna belum login (tamu/unauthenticated), tombol mengarahkan ke halaman login.
+    - **Kepatuhan AI Anti-Patterns**:
+      * Dilarang menambahkan badge/tag/pill tanpa perintah, dilarang border outline stroke (`border`, `ring-*`), dilarang emoji di string UI, dan dilarang animasi berdenyut non-skeleton.
+
+

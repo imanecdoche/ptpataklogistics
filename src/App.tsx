@@ -39,6 +39,7 @@ function AuthenticatedApp({ user, onLogout }: AuthenticatedAppProps): React.JSX.
     subTab: currentSubTab,
     params: routeParams,
     isNotFound,
+    navigate,
     navigateTab
   } = useRouter();
 
@@ -136,19 +137,16 @@ function AuthenticatedApp({ user, onLogout }: AuthenticatedAppProps): React.JSX.
 
   if (isNotFound) {
     return (
-      <AppShell
-        user={user}
-        activeTab="dashboard"
-        activeSubTab="overview"
-        onSelectTab={handleSelectTab}
-        onSelectSubTab={handleSelectSubTab}
-        onLogout={onLogout}
-      >
-        <NotFoundPage
-          currentPath={pathname}
-          onNavigateHome={() => navigateTab('dashboard', 'overview', undefined, { replace: true })}
-        />
-      </AppShell>
+      <NotFoundPage
+        currentPath={pathname}
+        onNavigateHome={() => {
+          if (user) {
+            navigateTab('dashboard', 'overview', undefined, { replace: true });
+          } else {
+            navigate('/', { replace: true });
+          }
+        }}
+      />
     );
   }
 
