@@ -362,6 +362,38 @@ export function DispatchHistoryPage({
     };
   }, [filteredTransactions]);
 
+  // Kalkulasi Sticky Footer Summary Riwayat Ritase
+  const filteredSummary = useMemo(() => {
+    let dtVolume = 0;
+    let tonVolume = 0;
+    let totalRevenue = 0;
+    let totalBuyCost = 0;
+    let totalOperationalCost = 0;
+    let totalNetProfit = 0;
+
+    filteredTransactions.forEach(tx => {
+      if (tx.unit === 'DT') {
+        dtVolume += Number(tx.quantity || 0);
+      } else if (tx.unit === 'Ton' || tx.unit === 'Tonase') {
+        tonVolume += Number(tx.quantity || 0);
+      }
+      totalRevenue += Number(tx.totalRevenue || 0);
+      totalBuyCost += Number(tx.totalBuyCost || 0);
+      totalOperationalCost += Number(tx.operationalCost || 0);
+      totalNetProfit += Number(tx.netProfit || 0);
+    });
+
+    return {
+      count: filteredTransactions.length,
+      dtVolume: Math.round(dtVolume),
+      tonVolume: Number(tonVolume.toFixed(1)),
+      totalRevenue,
+      totalBuyCost,
+      totalOperationalCost,
+      totalNetProfit
+    };
+  }, [filteredTransactions]);
+
   // Hitung berapa filter aktif di luar default
   const activeFiltersCount = useMemo(() => {
     let count = 0;
@@ -791,6 +823,64 @@ export function DispatchHistoryPage({
                 })
               )}
             </tbody>
+            {/* STICKY FOOTER ROW: TOTAL RINGKASAN RITASE */}
+            <tfoot className="sticky bottom-0 z-10 bg-[#f8f8f8] border-t-2 border-[#111111] text-[#111111] font-bold text-xs select-none shadow-[0_-4px_12px_rgba(0,0,0,0.06)]">
+              <tr>
+                <td className="py-2.5 px-3 w-[130px] min-w-[130px] whitespace-nowrap align-middle">
+                  <span className="font-mono text-[11px] text-[#666666] uppercase font-bold tracking-wider">TOTAL</span>
+                </td>
+                <td className="py-2.5 px-3 w-[115px] min-w-[115px] whitespace-nowrap align-middle">
+                  <span className="inline-block px-2.5 py-0.5 rounded-[4px] bg-[#111111] text-white font-bold text-[10px] tracking-wider uppercase whitespace-nowrap">
+                    {filteredSummary.count} RITASE
+                  </span>
+                </td>
+                <td className="py-2.5 px-3 w-[250px] min-w-[250px] whitespace-nowrap align-middle">
+                  <span className="text-xs font-bold text-[#111111] block truncate">
+                    {searchQuery.trim() ? `Pencarian: "${searchQuery.trim()}"` : 'Total Terfilter'}
+                  </span>
+                </td>
+                <td className="py-2.5 px-3 w-[130px] min-w-[130px] whitespace-nowrap align-middle">
+                  <div className="font-mono font-bold text-[11px] text-[#333333]">
+                    {filteredSummary.dtVolume > 0 && `${filteredSummary.dtVolume} DT`}
+                    {filteredSummary.dtVolume > 0 && filteredSummary.tonVolume > 0 && ' / '}
+                    {filteredSummary.tonVolume > 0 && `${filteredSummary.tonVolume} Ton`}
+                    {!filteredSummary.dtVolume && !filteredSummary.tonVolume && '-'}
+                  </div>
+                </td>
+                <td className="py-2.5 px-3 w-[130px] min-w-[130px] whitespace-nowrap align-middle text-[#888888] font-normal text-[11px]">
+                  Total Muatan
+                </td>
+                <td className="py-2.5 px-3 w-[130px] min-w-[130px] whitespace-nowrap align-middle font-mono font-bold text-[#111111] text-xs">
+                  {formatRupiah(filteredSummary.totalRevenue)}
+                </td>
+                {!hideMargin && (
+                  <td className="py-2.5 px-3 w-[130px] min-w-[130px] whitespace-nowrap align-middle font-mono font-bold text-[#555555] text-xs">
+                    {formatRupiah(filteredSummary.totalBuyCost)}
+                  </td>
+                )}
+                <td className="py-2.5 px-3 w-[110px] min-w-[110px] whitespace-nowrap align-middle font-mono font-bold text-[#555555] text-xs">
+                  {formatRupiah(filteredSummary.totalOperationalCost)}
+                </td>
+                {!hideMargin && (
+                  <td className="py-2.5 px-3 w-[125px] min-w-[125px] whitespace-nowrap align-middle font-mono font-bold text-xs">
+                    <span className={filteredSummary.totalNetProfit < 0 ? 'text-[#cf1124]' : 'text-emerald-700'}>
+                      {formatRupiah(filteredSummary.totalNetProfit)}
+                    </span>
+                  </td>
+                )}
+                <td className="py-2.5 px-3 w-[180px] min-w-[180px] whitespace-nowrap align-middle text-center text-[#888888] font-normal">
+                  -
+                </td>
+                <td className="py-2.5 px-3 w-[105px] min-w-[105px] whitespace-nowrap align-middle text-center text-[#888888] font-normal">
+                  -
+                </td>
+                {!isWatcherUser && (
+                  <td className="py-2.5 px-3 w-[60px] min-w-[60px] whitespace-nowrap align-middle text-right text-[#888888] font-normal">
+                    -
+                  </td>
+                )}
+              </tr>
+            </tfoot>
           </table>
         </div>
 
