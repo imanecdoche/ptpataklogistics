@@ -482,7 +482,7 @@ export function CashFlowView({
                 <th className="py-2.5 px-3 w-[130px] text-right whitespace-nowrap">Kas Keluar (-)</th>
                 <th className="py-2.5 px-3 w-[150px] text-right whitespace-nowrap">Saldo Berjalan</th>
                 <th className="py-2.5 px-3 w-[105px] whitespace-nowrap">Dibuat Oleh</th>
-                <th className="py-2.5 px-3 w-[110px] text-center whitespace-nowrap">Aksi</th>
+                <th className="py-2.5 px-3 w-[110px] text-right whitespace-nowrap">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#eaeaea]">
@@ -527,8 +527,8 @@ export function CashFlowView({
                     <td className="py-2.5 px-3 font-medium text-[#111111] whitespace-nowrap align-middle">
                       {resolveCreatorName(e.createdByName)}
                     </td>
-                    <td className="py-2.5 px-3 whitespace-nowrap align-middle text-center">
-                      <div className="flex items-center justify-center gap-1.5">
+                    <td className="py-2.5 px-3 whitespace-nowrap align-middle text-right">
+                      <div className="flex items-center justify-end gap-1.5">
                         {e.receiptUrl && (
                           <button
                             type="button"
