@@ -1,6 +1,7 @@
 import { X } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
 import { Project, MasterQuarry, MaterialItem } from '@/types/database';
+import { useDrawerTransition } from '@/hooks/useDrawerTransition';
 
 export interface DispatchFilterState {
   datePreset: 'TODAY' | '15D' | '30D' | 'THIS_MONTH' | 'ALL' | 'CUSTOM';
@@ -38,13 +39,17 @@ export function DispatchFilterPopover({
   const [localFilters, setLocalFilters] = useState<DispatchFilterState>(filters);
   const popoverRef = useRef<HTMLDivElement | null>(null);
 
+  const { isRendered, isVisible, handleClose } = useDrawerTransition(isOpen, onClose, { durationMs: 200 });
+
   useEffect(() => {
-    setLocalFilters(filters);
+    if (isOpen) {
+      setLocalFilters(filters);
+    }
   }, [filters, isOpen]);
 
   // Handle Click Outside & Escape Key on Desktop
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isVisible) return;
 
     const handleClickOutside = (event: MouseEvent | TouchEvent) => {
       const target = event.target as Node;
@@ -54,13 +59,13 @@ export function DispatchFilterPopover({
         anchorRef.current &&
         !anchorRef.current.contains(target)
       ) {
-        onClose();
+        handleClose();
       }
     };
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        onClose();
+        handleClose();
       }
     };
 
@@ -73,9 +78,9 @@ export function DispatchFilterPopover({
       document.removeEventListener('touchstart', handleClickOutside);
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isOpen, onClose, anchorRef]);
+  }, [isVisible, anchorRef, handleClose]);
 
-  if (!isOpen) return null;
+  if (!isRendered) return null;
 
   const handlePresetSelect = (preset: DispatchFilterState['datePreset']) => {
     const now = new Date();
@@ -136,38 +141,47 @@ export function DispatchFilterPopover({
 
   const handleApplyClick = () => {
     onApply(localFilters);
-    onClose();
+    handleClose();
   };
 
   const handleResetClick = () => {
     onReset();
-    onClose();
+    handleClose();
   };
 
   return (
     <>
-      {/* Mobile Backdrop */}
+      {/* Mobile Backdrop: Solid Dimmed (Zero Blur) */}
       <div
-        className="fixed inset-0 bg-black/40 z-40 md:hidden transition-opacity"
-        onClick={onClose}
+        className={`fixed inset-0 bg-black/50 z-40 md:hidden transition-opacity duration-200 ease-out ${
+          isVisible ? 'opacity-100' : 'opacity-0'
+        }`}
+        onClick={handleClose}
       />
 
-      {/* Popover Card (Desktop: Floating Anchored Popover | Mobile: Bottom Sheet Drawer) */}
+      {/* Popover Card (Desktop: Floating Anchored Popover | Mobile: Bottom Sheet Drawer with Smooth Slide) */}
       <div
         ref={popoverRef}
-        className="fixed md:absolute bottom-0 md:bottom-auto md:top-full right-0 md:mt-2 w-full md:w-[440px] max-h-[85vh] md:max-h-[600px] overflow-y-auto bg-white rounded-t-[16px] md:rounded-[12px] border border-[#dcdcdc] shadow-2xl z-50 p-4 md:p-5 flex flex-col gap-4 text-xs select-none animate-in fade-in slide-in-from-bottom-3 md:zoom-in-95 duration-150"
+        className={`
+          fixed md:absolute bottom-0 md:bottom-auto md:top-full right-0 md:mt-2 w-full md:w-[440px] max-h-[85dvh] md:max-h-[600px] overflow-y-auto bg-white rounded-t-[16px] md:rounded-[12px] shadow-2xl z-50 p-4 md:p-5 flex flex-col gap-4 text-xs select-none border-none
+          transition-all duration-200 ease-out transform
+          ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-full md:translate-y-2 opacity-0'}
+        `}
       >
         {/* Header */}
-        <div className="flex items-center justify-between pb-3 border-b border-[#eaeaea]">
+        <div className="flex items-center justify-between pb-3 bg-white border-none">
           <div className="flex items-center gap-2">
             <img src="/icons/filter-slider.png" alt="Filter" className="w-4 h-4 object-contain" />
             <h3 className="text-sm font-bold text-[#111111]">Filter Riwayat Ritase</h3>
           </div>
           <button
             type="button"
-            onClick={onClose}
-            className="p-1 text-[#888888] hover:text-[#111111] rounded-full hover:bg-[#f0f0f0] transition-colors"
-           aria-label="Tutup"><X className="w-4 h-4" /></button>
+            onClick={handleClose}
+            className="w-7 h-7 rounded-[6px] text-[#555555] hover:text-[#111111] bg-[#eeeeee] hover:bg-[#e2e2e2] flex items-center justify-center transition-colors border-none cursor-pointer"
+            aria-label="Tutup"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
 
         {/* 1. Filter Preset Tanggal */}

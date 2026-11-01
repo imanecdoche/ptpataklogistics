@@ -27,6 +27,7 @@ import { RecordEmployeeKasbonModal } from './RecordEmployeeKasbonModal';
 import { RecordClientPaymentModal } from './RecordClientPaymentModal';
 import { WorkerKasbonPrintModal } from './WorkerKasbonPrintModal';
 import { Loader2, Trash2, Eye, X, Plus, Pencil } from 'lucide-react';
+import { useDialog } from '@/context/DialogContext';
 
 interface ProjectFinancialsModalProps {
   isOpen: boolean;
@@ -63,6 +64,7 @@ export function ProjectFinancialsModal({
 
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
+  const { showAlert, showConfirm } = useDialog();
 
   useEffect(() => {
     if (!isOpen || !project) return;
@@ -129,31 +131,54 @@ export function ProjectFinancialsModal({
   const projectGrossMargin = totalProjectInvoice - totalProjectCost;
   const netProjectProfit = projectGrossMargin - totalEmployeeKasbon;
 
-  const handleDeleteJob = async (id: string, name: string) => {
-    if (!window.confirm(`Hapus sub-pekerjaan "${name}"? Catatan kasbon terkait akan tetap tersimpan di riwayat kas.`)) return;
-    try {
-      await deleteProjectSubJob(id);
-    } catch (err) {
-      console.error('Gagal menghapus sub-pekerjaan:', err);
-    }
+  const handleDeleteJob = (id: string, name: string) => {
+    showConfirm({
+      title: 'Hapus Sub-Pekerjaan',
+      message: `Hapus sub-pekerjaan "${name}"?\n\nCatatan: Catatan kasbon terkait akan tetap tersimpan di riwayat kas.`,
+      confirmText: 'Hapus',
+      cancelText: 'Batal',
+      isDestructive: true,
+      onConfirm: async () => {
+        try {
+          await deleteProjectSubJob(id);
+        } catch (err) {
+          console.error('Gagal menghapus sub-pekerjaan:', err);
+          showAlert({
+            title: 'Kesalahan',
+            message: 'Gagal menghapus sub-pekerjaan fisik.'
+          });
+        }
+      }
+    });
   };
 
-  const handleDeleteEmployeeKasbon = async (id: string, name: string, amount: number) => {
-    if (!window.confirm(`Hapus catatan kasbon karyawan "${name}" sebesar ${formatRupiah(amount)}?\n\nCatatan: Mutasi di Buku Kas Utama tetap tersimpan untuk riwayat audit.`)) return;
-    try {
-      await deleteEmployeeKasbon(id);
-    } catch (err) {
-      console.error('Gagal menghapus kasbon karyawan:', err);
-      alert('Gagal menghapus kasbon karyawan.');
-    }
+  const handleDeleteEmployeeKasbon = (id: string, name: string, amount: number) => {
+    showConfirm({
+      title: 'Hapus Kasbon Karyawan',
+      message: `Hapus catatan kasbon karyawan "${name}" sebesar ${formatRupiah(amount)}?\n\nCatatan: Mutasi di Buku Kas Utama tetap tersimpan untuk riwayat audit.`,
+      confirmText: 'Hapus Kasbon',
+      cancelText: 'Batal',
+      isDestructive: true,
+      onConfirm: async () => {
+        try {
+          await deleteEmployeeKasbon(id);
+        } catch (err) {
+          console.error('Gagal menghapus kasbon karyawan:', err);
+          showAlert({
+            title: 'Kesalahan',
+            message: 'Gagal menghapus kasbon karyawan.'
+          });
+        }
+      }
+    });
   };
 
   return (
     <>
       <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4 select-none">
-        {/* Backdrop (Tap on blur to close) */}
+        {/* Backdrop (Solid Dimmed without blur) */}
         <div 
-          className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
+          className="fixed inset-0 bg-black/50 transition-opacity"
           onClick={onClose}
         />
 
@@ -902,7 +927,7 @@ export function ProjectFinancialsModal({
       {/* LIGHTBOX PREVIEW BUKTI TRANSFER / KWITANSI */}
       {activeReceiptPreview && (
         <div 
-          className="fixed inset-0 z-60 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 cursor-pointer"
+          className="fixed inset-0 z-60 bg-black/80 flex items-center justify-center p-4 cursor-pointer"
           onClick={() => setActiveReceiptPreview(null)}
         >
           <div 

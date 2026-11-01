@@ -4,6 +4,8 @@ import { recordClientPayment } from '@/lib/projectFinanceService';
 import { formatRupiah } from '@/lib/currencyUtils';
 import { CurrencyInput } from '@/components/ui/CurrencyInput';
 import { X, Info } from 'lucide-react';
+import { useDialog } from '@/context/DialogContext';
+import { useDrawerTransition } from '@/hooks/useDrawerTransition';
 
 interface RecordClientPaymentModalProps {
   isOpen: boolean;
@@ -36,6 +38,8 @@ export function RecordClientPaymentModal({
   const [referenceNumber, setReferenceNumber] = useState<string>('');
   const [note, setNote] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { showAlert } = useDialog();
+  const { isRendered, isVisible, handleClose } = useDrawerTransition(isOpen, onClose, { durationMs: 200 });
 
   useEffect(() => {
     if (defaultProjectId) {
@@ -55,7 +59,7 @@ export function RecordClientPaymentModal({
     setNote('');
   }, [defaultProjectId, defaultClientId, projects, clients, isOpen]);
 
-  if (!isOpen) return null;
+  if (!isRendered) return null;
 
   const targetProj = projects.find(p => p.id === selectedProjectId);
 
@@ -70,11 +74,17 @@ export function RecordClientPaymentModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!clientName.trim()) {
-      alert('Nama klien / pembayar wajib diisi.');
+      showAlert({
+        title: 'Validasi Input',
+        message: 'Nama klien / pembayar wajib diisi.'
+      });
       return;
     }
     if (!amount || amount <= 0) {
-      alert('Nominal pembayaran masuk harus lebih besar dari 0.');
+      showAlert({
+        title: 'Validasi Input',
+        message: 'Nominal pembayaran masuk harus lebih besar dari 0.'
+      });
       return;
     }
 
@@ -93,32 +103,42 @@ export function RecordClientPaymentModal({
         userEmail
       });
 
-      alert(`Pembayaran masuk dari ${clientName} sebesar ${formatRupiah(amount)} berhasil dibukukan ke Kas Utama & memotong saldo tagihan.`);
-      onClose();
+      showAlert({
+        title: 'Pembayaran Tercatat',
+        message: `Pembayaran masuk dari ${clientName} sebesar ${formatRupiah(amount)} berhasil dibukukan ke Kas Utama & memotong saldo tagihan.`
+      });
+      handleClose();
       if (onSuccess) onSuccess();
     } catch (err) {
       console.error('Gagal mencatat pembayaran klien:', err);
-      alert('Terjadi kesalahan saat mencatat pembayaran masuk.');
+      showAlert({
+        title: 'Kesalahan',
+        message: 'Terjadi kesalahan saat mencatat pembayaran masuk.'
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4 select-none">
+    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4 select-none overflow-hidden">
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-black/60 transition-opacity"
-        onClick={onClose}
+        className={`fixed inset-0 bg-black/50 transition-opacity duration-200 ease-out ${
+          isVisible ? 'opacity-100' : 'opacity-0'
+        }`}
+        onClick={handleClose}
       />
 
       {/* Surface Dialog */}
       <div 
-        className="relative w-full max-w-md bg-white rounded-t-[20px] md:rounded-[12px] my-0 md:my-6 flex flex-col overflow-hidden shadow-2xl z-10 animate-in slide-in-from-bottom duration-300"
+        className={`relative w-full max-w-md bg-white rounded-t-[20px] md:rounded-[12px] my-0 md:my-6 flex flex-col overflow-hidden shadow-2xl z-10 border-none transition-transform duration-200 ease-out transform ${
+          isVisible ? 'translate-y-0' : 'translate-y-full md:translate-y-4'
+        }`}
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="p-4 sm:p-5 border-b border-[#eaeaea] bg-white flex items-center justify-between flex-shrink-0">
+        <div className="p-4 sm:p-5 bg-[#fafafa] flex items-center justify-between flex-shrink-0 border-none">
           <div>
             <h3 className="text-sm sm:text-base font-bold text-[#111111]">
               Catat Pembayaran Masuk (Klien)
@@ -129,8 +149,8 @@ export function RecordClientPaymentModal({
           </div>
           <button
             type="button"
-            onClick={onClose}
-            className="text-[#888888] hover:text-[#111111] p-1.5 rounded-lg hover:bg-[#f0f0f0] transition-colors"
+            onClick={handleClose}
+            className="w-7 h-7 rounded-[6px] text-[#555555] hover:text-[#111111] bg-[#eeeeee] hover:bg-[#e2e2e2] flex items-center justify-center transition-colors border-none cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>

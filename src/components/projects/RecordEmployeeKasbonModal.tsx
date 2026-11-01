@@ -4,6 +4,8 @@ import { Project } from '@/types/database';
 import { recordEmployeeKasbon } from '@/lib/projectFinanceService';
 import { formatRupiah } from '@/lib/currencyUtils';
 import { CurrencyInput } from '@/components/ui/CurrencyInput';
+import { useDialog } from '@/context/DialogContext';
+import { useDrawerTransition } from '@/hooks/useDrawerTransition';
 
 interface RecordEmployeeKasbonModalProps {
   isOpen: boolean;
@@ -28,6 +30,9 @@ export function RecordEmployeeKasbonModal({
   const [receiptUrl, setReceiptUrl] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const { showAlert } = useDialog();
+  const { isRendered, isVisible, handleClose } = useDrawerTransition(isOpen, onClose, { durationMs: 200 });
+
   useEffect(() => {
     if (isOpen) {
       setEmployeeName('');
@@ -39,7 +44,7 @@ export function RecordEmployeeKasbonModal({
     }
   }, [isOpen]);
 
-  if (!isOpen) return null;
+  if (!isRendered) return null;
 
   // Handler upload file bukti kasbon ke Base64 / Local Storage
   const handleReceiptUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -47,7 +52,10 @@ export function RecordEmployeeKasbonModal({
     if (!file) return;
 
     if (file.size > 2 * 1024 * 1024) {
-      alert('Ukuran foto bukti maksimal 2 MB.');
+      showAlert({
+        title: 'Batas Ukuran',
+        message: 'Ukuran foto bukti maksimal 2 MB.'
+      });
       return;
     }
 
@@ -61,11 +69,17 @@ export function RecordEmployeeKasbonModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!employeeName.trim()) {
-      alert('Nama karyawan wajib diisi.');
+      showAlert({
+        title: 'Validasi Input',
+        message: 'Nama karyawan wajib diisi.'
+      });
       return;
     }
     if (!amount || amount <= 0) {
-      alert('Nominal kasbon harus lebih besar dari 0.');
+      showAlert({
+        title: 'Validasi Input',
+        message: 'Nominal kasbon harus lebih besar dari 0.'
+      });
       return;
     }
 
@@ -83,32 +97,42 @@ export function RecordEmployeeKasbonModal({
         userEmail
       });
 
-      alert(`Kasbon karyawan ${employeeName.trim()} sebesar ${formatRupiah(amount)} berhasil dicatat ke Buku Kas & memotong laba kas riil proyek.`);
-      onClose();
+      showAlert({
+        title: 'Kasbon Berhasil Dicatat',
+        message: `Kasbon karyawan ${employeeName.trim()} sebesar ${formatRupiah(amount)} berhasil dicatat ke Buku Kas & memotong laba kas riil proyek.`
+      });
+      handleClose();
       if (onSuccess) onSuccess();
     } catch (err) {
       console.error('Gagal mencatat kasbon karyawan:', err);
-      alert('Terjadi kesalahan saat mencatat kasbon karyawan.');
+      showAlert({
+        title: 'Kesalahan',
+        message: 'Terjadi kesalahan saat mencatat kasbon karyawan.'
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4 select-none">
+    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4 select-none overflow-hidden">
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-black/60 transition-opacity"
-        onClick={onClose}
+        className={`fixed inset-0 bg-black/50 transition-opacity duration-200 ease-out ${
+          isVisible ? 'opacity-100' : 'opacity-0'
+        }`}
+        onClick={handleClose}
       />
 
       {/* Surface Dialog */}
       <div 
-        className="relative w-full max-w-md bg-white rounded-t-[20px] md:rounded-[12px] my-0 md:my-6 flex flex-col overflow-hidden shadow-2xl z-10 animate-in slide-in-from-bottom duration-300"
+        className={`relative w-full max-w-md bg-white rounded-t-[20px] md:rounded-[12px] my-0 md:my-6 flex flex-col overflow-hidden shadow-2xl z-10 border-none transition-transform duration-200 ease-out transform ${
+          isVisible ? 'translate-y-0' : 'translate-y-full md:translate-y-4'
+        }`}
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="p-4 sm:p-5 border-b border-[#eaeaea] bg-white flex items-center justify-between flex-shrink-0">
+        <div className="p-4 sm:p-5 bg-[#fafafa] flex items-center justify-between flex-shrink-0 border-none">
           <div>
             <h3 className="text-sm sm:text-base font-bold text-[#111111]">
               Catat Kasbon Karyawan / Tim
@@ -119,8 +143,8 @@ export function RecordEmployeeKasbonModal({
           </div>
           <button
             type="button"
-            onClick={onClose}
-            className="text-[#888888] hover:text-[#111111] p-1.5 rounded-lg hover:bg-[#f0f0f0] transition-colors border-none cursor-pointer"
+            onClick={handleClose}
+            className="w-7 h-7 rounded-[6px] text-[#555555] hover:text-[#111111] bg-[#eeeeee] hover:bg-[#e2e2e2] flex items-center justify-center transition-colors border-none cursor-pointer"
             aria-label="Tutup"
           >
             <X className="w-4 h-4" />

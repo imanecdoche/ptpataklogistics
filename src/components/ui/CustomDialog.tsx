@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { useDrawerTransition } from '@/hooks/useDrawerTransition';
 
 export interface CustomDialogProps {
   isOpen: boolean;
@@ -29,43 +30,49 @@ export function CustomDialog({
   isLoading = false,
   maxWidth = 'max-w-md'
 }: CustomDialogProps): React.JSX.Element | null {
+  const { isRendered, isVisible, handleClose } = useDrawerTransition(isOpen, onClose, { durationMs: 200 });
+
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isVisible) return;
 
     const handleKeyDown = (event: KeyboardEvent): void => {
       if (event.key === 'Escape' && !isLoading) {
-        onClose();
+        handleClose();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, isLoading, onClose]);
+  }, [isVisible, isLoading, handleClose]);
 
-  if (!isOpen) return null;
+  if (!isRendered) return null;
 
   return (
     <div
       role="dialog"
       aria-modal="true"
       aria-labelledby="custom-dialog-title"
-      className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4 select-none"
+      className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4 select-none overflow-hidden"
     >
-      {/* Dimmed Backdrop with Blur (Tap on blur to close) */}
+      {/* Dimmed Backdrop (Solid Dimmed without blur per Rule 1 & 4) */}
       <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-xs transition-opacity"
+        className={`fixed inset-0 bg-black/50 transition-opacity duration-200 ease-out ${
+          isVisible ? 'opacity-100' : 'opacity-0'
+        }`}
         onClick={() => {
-          if (!isLoading) onClose();
+          if (!isLoading) handleClose();
         }}
         aria-hidden="true"
       />
 
-      {/* Dialog Surface (Solid White Card - Mobile Bottom Sheet Drawer) */}
+      {/* Dialog Surface (Solid White Card - Mobile Bottom Sheet Drawer with Smooth Transition) */}
       <div
-        className={`relative w-full ${maxWidth} bg-white rounded-t-[20px] md:rounded-[10px] max-h-[92vh] md:max-h-[90vh] shadow-2xl overflow-hidden z-10 flex flex-col animate-in slide-in-from-bottom duration-300 ease-out`}
+        className={`relative w-full ${maxWidth} bg-white rounded-t-[20px] md:rounded-[12px] max-h-[90dvh] md:max-h-[85vh] shadow-2xl overflow-hidden z-10 flex flex-col border-none transition-transform duration-200 ease-out transform ${
+          isVisible ? 'translate-y-0' : 'translate-y-full md:translate-y-4'
+        }`}
       >
         {/* Header Bersih: Judul di tengah pada mobile */}
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#eaeaea] relative flex-shrink-0">
+        <div className="flex items-center justify-between px-5 py-4 bg-[#fafafa] relative flex-shrink-0 border-none">
           <div className="flex items-center justify-center md:justify-start space-x-2 min-w-0 w-full md:w-auto">
             {iconSrc && (
               <img
@@ -76,7 +83,7 @@ export function CustomDialog({
             )}
             <h2
               id="custom-dialog-title"
-              className="text-sm font-semibold tracking-tight text-[#111111] truncate text-center md:text-left w-full md:w-auto"
+              className="text-sm font-bold tracking-tight text-[#111111] truncate text-center md:text-left w-full md:w-auto"
             >
               {title}
             </h2>
@@ -85,15 +92,15 @@ export function CustomDialog({
           {/* Close Button on Desktop */}
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
             disabled={isLoading}
             aria-label="Tutup dialog"
-            className="hidden md:flex p-1 rounded text-[#666666] hover:text-[#111111] hover:bg-[#fafafa] transition-colors flex-shrink-0 disabled:opacity-50"
+            className="hidden md:flex p-1.5 rounded-[6px] text-[#666666] hover:text-[#111111] hover:bg-[#eeeeee] transition-colors flex-shrink-0 disabled:opacity-50 border-none cursor-pointer"
           >
             <img
               src="/icons/close.png"
               alt="Tutup"
-              className="w-5 h-5 object-contain"
+              className="w-4 h-4 object-contain"
             />
           </button>
         </div>
@@ -101,7 +108,7 @@ export function CustomDialog({
         {/* Content Body Scrollable */}
         <div className="px-5 py-4 space-y-3 overflow-y-auto flex-1 overscroll-contain">
           {description && (
-            <p className="text-xs text-[#666666] leading-relaxed text-center md:text-left">
+            <p className="text-xs text-[#666666] leading-relaxed text-center md:text-left whitespace-pre-line">
               {description}
             </p>
           )}
@@ -110,13 +117,13 @@ export function CustomDialog({
 
         {/* Sticky Bottom Action Bar */}
         {(confirmText || cancelText) ? (
-          <div className="p-4 bg-white md:bg-[#fafafa] border-t border-[#eaeaea] sticky bottom-0 flex-shrink-0 flex items-center justify-end space-x-2.5 z-10">
+          <div className="p-4 bg-white sticky bottom-0 flex-shrink-0 flex items-center justify-end space-x-2.5 z-10 border-none">
             {cancelText && (
               <button
                 type="button"
-                onClick={onClose}
+                onClick={handleClose}
                 disabled={isLoading}
-                className="flex-1 md:flex-none px-4 py-2.5 md:py-1.5 text-xs font-semibold md:font-medium text-[#171717] bg-[#f5f5f5] hover:bg-[#ebebeb] rounded-[8px] md:rounded-[6px] transition-colors disabled:opacity-50"
+                className="flex-1 md:flex-none px-4 py-2.5 text-xs font-semibold text-[#555555] bg-[#f5f5f5] hover:bg-[#ebebeb] rounded-[8px] transition-colors disabled:opacity-50 border-none cursor-pointer whitespace-nowrap"
               >
                 {cancelText}
               </button>
@@ -129,14 +136,14 @@ export function CustomDialog({
                   if (onConfirm) {
                     onConfirm();
                   } else {
-                    onClose();
+                    handleClose();
                   }
                 }}
                 disabled={isLoading}
-                className={`flex-1 md:flex-none px-4 py-2.5 md:py-1.5 text-xs font-semibold md:font-medium rounded-[8px] md:rounded-[6px] transition-colors flex items-center justify-center space-x-2 ${
+                className={`flex-1 md:flex-none px-5 py-2.5 text-xs font-semibold rounded-[8px] transition-colors flex items-center justify-center space-x-2 border-none cursor-pointer whitespace-nowrap ${
                   isDestructive
                     ? 'bg-[#cf1124] hover:bg-[#a80e1d] text-white'
-                    : 'bg-[#171717] hover:bg-[#333333] text-white'
+                    : 'bg-[#111111] hover:bg-[#2b2b2b] text-white'
                 } disabled:opacity-50`}
               >
                 {isLoading && (
@@ -147,12 +154,12 @@ export function CustomDialog({
             )}
           </div>
         ) : (
-          <div className="md:hidden p-3.5 bg-white border-t border-[#eaeaea] sticky bottom-0 flex-shrink-0 flex items-center justify-center z-10">
+          <div className="md:hidden p-3.5 bg-white sticky bottom-0 flex-shrink-0 flex items-center justify-center z-10 border-none">
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleClose}
               disabled={isLoading}
-              className="w-full py-2.5 text-xs font-semibold text-[#666666] bg-[#f5f5f5] hover:bg-[#ebebeb] rounded-[8px] transition-colors"
+              className="w-full py-2.5 text-xs font-semibold text-[#666666] bg-[#f5f5f5] hover:bg-[#ebebeb] rounded-[8px] transition-colors border-none cursor-pointer whitespace-nowrap"
             >
               Tutup
             </button>

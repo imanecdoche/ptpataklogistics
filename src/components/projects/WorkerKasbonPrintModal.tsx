@@ -35,18 +35,18 @@ export function WorkerKasbonPrintModal({
 
   return (
     <div className="fixed inset-0 z-60 flex items-end md:items-center justify-center p-0 md:p-4 select-none print:p-0 print:bg-white print:static">
-      {/* Backdrop (Tap on blur to close) */}
+      {/* Backdrop (Solid Dimmed without blur) */}
       <div 
-        className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity print:hidden"
+        className="fixed inset-0 bg-black/50 transition-opacity print:hidden"
         onClick={onClose}
       />
 
       <div 
-        className="relative w-full max-w-4xl bg-white rounded-t-[20px] md:rounded-[12px] shadow-2xl flex flex-col h-[92vh] md:h-auto max-h-[92vh] md:max-h-[95vh] overflow-hidden print:max-h-none print:shadow-none print:rounded-none print:w-full z-10 animate-in slide-in-from-bottom duration-300 ease-out"
+        className="relative w-full max-w-4xl bg-white rounded-t-[20px] md:rounded-[12px] shadow-2xl flex flex-col h-[92vh] md:h-auto max-h-[92vh] md:max-h-[95vh] overflow-hidden print:max-h-none print:shadow-none print:rounded-none print:w-full z-10 animate-in slide-in-from-bottom duration-300 ease-out border-none"
         onClick={e => e.stopPropagation()}
       >
         {/* Modal Toolbar (Disembunyikan saat diprint) */}
-        <div className="p-4 border-b border-[#eaeaea] bg-[#fafafa] flex items-center justify-between flex-shrink-0 print:hidden">
+        <div className="p-4 bg-[#fafafa] flex items-center justify-between flex-shrink-0 print:hidden border-none">
           <div className="flex items-center gap-2">
             <Printer className="w-4 h-4" />
             <div>

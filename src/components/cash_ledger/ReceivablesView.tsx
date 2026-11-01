@@ -9,6 +9,7 @@ import { formatRupiah } from '@/lib/currencyUtils';
 import { PricePerVolCell } from '@/components/ui/PricePerVolCell';
 import { matchesDateQuery, formatDateID } from '@/lib/dateSearchUtils';
 import { formatVolumeDisplay } from '@/lib/volumeUtils';
+import { useDialog } from '@/context/DialogContext';
 
 interface ReceivablesViewProps {
   transactions: DispatchTransaction[];
@@ -28,6 +29,7 @@ export function ReceivablesView({
   const [isRecordPaymentOpen, setIsRecordPaymentOpen] = useState(false);
   const [settlingTicketId, setSettlingTicketId] = useState<string | null>(null);
   const { isWatcherUser } = useProjectFilter();
+  const { showAlert, showConfirm } = useDialog();
 
   // Kalkulasi Ringkasan Piutang
   const stats = useMemo(() => {
@@ -100,18 +102,28 @@ export function ReceivablesView({
     return filteredTransactions.slice(start, start + 20);
   }, [filteredTransactions, currentPage]);
 
-  const handleSettleTicket = async (ticketId: string) => {
-    if (!window.confirm('Tandai tiket ritase ini sebagai LUNAS?')) return;
-    try {
-      setSettlingTicketId(ticketId);
-      await settleSingleTicket(ticketId, userEmail);
-      onRefresh();
-    } catch (err) {
-      console.error('Gagal melunasi tiket:', err);
-      alert('Terjadi kesalahan saat melunasi tiket.');
-    } finally {
-      setSettlingTicketId(null);
-    }
+  const handleSettleTicket = (ticketId: string) => {
+    showConfirm({
+      title: 'Konfirmasi Pelunasan',
+      message: 'Tandai tiket ritase ini sebagai LUNAS?',
+      confirmText: 'Lunasi Sekarang',
+      cancelText: 'Batal',
+      onConfirm: async () => {
+        try {
+          setSettlingTicketId(ticketId);
+          await settleSingleTicket(ticketId, userEmail);
+          onRefresh();
+        } catch (err) {
+          console.error('Gagal melunasi tiket:', err);
+          showAlert({
+            title: 'Kesalahan',
+            message: 'Terjadi kesalahan saat melunasi tiket ritase.'
+          });
+        } finally {
+          setSettlingTicketId(null);
+        }
+      }
+    });
   };
 
   return (

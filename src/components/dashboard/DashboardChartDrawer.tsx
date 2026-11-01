@@ -1,6 +1,7 @@
 import { X } from 'lucide-react';
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { DispatchTransaction } from '@/types/database';
+import { useDrawerTransition } from '@/hooks/useDrawerTransition';
 
 interface DashboardChartDrawerProps {
   isOpen: boolean;
@@ -30,6 +31,21 @@ export function DashboardChartDrawer({
     x: number;
     y: number;
   } | null>(null);
+
+  const { isRendered, isVisible, handleClose } = useDrawerTransition(isOpen, onClose, { durationMs: 200 });
+
+  // Handle ESC key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isVisible) {
+        handleClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isVisible, handleClose]);
+
+  if (!isRendered) return null;
 
   // Agregasi transaksi per tanggal (diurutkan tanggal kronologis)
   const chartData = useMemo(() => {
@@ -188,22 +204,23 @@ export function DashboardChartDrawer({
       : '';
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col justify-end">
-      {/* Backdrop */}
+    <div className="fixed inset-0 z-50 flex flex-col justify-end select-none overflow-hidden">
+      {/* Backdrop: Solid Dimmed (Zero Blur) */}
       <div
-        className="fixed inset-0 bg-black/40 backdrop-blur-xs transition-opacity duration-300 animate-in fade-in"
-        onClick={onClose}
+        className={`fixed inset-0 bg-black/50 transition-opacity duration-200 ease-out ${
+          isVisible ? 'opacity-100' : 'opacity-0'
+        }`}
+        onClick={handleClose}
       />
 
-      {/* Drawer Panel Bottom Sheet */}
-      <div className="relative z-10 bg-white rounded-t-[18px] border-t border-[#eaeaea] shadow-2xl max-h-[90vh] flex flex-col w-full max-w-3xl mx-auto overflow-hidden animate-in slide-in-from-bottom duration-300">
-        {/* Handle Bar */}
-        <div className="pt-3 pb-1 flex flex-col items-center cursor-pointer select-none" onClick={onClose}>
-          <div className="w-9 h-1.5 rounded-full bg-[#d5d5d5] mb-2" />
-        </div>
-
-        {/* Drawer Header */}
-        <div className="px-5 pb-3 border-b border-[#f0f0f0] flex items-center justify-between">
+      {/* Drawer Panel Bottom Sheet: Smooth Bi-directional slide */}
+      <div
+        className={`relative z-10 bg-white rounded-t-[18px] shadow-2xl h-[85dvh] max-h-[85dvh] flex flex-col w-full max-w-3xl mx-auto overflow-hidden border-none transition-transform duration-200 ease-out transform ${
+          isVisible ? 'translate-y-0' : 'translate-y-full'
+        }`}
+      >
+        {/* Drawer Header (No Drag Handle Bar per Rule 128) */}
+        <div className="p-4 bg-[#fafafa] flex items-center justify-between flex-shrink-0 border-none">
           <div className="flex items-center gap-2.5">
             <img src="/icons/chart-line.png" alt="" className="w-5 h-5 object-contain" />
             <div>
@@ -213,9 +230,12 @@ export function DashboardChartDrawer({
           </div>
           <button
             type="button"
-            onClick={onClose}
-            className="text-[#888888] hover:text-[#111111] p-1 rounded-md transition-colors"
-           aria-label="Tutup"><X className="w-4 h-4" /></button>
+            onClick={handleClose}
+            className="w-7 h-7 rounded-[6px] text-[#555555] hover:text-[#111111] bg-[#eeeeee] hover:bg-[#e2e2e2] flex items-center justify-center transition-colors border-none cursor-pointer"
+            aria-label="Tutup"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
 
         {/* Sub-Tab Category Switcher */}

@@ -12,6 +12,8 @@ import { formatRupiah } from '@/lib/currencyUtils';
 import { formatDateID } from '@/lib/dateSearchUtils';
 import { formatVolumeDisplay } from '@/lib/volumeUtils';
 import { X, Check, CheckCircle2, Loader2 } from 'lucide-react';
+import { useDialog } from '@/context/DialogContext';
+import { useDrawerTransition } from '@/hooks/useDrawerTransition';
 
 interface ApprovalCenterModalProps {
   isOpen: boolean;
@@ -35,6 +37,9 @@ export function ApprovalCenterModal({
   // Reject Dialog State
   const [rejectTarget, setRejectTarget] = useState<TicketApprovalRequest | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
+
+  const { showAlert, showConfirm } = useDialog();
+  const { isRendered, isVisible, handleClose } = useDrawerTransition(isOpen, onClose, { durationMs: 200 });
 
   // Subscribe real-time
   useEffect(() => {
@@ -60,23 +65,31 @@ export function ApprovalCenterModal({
 
   const historyRequests = allRequests.filter(r => r.status !== 'PENDING');
 
-  const handleApprove = async (request: TicketApprovalRequest) => {
-    const confirmText =
-      request.type === 'DELETE'
+  const handleApprove = (request: TicketApprovalRequest) => {
+    const isDelete = request.type === 'DELETE';
+    showConfirm({
+      title: isDelete ? 'Konfirmasi ACC Hapus' : 'Konfirmasi ACC Koreksi',
+      message: isDelete
         ? `Konfirmasi ACC Penghapusan Tiket #${request.ticketNumber}?\n\nPERINGATAN: Tiket ini dan catatan mutasi kas terkait akan dihapus secara permanen.`
-        : `Konfirmasi ACC Koreksi Tiket #${request.ticketNumber}?\n\nData transaksi dan mutasi kas akan langsung diperbarui sesuai usulan.`;
-
-    if (!window.confirm(confirmText)) return;
-
-    setProcessingId(request.id);
-    try {
-      await approveRequest(request, currentUserEmail, currentUserName);
-    } catch (err) {
-      console.error('Gagal menyetujui pengajuan:', err);
-      alert('Gagal mengeksekusi persetujuan. Silakan periksa koneksi internet.');
-    } finally {
-      setProcessingId(null);
-    }
+        : `Konfirmasi ACC Koreksi Tiket #${request.ticketNumber}?\n\nData transaksi dan mutasi kas akan langsung diperbarui sesuai usulan.`,
+      confirmText: 'Setujui (ACC)',
+      cancelText: 'Batal',
+      isDestructive: isDelete,
+      onConfirm: async () => {
+        setProcessingId(request.id);
+        try {
+          await approveRequest(request, currentUserEmail, currentUserName);
+        } catch (err) {
+          console.error('Gagal menyetujui pengajuan:', err);
+          showAlert({
+            title: 'Gagal ACC',
+            message: 'Gagal mengeksekusi persetujuan. Silakan periksa koneksi internet.'
+          });
+        } finally {
+          setProcessingId(null);
+        }
+      }
+    });
   };
 
   const handleConfirmReject = async () => {
@@ -93,7 +106,10 @@ export function ApprovalCenterModal({
       setRejectionReason('');
     } catch (err) {
       console.error('Gagal menolak pengajuan:', err);
-      alert('Gagal menolak pengajuan.');
+      showAlert({
+        title: 'Gagal',
+        message: 'Gagal menolak pengajuan.'
+      });
     } finally {
       setProcessingId(null);
     }
@@ -112,22 +128,28 @@ export function ApprovalCenterModal({
     }
   };
 
+  if (!isRendered) return null;
+
   return (
     <>
-      <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4 select-none">
-        {/* Backdrop */}
+      <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4 select-none overflow-hidden">
+        {/* Backdrop (Solid Dimmed without blur per Rule 1 & 4) */}
         <div 
-          className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
-          onClick={onClose}
+          className={`fixed inset-0 bg-black/50 transition-opacity duration-200 ease-out ${
+            isVisible ? 'opacity-100' : 'opacity-0'
+          }`}
+          onClick={handleClose}
         />
 
-        {/* Modal Window */}
+        {/* Modal Window: Smooth Mobile Drawer Slide */}
         <div 
-          className="relative w-full md:max-w-3xl bg-white rounded-t-[20px] md:rounded-[16px] shadow-2xl flex flex-col h-[92vh] md:h-[88vh] max-h-[92vh] md:max-h-[88vh] overflow-hidden z-10 animate-in slide-in-from-bottom duration-300 ease-out"
+          className={`relative w-full md:max-w-3xl bg-white rounded-t-[20px] md:rounded-[16px] shadow-2xl flex flex-col h-[85dvh] max-h-[85dvh] md:h-[88vh] md:max-h-[88vh] overflow-hidden z-10 border-none transition-transform duration-200 ease-out transform ${
+            isVisible ? 'translate-y-0' : 'translate-y-full md:translate-y-4'
+          }`}
           onClick={e => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="p-4 sm:p-5 border-b border-[#eaeaea] bg-white flex items-center justify-between flex-shrink-0">
+          <div className="p-4 sm:p-5 border-none bg-[#fafafa] flex items-center justify-between flex-shrink-0">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-[10px] bg-[#111111] text-white flex items-center justify-center font-bold text-sm">
                 ACC
@@ -138,7 +160,7 @@ export function ApprovalCenterModal({
                     Pusat Persetujuan Tiket (Approval Center)
                   </h2>
                   {pendingRequests.length > 0 && (
-                    <span className="px-2 py-0.5 rounded-[4px] text-[11px] font-bold bg-[#111111] text-white border-none">
+                    <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#111111] text-white border-none">
                       {pendingRequests.length} Pending
                     </span>
                   )}
@@ -151,8 +173,8 @@ export function ApprovalCenterModal({
 
             <button
               type="button"
-              onClick={onClose}
-              className="text-[#888888] hover:text-[#111111] p-1.5 rounded-lg hover:bg-[#f0f0f0] transition-colors border-none"
+              onClick={handleClose}
+              className="w-7 h-7 rounded-[6px] text-[#555555] hover:text-[#111111] bg-[#eeeeee] hover:bg-[#e2e2e2] flex items-center justify-center transition-colors border-none cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
