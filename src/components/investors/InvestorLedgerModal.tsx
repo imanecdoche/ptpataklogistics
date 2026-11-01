@@ -4,6 +4,7 @@ import { CurrencyInput } from '@/components/ui/CurrencyInput';
 import { PricePerVolCell } from '@/components/ui/PricePerVolCell';
 import { formatDateID } from '@/lib/dateSearchUtils';
 import { formatVolumeDisplay } from '@/lib/volumeUtils';
+import { formatCompactMonthlyProfitShare } from '@/lib/currencyUtils';
 import { calculateInvestorFinancials } from '@/lib/investorFinanceUtils';
 import { formatPhoneNumber } from '@/lib/phoneUtils';
 import { X } from 'lucide-react';
@@ -92,7 +93,7 @@ export function InvestorLedgerModal({
         onClick={onClose} 
       />
       
-      <div className="relative w-full md:max-w-4xl bg-white rounded-t-[20px] md:rounded-[12px] h-[92vh] md:h-[88vh] max-h-[92vh] md:max-h-[88vh] flex flex-col overflow-hidden z-10 shadow-2xl animate-in slide-in-from-bottom duration-300 ease-out select-text">
+      <div className="relative w-full md:max-w-5xl bg-white rounded-t-[20px] md:rounded-[12px] h-[92vh] md:h-[88vh] max-h-[92vh] md:max-h-[88vh] flex flex-col overflow-hidden z-10 shadow-2xl animate-in slide-in-from-bottom duration-300 ease-out select-text">
         {/* Header Modal */}
         <div className="p-4 sm:p-5 border-b border-[#eaeaea] flex items-center justify-between bg-[#fafafa] flex-shrink-0">
           <div className="w-full text-center md:text-left">
@@ -237,15 +238,18 @@ export function InvestorLedgerModal({
                     const isFixed = item.scheme === 'FIXED_MONTHLY';
 
                     return (
-                      <div key={item.projectId || idx} className="p-3.5 bg-[#f9f9f9] rounded-[8px] space-y-2.5">
+                      <div key={item.projectId || idx} className="p-3.5 bg-[#f0f2f5] border border-[#d8dbe0] rounded-[10px] shadow-xs space-y-2.5">
                         <div className="flex items-start justify-between gap-2">
                           <div>
                             <span className="font-bold text-xs text-[#111111] block">{item.projectName}</span>
-                            <span className="text-[10px] text-[#888888] block">{linkedProj?.location || 'Portofolio Umum'}</span>
+                            <span className="text-[10px] text-[#666666] block">{linkedProj?.location || 'Portofolio Umum'}</span>
                           </div>
                           {isFixed ? (
-                            <span className="text-[10px] font-bold bg-[#0284c7] text-white px-2.5 py-0.5 rounded-full border-none whitespace-nowrap flex-shrink-0">
-                              Fixed: {formatRupiah(item.fixedAmount || 0)}/bln (Tgl {item.dueDay || 25})
+                            <span 
+                              className="text-[10px] font-bold bg-[#0284c7] text-white px-2.5 py-0.5 rounded-full border-none whitespace-nowrap flex-shrink-0"
+                              title={`Fixed: ${formatRupiah(item.fixedAmount || 0)}/bln (Tgl ${item.dueDay || 25})`}
+                            >
+                              {formatCompactMonthlyProfitShare(item.fixedAmount || 0)}
                             </span>
                           ) : (
                             <span className="text-[10px] font-bold bg-[#15803d] text-white px-2.5 py-0.5 rounded-full border-none whitespace-nowrap flex-shrink-0">
@@ -316,24 +320,24 @@ export function InvestorLedgerModal({
 
           {activeTab === 'ritase' && (
             <div className="space-y-3">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs border-collapse">
-                  <thead className="bg-[#f9f9f9] border-b border-[#eaeaea] text-[#666666] font-semibold text-[10px] uppercase">
+              <div className="overflow-x-auto rounded-[10px] border border-[#eaeaea]">
+                <table className="w-full min-w-[1020px] table-fixed text-left text-xs border-collapse">
+                  <thead className="bg-[#f9f9f9] border-b border-[#eaeaea] text-[#555555] font-semibold text-[11px] uppercase tracking-wider select-none">
                     <tr>
-                      <th className="py-2 px-2.5">No. Tiket / Tgl</th>
-                      <th className="py-2 px-2.5">Armada / Sopir</th>
-                      <th className="py-2 px-2.5">Proyek Tujuan</th>
-                      <th className="py-2 px-2.5">Material & Vol</th>
-                      <th className="py-2 px-2.5 text-right">Harga Beli</th>
-                      <th className="py-2 px-2.5 text-right">Harga Jual</th>
-                      <th className="py-2 px-2.5 text-right">Biaya (Kas Utama)</th>
-                      <th className="py-2 px-2.5 text-right">Laba Bersih</th>
+                      <th className="py-2.5 px-3 w-[130px] min-w-[130px] whitespace-nowrap">No. Tiket / Tgl</th>
+                      <th className="py-2.5 px-3 w-[110px] min-w-[110px] whitespace-nowrap">Armada / Sopir</th>
+                      <th className="py-2.5 px-3 w-[200px] min-w-[200px] whitespace-nowrap">Proyek Tujuan</th>
+                      <th className="py-2.5 px-3 w-[130px] min-w-[130px] whitespace-nowrap">Material & Vol</th>
+                      <th className="py-2.5 px-3 w-[125px] min-w-[125px] text-right whitespace-nowrap">Harga Beli</th>
+                      <th className="py-2.5 px-3 w-[125px] min-w-[125px] text-right whitespace-nowrap">Harga Jual</th>
+                      <th className="py-2.5 px-3 w-[110px] min-w-[110px] text-right whitespace-nowrap">Biaya (Kas Utama)</th>
+                      <th className="py-2.5 px-3 w-[110px] min-w-[110px] text-right whitespace-nowrap">Laba Bersih</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#eaeaea]">
                     {investorTransactions.length === 0 ? (
                       <tr>
-                        <td colSpan={8} className="py-8 text-center text-[#888888]">
+                        <td colSpan={8} className="py-8 text-center text-[#888888] whitespace-nowrap">
                           Belum ada transaksi ritase untuk proyek yang didanai investor ini.
                         </td>
                       </tr>
@@ -342,24 +346,24 @@ export function InvestorLedgerModal({
                         const expense = (tx.totalBuyCost || 0) + (tx.operationalCost || 0);
                         const profit = (tx.totalRevenue || 0) - expense;
                         return (
-                          <tr key={tx.id} className="hover:bg-[#fafafa]">
-                            <td className="py-2 px-2.5">
-                              <span className="font-mono font-medium text-[#111111] block">{tx.ticketNumber}</span>
-                              <span className="text-[10px] text-[#888888] block">{formatDateID(tx.deliveryDate || tx.date)}</span>
+                          <tr key={tx.id} className="hover:bg-[#fafafa] transition-colors">
+                            <td className="py-2.5 px-3 whitespace-nowrap w-[130px] min-w-[130px] align-middle font-mono">
+                              <span className="font-bold text-[#111111] block whitespace-nowrap">{tx.ticketNumber}</span>
+                              <span className="text-[10px] text-[#888888] block whitespace-nowrap">{formatDateID(tx.deliveryDate || tx.date)}</span>
                             </td>
-                            <td className="py-2 px-2.5">
-                              <span className="font-bold text-[#111111] block">{tx.truckPlate}</span>
-                              <span className="text-[10px] text-[#888888] block">{tx.driverName || 'Supir'}</span>
+                            <td className="py-2.5 px-3 whitespace-nowrap w-[110px] min-w-[110px] align-middle">
+                              <span className="font-bold text-[#111111] block whitespace-nowrap">{tx.truckPlate}</span>
+                              <span className="text-[10px] text-[#888888] block truncate whitespace-nowrap">{tx.driverName || 'Supir'}</span>
                             </td>
-                            <td className="py-2 px-2.5">
-                              <span className="text-[#111111] block font-medium truncate max-w-[140px]">{tx.projectName}</span>
-                              <span className="text-[10px] text-[#888888] block">{tx.clientName}</span>
+                            <td className="py-2.5 px-3 whitespace-nowrap w-[200px] min-w-[200px] align-middle">
+                              <span className="text-[#111111] block font-semibold truncate whitespace-nowrap" title={tx.projectName}>{tx.projectName}</span>
+                              <span className="text-[10px] text-[#888888] block truncate whitespace-nowrap">{tx.clientName}</span>
                             </td>
-                            <td className="py-2 px-2.5">
-                              <span className="text-[#111111] block font-medium">{tx.materialName}</span>
-                              <span className="text-[10px] text-[#888888] block">{formatVolumeDisplay(tx.quantity, tx.unit)}</span>
+                            <td className="py-2.5 px-3 whitespace-nowrap w-[130px] min-w-[130px] align-middle">
+                              <span className="text-[#111111] block font-semibold truncate whitespace-nowrap">{tx.materialName}</span>
+                              <span className="text-[10px] text-[#888888] block font-mono whitespace-nowrap">{formatVolumeDisplay(tx.quantity, tx.unit)}</span>
                             </td>
-                            <td className="py-2 px-2.5 text-right">
+                            <td className="py-2.5 px-3 text-right whitespace-nowrap w-[125px] min-w-[125px] align-middle">
                               <PricePerVolCell
                                 unitPrice={tx.buyPricePerUnit}
                                 totalPrice={tx.totalBuyCost}
@@ -368,7 +372,7 @@ export function InvestorLedgerModal({
                                 align="right"
                               />
                             </td>
-                            <td className="py-2 px-2.5 text-right">
+                            <td className="py-2.5 px-3 text-right whitespace-nowrap w-[125px] min-w-[125px] align-middle">
                               <PricePerVolCell
                                 unitPrice={tx.sellPricePerUnit}
                                 totalPrice={tx.totalRevenue}
@@ -377,11 +381,11 @@ export function InvestorLedgerModal({
                                 align="right"
                               />
                             </td>
-                            <td className="py-2 px-2.5 text-right font-bold tracking-tight text-[#666666]">
-                              {formatRupiah(expense)}
+                            <td className="py-2.5 px-3 text-right whitespace-nowrap w-[110px] min-w-[110px] font-mono font-bold tracking-tight text-[#111111] align-middle">
+                              <span className="whitespace-nowrap">{formatRupiah(expense)}</span>
                             </td>
-                            <td className={`py-2 px-2.5 text-right font-bold tracking-tight ${profit >= 0 ? 'text-[#008060]' : 'text-red-600'}`}>
-                              {formatRupiah(profit)}
+                            <td className={`py-2.5 px-3 text-right whitespace-nowrap w-[110px] min-w-[110px] font-mono font-bold tracking-tight align-middle ${profit >= 0 ? 'text-[#008060]' : 'text-[#cf1124]'}`}>
+                              <span className="whitespace-nowrap">{formatRupiah(profit)}</span>
                             </td>
                           </tr>
                         );
@@ -409,9 +413,13 @@ export function InvestorLedgerModal({
                   <button
                     type="button"
                     onClick={() => setIsPayoutFormOpen(true)}
-                    className="px-3 py-1.5 bg-[#111111] hover:bg-[#2b2b2b] text-white text-xs font-semibold rounded-[6px] transition-colors cursor-pointer"
+                    className="px-3 py-1.5 bg-[#111111] hover:bg-[#2b2b2b] text-white text-xs font-semibold rounded-[6px] transition-colors cursor-pointer inline-flex items-center gap-1.5 shadow-xs whitespace-nowrap"
                   >
-                    + Penyerahan Bagi Hasil
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <line x1="12" y1="5" x2="12" y2="19"></line>
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    <span>Penyerahan Bagi Hasil</span>
                   </button>
                 )}
               </div>

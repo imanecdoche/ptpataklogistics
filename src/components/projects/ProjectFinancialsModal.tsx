@@ -508,13 +508,13 @@ export function ProjectFinancialsModal({
                           </div>
                           <div>
                             <span className="text-[10px] text-[#777777] block font-medium">Tagihan Klien</span>
-                            <span className="font-mono font-bold text-emerald-800">
+                            <span className="font-mono font-bold text-[#111111]">
                               {formatRupiah(job.contractAmountClient)}
                             </span>
                           </div>
                           <div>
                             <span className="text-[10px] text-[#777777] block font-medium">Plafon Tukang</span>
-                            <span className="font-mono font-bold text-amber-800">
+                            <span className="font-mono font-bold text-[#111111]">
                               {formatRupiah(job.contractAmountWorker)}
                             </span>
                           </div>
@@ -523,13 +523,13 @@ export function ProjectFinancialsModal({
                         {/* Kasbon Terpakai / Plafon (Format: Rp n / Rp n) */}
                         <div className="space-y-1 pt-1">
                           <div className="flex justify-between items-center text-[11px]">
-                            <span className="text-[#666666] font-mono">
-                              <span className="font-bold text-[#cf1124]">{formatRupiah(job.totalKasbonPaid)}</span>
-                              <span className="text-[#999999] mx-1">/</span>
-                              <span className="font-medium text-[#555555]">{formatRupiah(job.contractAmountWorker)}</span>
+                            <span className="text-[#111111] font-mono">
+                              <span className="font-bold text-[#111111]">{formatRupiah(job.totalKasbonPaid)}</span>
+                              <span className="text-[#111111] mx-1">/</span>
+                              <span className="font-medium text-[#111111]">{formatRupiah(job.contractAmountWorker)}</span>
                             </span>
-                            <span className="text-[11px] text-[#666666]">
-                              Sisa: <span className="font-mono font-bold text-[#008060]">{formatRupiah(job.remainingWorkerPay)}</span>
+                            <span className="text-[11px] text-[#111111]">
+                              Sisa: <span className="font-mono font-bold text-[#111111]">{formatRupiah(job.remainingWorkerPay)}</span>
                             </span>
                           </div>
 
@@ -548,7 +548,7 @@ export function ProjectFinancialsModal({
                         </div>
 
                         {/* Nominal Margin di bawah Progress Bar tanpa Divider */}
-                        <div className="text-[11px] font-semibold text-emerald-700">
+                        <div className="text-[11px] font-semibold text-[#111111]">
                           Margin: +{formatRupiah(job.companyMargin)}
                         </div>
                       </div>

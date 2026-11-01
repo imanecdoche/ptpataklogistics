@@ -634,7 +634,7 @@ export function RecapPage({
                     {/* 9. Volume */}
                     <td className="py-2.5 px-3 whitespace-nowrap text-right font-bold tracking-tight text-[#111111]">
                       {tx.quantity?.toLocaleString('id-ID')}{' '}
-                      <span className="text-[11px] font-normal text-[#777777]">{tx.unit}</span>
+                      <span className="text-[11px] font-normal text-[#777777]">{tx.unit === 'M3' ? 'm³' : tx.unit}</span>
                     </td>
                   </tr>
                 ))}
@@ -696,7 +696,7 @@ export function RecapPage({
                     <td className="py-2.5 px-3 whitespace-nowrap text-[#111111]">
                       <span className="font-medium">{tx.materialName}</span>{' '}
                       <span className="text-[11px] text-[#777777]">
-                        ({tx.quantity?.toLocaleString('id-ID')} {tx.unit})
+                        ({tx.quantity?.toLocaleString('id-ID')} {tx.unit === 'M3' ? 'm³' : tx.unit})
                       </span>
                     </td>
 

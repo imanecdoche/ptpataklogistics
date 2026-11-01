@@ -22,7 +22,8 @@ export function formatVolumeDisplay(quantity: number | undefined | null, unit?: 
     });
   }
 
-  return unit ? `${formatted} ${unit}` : formatted;
+  const displayUnit = unit === 'M3' || unit === 'm3' ? 'm³' : unit === 'M2' || unit === 'm2' ? 'm²' : unit;
+  return displayUnit ? `${formatted} ${displayUnit}` : formatted;
 }
 
 /**
@@ -71,5 +72,5 @@ export const AVAILABLE_UNITS = [
   { id: 'DT', label: 'DT (Dump Truck)', shortLabel: 'DT' },
   { id: 'Ton', label: 'Ton', shortLabel: 'Ton' },
   { id: 'Tonase', label: 'Tonase', shortLabel: 'Tonase' },
-  { id: 'M3', label: 'M3 (Meter Kubik)', shortLabel: 'M3' }
+  { id: 'M3', label: 'm³ (Meter Kubik)', shortLabel: 'm³' }
 ] as const;

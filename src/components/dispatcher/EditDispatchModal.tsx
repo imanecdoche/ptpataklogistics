@@ -421,7 +421,7 @@ export function EditDispatchModal({
                     { id: 'DT', label: 'DT (Dump Truck)' },
                     { id: 'Ton', label: 'Ton' },
                     { id: 'Tonase', label: 'Tonase' },
-                    { id: 'M3', label: 'M3 (Meter Kubik)' }
+                    { id: 'M3', label: 'm³ (Meter Kubik)' }
                   ]}
                   value={unit}
                   onChange={val => setUnit(val as UnitType)}
@@ -433,7 +433,7 @@ export function EditDispatchModal({
               {!hideMargin && (
                 <div>
                   <label className="block text-xs font-semibold text-[#444444] mb-1">
-                    Harga Beli ({unit}):
+                    Harga Beli ({unit === 'M3' ? 'm³' : unit}):
                   </label>
                   <CurrencyInput
                     value={buyPricePerUnit}
@@ -445,7 +445,7 @@ export function EditDispatchModal({
 
               <div>
                 <label className="block text-xs font-semibold text-[#444444] mb-1">
-                  Harga Jual ({unit}):
+                  Harga Jual ({unit === 'M3' ? 'm³' : unit}):
                 </label>
                 <CurrencyInput
                   value={sellPricePerUnit}

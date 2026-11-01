@@ -927,7 +927,7 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
             {!isDispatcherUser && (
               <div>
                 <label className="block text-[#666666] font-medium mb-1">
-                  Harga Beli ({unit})
+                  Harga Beli ({unit === 'M3' ? 'm³' : unit})
                 </label>
                 <CurrencyInput
                   inputRef={buyPriceInputRef}
@@ -951,7 +951,7 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
 
             <div className={isDispatcherUser ? 'col-span-2' : ''}>
               <label className="block text-[#666666] font-medium mb-1">
-                Harga Jual ({unit}) <span className="text-red-500">*</span>
+                Harga Jual ({unit === 'M3' ? 'm³' : unit}) <span className="text-red-500">*</span>
               </label>
               <CurrencyInput
                 inputRef={sellPriceInputRef}

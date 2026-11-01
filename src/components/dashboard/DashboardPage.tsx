@@ -571,7 +571,7 @@ export function DashboardPage({
                     {/* Volume (Fixed 90px, Zero Wrap) */}
                     <td className="py-2.5 px-3 text-center whitespace-nowrap w-[90px] align-middle">
                       <span className="font-bold tracking-tight text-[#111111]">{formatVolumeDisplay(tx.quantity)}</span>{' '}
-                      <span className="text-[#666666] text-[11px]">{tx.unit}</span>
+                      <span className="text-[#666666] text-[11px]">{tx.unit === 'M3' ? 'm³' : tx.unit}</span>
                     </td>
 
                     {/* Harga Jual (Fixed 130px, Zero Wrap) */}

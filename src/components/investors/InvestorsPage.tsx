@@ -37,6 +37,8 @@ import { PayTalanganModal } from './PayTalanganModal';
 import { ReceiptLightboxModal } from '@/components/ui/ReceiptLightboxModal';
 import { ImageIcon, X } from 'lucide-react';
 
+import { formatCompactMonthlyProfitShare } from '@/lib/currencyUtils';
+
 const formatRupiah = (val: number): string =>
   'Rp ' + Math.round(val).toLocaleString('id-ID');
 
@@ -703,8 +705,8 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
           <table className="w-full min-w-[760px] table-fixed text-left text-xs border-collapse">
             <thead className="sticky top-0 z-10 bg-[#f9f9f9] border-b border-[#eaeaea] text-[#555555] font-semibold text-[11px] uppercase tracking-wider select-none">
               <tr>
-                <th className="py-2.5 px-3 w-[220px] min-w-[220px] whitespace-nowrap">Nama Investor</th>
-                <th className="py-2.5 px-3 w-[240px] min-w-[240px] whitespace-nowrap">Proyek Terkait & Profit Share</th>
+                <th className="py-2.5 px-3 w-[150px] min-w-[150px] whitespace-nowrap">Nama Investor</th>
+                <th className="py-2.5 px-3 w-[310px] min-w-[310px] whitespace-nowrap">Proyek Terkait & Profit Share</th>
                 <th className="py-2.5 px-3 w-[160px] min-w-[160px] text-right whitespace-nowrap" title="Modal disetor disesuaikan transfer dan talangan aktif">Modal Bersih Berjalan</th>
                 <th className="py-2.5 px-3 w-[140px] min-w-[140px] text-right whitespace-nowrap">Hak Bagi Hasil</th>
                 <th className="py-2.5 px-3 w-[100px] min-w-[100px] text-right whitespace-nowrap">Aksi</th>
@@ -731,7 +733,7 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
 
                   return (
                     <tr key={inv.id} className="hover:bg-[#fafafa] transition-colors">
-                      <td className="py-2.5 px-3 whitespace-nowrap w-[220px] align-middle">
+                      <td className="py-2.5 px-3 whitespace-nowrap w-[150px] min-w-[150px] align-middle">
                         <button
                           type="button"
                           onClick={() => setSelectedLedgerInvestor(inv)}
@@ -741,7 +743,7 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
                           {inv.name}
                         </button>
                       </td>
-                      <td className="py-2.5 px-3 text-[#111111] whitespace-nowrap w-[240px] align-middle">
+                      <td className="py-2.5 px-3 text-[#111111] whitespace-nowrap w-[310px] min-w-[310px] align-middle">
                         {linkedProjects.length > 0 ? (
                           <div className="flex flex-col gap-2">
                             {linkedProjects.map(p => {
@@ -755,8 +757,11 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
                                     {p.name}
                                   </span>
                                   {isFixed ? (
-                                    <span className="text-[10px] font-bold text-white bg-[#0284c7] px-2 py-0.5 rounded-full inline-block border-none whitespace-nowrap">
-                                      Fixed: {formatRupiah(fixedAmt)}/bln (Tgl {dueDay})
+                                    <span 
+                                      className="text-[10px] font-bold text-white bg-[#0284c7] px-2 py-0.5 rounded-full inline-block border-none whitespace-nowrap"
+                                      title={`Fixed: ${formatRupiah(fixedAmt)}/bln (Tgl ${dueDay})`}
+                                    >
+                                      {formatCompactMonthlyProfitShare(fixedAmt)}
                                     </span>
                                   ) : (
                                     <span className="text-[10px] font-bold text-white bg-[#15803d] px-2 py-0.5 rounded-full inline-block border-none whitespace-nowrap">
@@ -771,8 +776,11 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
                           inv.profitShareScheme === 'FIXED_MONTHLY' && (inv.fixedMonthlyAmount || 0) > 0 ? (
                             <div className="flex flex-col items-start gap-1">
                               <span className="text-[#888888] text-[11px]">Umum</span>
-                              <span className="text-[10px] font-bold text-white bg-[#0284c7] px-2 py-0.5 rounded-full inline-block border-none whitespace-nowrap">
-                                Fixed: {formatRupiah(inv.fixedMonthlyAmount || 0)}/bln (Tgl {inv.fixedPayoutDay || 25})
+                              <span 
+                                className="text-[10px] font-bold text-white bg-[#0284c7] px-2 py-0.5 rounded-full inline-block border-none whitespace-nowrap"
+                                title={`Fixed: ${formatRupiah(inv.fixedMonthlyAmount || 0)}/bln (Tgl ${inv.fixedPayoutDay || 25})`}
+                              >
+                                {formatCompactMonthlyProfitShare(inv.fixedMonthlyAmount || 0)}
                               </span>
                             </div>
                           ) : (inv.profitSharePercentage || 0) > 0 ? (

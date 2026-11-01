@@ -122,3 +122,30 @@ export function formatRupiahCompact(amount: number): string {
 }
 
 
+
+/**
+ * Format ringkas pembagian hasil bulanan / fixed profit share.
+ * Contoh: 3.000.000 -> "Rp3jt/bln", 2.500.000 -> "Rp2,5jt/bln", 500.000 -> "Rp500rb/bln"
+ */
+export function formatCompactMonthlyProfitShare(amount: number): string {
+  if (!amount || amount <= 0) return '-';
+  if (amount >= 1_000_000_000) {
+    const val = amount / 1_000_000_000;
+    const rounded = Math.round(val * 10) / 10;
+    const str = rounded.toString().replace('.', ',');
+    return `Rp${str}M/bln`;
+  }
+  if (amount >= 1_000_000) {
+    const val = amount / 1_000_000;
+    const rounded = Math.round(val * 10) / 10;
+    const str = rounded.toString().replace('.', ',');
+    return `Rp${str}jt/bln`;
+  }
+  if (amount >= 1_000) {
+    const val = amount / 1_000;
+    const rounded = Math.round(val * 10) / 10;
+    const str = rounded.toString().replace('.', ',');
+    return `Rp${str}rb/bln`;
+  }
+  return `Rp${amount}/bln`;
+}

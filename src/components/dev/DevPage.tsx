@@ -226,7 +226,11 @@ export function DevPage({ userEmail }: DevPageProps): React.JSX.Element {
             onClick={() => setIsCreateModalOpen(true)}
             className="w-full sm:w-auto px-4 py-2 bg-[#111111] hover:bg-black text-white text-xs font-semibold rounded-[8px] transition-colors cursor-pointer flex items-center justify-center gap-1.5"
           >
-            <span>+ Buat Akun Baru Langsung</span>
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <line x1="12" y1="5" x2="12" y2="19" strokeLinecap="round" strokeLinejoin="round" />
+              <line x1="5" y1="12" x2="19" y2="12" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <span>Akun</span>
           </button>
         </div>
       </div>
@@ -296,7 +300,7 @@ export function DevPage({ userEmail }: DevPageProps): React.JSX.Element {
             onClick={() => setActiveFilter('pending')}
             className={`px-3 py-1.5 rounded-[6px] text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
               activeFilter === 'pending'
-                ? 'bg-[#ca8a04] text-white'
+                ? 'bg-[#111111] text-white'
                 : 'text-[#666666] hover:bg-[#f5f5f5] hover:text-[#111111]'
             }`}
           >
@@ -307,7 +311,7 @@ export function DevPage({ userEmail }: DevPageProps): React.JSX.Element {
             onClick={() => setActiveFilter('active')}
             className={`px-3 py-1.5 rounded-[6px] text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
               activeFilter === 'active'
-                ? 'bg-[#008060] text-white'
+                ? 'bg-[#111111] text-white'
                 : 'text-[#666666] hover:bg-[#f5f5f5] hover:text-[#111111]'
             }`}
           >
@@ -318,7 +322,7 @@ export function DevPage({ userEmail }: DevPageProps): React.JSX.Element {
             onClick={() => setActiveFilter('inactive')}
             className={`px-3 py-1.5 rounded-[6px] text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
               activeFilter === 'inactive'
-                ? 'bg-[#dc2626] text-white'
+                ? 'bg-[#111111] text-white'
                 : 'text-[#666666] hover:bg-[#f5f5f5] hover:text-[#111111]'
             }`}
           >
