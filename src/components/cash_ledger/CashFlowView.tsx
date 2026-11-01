@@ -234,50 +234,56 @@ export function CashFlowView({
         </div>
       </div>
 
-      {/* 2. Kartu Liabilitas Khusus: Hutang Perseroan Bpk. Pei (Rule 104 & Rule 116) */}
-      <div className="bg-white border border-[#eaeaea] rounded-[10px] p-4">
-        <div className="flex items-center justify-between gap-3 pb-3 border-b border-[#f0f0f0]">
-          <h3 className="text-sm font-bold text-[#111111]">
-            Hutang Bpk. Pei
+      {/* 2. Tabel Liabilitas / Hutang Perseroan */}
+      <div className="bg-white border border-[#eaeaea] rounded-[10px] overflow-hidden select-text shadow-xs">
+        <div className="px-4 py-2.5 border-b border-[#eaeaea] bg-[#fafafa] flex items-center justify-between">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-[#111111]">
+            Hutang & Liabilitas
           </h3>
-
-          {!isWatcherUser && (
-          <button
-            type="button"
-            onClick={() => setIsPayDebtOpen(true)}
-            disabled={isPeiDebtSettled}
-            className="px-3 py-1.5 bg-[#111111] hover:bg-[#2b2b2b] text-white text-xs font-semibold rounded-[6px] transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
-          >
-            Bayar Cicilan
-          </button>
-        )}
         </div>
 
-        <div className="grid grid-cols-3 gap-2 sm:gap-4 pt-3">
-          <div>
-            <span className="text-[11px] text-[#888888] block">Hutang Pokok</span>
-            <span className="text-xs sm:text-base font-bold tracking-tight text-[#111111] block mt-0.5">
-              {formatRupiah(PEI_INITIAL_DEBT)}
-            </span>
-          </div>
-
-          <div>
-            <span className="text-[11px] text-[#888888] block">Terbayar</span>
-            <span className="text-xs sm:text-base font-bold tracking-tight text-emerald-700 block mt-0.5">
-              {formatRupiah(peiDebtPayments)}
-            </span>
-          </div>
-
-          <div>
-            <span className="text-[11px] text-[#888888] block">Sisa Hutang</span>
-            <span
-              className={`text-xs sm:text-base font-bold tracking-tight block mt-0.5 ${
-                remainingPeiDebt > 0 ? 'text-[#cf1124]' : 'text-emerald-700'
-              }`}
-            >
-              {formatRupiah(remainingPeiDebt)}
-            </span>
-          </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs text-left border-collapse">
+            <thead className="bg-[#f9f9f9] border-b border-[#eaeaea] text-[#555555] font-semibold text-[11px] uppercase tracking-wider select-none">
+              <tr>
+                <th className="py-2.5 px-4 whitespace-nowrap">Nama</th>
+                <th className="py-2.5 px-4 text-right whitespace-nowrap">Pokok</th>
+                <th className="py-2.5 px-4 text-right whitespace-nowrap">Terbayar</th>
+                <th className="py-2.5 px-4 text-right whitespace-nowrap">Sisa</th>
+                <th className="py-2.5 px-4 text-right whitespace-nowrap w-[130px]">Aksi</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#eaeaea]">
+              <tr className="hover:bg-[#fafafa] transition-colors">
+                <td className="py-2.5 px-4 whitespace-nowrap font-bold text-[#111111] align-middle">
+                  Bpk. Jaro Pei
+                </td>
+                <td className="py-2.5 px-4 whitespace-nowrap text-right font-mono font-bold text-[#111111] align-middle">
+                  {formatRupiah(PEI_INITIAL_DEBT)}
+                </td>
+                <td className="py-2.5 px-4 whitespace-nowrap text-right font-mono font-bold text-[#111111] align-middle">
+                  {formatRupiah(peiDebtPayments)}
+                </td>
+                <td className={`py-2.5 px-4 whitespace-nowrap text-right font-mono font-bold align-middle ${
+                  remainingPeiDebt > 0 ? 'text-[#cf1124]' : 'text-[#111111]'
+                }`}>
+                  {formatRupiah(remainingPeiDebt)}
+                </td>
+                <td className="py-2.5 px-4 whitespace-nowrap text-right align-middle">
+                  {!isWatcherUser && (
+                    <button
+                      type="button"
+                      onClick={() => setIsPayDebtOpen(true)}
+                      disabled={isPeiDebtSettled}
+                      className="px-3 py-1 bg-[#111111] hover:bg-[#2b2b2b] text-white text-xs font-semibold rounded-[6px] transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap inline-flex items-center gap-1.5 shadow-xs"
+                    >
+                      Bayar Cicilan
+                    </button>
+                  )}
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
 
