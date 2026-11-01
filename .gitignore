@@ -41,3 +41,6 @@ assets/Meeting Audio Recording/
 
 
 .vercel
+
+sync_handoff.log
+/tmp/argon_*
