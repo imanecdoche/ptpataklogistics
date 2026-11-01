@@ -48,15 +48,16 @@ export function CashFlowView({
     return Array.from(set).sort();
   }, [entries]);
 
-  // Kalkulasi Hutang Bpk. Pei
+  // Kalkulasi Hutang Bpk. Pei (Hanya menghitung pembayaran cicilan keluar berjenis CICILAN_HUTANG)
   const peiDebtPayments = useMemo(() => {
     return entries
       .filter(
         e =>
           !e.isCredit &&
-          (e.type === 'CICILAN_HUTANG' ||
-            e.description.toLowerCase().includes('pei') ||
-            e.referenceId === 'HUTANG-PT-PEI')
+          e.type === 'CICILAN_HUTANG' &&
+          (e.description.toLowerCase().includes('pei') ||
+            e.referenceId === 'HUTANG-PT-PEI' ||
+            Boolean(e.referenceId && e.referenceId.toLowerCase().startsWith('itf-')))
       )
       .reduce((acc, cur) => acc + (cur.amount || 0), 0);
   }, [entries]);
