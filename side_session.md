@@ -490,3 +490,64 @@ Dicatat oleh **`antigravity`** untuk sinkronisasi kapabilitas sistem bersama **A
      - Menempel di dasar layar (`fixed inset-x-0 bottom-0 z-50 w-full rounded-t-[16px] rounded-b-none`, tinggi tetap `h-[82dvh]` atau `h-[85dvh]`).
      - Judul header berada di tengah (*centered title*), **dilarang keras menggunakan pill/drag handle bar**.
      - Tombol aksi konfirmasi/batal wajib menempel secara **sticky di bagian paling bawah drawer** (`sticky bottom-0 inset-x-0 z-10 mt-auto bg-white p-4`).
+
+
+### FASE 16: Surat Handover & Pembaruan Sistem untuk Argon (01 Nov 2026, 15:15 WIB)
+Dicatat oleh **`antigravity`** untuk sinkronisasi konteks arsitektur dan operasional bersama **Argon**:
+
+Halo **Argon**! 👋 Berikut adalah rekapitulasi lengkap dari pembaruan sistem logistik & keuangan PT Patak Abadi Jaya yang baru saja kami selesaikan pada sesi hari ini:
+
+1. **Standarisasi Global Nomor Tiket Ritase (`RIT-DDMMYY-XX`)**:
+   - Seluruh 28 transaksi ritase di Firestore (`transactions`) dan 32 mutasi terkait di `cash_ledger` telah dimigrasi 100% ke format standar baku 2-digit sequence: `RIT-DDMMYY-XX` (contoh: `RIT-311026-01`, `RIT-261026-02`).
+   - Format lama yang mengandung suffix tahun 4-digit atau huruf acak (seperti `RIT-261025-01` atau `RIT-311026-01-A`) telah dibersihkan secara konsisten di seluruh database.
+   - Generator tiket otomatis di `src/lib/dispatcherService.ts` disempurnakan dengan `ticketRegex: /^RIT-(\d{6})-(\d{2})$/` agar transaksi masa depan otomatis menghasilkan nomor urut 2-digit yang runtut dan rapi.
+
+2. **Audit Tombol Aksi Global & Standardisasi Ikon Plus SVG (Anti-Slop)**:
+   - Sesuai prinsip *Extreme Minimalism*, seluruh tombol penambahan data di aplikasi dibersihkan dari kata mubazir "Tambah" / "Catat":
+     - `ProjectsPage.tsx`: `+ Tambah Proyek` $\rightarrow$ `<svg .../><span>Proyek</span>`
+     - `QuarriesPage.tsx`: `+ Tambah Kuari` $\rightarrow$ `<svg .../><span>Kuari</span>`
+     - `ClientsPage.tsx`: `+ Tambah Klien` $\rightarrow$ `<svg .../><span>Klien</span>`
+     - `MasterMaterialPage.tsx`: `+ Komoditas Baru` $\rightarrow$ `<svg .../><span>Komoditas</span>`
+     - `LaborPage.tsx`: `+ Catat Pembayaran HOK` $\rightarrow$ `<svg .../><span>Pembayaran HOK</span>`
+     - `DevPage.tsx`: `+ Buat Akun Baru Langsung` $\rightarrow$ `<svg .../><span>Akun</span>`
+     - `FundTransferSection.tsx`: `+ Catat Kas Talangan` $\rightarrow$ `<svg .../><span>Kas Talangan</span>`, badge internal manajemen dihapus.
+     - `CashFlowView.tsx`: Tombol `Bayar Cicilan` (tanpa tanda plus mentah); tombol `<svg .../><span>Mutasi Kas</span>`.
+     - Toolbar Buku Kas dioptimalkan: Pada mobile, search bar ditarik 1 baris penuh di atas, sedangkan baris kedua diisi tombol filter dan tombol mutasi kas icon-only yang ramping.
+
+3. **Penyempurnaan Segmented Control Akun di `DevPage.tsx`**:
+   - Menghapus warna-warni pelangi (kuning `#ca8a04`, hijau `#008060`, merah `#dc2626`) pada tab segmented filter status akun (`Semua`, `Menunggu Review`, `Aktif`, `Nonaktif`).
+   - State aktif kini konsisten solid filled hitam murni (`bg-[#111111] text-white`) dengan kontras tinggi.
+
+4. **Simbol Satuan Meter Kubik Matematis (`m³`)**:
+   - Mengubah simbol meter kubik di seluruh lapisan aplikasi (`volumeUtils.ts`, `PricePerVolCell.tsx`, `DispatchForm.tsx`, `EditDispatchModal.tsx`, `MasterMaterialPage.tsx`, `DashboardPage.tsx`, `RecapPage.tsx`) dari teks kapital `M3` atau `m3` menjadi notasi matematika superscript Unicode: **`m³`** (dan `m²` untuk luas).
+
+5. **Pill Profit Share Bulanan Ringkas (`formatCompactMonthlyProfitShare`)**:
+   - Dibuatkan fungsi utilitas `formatCompactMonthlyProfitShare` di `src/lib/currencyUtils.ts`.
+   - Mengubah badge profit share bulanan panjang (`Fixed: Rp 3.000.000/bln (Tgl 1)`) menjadi format ringkas ramah tampilan: **`Rp3jt/bln`** (dengan teks lengkap tersimpan pada atribut `title` tooltip). Diterapkan pada `InvestorsPage.tsx` dan `InvestorLedgerModal.tsx`.
+
+6. **Penyempurnaan Layout Master Investor & Audit Tabel Riwayat Ritase**:
+   - Kolom `Nama Investor` di `InvestorsPage.tsx` dirampingkan dari `220px` ke `150px` agar kolom `Proyek Terkait & Profit Share` lebih lapang (`310px`).
+   - Kartu proyek yang didanai di tab *Ringkasan Proyek & Alokasi* (`InvestorLedgerModal.tsx`) diperbaiki kontrasnya dari background abu-abu pudar menyatu menjadi `bg-[#f0f2f5] border border-[#d8dbe0] rounded-[10px] shadow-xs`.
+   - Tabel tab *Riwayat Ritase* pada modal investor diaudit total sesuai `/auditaislop`: dikunci dengan `min-w-[1020px] table-fixed`, `whitespace-nowrap` pada semua baris data dan header, mencegah nomor tiket, plat armada, dan nominal laba bersih patah menjadi 2 baris canggung.
+
+7. **Koreksi Kritis: Audit Perhitungan Hutang Bpk. Pei (Temuan Komisaris / Papah)**:
+   - **Latar Belakang**: Pak Komisaris menemukan anomali bahwa hutang pokok Rp 23 juta tertera "Terbayar: Rp 36 juta" dan tombol "Bayar Cicilan" terkunci (*disabled*). Padahal cicilan riil yang baru dibayar adalah 8 jt + 5 jt = 13 juta.
+   - **Root Cause**: Rumus filter di `CashFlowView.tsx` sebelumnya menggunakan operator `||`:
+     `e.type === 'CICILAN_HUTANG' || e.description.toLowerCase().includes('pei')`
+     Sehingga entri pencatatan awal pinjaman pokok 23 juta (yang memiliki deskripsi ada kata *"Pei"*) keliru dijumlahkan sebagai uang pembayaran cicilan ($23\text{ jt} + 8\text{ jt} + 5\text{ jt} = 36\text{ jt}$). Akibatnya sisa hutang terhitung 0 dan tombol bayar cicilan otomatis dinonaktifkan.
+   - **Resolusi**: Filter diperketat wajib berjenis `CICILAN_HUTANG`. Angka sekarang 100% akurat:
+     - **Hutang Pokok**: **Rp 23.000.000**
+     - **Terbayar**: **Rp 13.000.000**
+     - **Sisa Hutang**: **Rp 10.000.000**
+     - Tombol **Bayar Cicilan** kembali aktif untuk mencatat sisa pelunasan.
+
+8. **Transformasi Seksi Hutang Bpk. Pei Menjadi Tabel Terstruktur**:
+   - Mengubah kartu metrik liabilitas menjadi tabel clean terstruktur di `CashFlowView.tsx` dengan kolom:
+     `NAMA` | `POKOK` | `TERBAYAR` | `SISA` | `AKSI` (Tombol Bayar Cicilan).
+
+9. **Teks Kartu Sub-Pekerjaan Solid Hitam**:
+   - Di `ProjectFinancialsModal.tsx`, seluruh nominal warna-warni (hijau, merah, coklat) pada kartu sub-pekerjaan borongan telah diubah menjadi hitam solid (`text-[#111111]`) sesuai arahan desain monokromatis.
+
+10. **Konektivitas Dev Server & Local Network**:
+    - Vite dev server dikonfigurasi `--host` binding `0.0.0.0:5173`.
+    - Aplikasi dapat diakses secara lokal di `http://localhost:5173/` dan diakses perangkat lain dalam jaringan Wi-Fi di `http://192.168.1.5:5173/`.
