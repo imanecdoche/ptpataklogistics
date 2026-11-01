@@ -10,6 +10,61 @@ type ChartCategory = 'ritase' | 'financial';
 type RitaseMetric = 'trips' | 'volumeDt' | 'volumeTon';
 type FinancialMetric = 'revenue' | 'profit';
 
+interface MetricConfig {
+  id: string;
+  label: string;
+  shortLabel: string;
+  color: string;
+  formatValue: (d: { trips: number; volumeDt: number; volumeTon: number; revenue: number; profit: number }) => string;
+  getValue: (d: { trips: number; volumeDt: number; volumeTon: number; revenue: number; profit: number }) => number;
+}
+
+const RITASE_METRICS: MetricConfig[] = [
+  {
+    id: 'trips',
+    label: 'Jumlah Trip Ritase',
+    shortLabel: 'Trip',
+    color: '#111111',
+    formatValue: d => `${d.trips} Trip`,
+    getValue: d => d.trips
+  },
+  {
+    id: 'volumeDt',
+    label: 'Volume (DT)',
+    shortLabel: 'DT',
+    color: '#0284c7', // Sky Blue
+    formatValue: d => `${d.volumeDt.toLocaleString('id-ID')} DT`,
+    getValue: d => d.volumeDt
+  },
+  {
+    id: 'volumeTon',
+    label: 'Volume (Ton)',
+    shortLabel: 'Ton',
+    color: '#ea580c', // Bright Orange
+    formatValue: d => `${d.volumeTon.toLocaleString('id-ID')} Ton`,
+    getValue: d => d.volumeTon
+  }
+];
+
+const FINANCIAL_METRICS: MetricConfig[] = [
+  {
+    id: 'revenue',
+    label: 'Omzet Penjualan',
+    shortLabel: 'Omzet',
+    color: '#059669', // Emerald
+    formatValue: d => 'Rp ' + Math.round(d.revenue).toLocaleString('id-ID'),
+    getValue: d => d.revenue
+  },
+  {
+    id: 'profit',
+    label: 'Estimasi Laba Bersih',
+    shortLabel: 'Laba',
+    color: '#7c3aed', // Purple
+    formatValue: d => 'Rp ' + Math.round(d.profit).toLocaleString('id-ID'),
+    getValue: d => d.profit
+  }
+];
+
 /**
  * Menghasilkan SVG path kurva smooth (Monotone Cubic Spline / Fritsch-Carlson)
  * Mencegah overshoot pada puncak dan lembah sehingga bentuk kurva mengalir alami dan akurat terhadap data.
@@ -133,16 +188,58 @@ export function DashboardInlineChart({
   hideMargin = false
 }: DashboardInlineChartProps): React.JSX.Element {
   const [activeCategory, setActiveCategory] = useState<ChartCategory>('ritase');
-  const [ritaseMetric, setRitaseMetric] = useState<RitaseMetric>('trips');
-  const [financialMetric, setFinancialMetric] = useState<FinancialMetric>('revenue');
-  const [hoveredPoint, setHoveredPoint] = useState<{
+  const [selectedRitaseMetrics, setSelectedRitaseMetrics] = useState<RitaseMetric[]>(['trips']);
+  const [selectedFinancialMetrics, setSelectedFinancialMetrics] = useState<FinancialMetric[]>(['revenue']);
+
+  // Hover state untuk crosshair & floating pill
+  const [hoverState, setHoverState] = useState<{
+    mouseX: number;
+    mouseY: number;
+    svgPctX: number;
+    svgPctY: number;
     date: string;
-    label: string;
-    val: number;
-    formatted: string;
-    x: number;
-    y: number;
+    points: {
+      metricId: string;
+      label: string;
+      formatted: string;
+      color: string;
+      x: number;
+      y: number;
+    }[];
   } | null>(null);
+
+  // Toggle multi-select metrik (minimal 1 harus tetap aktif)
+  const toggleMetric = (id: string) => {
+    if (activeCategory === 'ritase') {
+      const metricId = id as RitaseMetric;
+      if (selectedRitaseMetrics.includes(metricId)) {
+        if (selectedRitaseMetrics.length > 1) {
+          setSelectedRitaseMetrics(selectedRitaseMetrics.filter(m => m !== metricId));
+        }
+      } else {
+        setSelectedRitaseMetrics([...selectedRitaseMetrics, metricId]);
+      }
+    } else {
+      const metricId = id as FinancialMetric;
+      if (selectedFinancialMetrics.includes(metricId)) {
+        if (selectedFinancialMetrics.length > 1) {
+          setSelectedFinancialMetrics(selectedFinancialMetrics.filter(m => m !== metricId));
+        }
+      } else {
+        setSelectedFinancialMetrics([...selectedFinancialMetrics, metricId]);
+      }
+    }
+  };
+
+  // Konfigurasi metrik aktif saat ini
+  const currentMetricConfigs = activeCategory === 'ritase' ? RITASE_METRICS : FINANCIAL_METRICS;
+  const selectedMetricIds: string[] = activeCategory === 'ritase' ? selectedRitaseMetrics : selectedFinancialMetrics;
+  const activeConfigs = useMemo(() => {
+    const list = currentMetricConfigs.filter(m => selectedMetricIds.includes(m.id));
+    return list.length > 0 ? list : [currentMetricConfigs[0]!];
+  }, [currentMetricConfigs, selectedMetricIds]);
+
+  const isMultiSelect = activeConfigs.length > 1;
 
   // Agregasi transaksi per tanggal (diurutkan tanggal kronologis)
   const chartData = useMemo(() => {
@@ -207,54 +304,80 @@ export function DashboardInlineChart({
     return 'Rp ' + Math.round(val).toLocaleString('id-ID');
   };
 
-  const pointsData = useMemo(() => {
-    return chartData.map(d => {
-      let val = 0;
-      let label = '';
-      let formatted = '';
+  // Ukuran Canvas SVG yang lebar, tinggi, dan responsif
+  const svgWidth = 800;
+  const svgHeight = 260;
+  const paddingLeft = isMultiSelect ? 46 : 56;
+  const paddingRight = 16;
+  const paddingTop = 20;
+  const paddingBottom = 20;
+  const chartW = svgWidth - paddingLeft - paddingRight;
+  const chartH = svgHeight - paddingTop - paddingBottom;
 
-      if (activeCategory === 'ritase') {
-        if (ritaseMetric === 'trips') {
-          val = d.trips;
-          label = 'Ritase';
-          formatted = `${val} Trip`;
-        } else if (ritaseMetric === 'volumeDt') {
-          val = d.volumeDt;
-          label = 'Volume DT';
-          formatted = `${val.toLocaleString('id-ID')} DT`;
-        } else {
-          val = d.volumeTon;
-          label = 'Volume Ton';
-          formatted = `${val.toLocaleString('id-ID')} Ton`;
-        }
-      } else {
-        if (financialMetric === 'revenue') {
-          val = d.revenue;
-          label = 'Omzet';
-          formatted = formatRupiah(val);
-        } else {
-          val = d.profit;
-          label = 'Laba Bersih';
-          formatted = formatRupiah(val);
-        }
-      }
+  // Nilai maksimum untuk masing-masing metrik aktif
+  const maxValues = useMemo(() => {
+    const map = new Map<string, number>();
+    activeConfigs.forEach(cfg => {
+      const vals = chartData.map(d => cfg.getValue(d));
+      const m = Math.max(...vals, 1);
+      map.set(cfg.id, m);
+    });
+    return map;
+  }, [activeConfigs, chartData]);
+
+  // Data kurva garis untuk semua metrik aktif
+  const linesData = useMemo(() => {
+    const totalPts = chartData.length;
+
+    return activeConfigs.map(cfg => {
+      const maxVal = maxValues.get(cfg.id) || 1;
+
+      const coords = chartData.map((d, idx) => {
+        const x = totalPts === 1
+          ? (paddingLeft + (svgWidth - paddingRight)) / 2
+          : paddingLeft + (idx / (totalPts - 1)) * chartW;
+        const val = cfg.getValue(d);
+        const y = paddingTop + chartH - (val / maxVal) * chartH;
+        return {
+          metricId: cfg.id,
+          label: cfg.shortLabel,
+          val,
+          formatted: cfg.formatValue(d),
+          color: cfg.color,
+          date: d.date,
+          x,
+          y
+        };
+      });
+
+      const linePath = getSmoothCurvePath(coords);
+
+      const first = coords[0];
+      const last = coords[coords.length - 1];
+      const baseY = paddingTop + chartH;
+      const areaPath =
+        coords.length > 0 && first && last
+          ? `${linePath} L ${last.x.toFixed(2)} ${baseY.toFixed(2)} L ${first.x.toFixed(2)} ${baseY.toFixed(2)} Z`
+          : '';
 
       return {
-        date: d.date,
-        val,
-        label,
-        formatted
+        config: cfg,
+        coords,
+        linePath,
+        areaPath,
+        maxVal
       };
     });
-  }, [chartData, activeCategory, ritaseMetric, financialMetric]);
+  }, [activeConfigs, chartData, maxValues, chartW, chartH, paddingLeft, paddingTop]);
 
-  // Statistik Ringkasan
+  // Statistik Ringkasan (Menampilkan metrik utama / pertama yang aktif)
+  const primaryMetric = activeConfigs[0]!;
   const stats = useMemo(() => {
-    if (pointsData.length === 0) return { peak: '0', avg: '0', total: '0' };
-    const values = pointsData.map(p => p.val);
-    const maxVal = Math.max(...values);
+    if (chartData.length === 0) return { peak: '0', avg: '0', total: '0' };
+    const values = chartData.map(d => primaryMetric.getValue(d));
+    const maxVal = Math.max(...values, 0);
     const sumVal = values.reduce((a, b) => a + b, 0);
-    const avgVal = sumVal / values.length;
+    const avgVal = sumVal / (values.length || 1);
 
     const isCurrency = activeCategory === 'financial';
 
@@ -263,48 +386,51 @@ export function DashboardInlineChart({
       avg: isCurrency ? formatRupiah(avgVal) : `${Math.round(avgVal).toLocaleString('id-ID')}`,
       total: isCurrency ? formatRupiah(sumVal) : `${sumVal.toLocaleString('id-ID')}`
     };
-  }, [pointsData, activeCategory]);
+  }, [chartData, primaryMetric, activeCategory]);
 
-  // Ukuran Canvas SVG yang lebih lebar, tinggi, dan memiliki ruang sumbu Y di kiri
-  const svgWidth = 800;
-  const svgHeight = 260;
-  const paddingLeft = 56;
-  const paddingRight = 16;
-  const paddingTop = 20;
-  const paddingBottom = 20;
-  const chartW = svgWidth - paddingLeft - paddingRight;
-  const chartH = svgHeight - paddingTop - paddingBottom;
+  // Handler interaksi mouse hover & tracking
+  const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) return;
 
-  const maxVal = Math.max(...pointsData.map(p => p.val), 1);
+    const clientX = e.clientX - rect.left;
+    const clientY = e.clientY - rect.top;
 
-  // Hitung koordinat (x, y) tiap titik
-  const coords = useMemo(() => {
-    const totalPts = pointsData.length;
-    return pointsData.map((p, idx) => {
-      const x = totalPts === 1 ? (paddingLeft + (svgWidth - paddingRight)) / 2 : paddingLeft + (idx / (totalPts - 1)) * chartW;
-      const y = paddingTop + chartH - (p.val / maxVal) * chartH;
-      return {
-        ...p,
-        x,
-        y
-      };
+    const fracX = Math.max(0, Math.min(1, clientX / rect.width));
+    const fracY = Math.max(0, Math.min(1, clientY / rect.height));
+
+    const mouseX = fracX * svgWidth;
+    const mouseY = fracY * svgHeight;
+
+    // Cari indeks tanggal data terdekat di sumbu X
+    const totalPts = chartData.length;
+    let activeIndex = 0;
+    if (totalPts > 1) {
+      const rawIndex = ((mouseX - paddingLeft) / chartW) * (totalPts - 1);
+      activeIndex = Math.max(0, Math.min(totalPts - 1, Math.round(rawIndex)));
+    }
+
+    const d = chartData[activeIndex];
+    if (!d) return;
+
+    // Ambil data dari semua garis aktif pada tanggal ini
+    const pts = linesData
+      .map(line => line.coords[activeIndex])
+      .filter((pt): pt is NonNullable<typeof pt> => Boolean(pt));
+
+    setHoverState({
+      mouseX,
+      mouseY,
+      svgPctX: fracX * 100,
+      svgPctY: fracY * 100,
+      date: d.date,
+      points: pts
     });
-  }, [pointsData, maxVal, chartW, chartH, paddingLeft, paddingTop]);
+  };
 
-  // Buat path kurva SVG yang smooth & luwes tanpa kaku
-  const linePath = useMemo(() => {
-    return getSmoothCurvePath(coords);
-  }, [coords]);
-
-  // Buat path gradien area di bawah garis kurva smooth
-  const areaPath = useMemo(() => {
-    if (coords.length === 0 || !linePath) return '';
-    const first = coords[0];
-    const last = coords[coords.length - 1];
-    if (!first || !last) return '';
-    const baseY = paddingTop + chartH;
-    return `${linePath} L ${last.x.toFixed(2)} ${baseY.toFixed(2)} L ${first.x.toFixed(2)} ${baseY.toFixed(2)} Z`;
-  }, [coords, linePath, paddingTop, chartH]);
+  const handleMouseLeave = () => {
+    setHoverState(null);
+  };
 
   return (
     <div className="bg-white rounded-[10px] p-4 sm:p-5 border border-[#eaeaea] shadow-xs space-y-4 animate-in fade-in duration-200">
@@ -349,69 +475,70 @@ export function DashboardInlineChart({
         </div>
       </div>
 
-      {/* Metric Selector Buttons */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
-        {activeCategory === 'ritase' ? (
-          <>
-            {[
-              { id: 'trips', label: 'Jumlah Trip Ritase' },
-              { id: 'volumeDt', label: 'Volume (DT)' },
-              { id: 'volumeTon', label: 'Volume (Ton)' }
-            ].map(m => (
+      {/* Baris Tombol Multi-Select (Kiri) & Legenda Kotak Warna (Kanan Align Right) */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 pb-1">
+        {/* Tombol Multi-Select Metrik */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 text-xs">
+          {currentMetricConfigs.map(m => {
+            const isSelected = selectedMetricIds.includes(m.id);
+            return (
               <button
                 key={m.id}
                 type="button"
-                onClick={() => setRitaseMetric(m.id as RitaseMetric)}
-                className={`px-2.5 py-1 rounded-[6px] text-[11px] font-semibold border-none transition-colors cursor-pointer whitespace-nowrap ${
-                  ritaseMetric === m.id ? 'bg-[#111111] text-white shadow-xs' : 'bg-[#f0f0f0] text-[#555555] hover:bg-[#e4e4e4]'
+                onClick={() => toggleMetric(m.id)}
+                className={`px-2.5 py-1 rounded-[6px] text-[11px] font-semibold border-none transition-colors cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                  isSelected
+                    ? 'bg-[#111111] text-white shadow-xs'
+                    : 'bg-[#f0f0f0] text-[#666666] hover:bg-[#e4e4e4]'
                 }`}
               >
+                <span
+                  className="w-2 h-2 rounded-[2px] shrink-0"
+                  style={{ backgroundColor: isSelected && m.color === '#111111' ? '#ffffff' : m.color }}
+                />
                 {m.label}
               </button>
-            ))}
-          </>
-        ) : (
-          <>
-            {[
-              { id: 'revenue', label: 'Omzet Penjualan' },
-              { id: 'profit', label: 'Estimasi Laba Bersih' }
-            ].map(m => (
-              <button
-                key={m.id}
-                type="button"
-                onClick={() => setFinancialMetric(m.id as FinancialMetric)}
-                className={`px-2.5 py-1 rounded-[6px] text-[11px] font-semibold border-none transition-colors cursor-pointer whitespace-nowrap ${
-                  financialMetric === m.id ? 'bg-[#111111] text-white shadow-xs' : 'bg-[#f0f0f0] text-[#555555] hover:bg-[#e4e4e4]'
-                }`}
-              >
+            );
+          })}
+        </div>
+
+        {/* Legenda Warna Kotak Rata Kanan (Align Right) */}
+        <div className="flex items-center gap-3 justify-end text-xs select-none sm:self-center shrink-0">
+          {activeConfigs.map(m => (
+            <div key={m.id} className="flex items-center gap-1.5">
+              <span
+                className="w-2.5 h-2.5 rounded-[2px] shrink-0 shadow-xs border border-zinc-300"
+                style={{ backgroundColor: m.color }}
+              />
+              <span className="text-[11px] font-medium text-[#444444] whitespace-nowrap">
                 {m.label}
-              </button>
-            ))}
-          </>
-        )}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Chart Viewport & Tooltip Area */}
       <div className="relative w-full bg-[#fafafa] rounded-[10px] border border-[#eaeaea] p-3 sm:p-4 flex flex-col items-center select-none">
-        {/* SVG Container dengan Relative Wrapper untuk Floating Tooltip tepat di atas titik */}
+        {/* SVG Container dengan Relative Wrapper untuk Floating Tooltip tepat di atas kursor */}
         <div className="relative w-full">
           <svg
             viewBox={`0 0 ${svgWidth} ${svgHeight}`}
             preserveAspectRatio="none"
-            className="w-full h-64 sm:h-72 md:h-80 select-none overflow-visible"
-            onMouseLeave={() => setHoveredPoint(null)}
+            className="w-full h-64 sm:h-72 md:h-80 select-none overflow-visible cursor-crosshair"
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
           >
             <defs>
-              <linearGradient id="inlineChartGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#111111" stopOpacity="0.14" />
-                <stop offset="100%" stopColor="#111111" stopOpacity="0.0" />
+              <linearGradient id="singleChartGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={activeConfigs[0]?.color || '#111111'} stopOpacity="0.14" />
+                <stop offset="100%" stopColor={activeConfigs[0]?.color || '#111111'} stopOpacity="0.0" />
               </linearGradient>
             </defs>
 
-            {/* Sumbu Y Nilai & Horizontal Gridlines */}
+            {/* Sumbu Y & Gridlines Horizontal */}
             {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => {
               const y = paddingTop + chartH * (1 - ratio);
-              const yVal = maxVal * ratio;
               return (
                 <g key={i}>
                   {/* Label Nilai Sumbu Y Rata Kanan di Samping Kiri Grid */}
@@ -423,7 +550,9 @@ export function DashboardInlineChart({
                     fontSize="10"
                     className="font-mono font-medium select-none"
                   >
-                    {formatYAxisLabel(yVal, activeCategory === 'financial')}
+                    {isMultiSelect
+                      ? `${Math.round(ratio * 100)}%`
+                      : formatYAxisLabel((linesData[0]?.maxVal || 1) * ratio, activeCategory === 'financial')}
                   </text>
                   {/* Gridline Horizontal */}
                   <line
@@ -439,95 +568,121 @@ export function DashboardInlineChart({
               );
             })}
 
-            {/* Area Under Curve */}
-            {areaPath && <path d={areaPath} fill="url(#inlineChartGradient)" />}
+            {/* Area Under Curve (Hanya saat 1 metrik aktif agar tidak tumpang tindih) */}
+            {!isMultiSelect && linesData[0]?.areaPath && (
+              <path d={linesData[0].areaPath} fill="url(#singleChartGradient)" />
+            )}
 
-            {/* Line Curve Smooth */}
-            {linePath && (
+            {/* Garis Kurva Smooth untuk semua metrik aktif */}
+            {linesData.map(line => (
               <path
-                d={linePath}
+                key={line.config.id}
+                d={line.linePath}
                 fill="none"
-                stroke="#111111"
+                stroke={line.config.color}
                 strokeWidth="2.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
-            )}
+            ))}
 
-            {/* Crosshair indicator vertikal saat titik di-hover */}
-            {hoveredPoint && (
+            {/* Crosshair Horizontal (Mengikuti kursor Y secara dinamis) */}
+            {hoverState && (
               <line
-                x1={hoveredPoint.x}
-                y1={paddingTop}
-                x2={hoveredPoint.x}
-                y2={paddingTop + chartH}
-                stroke="#111111"
-                strokeOpacity="0.15"
-                strokeDasharray="3 3"
+                x1={paddingLeft}
+                y1={hoverState.mouseY}
+                x2={svgWidth - paddingRight}
+                y2={hoverState.mouseY}
+                stroke="#666666"
+                strokeOpacity="0.35"
+                strokeDasharray="4 4"
                 strokeWidth="1"
               />
             )}
 
-            {/* Interactive Dots */}
-            {coords.map((pt, idx) => (
-              <g
-                key={idx}
-                onMouseEnter={() => setHoveredPoint(pt)}
-                onMouseLeave={() => setHoveredPoint(null)}
-                onFocus={() => setHoveredPoint(pt)}
-                onBlur={() => setHoveredPoint(null)}
-                tabIndex={0}
-                className="outline-none"
-              >
+            {/* Crosshair Vertikal (Mengunci ke tanggal aktif terdekat di X) */}
+            {hoverState && hoverState.points[0] && (
+              <line
+                x1={hoverState.points[0].x}
+                y1={paddingTop}
+                x2={hoverState.points[0].x}
+                y2={paddingTop + chartH}
+                stroke="#666666"
+                strokeOpacity="0.35"
+                strokeDasharray="4 4"
+                strokeWidth="1"
+              />
+            )}
+
+            {/* Titik-titik Kurva (Selalu tampak halus) */}
+            {linesData.map(line =>
+              line.coords.map((pt, idx) => (
                 <circle
+                  key={`${line.config.id}-${idx}`}
                   cx={pt.x}
                   cy={pt.y}
-                  r={hoveredPoint?.date === pt.date ? 6 : 3.5}
-                  fill="#111111"
+                  r={hoverState?.points.some(p => p.metricId === line.config.id && p.x === pt.x) ? 5.5 : 3}
+                  fill={pt.color}
                   stroke="#ffffff"
-                  strokeWidth={hoveredPoint?.date === pt.date ? "2.5" : "2"}
-                  className="cursor-pointer transition-all duration-150"
+                  strokeWidth="2"
+                  className="transition-all duration-100"
                 />
-                {/* Invisible hit target for easy touch & mouse hover */}
-                <circle
-                  cx={pt.x}
-                  cy={pt.y}
-                  r={16}
-                  fill="transparent"
-                  className="cursor-pointer"
-                />
-              </g>
-            ))}
+              ))
+            )}
           </svg>
 
-          {/* Floating Dark Pill Tooltip tepat di atas titik yang sedang di-hover */}
-          {hoveredPoint && (
+          {/* Floating Dark Pill Tooltip tepat di atas posisi kursor mouse */}
+          {hoverState && (
             <div
-              className="pointer-events-none absolute z-30 transition-all duration-150 ease-out"
+              className="pointer-events-none absolute z-30 transition-all duration-75 ease-out select-none"
               style={{
-                left: `${(hoveredPoint.x / svgWidth) * 100}%`,
-                top: `${(hoveredPoint.y / svgHeight) * 100}%`,
+                left: `${hoverState.svgPctX}%`,
+                top: `${hoverState.svgPctY}%`,
                 transform: (() => {
-                  const percentX = (hoveredPoint.x / svgWidth) * 100;
-                  if (percentX < 18) return 'translate(-8%, -100%) translateY(-12px)';
-                  if (percentX > 82) return 'translate(-92%, -100%) translateY(-12px)';
-                  return 'translate(-50%, -100%) translateY(-12px)';
+                  if (hoverState.svgPctX < 18) return 'translate(-8%, -100%) translateY(-14px)';
+                  if (hoverState.svgPctX > 82) return 'translate(-92%, -100%) translateY(-14px)';
+                  return 'translate(-50%, -100%) translateY(-14px)';
                 })()
               }}
             >
-              <div className="relative px-3 py-1.5 bg-[#111111] text-white rounded-[7px] shadow-lg text-[11px] whitespace-nowrap flex items-center gap-2 border-none">
-                <span className="text-zinc-400 font-mono text-[10px]">{hoveredPoint.date}</span>
-                <span className="text-zinc-600">|</span>
-                <span className="font-bold text-white tracking-tight">{hoveredPoint.formatted}</span>
+              <div className="relative px-3 py-1.5 bg-[#111111] text-white rounded-[7px] shadow-xl text-[11px] whitespace-nowrap flex items-center gap-2 border-none">
+                {/* Tanggal Ringkas */}
+                <span className="text-zinc-400 font-mono text-[10px] font-medium">
+                  {hoverState.date.length === 10 ? hoverState.date.slice(5) : hoverState.date}
+                </span>
 
-                {/* Panah penunjuk halus menghadap ke bawah menuju titik */}
+                {/* Divider Tipis */}
+                <span className="text-zinc-600">|</span>
+
+                {/* Nilai seluruh data aktif dipisahkan divider tipis */}
+                {hoverState.points.map((pt, idx) => (
+                  <React.Fragment key={pt.metricId}>
+                    {idx > 0 && <span className="text-zinc-600">|</span>}
+                    <span className="flex items-center gap-1.5 font-bold tracking-tight">
+                      {isMultiSelect && (
+                        <span
+                          className="w-2 h-2 rounded-[2px] shrink-0 inline-block border border-white/30"
+                          style={{ backgroundColor: pt.color === '#111111' ? '#ffffff' : pt.color }}
+                        />
+                      )}
+                      <span
+                        style={{
+                          color: pt.color === '#111111' ? '#ffffff' : pt.color
+                        }}
+                      >
+                        {pt.formatted}
+                      </span>
+                    </span>
+                  </React.Fragment>
+                ))}
+
+                {/* Panah penunjuk halus menghadap ke bawah kursor */}
                 <div
                   className="absolute -bottom-1 w-2 h-2 bg-[#111111] rotate-45"
                   style={{
                     left: (() => {
-                      const percentX = (hoveredPoint.x / svgWidth) * 100;
-                      if (percentX < 18) return '15%';
-                      if (percentX > 82) return '85%';
+                      if (hoverState.svgPctX < 18) return '15%';
+                      if (hoverState.svgPctX > 82) return '85%';
                       return '50%';
                     })(),
                     transform: 'translateX(-50%)'
@@ -546,30 +701,36 @@ export function DashboardInlineChart({
             paddingRight: `${(paddingRight / svgWidth) * 100}%`
           }}
         >
-          <span>{coords[0]?.date || ''}</span>
-          {coords.length > 2 && (
-            <span>{coords[Math.floor(coords.length / 2)]?.date || ''}</span>
+          <span>{chartData[0]?.date || ''}</span>
+          {chartData.length > 2 && (
+            <span>{chartData[Math.floor(chartData.length / 2)]?.date || ''}</span>
           )}
-          <span>{coords[coords.length - 1]?.date || ''}</span>
+          <span>{chartData[chartData.length - 1]?.date || ''}</span>
         </div>
       </div>
 
-      {/* Quick Statistics Summary Cards */}
+      {/* Quick Statistics Summary Cards (Menampilkan metrik yang aktif) */}
       <div className="grid grid-cols-3 gap-2.5">
         <div className="p-3 bg-white rounded-[8px] border border-[#eaeaea] text-center">
-          <span className="text-[10px] text-[#777777] font-medium block">Puncak Tertinggi</span>
+          <span className="text-[10px] text-[#777777] font-medium block">
+            Puncak ({primaryMetric.shortLabel})
+          </span>
           <span className="text-xs sm:text-sm font-bold text-[#111111] truncate block mt-0.5">
             {stats.peak}
           </span>
         </div>
         <div className="p-3 bg-white rounded-[8px] border border-[#eaeaea] text-center">
-          <span className="text-[10px] text-[#777777] font-medium block">Rata-rata Harian</span>
+          <span className="text-[10px] text-[#777777] font-medium block">
+            Rata-rata ({primaryMetric.shortLabel})
+          </span>
           <span className="text-xs sm:text-sm font-bold text-[#111111] truncate block mt-0.5">
             {stats.avg}
           </span>
         </div>
         <div className="p-3 bg-white rounded-[8px] border border-[#eaeaea] text-center">
-          <span className="text-[10px] text-[#777777] font-medium block">Akumulasi Total</span>
+          <span className="text-[10px] text-[#777777] font-medium block">
+            Total ({primaryMetric.shortLabel})
+          </span>
           <span className="text-xs sm:text-sm font-bold text-[#111111] truncate block mt-0.5">
             {stats.total}
           </span>
