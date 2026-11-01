@@ -188,7 +188,7 @@ export async function updateProjectBalance(id: string, delta: number): Promise<v
 
 /**
  * Inisialisasi otomatis master proyek produksi (Situ Cikedal aktif, Menes completed)
- * dengan klien resmi P. Sapta.
+ * dengan klien resmi Bapak Endang.
  */
 export async function seedDefaultProjects(): Promise<void> {
   try {
@@ -206,11 +206,11 @@ export async function seedDefaultProjects(): Promise<void> {
         investorId: 'inv-bpk-yadi',
         investorName: 'Bpk. Yadi',
         clientId: 'cli-p-sapta',
-        clientName: 'P. Sapta',
+        clientName: 'Bapak Endang',
         initialDeposit: 26500000,
         currentBalance: 26500000,
         status: 'ACTIVE',
-        notes: 'Penyaluran material batu waste, split, abu batu konservasi Situ Cikedal (Rekanan P. Sapta)',
+        notes: 'Penyaluran material batu waste, split, abu batu konservasi Situ Cikedal (Rekanan Bapak Endang)',
         createdAt: new Date().toISOString()
       },
       {
