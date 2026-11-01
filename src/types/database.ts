@@ -39,7 +39,7 @@ export interface MaterialItem {
 // 3. Koleksi: transactions (Pencatatan Ritase)
 export interface DispatchTransaction {
   id: string;
-  ticketNumber: string;      // Format: PTK-YYYYMMDD-XXXX
+  ticketNumber: string;      // Format standar baru: RIT-DDMMYY-XX (misal: RIT-151026-02)
   suratJalan?: string;       // No. Surat Jalan fisik kuari / pengantaran (opsional)
   deliveryDate: string;      // Format YYYY-MM-DD (Tanggal Jalan / Pelaksanaan Ritase)
   createdAt: string;         // ISO Timestamp (Waktu Tiket Dibuat di Sistem)

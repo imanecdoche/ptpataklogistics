@@ -247,7 +247,7 @@ export function CashFlowView({
             disabled={isPeiDebtSettled}
             className="px-3 py-1.5 bg-[#111111] hover:bg-[#2b2b2b] text-white text-xs font-semibold rounded-[6px] transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
           >
-            + Bayar Cicilan
+            Bayar Cicilan
           </button>
         )}
         </div>
@@ -282,34 +282,31 @@ export function CashFlowView({
 
       {/* 3. Tabel Mutasi Buku Kas Riil */}
       <div className="bg-white border border-[#eaeaea] rounded-[10px] overflow-hidden">
-        {/* Toolbar Baris Atas */}
-        <div className="p-3.5 border-b border-[#eaeaea] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-[#fafafa]">
-          <div className="text-xs text-[#666666]">
-            Riwayat lengkap keluar masuk kas riil dan pergerakan saldo berjalan.
+        {/* Toolbar Baris Atas: Search di Kiri, Aksi di Kanan (Mobile: Search 1 Row atas, Filter & Plus di bawah) */}
+        <div className="p-3 sm:p-3.5 border-b border-[#eaeaea] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 bg-[#fafafa]">
+          {/* Search Input di Kiri (Mobile: Row 1 full-width) */}
+          <div className="relative w-full sm:w-72 md:w-80">
+            <img
+              src="/icons/search.png"
+              alt="Search"
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 object-contain pointer-events-none opacity-60"
+            />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="Cari transaksi, deskripsi, ref, tanggal..."
+              className="w-full bg-[#f4f4f4] border-none rounded-[6px] pl-9 pr-3 py-1.5 text-xs text-[#111111] placeholder:text-[#888888] outline-none focus:bg-[#ebebeb] transition-colors"
+            />
           </div>
 
-          <div className="flex items-center gap-2">
-            {/* Search Input (Rule 98 & Audit Solid Filled) */}
-            <div className="relative flex-1 sm:w-64">
-              <img
-                src="/icons/search.png"
-                alt="Search"
-                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 object-contain pointer-events-none opacity-60"
-              />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                placeholder="Cari transaksi, deskripsi, ref, tanggal (misal 28-10-26)..."
-                className="w-full bg-[#f4f4f4] border-none rounded-[6px] pl-9 pr-3 py-1.5 text-xs text-[#111111] placeholder:text-[#888888] outline-none focus:bg-[#ebebeb] transition-colors"
-              />
-            </div>
-
-            {/* Filter & Sorting Drawer Trigger Button (Solid-Filled per auditaislop) */}
+          {/* Action Buttons: Filter & Mutasi Kas (Mobile: Row 2) */}
+          <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+            {/* Filter & Sorting Drawer Trigger Button */}
             <button
               type="button"
               onClick={() => setIsFilterDrawerOpen(true)}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-[6px] border-none transition-colors cursor-pointer flex items-center gap-1.5 whitespace-nowrap flex-shrink-0 ${
+              className={`flex-1 sm:flex-none justify-center px-3 py-1.5 text-xs font-semibold rounded-[6px] border-none transition-colors cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
                 activeFiltersCount > 0
                   ? 'bg-[#111111] text-white shadow-xs'
                   : 'bg-[#eeeeee] text-[#222222] hover:bg-[#e2e2e2]'
@@ -324,13 +321,19 @@ export function CashFlowView({
               )}
             </button>
 
+            {/* Tombol Mutasi Kas (Desktop: Text + Icon, Mobile: Icon Only) */}
             {!isWatcherUser && (
               <button
                 type="button"
                 onClick={() => setIsRecordMutationOpen(true)}
-                className="px-3 py-1.5 bg-[#111111] hover:bg-[#2b2b2b] text-white text-xs font-semibold rounded-[6px] border-none transition-colors cursor-pointer whitespace-nowrap flex-shrink-0"
+                className="inline-flex items-center justify-center gap-1.5 p-2 sm:px-3 sm:py-1.5 bg-[#111111] hover:bg-[#2b2b2b] text-white text-xs font-semibold rounded-[6px] border-none transition-colors cursor-pointer whitespace-nowrap flex-shrink-0"
+                title="Catat Mutasi Kas Manual"
               >
-                + Catat Mutasi Kas Manual
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <line x1="12" y1="5" x2="12" y2="19" strokeLinecap="round" strokeLinejoin="round" />
+                  <line x1="5" y1="12" x2="19" y2="12" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <span className="hidden sm:inline">Mutasi Kas</span>
               </button>
             )}
           </div>

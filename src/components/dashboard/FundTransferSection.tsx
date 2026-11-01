@@ -128,14 +128,9 @@ export function FundTransferSection({ projects, userEmail }: FundTransferSection
       {/* Header Section */}
       <div className="p-4 border-b border-[#eaeaea] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-[#fafafa]">
         <div>
-          <div className="flex items-center gap-2">
-            <h2 className="text-xs md:text-sm font-bold text-[#111111]">
-              Subsidi Silang & Kas Talangan Antar-Proyek
-            </h2>
-            <span className="font-mono text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-[#111111] text-white">
-              Internal Manajemen
-            </span>
-          </div>
+          <h2 className="text-xs md:text-sm font-bold text-[#111111]">
+            Subsidi Silang & Kas Talangan Antar-Proyek
+          </h2>
           <p className="text-[11px] text-[#666666] mt-0.5">
             Talangan darurat saat tagihan proyek macet. Data ini terisolasi dan tidak muncul di laporan investor.
           </p>
@@ -151,9 +146,13 @@ export function FundTransferSection({ projects, userEmail }: FundTransferSection
           <button
             type="button"
             onClick={handleOpenCreate}
-            className="px-3 py-1.5 text-xs font-semibold text-white bg-[#111111] hover:bg-[#2b2b2b] rounded-[6px] transition-colors cursor-pointer whitespace-nowrap"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-[#111111] hover:bg-[#2b2b2b] rounded-[6px] transition-colors cursor-pointer whitespace-nowrap"
           >
-            + Catat Kas Talangan
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <line x1="12" y1="5" x2="12" y2="19" strokeLinecap="round" strokeLinejoin="round" />
+              <line x1="5" y1="12" x2="19" y2="12" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <span>Kas Talangan</span>
           </button>
         </div>
       </div>

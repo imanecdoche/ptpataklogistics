@@ -62,15 +62,61 @@ export async function getMaterials(): Promise<MaterialItem[]> {
 }
 
 /**
- * Generate nomor tiket ritase format: PTK-YYYYMMDD-XXXX
+ * Helper untuk memformat tanggal ke format DDMMYY (contoh: 2026-10-15 -> 151026)
  */
-export function generateTicketNumber(): string {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-  const randomSuffix = Math.floor(1000 + Math.random() * 9000);
-  return `PTK-${year}${month}${day}-${randomSuffix}`;
+export function formatDDMMYY(dateStr: string): string {
+  const parts = dateStr.split('-');
+  const yyyy = parts[0];
+  const mm = parts[1];
+  const dd = parts[2];
+  if (parts.length === 3 && yyyy && mm && dd) {
+    const yy = yyyy.slice(-2);
+    return `${dd}${mm}${yy}`;
+  }
+  const d = new Date(dateStr);
+  const ddStr = String(d.getDate()).padStart(2, '0');
+  const mmStr = String(d.getMonth() + 1).padStart(2, '0');
+  const yyStr = String(d.getFullYear()).slice(-2);
+  return `${ddStr}${mmStr}${yyStr}`;
+}
+
+/**
+ * Generate nomor tiket ritase format standar baru: RIT-DDMMYY-XX
+ * RIT-[TANGGAL]-[URUTAN DI HARI ITU]
+ * Contoh: RIT-151026-02
+ */
+export async function generateTicketNumber(targetDateStr?: string): Promise<string> {
+  const dateStr = targetDateStr || new Date().toISOString().slice(0, 10);
+  const ddmmyy = formatDDMMYY(dateStr);
+  const prefix = `RIT-${ddmmyy}-`;
+
+  try {
+    const txCol = collection(db, 'transactions');
+    const q = query(txCol, where('deliveryDate', '==', dateStr));
+    const snap = await getDocs(q);
+
+    let maxSeq = 0;
+    snap.forEach(d => {
+      const t = d.data().ticketNumber || '';
+      if (t.startsWith(prefix)) {
+        const seqPart = parseInt(t.slice(prefix.length), 10);
+        if (!isNaN(seqPart) && seqPart > maxSeq) {
+          maxSeq = seqPart;
+        }
+      }
+    });
+
+    if (maxSeq === 0 && !snap.empty) {
+      maxSeq = snap.size;
+    }
+
+    const nextSeq = String(maxSeq + 1).padStart(2, '0');
+    return `${prefix}${nextSeq}`;
+  } catch (err) {
+    console.warn('Gagal menghitung urutan tiket dari DB, gunakan fallback counter:', err);
+    const randomSuffix = String(Math.floor(10 + Math.random() * 90));
+    return `${prefix}${randomSuffix}`;
+  }
 }
 
 /**
@@ -124,9 +170,9 @@ export async function createDispatchTransaction(
   payload: CreateDispatchPayload,
   userEmail: string
 ): Promise<string> {
-  const ticketNumber = payload.ticketNumber || generateTicketNumber();
   const nowIso = new Date().toISOString();
   const deliveryDate = payload.deliveryDate || nowIso.slice(0, 10);
+  const ticketNumber = payload.ticketNumber || (await generateTicketNumber(deliveryDate));
 
   const totalBuyCost = payload.quantity * payload.buyPricePerUnit;
   const totalRevenue = payload.quantity * payload.sellPricePerUnit;
