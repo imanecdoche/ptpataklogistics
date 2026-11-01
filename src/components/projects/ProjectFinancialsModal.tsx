@@ -162,21 +162,18 @@ export function ProjectFinancialsModal({
           className="relative w-full md:max-w-5xl bg-white rounded-t-[20px] md:rounded-[16px] shadow-2xl flex flex-col h-[92vh] md:h-[88vh] max-h-[92vh] md:max-h-[88vh] overflow-hidden z-10 animate-in slide-in-from-bottom duration-300 ease-out"
           onClick={e => e.stopPropagation()}
         >
-          {/* Header Panel */}
-          <div className="p-4 sm:p-5 border-b border-[#eaeaea] bg-white flex flex-col gap-3.5 flex-shrink-0">
+          {/* Header Panel (Compact) */}
+          <div className="px-4 py-3 sm:px-5 sm:py-3.5 border-b border-[#eaeaea] bg-white flex flex-col gap-2.5 flex-shrink-0">
             {/* Baris Atas: Info Proyek & Tombol Close di Pojok Kanan */}
             <div className="flex items-start justify-between gap-3">
-              <div>
-                <h2 className="text-base sm:text-lg font-bold text-[#111111]">
+              <div className="min-w-0">
+                <h2 className="text-sm sm:text-base font-bold text-[#111111] tracking-tight">
                   {project.name}
                 </h2>
-                {project.location && (
-                  <p className="text-xs text-[#666666] mt-0.5">
-                    {project.location}
-                  </p>
-                )}
-                <p className="text-xs text-[#666666] mt-0.5">
-                  Klien / Pihak Proyek: <span className="font-bold text-[#111111]">{project.clientName || 'Mitra Proyek'}</span> | Investor: <span className="font-semibold text-[#111111]">{project.investorName}</span>
+                <p className="text-[11px] text-[#666666] mt-0.5 truncate">
+                  Klien: <span className="font-semibold text-[#111111]">{project.clientName || 'Mitra Proyek'}</span>
+                  <span className="mx-1.5 text-[#cccccc]">|</span>
+                  Investor: <span className="font-semibold text-[#111111]">{project.investorName}</span>
                 </p>
               </div>
 
@@ -184,7 +181,7 @@ export function ProjectFinancialsModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="p-1.5 text-[#666666] hover:text-[#111111] hover:bg-[#f0f0f0] rounded-[8px] transition-colors cursor-pointer -mr-1 -mt-1"
+                className="p-1 text-[#666666] hover:text-[#111111] hover:bg-[#f0f0f0] rounded-[6px] transition-colors cursor-pointer -mr-1 -mt-0.5"
                 title="Tutup Modal"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -194,26 +191,26 @@ export function ProjectFinancialsModal({
             </div>
 
             {/* Baris Bawah: Deretan Tombol Aksi 1 Row Berjejer */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-0.5">
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none">
               <button
                 type="button"
                 onClick={() => {
                   setEditingSubJob(null);
                   setIsSubJobModalOpen(true);
                 }}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#111111] hover:bg-black text-white text-xs font-semibold rounded-[8px] transition-colors shadow-xs cursor-pointer whitespace-nowrap"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-[#111111] hover:bg-black text-white text-[11px] sm:text-xs font-semibold rounded-[6px] transition-colors shadow-xs cursor-pointer whitespace-nowrap"
               >
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <line x1="12" y1="5" x2="12" y2="19" strokeLinecap="round" strokeLinejoin="round" />
                   <line x1="5" y1="12" x2="19" y2="12" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-                <span>Tambah Sub-Pekerjaan</span>
+                <span>+ Sub-Pekerjaan</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setIsPaymentModalOpen(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-[#f9fafb] text-[#111111] border border-[#d1d5db] text-xs font-semibold rounded-[8px] transition-colors shadow-xs cursor-pointer whitespace-nowrap"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-white hover:bg-[#f9fafb] text-[#111111] border border-[#d1d5db] text-[11px] sm:text-xs font-semibold rounded-[6px] transition-colors shadow-xs cursor-pointer whitespace-nowrap"
               >
                 <svg className="w-3.5 h-3.5 text-[#555555]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
                   <rect x="2" y="5" width="20" height="14" rx="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -228,7 +225,7 @@ export function ProjectFinancialsModal({
                   setTargetSubJobForKasbon(undefined);
                   setIsKasbonModalOpen(true);
                 }}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-[#f9fafb] text-[#111111] border border-[#d1d5db] text-xs font-semibold rounded-[8px] transition-colors shadow-xs cursor-pointer whitespace-nowrap"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-white hover:bg-[#f9fafb] text-[#111111] border border-[#d1d5db] text-[11px] sm:text-xs font-semibold rounded-[6px] transition-colors shadow-xs cursor-pointer whitespace-nowrap"
               >
                 <svg className="w-3.5 h-3.5 text-[#555555]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -239,7 +236,7 @@ export function ProjectFinancialsModal({
               <button
                 type="button"
                 onClick={() => setIsEmployeeKasbonModalOpen(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-[#f9fafb] text-[#111111] border border-[#d1d5db] text-xs font-semibold rounded-[8px] transition-colors shadow-xs cursor-pointer whitespace-nowrap"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-white hover:bg-[#f9fafb] text-[#111111] border border-[#d1d5db] text-[11px] sm:text-xs font-semibold rounded-[6px] transition-colors shadow-xs cursor-pointer whitespace-nowrap"
               >
                 <svg className="w-3.5 h-3.5 text-[#555555]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -250,7 +247,7 @@ export function ProjectFinancialsModal({
               <button
                 type="button"
                 onClick={() => setIsPrintModalOpen(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-[#f9fafb] text-[#111111] border border-[#d1d5db] text-xs font-semibold rounded-[8px] transition-colors cursor-pointer whitespace-nowrap"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-white hover:bg-[#f9fafb] text-[#111111] border border-[#d1d5db] text-[11px] sm:text-xs font-semibold rounded-[6px] transition-colors cursor-pointer whitespace-nowrap"
                 title="Cetak Rekap Kasbon & Borongan Mandor"
               >
                 <svg className="w-3.5 h-3.5 text-[#555555]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
@@ -261,64 +258,64 @@ export function ProjectFinancialsModal({
             </div>
           </div>
 
-          {/* 4 Kartu Metrik Terpadu (Pool Tagihan & Saldo Berjalan) */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 p-4 sm:p-5 bg-[#fafafa] border-b border-[#eaeaea] flex-shrink-0">
-            {/* Metrik 1: Total Nilai Proyek (Global) */}
-            <div className="bg-white p-3.5 rounded-[10px] border border-[#eaeaea]">
+          {/* 4 Kartu Metrik Terpadu (Compact & Ramping) */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 p-3 sm:px-5 sm:py-3 bg-[#fafafa] border-b border-[#eaeaea] flex-shrink-0">
+            {/* Metrik 1: Total Kontrak */}
+            <div className="bg-white p-2.5 sm:p-3 rounded-[8px] border border-[#eaeaea]">
               <span className="text-[10px] font-bold uppercase tracking-wider text-[#777777] block">
-                Total Nilai Tagihan (Pool)
+                Total Kontrak
               </span>
-              <div className="mt-1">
+              <div className="mt-0.5">
                 <MetricCardCurrency amount={totalProjectInvoice} size="md" colorClassName="text-[#111111]" />
               </div>
-              <span className="text-[10px] text-[#888888] block mt-1">
+              <span className="text-[10px] text-[#888888] block mt-0.5 truncate" title={`Material ${formatRupiah(totalMaterialRevenue)} + Fisik ${formatRupiah(totalSubJobsClientContract)}`}>
                 Material {formatRupiah(totalMaterialRevenue)} + Fisik {formatRupiah(totalSubJobsClientContract)}
               </span>
             </div>
 
-            {/* Metrik 2: Total Pembayaran Diterima */}
-            <div className="bg-white p-3.5 rounded-[10px] border border-[#eaeaea]">
+            {/* Metrik 2: Terbayar */}
+            <div className="bg-white p-2.5 sm:p-3 rounded-[8px] border border-[#eaeaea]">
               <span className="text-[10px] font-bold uppercase tracking-wider text-[#777777] block">
-                Pembayaran Diterima (Kas Masuk)
+                Terbayar
               </span>
-              <div className="mt-1">
+              <div className="mt-0.5">
                 <MetricCardCurrency amount={totalPaymentsReceived} size="md" colorClassName="text-[#008060]" />
               </div>
-              <span className="text-[10px] text-[#008060] block mt-1">
-                {clientPayments.length} kali pembayaran termin
+              <span className="text-[10px] text-[#008060] block mt-0.5 truncate">
+                {clientPayments.length} kali termin
               </span>
             </div>
 
-            {/* Metrik 3: Sisa Piutang Berjalan Proyek */}
-            <div className="bg-white p-3.5 rounded-[10px] border border-[#eaeaea]">
+            {/* Metrik 3: Sisa Piutang */}
+            <div className="bg-white p-2.5 sm:p-3 rounded-[8px] border border-[#eaeaea]">
               <span className="text-[10px] font-bold uppercase tracking-wider text-[#777777] block">
-                Sisa Piutang Klien (Tempo)
+                Sisa Piutang
               </span>
-              <div className="mt-1">
+              <div className="mt-0.5">
                 <MetricCardCurrency
                   amount={remainingReceivableBalance}
                   size="md"
                   colorClassName={remainingReceivableBalance > 0 ? "text-amber-800" : "text-[#008060]"}
                 />
               </div>
-              <span className="text-[10px] text-[#888888] block mt-1">
+              <span className="text-[10px] text-[#888888] block mt-0.5 truncate">
                 {remainingReceivableBalance === 0 ? 'Lunas Sepenuhnya' : 'Otomatis terpotong saat bayar'}
               </span>
             </div>
 
-            {/* Metrik 4: Estimasi Laba Bersih Proyek */}
-            <div className="bg-white p-3.5 rounded-[10px] border border-[#eaeaea]">
+            {/* Metrik 4: Laba Bersih */}
+            <div className="bg-white p-2.5 sm:p-3 rounded-[8px] border border-[#eaeaea]">
               <span className="text-[10px] font-bold uppercase tracking-wider text-[#777777] block">
-                Estimasi Laba Bersih Proyek
+                Laba Bersih
               </span>
-              <div className="mt-1">
+              <div className="mt-0.5">
                 <MetricCardCurrency
                   amount={netProjectProfit}
                   size="md"
                   colorClassName={netProjectProfit < 0 ? "text-[#cf1124]" : "text-[#008060]"}
                 />
               </div>
-              <span className="text-[10px] text-[#888888] block mt-1 truncate" title={totalEmployeeKasbon > 0 ? `Margin ${formatRupiah(projectGrossMargin)} - Kasbon Tim ${formatRupiah(totalEmployeeKasbon)}` : 'Setelah beban material & tukang'}>
+              <span className="text-[10px] text-[#888888] block mt-0.5 truncate" title={totalEmployeeKasbon > 0 ? `Margin ${formatRupiah(projectGrossMargin)} - Kasbon ${formatRupiah(totalEmployeeKasbon)}` : 'Setelah beban material & tukang'}>
                 {totalEmployeeKasbon > 0
                   ? `Margin ${formatRupiah(projectGrossMargin)} - Kasbon ${formatRupiah(totalEmployeeKasbon)}`
                   : 'Setelah beban material & tukang'}
@@ -327,7 +324,7 @@ export function ProjectFinancialsModal({
           </div>
 
           {/* Tab Navigation Switcher */}
-          <div className="px-5 pt-3 pb-0 border-b border-[#eaeaea] flex items-center gap-6 bg-white flex-shrink-0 overflow-x-auto">
+          <div className="px-4 sm:px-5 pt-2 pb-0 border-b border-[#eaeaea] flex items-center gap-5 sm:gap-6 bg-white flex-shrink-0 overflow-x-auto scrollbar-none">
             <button
               type="button"
               onClick={() => setActiveTab('subjobs')}

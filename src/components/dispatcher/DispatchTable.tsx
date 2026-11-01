@@ -234,14 +234,16 @@ export function DispatchTable({
 
                     {/* Proyek Tujuan & Konsumen (Fixed 160px, Zero Wrap) */}
                     <td className="py-2.5 px-3 align-middle whitespace-nowrap w-[160px]">
-                      <span className="font-semibold text-[#111111] block truncate">
-                        {tx.projectName || '-'}
-                      </span>
-                      {(tx.clientName || tx.customerName) && (
-                        <span className="text-[11px] text-[#666666] block truncate mt-0.5">
-                          {tx.clientName || tx.customerName}
+                      <div className="flex flex-col items-start gap-0.5 max-w-full">
+                        <span className="font-semibold text-[#111111] block truncate">
+                          {tx.projectName || '-'}
                         </span>
-                      )}
+                        {(tx.clientName || tx.customerName) && (
+                          <span className="text-[11px] text-[#666666] block truncate">
+                            {tx.clientName || tx.customerName}
+                          </span>
+                        )}
+                      </div>
                     </td>
 
                     {/* Kuari Asal (Fixed 130px, Zero Wrap, RunningText) */}

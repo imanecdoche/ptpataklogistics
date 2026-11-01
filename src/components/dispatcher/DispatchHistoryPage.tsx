@@ -644,20 +644,22 @@ export function DispatchHistoryPage({ userEmail }: DispatchHistoryPageProps): Re
                         />
                       </td>
                       <td className="py-2.5 px-3 whitespace-nowrap w-[170px] align-middle">
-                        <DynamicEntityText
-                          name={ent.project.name}
-                          isOrphan={ent.project.isOrphan}
-                          tooltipText={ent.project.tooltipText}
-                          className="font-medium text-[#111111] block truncate"
-                        />
-                        {ent.client.name && (
+                        <div className="flex flex-col items-start gap-0.5 max-w-full">
                           <DynamicEntityText
-                            name={ent.client.name}
-                            isOrphan={ent.client.isOrphan}
-                            tooltipText={ent.client.tooltipText}
-                            className="text-[11px] text-[#666666] block truncate mt-0.5"
+                            name={ent.project.name}
+                            isOrphan={ent.project.isOrphan}
+                            tooltipText={ent.project.tooltipText}
+                            className="font-medium text-[#111111] block truncate"
                           />
-                        )}
+                          {ent.client.name && (
+                            <DynamicEntityText
+                              name={ent.client.name}
+                              isOrphan={ent.client.isOrphan}
+                              tooltipText={ent.client.tooltipText}
+                              className="text-[11px] text-[#666666] block truncate"
+                            />
+                          )}
+                        </div>
                       </td>
                       <td className="py-2.5 px-3 whitespace-nowrap w-[130px] align-middle">
                         <DynamicEntityText

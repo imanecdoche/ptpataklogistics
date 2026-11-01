@@ -743,21 +743,23 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
                       </td>
                       <td className="py-2.5 px-3 text-[#111111] whitespace-nowrap w-[240px] align-middle">
                         {linkedProjects.length > 0 ? (
-                          <div className="flex flex-col gap-1">
+                          <div className="flex flex-col gap-2">
                             {linkedProjects.map(p => {
                               const isFixed = p.profitShareScheme === 'FIXED_MONTHLY' || (!p.profitShareScheme && inv.profitShareScheme === 'FIXED_MONTHLY');
                               const fixedAmt = p.fixedMonthlyAmount ?? inv.fixedMonthlyAmount ?? 0;
                               const dueDay = p.fixedPayoutDay ?? inv.fixedPayoutDay ?? 25;
                               const pct = p.profitSharePercentage ?? inv.profitSharePercentage ?? 50;
                               return (
-                                <div key={p.id} className="text-xs truncate flex items-center gap-1.5">
-                                  <span className="font-semibold text-[#111111]">{p.name}</span>
+                                <div key={p.id} className="flex flex-col items-start gap-1">
+                                  <span className="font-semibold text-[#111111] text-xs truncate max-w-full">
+                                    {p.name}
+                                  </span>
                                   {isFixed ? (
-                                    <span className="text-[10px] font-bold text-white bg-[#0284c7] px-2 py-0.5 rounded-full inline-block border-none whitespace-nowrap flex-shrink-0">
+                                    <span className="text-[10px] font-bold text-white bg-[#0284c7] px-2 py-0.5 rounded-full inline-block border-none whitespace-nowrap">
                                       Fixed: {formatRupiah(fixedAmt)}/bln (Tgl {dueDay})
                                     </span>
                                   ) : (
-                                    <span className="text-[10px] font-bold text-white bg-[#15803d] px-2 py-0.5 rounded-full inline-block border-none whitespace-nowrap flex-shrink-0">
+                                    <span className="text-[10px] font-bold text-white bg-[#15803d] px-2 py-0.5 rounded-full inline-block border-none whitespace-nowrap">
                                       {pct}%
                                     </span>
                                   )}
@@ -766,16 +768,22 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
                             })}
                           </div>
                         ) : (
-                          inv.profitShareScheme === 'FIXED_MONTHLY' ? (
-                            <span className="text-[10px] font-bold text-white bg-[#0284c7] px-2 py-0.5 rounded-full inline-block border-none whitespace-nowrap flex-shrink-0">
-                              Fixed: {formatRupiah(inv.fixedMonthlyAmount || 0)}/bln (Tgl {inv.fixedPayoutDay || 25})
-                            </span>
-                          ) : inv.profitSharePercentage ? (
-                            <span className="text-[10px] font-bold text-white bg-[#15803d] px-2 py-0.5 rounded-full inline-block border-none whitespace-nowrap flex-shrink-0">
-                              {inv.profitSharePercentage}%
-                            </span>
+                          inv.profitShareScheme === 'FIXED_MONTHLY' && (inv.fixedMonthlyAmount || 0) > 0 ? (
+                            <div className="flex flex-col items-start gap-1">
+                              <span className="text-[#888888] text-[11px]">Umum</span>
+                              <span className="text-[10px] font-bold text-white bg-[#0284c7] px-2 py-0.5 rounded-full inline-block border-none whitespace-nowrap">
+                                Fixed: {formatRupiah(inv.fixedMonthlyAmount || 0)}/bln (Tgl {inv.fixedPayoutDay || 25})
+                              </span>
+                            </div>
+                          ) : (inv.profitSharePercentage || 0) > 0 ? (
+                            <div className="flex flex-col items-start gap-1">
+                              <span className="text-[#888888] text-[11px]">Umum</span>
+                              <span className="text-[10px] font-bold text-white bg-[#15803d] px-2 py-0.5 rounded-full inline-block border-none whitespace-nowrap">
+                                {inv.profitSharePercentage}%
+                              </span>
+                            </div>
                           ) : (
-                            <span className="text-[#888888]">-</span>
+                            <span className="text-[#888888] text-xs">-</span>
                           )
                         )}
                       </td>
