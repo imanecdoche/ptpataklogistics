@@ -3,6 +3,7 @@ import {
   doc,
   setDoc,
   getDoc,
+  getDocs,
   updateDoc,
   deleteDoc,
   query,
@@ -141,11 +142,30 @@ export async function saveProjectSubJob(payload: SaveSubJobPayload): Promise<str
 }
 
 /**
- * Menghapus sub-pekerjaan fisik
+ * Menghapus sub-pekerjaan fisik dan seluruh riwayat kasbon tukang terkait secara permanen
  */
 export async function deleteProjectSubJob(id: string): Promise<void> {
   const docRef = doc(db, SUB_JOBS_COLLECTION, id);
   await deleteDoc(docRef);
+
+  // Cascade delete worker_kasbon_logs & cash_ledger terkait
+  try {
+    const kasbonSnap = await getDocs(query(collection(db, KASBON_COLLECTION), where('subJobId', '==', id)));
+    for (const d of kasbonSnap.docs) {
+      await deleteDoc(d.ref);
+      // Hapus mutasi di cash_ledger
+      try {
+        const ledgerSnap = await getDocs(query(collection(db, 'cash_ledger'), where('referenceId', '==', d.id)));
+        for (const ld of ledgerSnap.docs) {
+          await deleteDoc(ld.ref);
+        }
+      } catch (le) {
+        console.warn('Gagal menghapus mutasi kasbon tukang:', le);
+      }
+    }
+  } catch (e) {
+    console.warn('Gagal menghapus relasi kasbon tukang sub-pekerjaan:', e);
+  }
 }
 
 /**
@@ -330,11 +350,21 @@ export async function recordEmployeeKasbon(payload: RecordEmployeeKasbonPayload)
 }
 
 /**
- * Hapus dokumen kasbon karyawan
+ * Hapus dokumen kasbon karyawan dan mutasi kas keluarnya di Buku Kas secara permanen
  */
 export async function deleteEmployeeKasbon(kasbonId: string): Promise<void> {
   const docRef = doc(db, EMPLOYEE_KASBON_COLLECTION, kasbonId);
   await deleteDoc(docRef);
+
+  // Cascade delete mutasi di cash_ledger
+  try {
+    const ledgerSnap = await getDocs(query(collection(db, 'cash_ledger'), where('referenceId', '==', kasbonId)));
+    for (const d of ledgerSnap.docs) {
+      await deleteDoc(d.ref);
+    }
+  } catch (e) {
+    console.warn('Gagal menghapus mutasi kasbon karyawan di cash_ledger:', e);
+  }
 }
 
 /**

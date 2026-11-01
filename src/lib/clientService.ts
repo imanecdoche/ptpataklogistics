@@ -4,6 +4,7 @@ import {
   getDocs, 
   setDoc, 
   deleteDoc,
+  where,
   query, 
   orderBy, 
   onSnapshot 
@@ -191,6 +192,16 @@ export function subscribeClients(callback: (clients: Client[]) => void): () => v
 export async function deleteClient(id: string): Promise<void> {
   const docRef = doc(db, 'clients', id);
   await deleteDoc(docRef);
+
+  // Cascade delete route_tariffs jika ada yang mengikat clientId
+  try {
+    const routeSnap = await getDocs(query(collection(db, 'route_tariffs'), where('clientId', '==', id)));
+    for (const d of routeSnap.docs) {
+      await deleteDoc(d.ref);
+    }
+  } catch (e) {
+    console.warn('Gagal menghapus rute tarif terkait klien:', e);
+  }
 }
 
 /**

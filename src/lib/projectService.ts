@@ -7,6 +7,7 @@ import {
   updateDoc,
   deleteDoc,
   query,
+  where,
   orderBy,
   onSnapshot,
   increment
@@ -117,11 +118,61 @@ export async function saveProject(
 }
 
 /**
- * Menghapus proyek dari sistem secara permanen
+ * Menghapus proyek dari sistem secara permanen beserta seluruh relasi terkait (Cascade Hard Delete)
  */
 export async function deleteProject(id: string): Promise<void> {
   const docRef = doc(db, PROJECTS_COLLECTION, id);
   await deleteDoc(docRef);
+
+  // 1. Cascade delete route_tariffs terkait
+  try {
+    const routeSnap = await getDocs(query(collection(db, 'route_tariffs'), where('projectId', '==', id)));
+    for (const d of routeSnap.docs) {
+      await deleteDoc(d.ref);
+    }
+  } catch (e) {
+    console.warn('Gagal menghapus relasi route_tariffs proyek:', e);
+  }
+
+  // 2. Cascade delete project_sub_jobs terkait
+  try {
+    const subJobsSnap = await getDocs(query(collection(db, 'project_sub_jobs'), where('projectId', '==', id)));
+    for (const d of subJobsSnap.docs) {
+      await deleteDoc(d.ref);
+    }
+  } catch (e) {
+    console.warn('Gagal menghapus relasi project_sub_jobs proyek:', e);
+  }
+
+  // 3. Cascade delete worker_kasbon_logs terkait
+  try {
+    const kasbonSnap = await getDocs(query(collection(db, 'worker_kasbon_logs'), where('projectId', '==', id)));
+    for (const d of kasbonSnap.docs) {
+      await deleteDoc(d.ref);
+    }
+  } catch (e) {
+    console.warn('Gagal menghapus relasi worker_kasbon_logs proyek:', e);
+  }
+
+  // 4. Cascade delete employee_kasbon_logs terkait
+  try {
+    const empKasbonSnap = await getDocs(query(collection(db, 'employee_kasbon_logs'), where('projectId', '==', id)));
+    for (const d of empKasbonSnap.docs) {
+      await deleteDoc(d.ref);
+    }
+  } catch (e) {
+    console.warn('Gagal menghapus relasi employee_kasbon_logs proyek:', e);
+  }
+
+  // 5. Cascade delete client_project_payments terkait
+  try {
+    const paymentsSnap = await getDocs(query(collection(db, 'client_project_payments'), where('projectId', '==', id)));
+    for (const d of paymentsSnap.docs) {
+      await deleteDoc(d.ref);
+    }
+  } catch (e) {
+    console.warn('Gagal menghapus relasi client_project_payments proyek:', e);
+  }
 }
 
 /**
