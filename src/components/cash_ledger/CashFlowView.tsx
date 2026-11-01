@@ -130,8 +130,7 @@ export function CashFlowView({
           const descLower = e.description.toLowerCase();
           return (
             descLower.includes(pNameLower) ||
-            (p.name.includes('Cikedal') && (descLower.includes('cikedal') || descLower.includes('endang') || descLower.includes('sapta'))) ||
-            (p.name.includes('Cipeucang') && descLower.includes('cipeucang'))
+            (p.name.includes('Cikedal') && (descLower.includes('cikedal') || descLower.includes('endang') || descLower.includes('sapta')))
           );
         });
       }

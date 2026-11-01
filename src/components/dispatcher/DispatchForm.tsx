@@ -99,7 +99,7 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
       if (p) {
         setFormProjectId(p.id);
         setFormProjectName(p.name);
-        const isSapta = p.name.toLowerCase().includes('cikedal') || p.name.toLowerCase().includes('cipeucang');
+        const isSapta = p.name.toLowerCase().includes('cikedal');
         const sapta = clients.find(c => c.id === 'cli-p-sapta') || clients.find(c => c.name.toLowerCase().includes('sapta'));
         if (isSapta && sapta) {
           setSelectedClientId(sapta.id);
@@ -118,8 +118,8 @@ export function DispatchForm({ materials, userEmail, transactions = [], onSucces
     if (project) {
       setFormProjectId(project.id);
       setFormProjectName(project.name);
-      // Auto-set client ke P. Sapta jika proyek Cikedal atau Cipeucang
-      const isSapta = project.name.toLowerCase().includes('cikedal') || project.name.toLowerCase().includes('cipeucang');
+      // Auto-set client ke P. Sapta jika proyek Cikedal
+      const isSapta = project.name.toLowerCase().includes('cikedal');
       const sapta = clients.find(c => c.id === 'cli-p-sapta') || clients.find(c => c.name.toLowerCase().includes('sapta'));
       if (isSapta && sapta) {
         setSelectedClientId(sapta.id);

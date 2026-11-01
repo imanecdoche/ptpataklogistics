@@ -350,17 +350,6 @@ export async function seedInitialMaterialData(): Promise<void> {
           updatedAt: new Date().toISOString()
         },
         {
-          id: 'rte_qry-batu-mandiri_prj-cipeucang',
-          quarryId: 'qry-batu-mandiri',
-          quarryName: 'PT Tambang Batu Mandiri',
-          projectId: 'prj-cipeucang',
-          projectName: 'Proyek Irigasi Cipeucang',
-          distanceKm: 32,
-          standardOperationalCost: 230000,
-          standardTripDurationHours: 2,
-          updatedAt: new Date().toISOString()
-        },
-        {
           id: 'rte_qry-pasir-sakti_prj-situ-cikedal',
           quarryId: 'qry-pasir-sakti',
           quarryName: 'PT Kuari Pasir Sakti',
@@ -369,17 +358,6 @@ export async function seedInitialMaterialData(): Promise<void> {
           distanceKm: 38,
           standardOperationalCost: 260000,
           standardTripDurationHours: 2.5,
-          updatedAt: new Date().toISOString()
-        },
-        {
-          id: 'rte_qry-pasir-sakti_prj-cipeucang',
-          quarryId: 'qry-pasir-sakti',
-          quarryName: 'PT Kuari Pasir Sakti',
-          projectId: 'prj-cipeucang',
-          projectName: 'Proyek Irigasi Cipeucang',
-          distanceKm: 45,
-          standardOperationalCost: 290000,
-          standardTripDurationHours: 3,
           updatedAt: new Date().toISOString()
         }
       ];

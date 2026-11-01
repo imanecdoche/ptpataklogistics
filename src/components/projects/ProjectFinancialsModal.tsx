@@ -3,14 +3,17 @@ import {
   Project,
   ProjectSubJob,
   WorkerKasbonLog,
+  EmployeeKasbonLog,
   ClientProjectPayment,
   DispatchTransaction
 } from '@/types/database';
 import {
   subscribeProjectSubJobs,
   subscribeWorkerKasbonLogs,
+  subscribeEmployeeKasbonLogs,
   subscribeClientPayments,
-  deleteProjectSubJob
+  deleteProjectSubJob,
+  deleteEmployeeKasbon
 } from '@/lib/projectFinanceService';
 import { subscribeAllTransactions } from '@/lib/dispatcherService';
 import { formatRupiah } from '@/lib/currencyUtils';
@@ -20,9 +23,10 @@ import { formatVolumeDisplay } from '@/lib/volumeUtils';
 import { MetricCardCurrency } from '@/components/ui/MetricCardCurrency';
 import { RecordSubJobModal } from './RecordSubJobModal';
 import { RecordKasbonModal } from './RecordKasbonModal';
+import { RecordEmployeeKasbonModal } from './RecordEmployeeKasbonModal';
 import { RecordClientPaymentModal } from './RecordClientPaymentModal';
 import { WorkerKasbonPrintModal } from './WorkerKasbonPrintModal';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Trash2, Eye, X } from 'lucide-react';
 
 interface ProjectFinancialsModalProps {
   isOpen: boolean;
@@ -39,9 +43,10 @@ export function ProjectFinancialsModal({
   projects,
   userEmail
 }: ProjectFinancialsModalProps): React.JSX.Element | null {
-  const [activeTab, setActiveTab] = useState<'subjobs' | 'material' | 'kasbon' | 'payments'>('subjobs');
+  const [activeTab, setActiveTab] = useState<'subjobs' | 'material' | 'kasbon' | 'employee_kasbon' | 'payments'>('subjobs');
   const [subJobs, setSubJobs] = useState<ProjectSubJob[]>([]);
   const [kasbonLogs, setKasbonLogs] = useState<WorkerKasbonLog[]>([]);
+  const [employeeKasbonLogs, setEmployeeKasbonLogs] = useState<EmployeeKasbonLog[]>([]);
   const [clientPayments, setClientPayments] = useState<ClientProjectPayment[]>([]);
   const [transactions, setTransactions] = useState<DispatchTransaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -52,6 +57,9 @@ export function ProjectFinancialsModal({
 
   const [isKasbonModalOpen, setIsKasbonModalOpen] = useState(false);
   const [targetSubJobForKasbon, setTargetSubJobForKasbon] = useState<string | undefined>(undefined);
+
+  const [isEmployeeKasbonModalOpen, setIsEmployeeKasbonModalOpen] = useState(false);
+  const [activeReceiptPreview, setActiveReceiptPreview] = useState<string | null>(null);
 
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
@@ -69,6 +77,10 @@ export function ProjectFinancialsModal({
       setKasbonLogs(list.filter(k => k.projectId === project.id));
     });
 
+    const unsubEmployeeKasbon = subscribeEmployeeKasbonLogs(list => {
+      setEmployeeKasbonLogs(list.filter(k => k.projectId === project.id));
+    }, project.id);
+
     const unsubPayments = subscribeClientPayments(list => {
       setClientPayments(list.filter(p => p.projectId === project.id || p.clientName.toLowerCase() === (project.clientName || '').toLowerCase()));
     }, project.id);
@@ -80,6 +92,7 @@ export function ProjectFinancialsModal({
     return () => {
       unsubSubJobs();
       unsubKasbon();
+      unsubEmployeeKasbon();
       unsubPayments();
       unsubTx();
     };
@@ -99,18 +112,22 @@ export function ProjectFinancialsModal({
   // const totalKasbonPaid = subJobs.reduce((acc, s) => acc + (s.totalKasbonPaid || 0), 0);
   // const totalRemainingWorkerPay = Math.max(0, totalSubJobsWorkerContract - totalKasbonPaid);
 
-  // 3. Pool Total Tagihan Global ke Klien / Kak Angga
+  // 3. Kasbon Karyawan / Tim Internal Proyek
+  const totalEmployeeKasbon = employeeKasbonLogs.reduce((acc, k) => acc + (k.amount || 0), 0);
+
+  // 4. Pool Total Tagihan Global ke Klien / Kak Angga
   const totalProjectInvoice = totalMaterialRevenue + totalSubJobsClientContract;
 
-  // 4. Total Pembayaran Klien Masuk
+  // 5. Total Pembayaran Klien Masuk
   const totalPaymentsReceived = clientPayments.reduce((acc, p) => acc + (p.amount || 0), 0);
 
-  // 5. Sisa Piutang Berjalan Proyek (Total Tagihan - Pembayaran Masuk)
+  // 6. Sisa Piutang Berjalan Proyek (Total Tagihan - Pembayaran Masuk)
   const remainingReceivableBalance = Math.max(0, totalProjectInvoice - totalPaymentsReceived);
 
-  // 6. Total Beban Biaya & Estimasi Laba Bersih
+  // 7. Total Beban Biaya & Estimasi Laba Bersih
   const totalProjectCost = totalMaterialBuyCost + totalMaterialOpsCost + totalSubJobsWorkerContract;
-  const netProjectProfit = totalProjectInvoice - totalProjectCost;
+  const projectGrossMargin = totalProjectInvoice - totalProjectCost;
+  const netProjectProfit = projectGrossMargin - totalEmployeeKasbon;
 
   const handleDeleteJob = async (id: string, name: string) => {
     if (!window.confirm(`Hapus sub-pekerjaan "${name}"? Catatan kasbon terkait akan tetap tersimpan di riwayat kas.`)) return;
@@ -118,6 +135,16 @@ export function ProjectFinancialsModal({
       await deleteProjectSubJob(id);
     } catch (err) {
       console.error('Gagal menghapus sub-pekerjaan:', err);
+    }
+  };
+
+  const handleDeleteEmployeeKasbon = async (id: string, name: string, amount: number) => {
+    if (!window.confirm(`Hapus catatan kasbon karyawan "${name}" sebesar ${formatRupiah(amount)}?\n\nCatatan: Mutasi di Buku Kas Utama tetap tersimpan untuk riwayat audit.`)) return;
+    try {
+      await deleteEmployeeKasbon(id);
+    } catch (err) {
+      console.error('Gagal menghapus kasbon karyawan:', err);
+      alert('Gagal menghapus kasbon karyawan.');
     }
   };
 
@@ -211,6 +238,17 @@ export function ProjectFinancialsModal({
 
               <button
                 type="button"
+                onClick={() => setIsEmployeeKasbonModalOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-[#f9fafb] text-[#111111] border border-[#d1d5db] text-xs font-semibold rounded-[8px] transition-colors shadow-xs cursor-pointer whitespace-nowrap"
+              >
+                <svg className="w-3.5 h-3.5 text-[#555555]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                <span>Kasbon Karyawan</span>
+              </button>
+
+              <button
+                type="button"
                 onClick={() => setIsPrintModalOpen(true)}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-[#f9fafb] text-[#111111] border border-[#d1d5db] text-xs font-semibold rounded-[8px] transition-colors cursor-pointer whitespace-nowrap"
                 title="Cetak Rekap Kasbon & Borongan Mandor"
@@ -280,8 +318,10 @@ export function ProjectFinancialsModal({
                   colorClassName={netProjectProfit < 0 ? "text-[#cf1124]" : "text-[#008060]"}
                 />
               </div>
-              <span className="text-[10px] text-[#888888] block mt-1">
-                Setelah beban material & tukang
+              <span className="text-[10px] text-[#888888] block mt-1 truncate" title={totalEmployeeKasbon > 0 ? `Margin ${formatRupiah(projectGrossMargin)} - Kasbon Tim ${formatRupiah(totalEmployeeKasbon)}` : 'Setelah beban material & tukang'}>
+                {totalEmployeeKasbon > 0
+                  ? `Margin ${formatRupiah(projectGrossMargin)} - Kasbon ${formatRupiah(totalEmployeeKasbon)}`
+                  : 'Setelah beban material & tukang'}
               </span>
             </div>
           </div>
@@ -330,6 +370,21 @@ export function ProjectFinancialsModal({
               <span>Kasbon Mandor</span>
               <span className="text-[11px] font-semibold text-[#888888]">
                 ({kasbonLogs.length})
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('employee_kasbon')}
+              className={`pb-2.5 text-xs font-bold border-b-2 flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap ${
+                activeTab === 'employee_kasbon'
+                  ? 'border-[#111111] text-[#111111]'
+                  : 'border-transparent text-[#666666] hover:text-[#111111]'
+              }`}
+            >
+              <span>Kasbon Karyawan</span>
+              <span className="text-[11px] font-semibold text-[#888888]">
+                ({employeeKasbonLogs.length})
               </span>
             </button>
 
@@ -621,6 +676,127 @@ export function ProjectFinancialsModal({
                   </div>
                 </div>
               )
+            ) : activeTab === 'employee_kasbon' ? (
+              /* TAB: RIWAYAT KASBON KARYAWAN / TIM PROYEK */
+              employeeKasbonLogs.length === 0 ? (
+                <div className="py-14 text-center text-xs text-[#888888] space-y-3 bg-white rounded-[12px] border border-[#eaeaea] p-8 max-w-lg mx-auto my-6">
+                  <div className="w-10 h-10 mx-auto rounded-full bg-[#f5f5f5] flex items-center justify-center text-[#777777]">
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                  </div>
+                  <p className="font-bold text-[#111111] text-sm">Belum Ada Catatan Kasbon Karyawan</p>
+                  <p className="text-[#666666] text-xs leading-relaxed">
+                    Catat kasbon operasional untuk tim/karyawan lapangan proyek (Pengawas, Admin Lapangan, Logistik). Kasbon ini langsung memotong kas fisik di Buku Kas dan memotong sisa laba bersih proyek.
+                  </p>
+                  <div className="pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsEmployeeKasbonModalOpen(true)}
+                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#111111] hover:bg-black text-white text-xs font-semibold rounded-[8px] transition-colors cursor-pointer"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <line x1="12" y1="5" x2="12" y2="19" strokeLinecap="round" strokeLinejoin="round" />
+                        <line x1="5" y1="12" x2="19" y2="12" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      <span>Catat Kasbon Karyawan</span>
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {/* Banner Ringkasan Kasbon Karyawan */}
+                  <div className="bg-white p-3.5 rounded-[10px] border border-[#eaeaea] flex items-center justify-between">
+                    <div>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#777777] block">
+                        Total Kasbon Karyawan / Tim Proyek
+                      </span>
+                      <span className="text-base font-bold font-mono text-[#cf1124] block mt-0.5">
+                        {formatRupiah(totalEmployeeKasbon)}
+                      </span>
+                      <span className="text-[10px] text-[#666666] block mt-0.5">
+                        Memotong langsung saldo kas fisik dan mengurangi porsi laba bersih siap bagi
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsEmployeeKasbonModalOpen(true)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#111111] hover:bg-black text-white text-xs font-semibold rounded-[6px] transition-colors cursor-pointer whitespace-nowrap"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <line x1="12" y1="5" x2="12" y2="19" strokeLinecap="round" strokeLinejoin="round" />
+                        <line x1="5" y1="12" x2="19" y2="12" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      <span>Tambah Kasbon</span>
+                    </button>
+                  </div>
+
+                  {/* Tabel Riwayat Kasbon Karyawan */}
+                  <div className="bg-white border border-[#eaeaea] rounded-[10px] overflow-hidden">
+                    <div className="overflow-x-auto">
+                      <table className="w-full min-w-[700px] text-xs text-left border-collapse">
+                        <thead className="bg-[#f9f9f9] border-b border-[#eaeaea] text-[#555555] font-semibold text-[10px] uppercase">
+                          <tr>
+                            <th className="py-2.5 px-3 whitespace-nowrap">Tanggal</th>
+                            <th className="py-2.5 px-3 whitespace-nowrap">Nama Karyawan & Peran</th>
+                            <th className="py-2.5 px-3 text-right whitespace-nowrap">Nominal Kasbon</th>
+                            <th className="py-2.5 px-3 whitespace-nowrap">Catatan / Keperluan</th>
+                            <th className="py-2.5 px-3 whitespace-nowrap">Bukti TF / Kwitansi</th>
+                            <th className="py-2.5 px-3 whitespace-nowrap">Dicatat Oleh</th>
+                            <th className="py-2.5 px-3 text-center whitespace-nowrap">Aksi</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-[#eaeaea]">
+                          {employeeKasbonLogs.map(emp => (
+                            <tr key={emp.id} className="hover:bg-[#fafafa]">
+                              <td className="py-2.5 px-3 font-mono font-medium whitespace-nowrap">{formatDateID(emp.date)}</td>
+                              <td className="py-2.5 px-3 whitespace-nowrap">
+                                <span className="font-bold text-[#111111] block">{emp.employeeName}</span>
+                                {emp.role && (
+                                  <span className="text-[10px] text-[#666666] block">{emp.role}</span>
+                                )}
+                              </td>
+                              <td className="py-2.5 px-3 text-right font-mono font-bold text-[#cf1124] whitespace-nowrap">
+                                {formatRupiah(emp.amount)}
+                              </td>
+                              <td className="py-2.5 px-3 text-[#666666] max-w-xs truncate" title={emp.note || '-'}>
+                                {emp.note || '-'}
+                              </td>
+                              <td className="py-2.5 px-3 whitespace-nowrap">
+                                {emp.receiptUrl ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => setActiveReceiptPreview(emp.receiptUrl || null)}
+                                    className="inline-flex items-center gap-1 px-2 py-1 bg-[#f0f0f0] hover:bg-[#e4e4e4] text-[#111111] rounded text-[11px] font-medium transition-colors cursor-pointer"
+                                  >
+                                    <Eye className="w-3 h-3 text-[#555555]" />
+                                    <span>Lihat Foto</span>
+                                  </button>
+                                ) : (
+                                  <span className="text-[#999999] text-[11px]">-</span>
+                                )}
+                              </td>
+                              <td className="py-2.5 px-3 font-mono text-[10px] text-[#888888] whitespace-nowrap">
+                                {emp.recordedBy?.split('@')[0] || 'Admin'}
+                              </td>
+                              <td className="py-2.5 px-3 text-center whitespace-nowrap">
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteEmployeeKasbon(emp.id, emp.employeeName, emp.amount)}
+                                  className="p-1 text-[#888888] hover:text-[#cf1124] hover:bg-red-50 rounded-[4px] transition-colors cursor-pointer"
+                                  title="Hapus Kasbon Karyawan"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              )
             ) : (
               /* TAB 4: RIWAYAT PEMBAYARAN KLIEN (POOL) */
               clientPayments.length === 0 ? (
@@ -721,6 +897,45 @@ export function ProjectFinancialsModal({
         subJobs={subJobs}
         kasbonLogs={kasbonLogs}
       />
+
+      {/* SUB-MODAL 5: CATAT KASBON KARYAWAN */}
+      <RecordEmployeeKasbonModal
+        isOpen={isEmployeeKasbonModalOpen}
+        onClose={() => setIsEmployeeKasbonModalOpen(false)}
+        project={project}
+        userEmail={userEmail}
+      />
+
+      {/* LIGHTBOX PREVIEW BUKTI TRANSFER / KWITANSI */}
+      {activeReceiptPreview && (
+        <div 
+          className="fixed inset-0 z-60 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 cursor-pointer"
+          onClick={() => setActiveReceiptPreview(null)}
+        >
+          <div 
+            className="relative max-w-xl max-h-[85vh] bg-white rounded-[12px] p-2 overflow-hidden shadow-2xl cursor-default"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between p-2 border-b border-[#eaeaea]">
+              <span className="text-xs font-bold text-[#111111]">Foto Bukti Kasbon Karyawan</span>
+              <button
+                type="button"
+                onClick={() => setActiveReceiptPreview(null)}
+                className="p-1 text-[#555555] hover:text-[#111111] hover:bg-[#f0f0f0] rounded-[6px] transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="p-2 flex items-center justify-center max-h-[75vh] overflow-auto">
+              <img
+                src={activeReceiptPreview}
+                alt="Bukti Transfer Kasbon"
+                className="max-w-full max-h-[70vh] object-contain rounded"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

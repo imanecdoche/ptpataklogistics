@@ -35,7 +35,7 @@ export interface RouteOperatingTariff {
   id: string;               // e.g. "rte_qry-batu-mandiri_prj-situ-cikedal"
   quarryId: string;         // Titik Muat
   quarryName: string;
-  projectId: string;        // Titik Bongkar (Situ Cikedal / Cipeucang)
+  projectId: string;        // Titik Bongkar (Situ Cikedal)
   projectName: string;
   distanceKm: number;       // Estimasi jarak tempuh
   standardTripDurationHours?: number;

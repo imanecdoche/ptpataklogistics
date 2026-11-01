@@ -1248,7 +1248,7 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
                           }
                         }
                       }}
-                      placeholder="Cari & kaitkan proyek (contoh: Situ Cikedal / Irigasi Cipeucang)..."
+                      placeholder="Cari & kaitkan proyek (contoh: Situ Cikedal)..."
                       className="w-full bg-white border border-[#eaeaea] rounded-[6px] pl-8 pr-3 py-1.5 text-xs text-[#111111] placeholder:text-[#999999] outline-none focus:border-[#111111]"
                     />
                   </div>
@@ -1661,7 +1661,7 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
                           }
                         }
                       }}
-                      placeholder="Cari & kaitkan proyek (contoh: Situ Cikedal / Irigasi Cipeucang)..."
+                      placeholder="Cari & kaitkan proyek (contoh: Situ Cikedal)..."
                       className="w-full bg-white border border-[#eaeaea] rounded-[6px] pl-8 pr-3 py-1.5 text-xs text-[#111111] placeholder:text-[#999999] outline-none focus:border-[#111111]"
                     />
                   </div>

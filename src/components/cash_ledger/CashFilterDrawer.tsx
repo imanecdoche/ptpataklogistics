@@ -6,7 +6,7 @@ import { CurrencyInput } from '@/components/ui/CurrencyInput';
 export interface CashFilterState {
   sortBy: 'DATE_DESC' | 'DATE_ASC' | 'AMOUNT_DESC' | 'AMOUNT_ASC';
   flowDirection: 'ALL' | 'IN' | 'OUT';
-  category: 'ALL' | 'BELI_MATERIAL' | 'BIAYA_OPERASIONAL' | 'PEMBAYARAN_PROYEK' | 'DEBT' | 'KASBON_TUKANG' | 'CAPITAL' | 'BAGI_HASIL_INVESTOR';
+  category: 'ALL' | 'BELI_MATERIAL' | 'BIAYA_OPERASIONAL' | 'PEMBAYARAN_PROYEK' | 'DEBT' | 'KASBON_TUKANG' | 'KASBON_KARYAWAN' | 'CAPITAL' | 'BAGI_HASIL_INVESTOR';
   projectId: string;
   datePreset: 'ALL' | 'TODAY' | '7D' | '30D' | 'THIS_MONTH' | 'CUSTOM';
   startDate: string; // YYYY-MM-DD
@@ -278,6 +278,7 @@ export function CashFilterDrawer({
               <option value="ALL">Semua Kategori Mutasi</option>
               <option value="BELI_MATERIAL">Belanja Material Kuari (Batu, Split, Abu Batu, dll)</option>
               <option value="KASBON_TUKANG">Kasbon Mandor & Tukang Fisik</option>
+              <option value="KASBON_KARYAWAN">Kasbon Karyawan & Tim Proyek</option>
               <option value="PEMBAYARAN_PROYEK">Pembayaran Termin / Klien (Kas Masuk)</option>
               <option value="DEBT">Cicilan & Pengembalian Hutang Talangan</option>
               <option value="BIAYA_OPERASIONAL">Beban Operasional & HOK (Supir, Solar, Domain)</option>

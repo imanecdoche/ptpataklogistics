@@ -248,7 +248,7 @@ export function InvestorTransferModal({
               type="text"
               value={note}
               onChange={e => setNote(e.target.value)}
-              placeholder="Talangan solar kuari rute Cipeucang..."
+              placeholder="Talangan solar kuari rute proyek..."
               className="w-full bg-white border border-[#eaeaea] rounded-[6px] px-3 py-2 text-xs text-[#111111] outline-none focus:border-[#111111]"
             />
           </div>

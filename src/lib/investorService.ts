@@ -199,7 +199,7 @@ export async function seedDefaultInvestors(): Promise<void> {
       bankAccount: 'BCA - Rekening Investor Bpk. Yadi',
       initialCapital: 26500000,
       profitSharePercentage: 50,
-      notes: 'Investor Tunggal Aktif PT Patak Abadi Jaya (Mendanai Proyek Situ Cikedal & Proyek Irigasi Cipeucang)',
+      notes: 'Investor Tunggal Aktif PT Patak Abadi Jaya (Mendanai Proyek Situ Cikedal)',
       createdAt: new Date().toISOString()
     };
 

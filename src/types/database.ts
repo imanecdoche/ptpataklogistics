@@ -11,7 +11,8 @@ export type CashFlowType =
   | 'BAGI_HASIL_INVESTOR'
   | 'TRANSFER_INVESTOR'
   | 'PEMBAYARAN_PROYEK'
-  | 'KASBON_TUKANG';
+  | 'KASBON_TUKANG'
+  | 'KASBON_KARYAWAN';
 
 export type ClientType = 'PT' | 'CV' | 'UD' | 'PERORANGAN';
 
@@ -213,7 +214,7 @@ export interface InvestorTransferLog {
 
 // 8. Koleksi: projects (Master Proyek & Alokasi Investor)
 export interface Project {
-  id: string;                // e.g. "prj-situ-cikedal", "prj-menes", "prj-cipeucang"
+  id: string;                // e.g. "prj-situ-cikedal", "prj-menes"
   name: string;              // Nama Proyek (e.g. "Proyek Situ Cikedal")
   location: string;          // Lokasi Proyek
   investorId: string;        // Pautkan ke ID Investor terkait
@@ -353,6 +354,20 @@ export interface ProjectSubJob {
   remainingWorkerPay: number;   // Sisa hak upah = contractAmountWorker - totalKasbonPaid
   companyMargin: number;        // contractAmountClient - contractAmountWorker
   notes?: string;
+  createdAt: string;
+}
+
+export interface EmployeeKasbonLog {
+  id: string;
+  projectId: string;
+  projectName: string;
+  employeeName: string;
+  role?: string;
+  date: string;
+  amount: number;
+  note?: string;
+  receiptUrl?: string;
+  recordedBy: string;
   createdAt: string;
 }
 

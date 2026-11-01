@@ -23,6 +23,7 @@ const ALL_CASHFLOW_TYPES: { id: CashFlowType; label: string }[] = [
   { id: 'BELI_MATERIAL', label: 'Belanja Material' },
   { id: 'BIAYA_OPERASIONAL', label: 'Biaya Operasional / HOK Supir' },
   { id: 'KASBON_TUKANG', label: 'Kasbon Mandor / Tukang' },
+  { id: 'KASBON_KARYAWAN', label: 'Kasbon Karyawan / Tim Proyek' },
   { id: 'CICILAN_HUTANG', label: 'Pembayaran Cicilan Hutang' },
   { id: 'BAGI_HASIL_INVESTOR', label: 'Bagi Hasil Investor' },
   { id: 'TRANSFER_INVESTOR', label: 'Transfer / Talangan Antar-Investor' }

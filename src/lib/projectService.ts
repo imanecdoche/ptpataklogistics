@@ -136,7 +136,7 @@ export async function updateProjectBalance(id: string, delta: number): Promise<v
 }
 
 /**
- * Inisialisasi otomatis master proyek produksi (Situ Cikedal & Cipeucang aktif, Menes completed)
+ * Inisialisasi otomatis master proyek produksi (Situ Cikedal aktif, Menes completed)
  * dengan klien resmi P. Sapta.
  */
 export async function seedDefaultProjects(): Promise<void> {
@@ -156,24 +156,10 @@ export async function seedDefaultProjects(): Promise<void> {
         investorName: 'Bpk. Yadi',
         clientId: 'cli-p-sapta',
         clientName: 'P. Sapta',
-        initialDeposit: 15000000,
-        currentBalance: 15000000,
+        initialDeposit: 26500000,
+        currentBalance: 26500000,
         status: 'ACTIVE',
         notes: 'Penyaluran material batu waste, split, abu batu konservasi Situ Cikedal (Rekanan P. Sapta)',
-        createdAt: new Date().toISOString()
-      },
-      {
-        id: 'prj-cipeucang',
-        name: 'Proyek Irigasi Cipeucang',
-        location: 'Kec. Cipeucang, Pandeglang',
-        investorId: 'inv-bpk-yadi',
-        investorName: 'Bpk. Yadi',
-        clientId: 'cli-p-sapta',
-        clientName: 'P. Sapta',
-        initialDeposit: 11500000,
-        currentBalance: 11500000,
-        status: 'ACTIVE',
-        notes: 'Proyek infrastruktur drainase & irigasi Cipeucang (Rekanan P. Sapta)',
         createdAt: new Date().toISOString()
       },
       {
@@ -206,7 +192,7 @@ export async function seedDefaultProjects(): Promise<void> {
         phoneNumber: '+62 812-3456-7890',
         bankAccount: 'BCA - Rekening Investor Bpk. Yadi',
         initialCapital: 26500000,
-        notes: 'Investor Tunggal Aktif PT Patak Abadi Jaya (Mendanai Proyek Situ Cikedal & Proyek Irigasi Cipeucang)',
+        notes: 'Investor Tunggal Aktif PT Patak Abadi Jaya (Mendanai Proyek Situ Cikedal)',
         createdAt: new Date().toISOString()
       };
       await setDoc(invDocRef, bpkYadi);
