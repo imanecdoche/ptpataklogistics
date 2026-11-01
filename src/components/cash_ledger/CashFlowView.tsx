@@ -477,12 +477,12 @@ export function CashFlowView({
               <tr>
                 <th className="py-2.5 px-3 w-[120px] whitespace-nowrap">Tanggal</th>
                 <th className="py-2.5 px-3 w-[160px] whitespace-nowrap">Kategori Mutasi</th>
-                <th className="py-2.5 px-3 w-[260px] whitespace-nowrap">Deskripsi / Referensi</th>
+                <th className="py-2.5 px-3 w-[250px] whitespace-nowrap">Deskripsi / Referensi</th>
                 <th className="py-2.5 px-3 w-[130px] text-right whitespace-nowrap">Kas Masuk (+)</th>
                 <th className="py-2.5 px-3 w-[130px] text-right whitespace-nowrap">Kas Keluar (-)</th>
                 <th className="py-2.5 px-3 w-[150px] text-right whitespace-nowrap">Saldo Berjalan</th>
                 <th className="py-2.5 px-3 w-[105px] whitespace-nowrap">Dibuat Oleh</th>
-                <th className="py-2.5 px-3 w-[100px] text-center whitespace-nowrap">Aksi</th>
+                <th className="py-2.5 px-3 w-[110px] text-center whitespace-nowrap">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#eaeaea]">
@@ -504,20 +504,7 @@ export function CashFlowView({
                       </span>
                     </td>
                     <td className="py-2.5 px-3 text-[#333333] align-middle">
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="block font-medium truncate">{e.description}</span>
-                        {e.receiptUrl && (
-                          <button
-                            type="button"
-                            onClick={() => setActiveReceiptLightbox(e.receiptUrl || null)}
-                            className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#f0f0f0] hover:bg-[#e4e4e4] text-[#111111] text-[10px] font-semibold rounded-[4px] border-none cursor-pointer transition-colors whitespace-nowrap flex-shrink-0"
-                            title="Lihat Bukti Kwitansi"
-                          >
-                            <ImageIcon className="w-3 h-3" />
-                            <span>Bukti</span>
-                          </button>
-                        )}
-                      </div>
+                      <span className="block font-medium truncate">{e.description}</span>
                       {e.referenceId ? (
                         <span className="text-[10px] font-mono text-[#888888] block">
                           Ref: {e.referenceId}
@@ -541,30 +528,43 @@ export function CashFlowView({
                       {resolveCreatorName(e.createdByName)}
                     </td>
                     <td className="py-2.5 px-3 whitespace-nowrap align-middle text-center">
-                      {!isWatcherUser ? (
-                        <div className="flex items-center justify-center gap-1.5">
+                      <div className="flex items-center justify-center gap-1.5">
+                        {e.receiptUrl && (
                           <button
                             type="button"
-                            onClick={() => setEditEntry(e)}
-                            className="p-1.5 bg-[#f0f0f0] hover:bg-[#e4e4e4] text-[#111111] rounded-[6px] border-none cursor-pointer transition-colors"
-                            title="Edit Mutasi"
-                            aria-label="Edit Mutasi"
+                            onClick={() => setActiveReceiptLightbox(e.receiptUrl || null)}
+                            className="p-1.5 bg-[#f0f0f0] hover:bg-[#e4e4e4] text-[#111111] rounded-[6px] border-none cursor-pointer transition-colors flex-shrink-0"
+                            title="Lihat Bukti Kwitansi / Transfer"
+                            aria-label="Lihat Bukti Kwitansi"
                           >
-                            <Pencil className="w-3.5 h-3.5" />
+                            <ImageIcon className="w-3.5 h-3.5" />
                           </button>
-                          <button
-                            type="button"
-                            onClick={() => setDeleteEntry(e)}
-                            className="p-1.5 bg-[#fee2e2] hover:bg-[#fecaca] text-[#cf1124] rounded-[6px] border-none cursor-pointer transition-colors"
-                            title="Hapus Mutasi"
-                            aria-label="Hapus Mutasi"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      ) : (
-                        <span className="text-[11px] text-[#999999]">-</span>
-                      )}
+                        )}
+                        {!isWatcherUser ? (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => setEditEntry(e)}
+                              className="p-1.5 bg-[#f0f0f0] hover:bg-[#e4e4e4] text-[#111111] rounded-[6px] border-none cursor-pointer transition-colors flex-shrink-0"
+                              title="Edit Mutasi"
+                              aria-label="Edit Mutasi"
+                            >
+                              <Pencil className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setDeleteEntry(e)}
+                              className="p-1.5 bg-[#fee2e2] hover:bg-[#fecaca] text-[#cf1124] rounded-[6px] border-none cursor-pointer transition-colors flex-shrink-0"
+                              title="Hapus Mutasi"
+                              aria-label="Hapus Mutasi"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </>
+                        ) : !e.receiptUrl ? (
+                          <span className="text-[11px] text-[#999999]">-</span>
+                        ) : null}
+                      </div>
                     </td>
                   </tr>
                 ))
