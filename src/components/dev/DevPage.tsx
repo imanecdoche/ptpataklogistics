@@ -38,13 +38,35 @@ const EDIT_STATUS_OPTIONS: SelectOption[] = [
 
 interface DevPageProps {
   userEmail: string;
+  activeSubTab?: string;
+  onNavigateSubTab?: (tab: any, subTabId: string) => void;
 }
 
 type DevFilterTab = 'all' | 'pending' | 'active' | 'inactive';
 
-export function DevPage({ userEmail }: DevPageProps): React.JSX.Element {
+export function DevPage({
+  userEmail,
+  activeSubTab,
+  onNavigateSubTab
+}: DevPageProps): React.JSX.Element {
   const [users, setUsers] = useState<SystemUser[]>([]);
-  const [activeFilter, setActiveFilter] = useState<DevFilterTab>('all');
+  const [activeFilter, setActiveFilter] = useState<DevFilterTab>(() => {
+    if (activeSubTab === 'pending' || activeSubTab === 'active' || activeSubTab === 'inactive' || activeSubTab === 'all') {
+      return activeSubTab;
+    }
+    return 'all';
+  });
+
+  useEffect(() => {
+    if (activeSubTab === 'pending' || activeSubTab === 'active' || activeSubTab === 'inactive' || activeSubTab === 'all') {
+      setActiveFilter(activeSubTab);
+    }
+  }, [activeSubTab]);
+
+  const handleSelectFilter = (filter: DevFilterTab) => {
+    setActiveFilter(filter);
+    onNavigateSubTab?.('dev', filter);
+  };
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
@@ -286,7 +308,7 @@ export function DevPage({ userEmail }: DevPageProps): React.JSX.Element {
         <div className="flex items-center gap-1 overflow-x-auto">
           <button
             type="button"
-            onClick={() => setActiveFilter('all')}
+            onClick={() => handleSelectFilter('all')}
             className={`px-3 py-1.5 rounded-[6px] text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
               activeFilter === 'all'
                 ? 'bg-[#111111] text-white'
@@ -297,7 +319,7 @@ export function DevPage({ userEmail }: DevPageProps): React.JSX.Element {
           </button>
           <button
             type="button"
-            onClick={() => setActiveFilter('pending')}
+            onClick={() => handleSelectFilter('pending')}
             className={`px-3 py-1.5 rounded-[6px] text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
               activeFilter === 'pending'
                 ? 'bg-[#111111] text-white'
@@ -308,7 +330,7 @@ export function DevPage({ userEmail }: DevPageProps): React.JSX.Element {
           </button>
           <button
             type="button"
-            onClick={() => setActiveFilter('active')}
+            onClick={() => handleSelectFilter('active')}
             className={`px-3 py-1.5 rounded-[6px] text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
               activeFilter === 'active'
                 ? 'bg-[#111111] text-white'
@@ -319,7 +341,7 @@ export function DevPage({ userEmail }: DevPageProps): React.JSX.Element {
           </button>
           <button
             type="button"
-            onClick={() => setActiveFilter('inactive')}
+            onClick={() => handleSelectFilter('inactive')}
             className={`px-3 py-1.5 rounded-[6px] text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
               activeFilter === 'inactive'
                 ? 'bg-[#111111] text-white'

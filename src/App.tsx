@@ -22,148 +22,107 @@ import { DevPage } from '@/components/dev/DevPage';
 import { OfflineOverlay } from '@/components/ui/OfflineOverlay';
 import { isDeveloperEmail } from '@/lib/userManagementService';
 import { ProjectFilterProvider, useProjectFilter } from '@/context/ProjectFilterContext';
+import { RouterProvider, useRouter } from '@/context/RouterContext';
+import { DEFAULT_SUBTAB } from '@/lib/routeDefinitions';
+import { NotFoundPage } from '@/components/ui/NotFoundPage';
 
 interface AuthenticatedAppProps {
   user: User | null;
   onLogout: () => void;
 }
 
-const VALID_TABS: NavigationTab[] = [
-  'dashboard',
-  'dispatcher',
-  'database',
-  'materials',
-  'projects',
-  'investors',
-  'quarries',
-  'clients',
-  'recap',
-  'cash_ledger',
-  'hok_labor',
-  'dev'
-];
-
 function AuthenticatedApp({ user, onLogout }: AuthenticatedAppProps): React.JSX.Element {
   const { isDispatcherUser, isInvestorUser, isWatcherUser } = useProjectFilter();
+  const {
+    pathname,
+    tab: currentTab,
+    subTab: currentSubTab,
+    params: routeParams,
+    isNotFound,
+    navigateTab
+  } = useRouter();
 
-  const [currentTab, setCurrentTab] = useState<NavigationTab>(() => {
-    try {
-      const saved = localStorage.getItem('patak_active_tab') as NavigationTab | null;
-      if (saved && VALID_TABS.includes(saved)) {
-        return saved;
+  // Inisialisasi awal saat pertama login jika rute masih di root '/'
+  useEffect(() => {
+    if (pathname === '/' || pathname === '') {
+      if (isDispatcherUser) {
+        navigateTab('dispatcher', 'new_ticket', undefined, { replace: true });
+      } else {
+        navigateTab('dashboard', 'overview', undefined, { replace: true });
       }
-    } catch {
-      // fallback
     }
-    return isDispatcherUser ? 'dispatcher' : 'dashboard';
-  });
+  }, [pathname, isDispatcherUser, navigateTab]);
 
-  const [currentSubTab, setCurrentSubTab] = useState<string>(() => {
-    try {
-      const savedSub = localStorage.getItem('patak_active_subtab');
-      if (savedSub) return savedSub;
-    } catch {
-      // fallback
-    }
-    return isDispatcherUser ? 'new_ticket' : 'overview';
-  });
-
-  // Presistensi tab aktif ke localStorage saat berpindah halaman
+  // Keamanan Route Protection RBAC
   useEffect(() => {
-    try {
-      localStorage.setItem('patak_active_tab', currentTab);
-    } catch {
-      // ignore
+    // Keamanan: tab dev hanya untuk akun developer
+    if (currentTab === 'dev' && !isDeveloperEmail(user?.email)) {
+      navigateTab(isDispatcherUser ? 'dispatcher' : 'dashboard', undefined, undefined, { replace: true });
+      return;
     }
-  }, [currentTab]);
 
-  // Presistensi sub-tab aktif ke localStorage saat berpindah sub-halaman
-  useEffect(() => {
-    try {
-      if (currentSubTab) {
-        localStorage.setItem('patak_active_subtab', currentSubTab);
-      }
-    } catch {
-      // ignore
-    }
-  }, [currentSubTab]);
-
-  // Keamanan Route Protection: dispatcher & investor
-  useEffect(() => {
+    // Keamanan RBAC: dispatcher tidak boleh mengakses dashboard, investors, cash_ledger, atau hok_labor
     if (isDispatcherUser && (currentTab === 'dashboard' || currentTab === 'investors' || currentTab === 'cash_ledger' || currentTab === 'hok_labor')) {
-      setCurrentTab('dispatcher');
-      setCurrentSubTab('new_ticket');
-    } else if (isInvestorUser && !['dashboard', 'projects', 'investors'].includes(currentTab)) {
-      setCurrentTab('dashboard');
-      setCurrentSubTab('overview');
+      navigateTab('dispatcher', 'new_ticket', undefined, { replace: true });
+      return;
     }
-  }, [isDispatcherUser, isInvestorUser, isWatcherUser, currentTab]);
+
+    // Keamanan RBAC: watcher tidak boleh mengakses tab dispatcher (input tiket)
+    if (isWatcherUser && currentTab === 'dispatcher') {
+      navigateTab('dashboard', 'overview', undefined, { replace: true });
+      return;
+    }
+
+    // Keamanan RBAC: investor hanya boleh mengakses dashboard, projects, atau investors
+    if (isInvestorUser && !['dashboard', 'projects', 'investors'].includes(currentTab)) {
+      navigateTab('dashboard', 'overview', undefined, { replace: true });
+      return;
+    }
+  }, [isDispatcherUser, isInvestorUser, isWatcherUser, currentTab, user?.email, navigateTab]);
 
   const handleSelectTab = (tab: NavigationTab): void => {
     // Keamanan: tab dev hanya untuk akun developer
     if (tab === 'dev' && !isDeveloperEmail(user?.email)) {
-      setCurrentTab(isDispatcherUser ? 'dispatcher' : 'dashboard');
-      setCurrentSubTab(isDispatcherUser ? 'new_ticket' : 'overview');
+      navigateTab(isDispatcherUser ? 'dispatcher' : 'dashboard', undefined, undefined, { replace: true });
       return;
     }
 
     // Keamanan RBAC: dispatcher tidak boleh mengakses dashboard, investors, cash_ledger, atau hok_labor
     if (isDispatcherUser && (tab === 'dashboard' || tab === 'investors' || tab === 'cash_ledger' || tab === 'hok_labor')) {
-      setCurrentTab('dispatcher');
-      setCurrentSubTab('new_ticket');
+      navigateTab('dispatcher', 'new_ticket', undefined, { replace: true });
       return;
     }
 
     // Keamanan RBAC: watcher tidak boleh mengakses tab dispatcher (input tiket)
     if (isWatcherUser && tab === 'dispatcher') {
-      setCurrentTab('dashboard');
-      setCurrentSubTab('overview');
+      navigateTab('dashboard', 'overview', undefined, { replace: true });
       return;
     }
 
     // Keamanan RBAC: investor hanya boleh mengakses dashboard, projects, atau investors
     if (isInvestorUser && !['dashboard', 'projects', 'investors'].includes(tab)) {
-      setCurrentTab('dashboard');
-      setCurrentSubTab('overview');
+      navigateTab('dashboard', 'overview', undefined, { replace: true });
       return;
     }
 
-    setCurrentTab(tab);
-    if (tab === 'dashboard') {
-      setCurrentSubTab('overview');
-    } else if (tab === 'database') {
-      setCurrentSubTab('ritase');
-    } else if (tab === 'dev') {
-      setCurrentSubTab('all');
-    } else if (tab === 'dispatcher') {
-      setCurrentSubTab('new_ticket');
+    if (tab === 'dispatcher') {
       window.dispatchEvent(new CustomEvent('patak:close-dispatch-drawer'));
-    } else if (tab === 'recap') {
-      setCurrentSubTab('volume');
-    } else if (tab === 'cash_ledger') {
-      setCurrentSubTab('cash_flow');
-    } else if (tab === 'hok_labor') {
-      setCurrentSubTab('payments');
     }
+
+    navigateTab(tab, DEFAULT_SUBTAB[tab]);
   };
 
   const handleSelectSubTab = (tab: NavigationTab, subTabId?: string): void => {
     // Keamanan RBAC
     if (isDispatcherUser && (tab === 'dashboard' || tab === 'investors' || tab === 'cash_ledger' || tab === 'hok_labor')) {
-      setCurrentTab('dispatcher');
-      setCurrentSubTab('new_ticket');
+      navigateTab('dispatcher', 'new_ticket', undefined, { replace: true });
       return;
     }
     if (isInvestorUser && !['dashboard', 'projects', 'investors'].includes(tab)) {
-      setCurrentTab('dashboard');
-      setCurrentSubTab('overview');
+      navigateTab('dashboard', 'overview', undefined, { replace: true });
       return;
     }
 
-    setCurrentTab(tab);
-    if (subTabId) {
-      setCurrentSubTab(subTabId);
-    }
     if (tab === 'dispatcher') {
       if (subTabId === 'history') {
         window.dispatchEvent(new CustomEvent('patak:open-dispatch-drawer'));
@@ -171,7 +130,27 @@ function AuthenticatedApp({ user, onLogout }: AuthenticatedAppProps): React.JSX.
         window.dispatchEvent(new CustomEvent('patak:close-dispatch-drawer'));
       }
     }
+
+    navigateTab(tab, subTabId);
   };
+
+  if (isNotFound) {
+    return (
+      <AppShell
+        user={user}
+        activeTab="dashboard"
+        activeSubTab="overview"
+        onSelectTab={handleSelectTab}
+        onSelectSubTab={handleSelectSubTab}
+        onLogout={onLogout}
+      >
+        <NotFoundPage
+          currentPath={pathname}
+          onNavigateHome={() => navigateTab('dashboard', 'overview', undefined, { replace: true })}
+        />
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell
@@ -195,15 +174,33 @@ function AuthenticatedApp({ user, onLogout }: AuthenticatedAppProps): React.JSX.
       )}
 
       {currentTab === 'ritase' && (
-        <DispatchHistoryPage userEmail={user?.email || 'operator@patak.id'} />
+        <DispatchHistoryPage
+          userEmail={user?.email || 'operator@patak.id'}
+          initialTicketId={routeParams.ticketId}
+          onDetailModalChange={tx => {
+            if (tx) {
+              navigateTab('ritase', undefined, { ticketId: tx.id });
+            } else {
+              navigateTab('ritase');
+            }
+          }}
+        />
       )}
 
       {currentTab === 'database' && (
-        <DatabasePage userEmail={user?.email || 'admin@patak.id'} />
+        <DatabasePage
+          userEmail={user?.email || 'admin@patak.id'}
+          activeSubTab={currentSubTab}
+          onNavigateSubTab={handleSelectSubTab}
+        />
       )}
 
       {currentTab === 'dev' && (
-        <DevPage userEmail={user?.email || 'fatih@patak.dev'} />
+        <DevPage
+          userEmail={user?.email || 'fatih@patak.dev'}
+          activeSubTab={currentSubTab}
+          onNavigateSubTab={handleSelectSubTab}
+        />
       )}
 
       {currentTab === 'materials' && (
@@ -215,11 +212,31 @@ function AuthenticatedApp({ user, onLogout }: AuthenticatedAppProps): React.JSX.
       )}
 
       {currentTab === 'projects' && (
-        <ProjectsPage userEmail={user?.email || 'admin@patak.id'} />
+        <ProjectsPage
+          userEmail={user?.email || 'admin@patak.id'}
+          initialProjectId={routeParams.projectId}
+          onFinanceModalChange={proj => {
+            if (proj) {
+              navigateTab('projects', undefined, { projectId: proj.id });
+            } else {
+              navigateTab('projects');
+            }
+          }}
+        />
       )}
 
       {currentTab === 'investors' && (
-        <InvestorsPage userEmail={user?.email || 'admin@patak.id'} />
+        <InvestorsPage
+          userEmail={user?.email || 'admin@patak.id'}
+          initialInvestorId={routeParams.investorId}
+          onLedgerModalChange={inv => {
+            if (inv) {
+              navigateTab('investors', undefined, { investorId: inv.id });
+            } else {
+              navigateTab('investors');
+            }
+          }}
+        />
       )}
 
       {currentTab === 'quarries' && (
@@ -345,7 +362,9 @@ export default function App(): React.JSX.Element {
   return (
     <>
       <ProjectFilterProvider currentUserEmail={user?.email}>
-        <AuthenticatedApp user={user} onLogout={handleLogout} />
+        <RouterProvider>
+          <AuthenticatedApp user={user} onLogout={handleLogout} />
+        </RouterProvider>
       </ProjectFilterProvider>
 
       {/* Layar Verifikasi Kredensial 3 Detik dengan Transisi Fade-Out */}

@@ -51,9 +51,15 @@ import { TablePagination } from '@/components/ui/TablePagination';
 
 interface DispatchHistoryPageProps {
   userEmail: string;
+  initialTicketId?: string;
+  onDetailModalChange?: (tx: DispatchTransaction | null) => void;
 }
 
-export function DispatchHistoryPage({ userEmail }: DispatchHistoryPageProps): React.JSX.Element {
+export function DispatchHistoryPage({
+  userEmail,
+  initialTicketId,
+  onDetailModalChange
+}: DispatchHistoryPageProps): React.JSX.Element {
   const { projects, selectedProjectId, isDispatcherUser, isInvestorUser, isWatcherUser } = useProjectFilter();
   const hideMargin = isDispatcherUser || isInvestorUser;
 
@@ -147,6 +153,22 @@ export function DispatchHistoryPage({ userEmail }: DispatchHistoryPageProps): Re
       unsubUsers();
     };
   }, []);
+
+  const handleOpenDetailTx = (tx: DispatchTransaction | null) => {
+    setSelectedDetailTx(tx);
+    onDetailModalChange?.(tx);
+  };
+
+  useEffect(() => {
+    if (initialTicketId && transactions.length > 0) {
+      const found = transactions.find(t => t.id === initialTicketId);
+      if (found) {
+        setSelectedDetailTx(found);
+      }
+    } else if (!initialTicketId && selectedDetailTx) {
+      setSelectedDetailTx(null);
+    }
+  }, [initialTicketId, transactions]);
 
   // Entity Maps untuk SSoT Dynamic Resolution
   const clientsMap = useMemo(() => new Map(clients.map(c => [c.id, c])), [clients]);
@@ -734,7 +756,7 @@ export function DispatchHistoryPage({ userEmail }: DispatchHistoryPageProps): Re
                             items={[
                               {
                                 label: 'Lihat Rincian',
-                                onClick: () => setSelectedDetailTx(tx)
+                                onClick: () => handleOpenDetailTx(tx)
                               },
                               {
                                 label: isDispatcherUser ? 'Ajukan Koreksi Tiket' : 'Edit Tiket',
@@ -800,7 +822,7 @@ export function DispatchHistoryPage({ userEmail }: DispatchHistoryPageProps): Re
       {selectedDetailTx && (
         <DispatchDetailModal
           transaction={selectedDetailTx}
-          onClose={() => setSelectedDetailTx(null)}
+          onClose={() => handleOpenDetailTx(null)}
           entityMaps={entityMaps}
         />
       )}

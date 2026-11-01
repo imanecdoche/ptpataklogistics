@@ -65,11 +65,34 @@ type SortOption =
 
 interface DatabasePageProps {
   userEmail: string;
+  activeSubTab?: string;
+  onNavigateSubTab?: (tab: any, subTabId: string) => void;
 }
 
-export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Element {
+export function DatabasePage({
+  userEmail,
+  activeSubTab: propActiveSubTab,
+  onNavigateSubTab
+}: DatabasePageProps): React.JSX.Element {
   const { projects, isDispatcherUser, isWatcherUser } = useProjectFilter();
-  const [activeSubTab, setActiveSubTab] = useState<SubTab>('ritase');
+  const [activeSubTab, setActiveSubTab] = useState<SubTab>(() => {
+    if (propActiveSubTab === 'vehicles' || propActiveSubTab === 'drivers' || propActiveSubTab === 'ritase') {
+      return propActiveSubTab;
+    }
+    return 'ritase';
+  });
+
+  useEffect(() => {
+    if (propActiveSubTab === 'vehicles' || propActiveSubTab === 'drivers' || propActiveSubTab === 'ritase') {
+      setActiveSubTab(propActiveSubTab);
+    }
+  }, [propActiveSubTab]);
+
+  const handleSelectSubTab = (sub: SubTab) => {
+    setActiveSubTab(sub);
+    setSearchQuery('');
+    onNavigateSubTab?.('database', sub);
+  };
   const [searchQuery, setSearchQuery] = useState('');
 
   // Data Collections
@@ -503,10 +526,7 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
         {/* Tab 1: Riwayat Ritase (First Tab) */}
         <button
           type="button"
-          onClick={() => {
-            setActiveSubTab('ritase');
-            setSearchQuery('');
-          }}
+          onClick={() => handleSelectSubTab('ritase')}
           className={`flex items-center gap-2 px-3.5 py-2 rounded-[8px] text-xs font-medium transition-colors whitespace-nowrap cursor-pointer ${
             activeSubTab === 'ritase'
               ? 'bg-[#111111] text-white'
@@ -526,10 +546,7 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
         {/* Tab 2: Armada & Plat Nomor */}
         <button
           type="button"
-          onClick={() => {
-            setActiveSubTab('vehicles');
-            setSearchQuery('');
-          }}
+          onClick={() => handleSelectSubTab('vehicles')}
           className={`flex items-center gap-2 px-3.5 py-2 rounded-[8px] text-xs font-medium transition-colors whitespace-nowrap cursor-pointer ${
             activeSubTab === 'vehicles'
               ? 'bg-[#111111] text-white'
@@ -549,10 +566,7 @@ export function DatabasePage({ userEmail }: DatabasePageProps): React.JSX.Elemen
         {/* Tab 3: Daftar Supir */}
         <button
           type="button"
-          onClick={() => {
-            setActiveSubTab('drivers');
-            setSearchQuery('');
-          }}
+          onClick={() => handleSelectSubTab('drivers')}
           className={`flex items-center gap-2 px-3.5 py-2 rounded-[8px] text-xs font-medium transition-colors whitespace-nowrap cursor-pointer ${
             activeSubTab === 'drivers'
               ? 'bg-[#111111] text-white'

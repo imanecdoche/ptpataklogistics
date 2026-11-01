@@ -44,9 +44,15 @@ const formatRupiah = (val: number): string =>
 
 interface InvestorsPageProps {
   userEmail?: string;
+  initialInvestorId?: string;
+  onLedgerModalChange?: (investor: Investor | null) => void;
 }
 
-export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPageProps): React.JSX.Element {
+export function InvestorsPage({
+  userEmail = 'fatih@patak.dev',
+  initialInvestorId,
+  onLedgerModalChange
+}: InvestorsPageProps): React.JSX.Element {
   const { isInvestorUser, lockedInvestorId, selectedProjectId, projects: allProjects, isWatcherUser } = useProjectFilter();
   const [investors, setInvestors] = useState<Investor[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -126,6 +132,22 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
       unsubPayouts();
     };
   }, []);
+
+  const handleOpenLedgerModal = (inv: Investor | null) => {
+    setSelectedLedgerInvestor(inv);
+    onLedgerModalChange?.(inv);
+  };
+
+  useEffect(() => {
+    if (initialInvestorId && investors.length > 0) {
+      const found = investors.find(i => i.id === initialInvestorId);
+      if (found) {
+        setSelectedLedgerInvestor(found);
+      }
+    } else if (!initialInvestorId && selectedLedgerInvestor) {
+      setSelectedLedgerInvestor(null);
+    }
+  }, [initialInvestorId, investors]);
 
   // Filter investor berdasarkan RBAC & search
   const filteredInvestors = useMemo(() => {
@@ -736,7 +758,7 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
                       <td className="py-2.5 px-3 whitespace-nowrap w-[150px] min-w-[150px] align-middle">
                         <button
                           type="button"
-                          onClick={() => setSelectedLedgerInvestor(inv)}
+                          onClick={() => handleOpenLedgerModal(inv)}
                           className="font-bold text-[#111111] hover:text-[#008060] hover:underline text-left block truncate cursor-pointer"
                           title="Buka Buku Kas & Detail Investor"
                         >
@@ -830,7 +852,7 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
                         <div className="flex items-center justify-end gap-1.5">
                           <button
                             type="button"
-                            onClick={() => setSelectedLedgerInvestor(inv)}
+                            onClick={() => handleOpenLedgerModal(inv)}
                             className="w-7 h-7 inline-flex items-center justify-center rounded-[6px] transition-colors cursor-pointer select-none hover:bg-[#f0f0f0] active:bg-[#e5e5e5]"
                             title="Buku Kas & Rekap Ekuitas"
                           >
@@ -845,7 +867,7 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
                               items={[
                                 {
                                   label: 'Buku Kas & Rekap Ekuitas',
-                                  onClick: () => setSelectedLedgerInvestor(inv)
+                                  onClick: () => handleOpenLedgerModal(inv)
                                 },
                                 {
                                   label: 'Edit Data Investor',
@@ -1881,7 +1903,7 @@ export function InvestorsPage({ userEmail = 'fatih@patak.dev' }: InvestorsPagePr
           projects={projects}
           transactions={transactions}
           payouts={payouts}
-          onClose={() => setSelectedLedgerInvestor(null)}
+          onClose={() => handleOpenLedgerModal(null)}
           onRecordPayout={handleRecordPayout}
           isInvestorUser={isInvestorUser}
         />

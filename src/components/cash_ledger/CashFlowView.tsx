@@ -184,6 +184,26 @@ export function CashFlowView({
     return result;
   }, [entries, searchQuery, filters, projects]);
 
+  // Kalkulasi Sticky Footer Summary (Hasil search / filter aktif)
+  const filteredSummary = useMemo(() => {
+    let totalIn = 0;
+    let totalOut = 0;
+    for (const e of filteredEntries) {
+      if (e.isCredit) {
+        totalIn += e.amount || 0;
+      } else {
+        totalOut += e.amount || 0;
+      }
+    }
+    const net = totalIn - totalOut;
+    return {
+      totalIn,
+      totalOut,
+      net,
+      count: filteredEntries.length
+    };
+  }, [filteredEntries]);
+
   const paginatedEntries = useMemo(() => {
     const start = (currentPage - 1) * 20;
     return filteredEntries.slice(start, start + 20);
@@ -480,7 +500,7 @@ export function CashFlowView({
         )}
 
         {/* Tabel Data Mutasi */}
-        <div className="overflow-x-auto select-text">
+        <div className="overflow-x-auto max-h-[640px] select-text">
           <table className="w-full min-w-[950px] table-fixed text-left text-xs border-collapse">
             <thead className="sticky top-0 z-10 bg-[#f9f9f9] border-b border-[#eaeaea] text-[#555555] font-semibold text-[11px] uppercase tracking-wider select-none">
               <tr>
@@ -579,6 +599,44 @@ export function CashFlowView({
                 ))
               )}
             </tbody>
+            {/* Sticky Row Total Masuk & Keluar */}
+            <tfoot className="sticky bottom-0 z-10 bg-[#f9f9f9] border-t-2 border-[#111111] text-[#111111] font-bold text-xs select-none shadow-[0_-4px_12px_rgba(0,0,0,0.06)]">
+              <tr>
+                <td className="py-2.5 px-3 w-[120px] whitespace-nowrap align-middle">
+                  <span className="font-mono text-[11px] text-[#666666] uppercase font-bold tracking-wider">TOTAL</span>
+                </td>
+                <td className="py-2.5 px-3 w-[160px] whitespace-nowrap align-middle">
+                  <span className="inline-block px-2.5 py-0.5 rounded-[4px] bg-[#111111] text-white font-bold text-[10px] tracking-wider uppercase whitespace-nowrap">
+                    {filteredSummary.count} MUTASI
+                  </span>
+                </td>
+                <td className="py-2.5 px-3 w-[250px] whitespace-nowrap align-middle">
+                  <span className="text-xs font-bold text-[#111111] block truncate">
+                    {searchQuery.trim() ? `Pencarian: "${searchQuery.trim()}"` : 'Total Terfilter'}
+                  </span>
+                </td>
+                <td className="py-2.5 px-3 w-[130px] text-right whitespace-nowrap align-middle font-mono font-bold text-emerald-700 text-xs">
+                  {formatRupiah(filteredSummary.totalIn)}
+                </td>
+                <td className="py-2.5 px-3 w-[130px] text-right whitespace-nowrap align-middle font-mono font-bold text-[#cf1124] text-xs">
+                  {formatRupiah(filteredSummary.totalOut)}
+                </td>
+                <td className="py-2.5 px-3 w-[150px] text-right whitespace-nowrap align-middle font-mono font-bold text-xs">
+                  <span className={filteredSummary.net < 0 ? 'text-[#cf1124]' : 'text-emerald-700'}>
+                    {formatRupiah(filteredSummary.net)}
+                  </span>
+                  <span className="block text-[10px] font-sans font-normal text-[#666666] tracking-normal">
+                    {filteredSummary.net >= 0 ? '(Surplus Bersih)' : '(Defisit Bersih)'}
+                  </span>
+                </td>
+                <td className="py-2.5 px-3 w-[105px] text-[#888888] whitespace-nowrap align-middle text-center font-normal">
+                  -
+                </td>
+                <td className="py-2.5 px-3 w-[110px] text-[#888888] whitespace-nowrap align-middle text-right font-normal">
+                  -
+                </td>
+              </tr>
+            </tfoot>
           </table>
         </div>
 

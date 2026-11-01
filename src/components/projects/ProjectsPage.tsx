@@ -29,9 +29,15 @@ const PROJECT_STATUS_OPTIONS: SelectOption[] = [
 
 interface ProjectsPageProps {
   userEmail: string;
+  initialProjectId?: string;
+  onFinanceModalChange?: (project: Project | null) => void;
 }
 
-export function ProjectsPage({ userEmail: _userEmail }: ProjectsPageProps): React.JSX.Element {
+export function ProjectsPage({
+  userEmail: _userEmail,
+  initialProjectId,
+  onFinanceModalChange
+}: ProjectsPageProps): React.JSX.Element {
   const { isInvestorUser, isDispatcherUser, lockedInvestorId, selectedProjectId, isWatcherUser } = useProjectFilter();
   const [projects, setProjects] = useState<Project[]>([]);
   const [investors, setInvestors] = useState<Investor[]>([]);
@@ -76,6 +82,22 @@ export function ProjectsPage({ userEmail: _userEmail }: ProjectsPageProps): Reac
       unsubClients();
     };
   }, []);
+
+  const handleOpenFinanceProject = (proj: Project | null) => {
+    setSelectedFinanceProject(proj);
+    onFinanceModalChange?.(proj);
+  };
+
+  useEffect(() => {
+    if (initialProjectId && projects.length > 0) {
+      const found = projects.find(p => p.id === initialProjectId);
+      if (found) {
+        setSelectedFinanceProject(found);
+      }
+    } else if (!initialProjectId && selectedFinanceProject) {
+      setSelectedFinanceProject(null);
+    }
+  }, [initialProjectId, projects]);
 
   const investorOptions: SelectOption[] = useMemo(() => {
     return investors.map(inv => ({ id: inv.id, label: inv.name }));
@@ -426,7 +448,7 @@ export function ProjectsPage({ userEmail: _userEmail }: ProjectsPageProps): Reac
                     <td className="py-2.5 px-3 whitespace-nowrap w-[240px] align-middle">
                       <button
                         type="button"
-                        onClick={() => setSelectedFinanceProject(proj)}
+                        onClick={() => handleOpenFinanceProject(proj)}
                         className="font-bold text-[#111111] hover:text-[#008060] hover:underline text-left transition-colors cursor-pointer block truncate"
                         title="Klik untuk membuka rincian sub-pekerjaan fisik, ritase, kasbon & pembayaran proyek"
                       >
@@ -480,7 +502,7 @@ export function ProjectsPage({ userEmail: _userEmail }: ProjectsPageProps): Reac
                             items={[
                               {
                                 label: 'Rincian Finansial & Kasbon',
-                                onClick: () => setSelectedFinanceProject(proj)
+                                onClick: () => handleOpenFinanceProject(proj)
                               },
                               {
                                 label: 'Edit Data Proyek',
@@ -765,7 +787,7 @@ export function ProjectsPage({ userEmail: _userEmail }: ProjectsPageProps): Reac
       {/* Modal Finansial & Sub-Pekerjaan Terpadu */}
       <ProjectFinancialsModal
         isOpen={Boolean(selectedFinanceProject)}
-        onClose={() => setSelectedFinanceProject(null)}
+        onClose={() => handleOpenFinanceProject(null)}
         project={selectedFinanceProject}
         projects={projects}
         userEmail={_userEmail}
