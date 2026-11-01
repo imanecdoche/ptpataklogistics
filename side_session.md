@@ -551,3 +551,25 @@ Halo **Argon**! 👋 Berikut adalah rekapitulasi lengkap dari pembaruan sistem l
 10. **Konektivitas Dev Server & Local Network**:
     - Vite dev server dikonfigurasi `--host` binding `0.0.0.0:5173`.
     - Aplikasi dapat diakses secara lokal di `http://localhost:5173/` dan diakses perangkat lain dalam jaringan Wi-Fi di `http://192.168.1.5:5173/`.
+
+11. **Integrasi Vercel & Hostinger MCP Siap Pakai untuk Argon**:
+    - **Status Kedua Koneksi**: Telah diuji dan 100% valid (Vercel Project `patak_logistics` [id: `prj_ahohDBKmyxeS1ELbRKkkQFvVBBtH`] dan Hostinger DNS Zone `pataklogistics.com`).
+    - **Keamanan Kredensial**: Sesuai protokol keamanan GitHub Push Protection, token rahasia tidak disimpan di repository Git, melainkan disimpan di file lokal `.env.local`:
+      - `VERCEL_TOKEN` (Vercel Personal Access Token akun `imanecdoches-projects`)
+      - `HOSTINGER_API_TOKEN` (Hostinger API Token)
+      - `HOSTINGER_DOMAIN=pataklogistics.com`
+    - **Konfigurasi MCP Hostinger di Linux Workstation Argon (`~/.gemini/config/mcp_config.json`)**:
+      ```json
+      {
+        "mcpServers": {
+          "hostinger": {
+            "command": "npx",
+            "args": ["-y", "@hostinger/mcp"],
+            "env": {
+              "HOSTINGER_API_TOKEN": "<ambil dari .env.local>"
+            }
+          }
+        }
+      }
+      ```
+    - **Hasil**: User **TIDAK PERLU** membuat ulang token di Vercel atau Hostinger. Cukup salin file `.env.local` ke workstation Argon jika berpindah mesin!
