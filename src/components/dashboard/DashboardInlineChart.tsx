@@ -1,68 +1,31 @@
 import React, { useState, useMemo } from 'react';
-import { DispatchTransaction } from '@/types/database';
+import { DispatchTransaction, CashLedgerEntry } from '@/types/database';
 
 interface DashboardInlineChartProps {
   transactions: DispatchTransaction[];
+  cashEntries?: CashLedgerEntry[];
   hideMargin?: boolean;
 }
 
-type ChartCategory = 'ritase' | 'financial';
-type RitaseMetric = 'trips' | 'volumeDt' | 'volumeTon';
-type FinancialMetric = 'revenue' | 'profit';
+export type ChartCategory = 'ritase' | 'financial' | 'cashflow' | 'material' | 'fleet';
 
 interface MetricConfig {
   id: string;
   label: string;
   shortLabel: string;
   color: string;
-  formatValue: (d: { trips: number; volumeDt: number; volumeTon: number; revenue: number; profit: number }) => string;
-  getValue: (d: { trips: number; volumeDt: number; volumeTon: number; revenue: number; profit: number }) => number;
+  formatValue: (val: number) => string;
 }
 
-const RITASE_METRICS: MetricConfig[] = [
-  {
-    id: 'trips',
-    label: 'Jumlah Trip Ritase',
-    shortLabel: 'Trip',
-    color: '#111111',
-    formatValue: d => `${d.trips} Trip`,
-    getValue: d => d.trips
-  },
-  {
-    id: 'volumeDt',
-    label: 'Volume (DT)',
-    shortLabel: 'DT',
-    color: '#0284c7', // Sky Blue
-    formatValue: d => `${d.volumeDt.toLocaleString('id-ID')} DT`,
-    getValue: d => d.volumeDt
-  },
-  {
-    id: 'volumeTon',
-    label: 'Volume (Ton)',
-    shortLabel: 'Ton',
-    color: '#ea580c', // Bright Orange
-    formatValue: d => `${d.volumeTon.toLocaleString('id-ID')} Ton`,
-    getValue: d => d.volumeTon
-  }
-];
-
-const FINANCIAL_METRICS: MetricConfig[] = [
-  {
-    id: 'revenue',
-    label: 'Omzet Penjualan',
-    shortLabel: 'Omzet',
-    color: '#059669', // Emerald
-    formatValue: d => 'Rp ' + Math.round(d.revenue).toLocaleString('id-ID'),
-    getValue: d => d.revenue
-  },
-  {
-    id: 'profit',
-    label: 'Estimasi Laba Bersih',
-    shortLabel: 'Laba',
-    color: '#7c3aed', // Purple
-    formatValue: d => 'Rp ' + Math.round(d.profit).toLocaleString('id-ID'),
-    getValue: d => d.profit
-  }
+const MATERIAL_PALETTE = [
+  '#0284c7', // Sky Blue
+  '#ea580c', // Bright Orange
+  '#7c3aed', // Purple
+  '#059669', // Emerald
+  '#d97706', // Amber
+  '#dc2626', // Red
+  '#475569', // Slate
+  '#db2777'  // Pink
 ];
 
 /**
@@ -176,7 +139,7 @@ function formatYAxisLabel(val: number, isCurrency: boolean): string {
     }
     return `Rp ${Math.round(val)}`;
   }
-  // Ritase / Volume
+  // Ritase / Volume / Satuan
   if (val >= 1_000) {
     return (val / 1_000).toFixed(1).replace(/\.0$/, '') + 'k';
   }
@@ -185,11 +148,17 @@ function formatYAxisLabel(val: number, isCurrency: boolean): string {
 
 export function DashboardInlineChart({
   transactions,
+  cashEntries = [],
   hideMargin = false
 }: DashboardInlineChartProps): React.JSX.Element {
   const [activeCategory, setActiveCategory] = useState<ChartCategory>('ritase');
-  const [selectedRitaseMetrics, setSelectedRitaseMetrics] = useState<RitaseMetric[]>(['trips']);
-  const [selectedFinancialMetrics, setSelectedFinancialMetrics] = useState<FinancialMetric[]>(['revenue']);
+
+  // State multi-select per kategori
+  const [selectedRitase, setSelectedRitase] = useState<string[]>(['trips']);
+  const [selectedFinancial, setSelectedFinancial] = useState<string[]>(['revenue']);
+  const [selectedCashflow, setSelectedCashflow] = useState<string[]>(['cashIn', 'cashOut']);
+  const [selectedMaterial, setSelectedMaterial] = useState<string[]>([]);
+  const [selectedFleet, setSelectedFleet] = useState<string[]>(['activeTrucks', 'tripsPerTruck']);
 
   // Hover state untuk crosshair & floating pill
   const [hoverState, setHoverState] = useState<{
@@ -208,100 +177,302 @@ export function DashboardInlineChart({
     }[];
   } | null>(null);
 
-  // Toggle multi-select metrik (minimal 1 harus tetap aktif)
-  const toggleMetric = (id: string) => {
-    if (activeCategory === 'ritase') {
-      const metricId = id as RitaseMetric;
-      if (selectedRitaseMetrics.includes(metricId)) {
-        if (selectedRitaseMetrics.length > 1) {
-          setSelectedRitaseMetrics(selectedRitaseMetrics.filter(m => m !== metricId));
-        }
-      } else {
-        setSelectedRitaseMetrics([...selectedRitaseMetrics, metricId]);
-      }
-    } else {
-      const metricId = id as FinancialMetric;
-      if (selectedFinancialMetrics.includes(metricId)) {
-        if (selectedFinancialMetrics.length > 1) {
-          setSelectedFinancialMetrics(selectedFinancialMetrics.filter(m => m !== metricId));
-        }
-      } else {
-        setSelectedFinancialMetrics([...selectedFinancialMetrics, metricId]);
-      }
-    }
-  };
-
-  // Konfigurasi metrik aktif saat ini
-  const currentMetricConfigs = activeCategory === 'ritase' ? RITASE_METRICS : FINANCIAL_METRICS;
-  const selectedMetricIds: string[] = activeCategory === 'ritase' ? selectedRitaseMetrics : selectedFinancialMetrics;
-  const activeConfigs = useMemo(() => {
-    const list = currentMetricConfigs.filter(m => selectedMetricIds.includes(m.id));
-    return list.length > 0 ? list : [currentMetricConfigs[0]!];
-  }, [currentMetricConfigs, selectedMetricIds]);
-
-  const isMultiSelect = activeConfigs.length > 1;
-
-  // Agregasi transaksi per tanggal (diurutkan tanggal kronologis)
-  const chartData = useMemo(() => {
-    const map = new Map<
-      string,
-      {
-        date: string;
-        trips: number;
-        volumeDt: number;
-        volumeTon: number;
-        revenue: number;
-        profit: number;
-      }
-    >();
-
-    transactions.forEach(t => {
-      const d = t.deliveryDate || t.createdAt?.slice(0, 10) || 'Unknown';
-      const existing = map.get(d) || {
-        date: d,
-        trips: 0,
-        volumeDt: 0,
-        volumeTon: 0,
-        revenue: 0,
-        profit: 0
-      };
-
-      existing.trips += 1;
-      const qty = Number(t.quantity) || 0;
-      if (t.unit === 'Ton') {
-        existing.volumeTon += qty;
-      } else {
-        existing.volumeDt += qty;
-      }
-      existing.revenue += Number(t.totalRevenue) || 0;
-      existing.profit += Number(t.netProfit) || 0;
-
-      map.set(d, existing);
-    });
-
-    const sorted = Array.from(map.values()).sort((a, b) => a.date.localeCompare(b.date));
-
-    // Jika data kosong, sediakan 1 dummy titik hari ini
-    if (sorted.length === 0) {
-      const today = new Date().toISOString().slice(0, 10);
-      return [
-        {
-          date: today,
-          trips: 0,
-          volumeDt: 0,
-          volumeTon: 0,
-          revenue: 0,
-          profit: 0
-        }
-      ];
-    }
-
-    return sorted;
-  }, [transactions]);
-
   // Format Helper
   const formatRupiah = (val: number): string => {
     return 'Rp ' + Math.round(val).toLocaleString('id-ID');
+  };
+
+  // 1. Ekstrak daftar material yang ada di transaksi
+  const availableMaterials = useMemo(() => {
+    const map = new Map<string, { id: string; name: string; totalVol: number; unit: string }>();
+    transactions.forEach(t => {
+      const name = t.materialName?.trim() || 'Lainnya';
+      const id = name.toLowerCase().replace(/\s+/g, '_');
+      const existing = map.get(id) || { id, name, totalVol: 0, unit: t.unit || 'DT' };
+      existing.totalVol += Number(t.quantity) || 0;
+      map.set(id, existing);
+    });
+    return Array.from(map.values()).sort((a, b) => b.totalVol - a.totalVol);
+  }, [transactions]);
+
+  // Default material terpilih (2 material teratas)
+  useMemo(() => {
+    if (selectedMaterial.length === 0 && availableMaterials.length > 0) {
+      const topIds = availableMaterials.slice(0, 2).map(m => m.id);
+      setSelectedMaterial(topIds);
+    }
+  }, [availableMaterials, selectedMaterial.length]);
+
+  // 2. Definisi Konfigurasi Metrik per Kategori
+  const metricConfigsByCategory: Record<ChartCategory, MetricConfig[]> = useMemo(() => {
+    return {
+      ritase: [
+        {
+          id: 'trips',
+          label: 'Jumlah Trip Ritase',
+          shortLabel: 'Trip',
+          color: '#111111',
+          formatValue: v => `${v} Trip`
+        },
+        {
+          id: 'volumeDt',
+          label: 'Volume (DT)',
+          shortLabel: 'DT',
+          color: '#0284c7',
+          formatValue: v => `${v.toLocaleString('id-ID')} DT`
+        },
+        {
+          id: 'volumeTon',
+          label: 'Volume (Ton)',
+          shortLabel: 'Ton',
+          color: '#ea580c',
+          formatValue: v => `${v.toLocaleString('id-ID')} Ton`
+        }
+      ],
+      financial: [
+        {
+          id: 'revenue',
+          label: 'Omzet Penjualan',
+          shortLabel: 'Omzet',
+          color: '#059669',
+          formatValue: v => formatRupiah(v)
+        },
+        {
+          id: 'profit',
+          label: 'Estimasi Laba Bersih',
+          shortLabel: 'Laba',
+          color: '#7c3aed',
+          formatValue: v => formatRupiah(v)
+        },
+        {
+          id: 'buyCost',
+          label: 'Modal Tebus Kuari',
+          shortLabel: 'Kuari',
+          color: '#d97706',
+          formatValue: v => formatRupiah(v)
+        },
+        {
+          id: 'opsCost',
+          label: 'HOK & Solar Supir',
+          shortLabel: 'Ops',
+          color: '#dc2626',
+          formatValue: v => formatRupiah(v)
+        }
+      ],
+      cashflow: [
+        {
+          id: 'cashIn',
+          label: 'Pemasukan (Kas Masuk)',
+          shortLabel: 'Masuk',
+          color: '#16a34a',
+          formatValue: v => formatRupiah(v)
+        },
+        {
+          id: 'cashOut',
+          label: 'Pengeluaran (Kas Keluar)',
+          shortLabel: 'Keluar',
+          color: '#cf1124',
+          formatValue: v => formatRupiah(v)
+        },
+        {
+          id: 'netCash',
+          label: 'Arus Kas Bersih',
+          shortLabel: 'Net Kas',
+          color: '#0284c7',
+          formatValue: v => formatRupiah(v)
+        }
+      ],
+      material: availableMaterials.map((mat, idx) => ({
+        id: mat.id,
+        label: mat.name,
+        shortLabel: mat.name,
+        color: MATERIAL_PALETTE[idx % MATERIAL_PALETTE.length] || '#0284c7',
+        formatValue: v => `${v.toLocaleString('id-ID')} ${mat.unit}`
+      })),
+      fleet: [
+        {
+          id: 'activeTrucks',
+          label: 'Armada Aktif (Unit)',
+          shortLabel: 'Armada',
+          color: '#111111',
+          formatValue: v => `${v} Unit`
+        },
+        {
+          id: 'tripsPerTruck',
+          label: 'Rata-rata Rit / Unit',
+          shortLabel: 'Rit/Unit',
+          color: '#0284c7',
+          formatValue: v => `${v} Rit/Unit`
+        }
+      ]
+    };
+  }, [availableMaterials]);
+
+  // ID metrik yang sedang aktif untuk kategori yang sedang dibuka
+  const activeSelectedIds = useMemo(() => {
+    switch (activeCategory) {
+      case 'ritase':
+        return selectedRitase;
+      case 'financial':
+        return selectedFinancial;
+      case 'cashflow':
+        return selectedCashflow;
+      case 'material':
+        return selectedMaterial.length > 0 ? selectedMaterial : (availableMaterials[0] ? [availableMaterials[0].id] : []);
+      case 'fleet':
+        return selectedFleet;
+    }
+  }, [activeCategory, selectedRitase, selectedFinancial, selectedCashflow, selectedMaterial, selectedFleet, availableMaterials]);
+
+  // Toggle multi-select metrik (minimal 1 harus tetap aktif)
+  const toggleMetric = (id: string) => {
+    const handleToggle = (current: string[], setFn: (val: string[]) => void) => {
+      if (current.includes(id)) {
+        if (current.length > 1) {
+          setFn(current.filter(m => m !== id));
+        }
+      } else {
+        setFn([...current, id]);
+      }
+    };
+
+    switch (activeCategory) {
+      case 'ritase':
+        handleToggle(selectedRitase, setSelectedRitase);
+        break;
+      case 'financial':
+        handleToggle(selectedFinancial, setSelectedFinancial);
+        break;
+      case 'cashflow':
+        handleToggle(selectedCashflow, setSelectedCashflow);
+        break;
+      case 'material':
+        handleToggle(selectedMaterial, setSelectedMaterial);
+        break;
+      case 'fleet':
+        handleToggle(selectedFleet, setSelectedFleet);
+        break;
+    }
+  };
+
+  const currentConfigs = metricConfigsByCategory[activeCategory] || [];
+  const activeConfigs = useMemo(() => {
+    const list = currentConfigs.filter(c => activeSelectedIds.includes(c.id));
+    return list.length > 0 ? list : (currentConfigs[0] ? [currentConfigs[0]] : []);
+  }, [currentConfigs, activeSelectedIds]);
+
+  const isMultiSelect = activeConfigs.length > 1;
+
+  // 3. Agregasi Transaksi & Kas per Tanggal Kronologis
+  const chartData = useMemo(() => {
+    // Kumpulkan seluruh tanggal unik dari transaksi & cash ledger
+    const datesSet = new Set<string>();
+
+    transactions.forEach(t => {
+      const d = t.deliveryDate || t.createdAt?.slice(0, 10);
+      if (d && d !== 'Unknown') datesSet.add(d);
+    });
+
+    if (activeCategory === 'cashflow' && cashEntries.length > 0) {
+      cashEntries.forEach(c => {
+        const d = c.date?.slice(0, 10);
+        if (d) datesSet.add(d);
+      });
+    }
+
+    const sortedDates = Array.from(datesSet).sort((a, b) => a.localeCompare(b));
+
+    if (sortedDates.length === 0) {
+      const today = new Date().toISOString().slice(0, 10);
+      sortedDates.push(today);
+    }
+
+    // Peta agregasi tanggal
+    return sortedDates.map(d => {
+      // Data transaksi ritase di tanggal d
+      const dayTxs = transactions.filter(t => (t.deliveryDate || t.createdAt?.slice(0, 10)) === d);
+
+      let trips = 0;
+      let volumeDt = 0;
+      let volumeTon = 0;
+      let revenue = 0;
+      let profit = 0;
+      let buyCost = 0;
+      let opsCost = 0;
+      const truckSet = new Set<string>();
+      const materialVolMap: Record<string, number> = {};
+
+      dayTxs.forEach(t => {
+        trips += 1;
+        const q = Number(t.quantity) || 0;
+        if (t.unit === 'Ton') {
+          volumeTon += q;
+        } else {
+          volumeDt += q;
+        }
+        revenue += Number(t.totalRevenue) || 0;
+        profit += Number(t.netProfit) || 0;
+        buyCost += Number(t.totalBuyCost) || 0;
+        opsCost += Number(t.operationalCost) || 0;
+
+        if (t.truckPlate) truckSet.add(t.truckPlate.toUpperCase().trim());
+
+        const mName = t.materialName?.trim() || 'Lainnya';
+        const mId = mName.toLowerCase().replace(/\s+/g, '_');
+        materialVolMap[mId] = (materialVolMap[mId] || 0) + q;
+      });
+
+      const activeTrucks = truckSet.size;
+      const tripsPerTruck = activeTrucks > 0 ? Number((trips / activeTrucks).toFixed(1)) : 0;
+
+      // Data cash ledger di tanggal d
+      const dayCash = cashEntries.filter(c => c.date?.slice(0, 10) === d);
+      let cashIn = 0;
+      let cashOut = 0;
+
+      if (dayCash.length > 0) {
+        dayCash.forEach(c => {
+          const amt = Number(c.amount) || 0;
+          if (c.isCredit) {
+            cashIn += amt;
+          } else {
+            cashOut += amt;
+          }
+        });
+      } else {
+        // Fallback perkiraan dari operasional jika cash ledger di tanggal ini kosong
+        cashIn = revenue;
+        cashOut = buyCost + opsCost;
+      }
+
+      const netCash = cashIn - cashOut;
+
+      return {
+        date: d,
+        trips,
+        volumeDt,
+        volumeTon,
+        revenue,
+        profit,
+        buyCost,
+        opsCost,
+        cashIn,
+        cashOut,
+        netCash,
+        activeTrucks,
+        tripsPerTruck,
+        materialVolMap
+      };
+    });
+  }, [transactions, cashEntries, activeCategory]);
+
+  // Fungsi pengambil nilai metrik
+  const getMetricValue = (d: (typeof chartData)[0], metricId: string): number => {
+    if (activeCategory === 'material') {
+      return d.materialVolMap[metricId] || 0;
+    }
+    const val = (d as unknown as Record<string, number>)[metricId];
+    return typeof val === 'number' ? val : 0;
   };
 
   // Ukuran Canvas SVG yang lebar, tinggi, dan responsif
@@ -318,7 +489,7 @@ export function DashboardInlineChart({
   const maxValues = useMemo(() => {
     const map = new Map<string, number>();
     activeConfigs.forEach(cfg => {
-      const vals = chartData.map(d => cfg.getValue(d));
+      const vals = chartData.map(d => getMetricValue(d, cfg.id));
       const m = Math.max(...vals, 1);
       map.set(cfg.id, m);
     });
@@ -336,13 +507,13 @@ export function DashboardInlineChart({
         const x = totalPts === 1
           ? (paddingLeft + (svgWidth - paddingRight)) / 2
           : paddingLeft + (idx / (totalPts - 1)) * chartW;
-        const val = cfg.getValue(d);
+        const val = getMetricValue(d, cfg.id);
         const y = paddingTop + chartH - (val / maxVal) * chartH;
         return {
           metricId: cfg.id,
           label: cfg.shortLabel,
           val,
-          formatted: cfg.formatValue(d),
+          formatted: cfg.formatValue(val),
           color: cfg.color,
           date: d.date,
           x,
@@ -370,21 +541,21 @@ export function DashboardInlineChart({
     });
   }, [activeConfigs, chartData, maxValues, chartW, chartH, paddingLeft, paddingTop]);
 
-  // Statistik Ringkasan (Menampilkan metrik utama / pertama yang aktif)
-  const primaryMetric = activeConfigs[0]!;
+  // Statistik Ringkasan (Menampilkan metrik pertama yang aktif)
+  const primaryMetric = activeConfigs[0];
   const stats = useMemo(() => {
-    if (chartData.length === 0) return { peak: '0', avg: '0', total: '0' };
-    const values = chartData.map(d => primaryMetric.getValue(d));
+    if (!primaryMetric || chartData.length === 0) return { peak: '0', avg: '0', total: '0' };
+    const values = chartData.map(d => getMetricValue(d, primaryMetric.id));
     const maxVal = Math.max(...values, 0);
     const sumVal = values.reduce((a, b) => a + b, 0);
     const avgVal = sumVal / (values.length || 1);
 
-    const isCurrency = activeCategory === 'financial';
+    const isCurrency = activeCategory === 'financial' || activeCategory === 'cashflow';
 
     return {
-      peak: isCurrency ? formatRupiah(maxVal) : `${maxVal.toLocaleString('id-ID')}`,
-      avg: isCurrency ? formatRupiah(avgVal) : `${Math.round(avgVal).toLocaleString('id-ID')}`,
-      total: isCurrency ? formatRupiah(sumVal) : `${sumVal.toLocaleString('id-ID')}`
+      peak: isCurrency ? formatRupiah(maxVal) : primaryMetric.formatValue(maxVal),
+      avg: isCurrency ? formatRupiah(avgVal) : primaryMetric.formatValue(Math.round(avgVal)),
+      total: isCurrency ? formatRupiah(sumVal) : primaryMetric.formatValue(sumVal)
     };
   }, [chartData, primaryMetric, activeCategory]);
 
@@ -446,41 +617,39 @@ export function DashboardInlineChart({
           </div>
         </div>
 
-        {/* Category Switcher */}
-        <div className="flex items-center gap-1.5 self-start sm:self-auto">
-          <button
-            type="button"
-            onClick={() => setActiveCategory('ritase')}
-            className={`px-3 py-1.5 rounded-[6px] text-xs font-bold border-none transition-colors cursor-pointer whitespace-nowrap ${
-              activeCategory === 'ritase'
-                ? 'bg-[#111111] text-white shadow-xs'
-                : 'bg-[#f0f0f0] text-[#555555] hover:bg-[#e4e4e4]'
-            }`}
-          >
-            Tren Ritase & Volume
-          </button>
-          {!hideMargin && (
-            <button
-              type="button"
-              onClick={() => setActiveCategory('financial')}
-              className={`px-3 py-1.5 rounded-[6px] text-xs font-bold border-none transition-colors cursor-pointer whitespace-nowrap ${
-                activeCategory === 'financial'
-                  ? 'bg-[#111111] text-white shadow-xs'
-                  : 'bg-[#f0f0f0] text-[#555555] hover:bg-[#e4e4e4]'
-              }`}
-            >
-              Tren Finansial
-            </button>
-          )}
+        {/* 5 Tab Kategori Ringkas (Anti-Wrapping) */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 self-start sm:self-auto max-w-full">
+          {[
+            { id: 'ritase', label: 'Ritase & Vol' },
+            { id: 'financial', label: 'Finansial', hide: hideMargin },
+            { id: 'cashflow', label: 'Arus Kas' },
+            { id: 'material', label: 'Material' },
+            { id: 'fleet', label: 'Armada' }
+          ]
+            .filter(c => !c.hide)
+            .map(c => (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => setActiveCategory(c.id as ChartCategory)}
+                className={`px-2.5 py-1.5 rounded-[6px] text-xs font-bold border-none transition-colors cursor-pointer whitespace-nowrap ${
+                  activeCategory === c.id
+                    ? 'bg-[#111111] text-white shadow-xs'
+                    : 'bg-[#f0f0f0] text-[#555555] hover:bg-[#e4e4e4]'
+                }`}
+              >
+                {c.label}
+              </button>
+            ))}
         </div>
       </div>
 
       {/* Baris Tombol Multi-Select (Kiri) & Legenda Kotak Warna (Kanan Align Right) */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 pb-1">
         {/* Tombol Multi-Select Metrik */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 text-xs">
-          {currentMetricConfigs.map(m => {
-            const isSelected = selectedMetricIds.includes(m.id);
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 text-xs max-w-full">
+          {currentConfigs.map(m => {
+            const isSelected = activeSelectedIds.includes(m.id);
             return (
               <button
                 key={m.id}
@@ -494,7 +663,9 @@ export function DashboardInlineChart({
               >
                 <span
                   className="w-2 h-2 rounded-[2px] shrink-0"
-                  style={{ backgroundColor: isSelected && m.color === '#111111' ? '#ffffff' : m.color }}
+                  style={{
+                    backgroundColor: isSelected && m.color === '#111111' ? '#ffffff' : m.color
+                  }}
                 />
                 {m.label}
               </button>
@@ -511,7 +682,7 @@ export function DashboardInlineChart({
                 style={{ backgroundColor: m.color }}
               />
               <span className="text-[11px] font-medium text-[#444444] whitespace-nowrap">
-                {m.label}
+                {m.shortLabel}
               </span>
             </div>
           ))}
@@ -552,7 +723,7 @@ export function DashboardInlineChart({
                   >
                     {isMultiSelect
                       ? `${Math.round(ratio * 100)}%`
-                      : formatYAxisLabel((linesData[0]?.maxVal || 1) * ratio, activeCategory === 'financial')}
+                      : formatYAxisLabel((linesData[0]?.maxVal || 1) * ratio, activeCategory === 'financial' || activeCategory === 'cashflow')}
                   </text>
                   {/* Gridline Horizontal */}
                   <line
@@ -662,7 +833,9 @@ export function DashboardInlineChart({
                       {isMultiSelect && (
                         <span
                           className="w-2 h-2 rounded-[2px] shrink-0 inline-block border border-white/30"
-                          style={{ backgroundColor: pt.color === '#111111' ? '#ffffff' : pt.color }}
+                          style={{
+                            backgroundColor: pt.color === '#111111' ? '#ffffff' : pt.color
+                          }}
                         />
                       )}
                       <span
@@ -709,11 +882,11 @@ export function DashboardInlineChart({
         </div>
       </div>
 
-      {/* Quick Statistics Summary Cards (Menampilkan metrik yang aktif) */}
+      {/* Quick Statistics Summary Cards */}
       <div className="grid grid-cols-3 gap-2.5">
         <div className="p-3 bg-white rounded-[8px] border border-[#eaeaea] text-center">
           <span className="text-[10px] text-[#777777] font-medium block">
-            Puncak ({primaryMetric.shortLabel})
+            Puncak {primaryMetric ? `(${primaryMetric.shortLabel})` : ''}
           </span>
           <span className="text-xs sm:text-sm font-bold text-[#111111] truncate block mt-0.5">
             {stats.peak}
@@ -721,7 +894,7 @@ export function DashboardInlineChart({
         </div>
         <div className="p-3 bg-white rounded-[8px] border border-[#eaeaea] text-center">
           <span className="text-[10px] text-[#777777] font-medium block">
-            Rata-rata ({primaryMetric.shortLabel})
+            Rata-rata {primaryMetric ? `(${primaryMetric.shortLabel})` : ''}
           </span>
           <span className="text-xs sm:text-sm font-bold text-[#111111] truncate block mt-0.5">
             {stats.avg}
@@ -729,7 +902,7 @@ export function DashboardInlineChart({
         </div>
         <div className="p-3 bg-white rounded-[8px] border border-[#eaeaea] text-center">
           <span className="text-[10px] text-[#777777] font-medium block">
-            Total ({primaryMetric.shortLabel})
+            Total {primaryMetric ? `(${primaryMetric.shortLabel})` : ''}
           </span>
           <span className="text-xs sm:text-sm font-bold text-[#111111] truncate block mt-0.5">
             {stats.total}

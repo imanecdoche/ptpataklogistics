@@ -369,6 +369,7 @@ export function DashboardPage({
           {/* 1.1 SECTION: GRAFIK GARIS TREN OPERASIONAL & KEUANGAN (SELALU MUNCUL DI BAWAH KARTU MATRIKS) */}
           <DashboardInlineChart
             transactions={filteredTransactions}
+            cashEntries={cashEntries}
             hideMargin={hideMargin}
           />
 
