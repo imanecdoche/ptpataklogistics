@@ -561,17 +561,14 @@ export function DispatchHistoryPage({ userEmail }: DispatchHistoryPageProps): Re
       {/* 3. TABEL DATA RIWAYAT RITASE FULL-WIDTH */}
       <div className="w-full bg-white border border-[#dcdcdc] rounded-[10px] overflow-hidden shadow-xs">
         <div className="overflow-x-auto select-text max-h-[720px] w-full">
-          <table className="w-full min-w-[1370px] table-fixed text-left text-xs border-collapse">
+          <table className="w-full min-w-[1280px] table-fixed text-left text-xs border-collapse">
             <thead className="sticky top-0 z-10 bg-[#f8f8f8] border-b border-[#eaeaea] text-[#555555] font-semibold text-[11px] uppercase tracking-wider select-none">
               <tr>
-                <th className="py-2.5 px-3 w-[140px] min-w-[140px] whitespace-nowrap">No. Tiket</th>
-                <th className="py-2.5 px-3 w-[105px] min-w-[105px] whitespace-nowrap">Tanggal</th>
-                <th className="py-2.5 px-3 w-[110px] min-w-[110px] whitespace-nowrap">No. Plat</th>
-                <th className="py-2.5 px-3 w-[130px] min-w-[130px] whitespace-nowrap">Supir</th>
-                <th className="py-2.5 px-3 w-[170px] min-w-[170px] whitespace-nowrap">Proyek Tujuan</th>
+                <th className="py-2.5 px-3 w-[130px] min-w-[130px] whitespace-nowrap">Tanggal</th>
+                <th className="py-2.5 px-3 w-[115px] min-w-[115px] whitespace-nowrap">No. Plat</th>
+                <th className="py-2.5 px-3 w-[250px] min-w-[250px] whitespace-nowrap">Proyek Tujuan</th>
                 <th className="py-2.5 px-3 w-[130px] min-w-[130px] whitespace-nowrap">Kuari Asal</th>
-                <th className="py-2.5 px-3 w-[140px] min-w-[140px] whitespace-nowrap">Material</th>
-                <th className="py-2.5 px-3 w-[90px] min-w-[90px] whitespace-nowrap">Vol</th>
+                <th className="py-2.5 px-3 w-[130px] min-w-[130px] whitespace-nowrap">Material</th>
                 <th className="py-2.5 px-3 w-[130px] min-w-[130px] whitespace-nowrap">Harga Jual</th>
                 {!hideMargin && (
                   <th className="py-2.5 px-3 w-[130px] min-w-[130px] whitespace-nowrap">Harga Beli</th>
@@ -589,7 +586,7 @@ export function DispatchHistoryPage({ userEmail }: DispatchHistoryPageProps): Re
               {filteredTransactions.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={hideMargin ? 13 : 15}
+                    colSpan={hideMargin ? 10 : 12}
                     className="py-12 text-center text-xs text-[#888888] whitespace-nowrap"
                   >
                     {isLoading
@@ -607,43 +604,52 @@ export function DispatchHistoryPage({ userEmail }: DispatchHistoryPageProps): Re
                       key={tx.id}
                       className="hover:bg-[#fafafa] transition-colors group cursor-default"
                     >
-                      <td className="py-2.5 px-3 font-mono font-bold text-[#111111] whitespace-nowrap w-[140px] align-middle">
-                        <div className="flex items-center gap-1.5">
-                          <span>{tx.ticketNumber}</span>
-                          {pendingApprovalsMap.has(tx.id) && (
-                            <span
-                              className={`text-[9px] font-sans font-bold px-1.5 py-0.5 rounded-[4px] border-none flex items-center ${
-                                pendingApprovalsMap.get(tx.id)?.type === 'DELETE'
-                                  ? 'bg-[#fce8e6] text-[#cf1124]'
-                                  : 'bg-[#fef3c7] text-[#92400e]'
-                              }`}
-                              title={`Sedang diajukan oleh ${pendingApprovalsMap.get(tx.id)?.requestedByName}: "${pendingApprovalsMap.get(tx.id)?.reason}"`}
-                            >
-                              <span>Menunggu ACC {pendingApprovalsMap.get(tx.id)?.type === 'DELETE' ? 'Hapus' : 'Edit'}</span>
+                      {/* Tanggal & No. Tiket */}
+                      <td className="py-2.5 px-3 whitespace-nowrap w-[130px] align-middle">
+                        <div className="flex flex-col items-start gap-0.5 max-w-full">
+                          <span className="font-mono font-medium text-[#111111]">
+                            {formatDateID(tx.deliveryDate || tx.date)}
+                          </span>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="font-mono text-[11px] text-[#666666]">
+                              {tx.ticketNumber}
                             </span>
-                          )}
+                            {pendingApprovalsMap.has(tx.id) && (
+                              <span
+                                className={`text-[9px] font-sans font-bold px-1.5 py-0.5 rounded-[4px] border-none flex items-center ${
+                                  pendingApprovalsMap.get(tx.id)?.type === 'DELETE'
+                                    ? 'bg-[#fce8e6] text-[#cf1124]'
+                                    : 'bg-[#fef3c7] text-[#92400e]'
+                                }`}
+                                title={`Sedang diajukan oleh ${pendingApprovalsMap.get(tx.id)?.requestedByName}: "${pendingApprovalsMap.get(tx.id)?.reason}"`}
+                              >
+                                <span>Menunggu ACC {pendingApprovalsMap.get(tx.id)?.type === 'DELETE' ? 'Hapus' : 'Edit'}</span>
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </td>
-                      <td className="py-2.5 px-3 font-mono font-medium text-[#555555] whitespace-nowrap w-[105px] align-middle">
-                        {formatDateID(tx.deliveryDate || tx.date)}
+
+                      {/* No. Plat & Supir */}
+                      <td className="py-2.5 px-3 whitespace-nowrap w-[115px] align-middle">
+                        <div className="flex flex-col items-start gap-0.5 max-w-full">
+                          <DynamicEntityText
+                            name={ent.truck.name}
+                            isOrphan={ent.truck.isOrphan}
+                            tooltipText={ent.truck.tooltipText}
+                            className="font-mono font-bold text-[#111111]"
+                          />
+                          <DynamicEntityText
+                            name={ent.driver.name}
+                            isOrphan={ent.driver.isOrphan}
+                            tooltipText={ent.driver.tooltipText}
+                            className="text-[11px] text-[#666666] block truncate"
+                          />
+                        </div>
                       </td>
-                      <td className="py-2.5 px-3 whitespace-nowrap w-[110px] align-middle">
-                        <DynamicEntityText
-                          name={ent.truck.name}
-                          isOrphan={ent.truck.isOrphan}
-                          tooltipText={ent.truck.tooltipText}
-                          className="font-mono font-bold text-[#111111]"
-                        />
-                      </td>
-                      <td className="py-2.5 px-3 whitespace-nowrap w-[130px] align-middle">
-                        <DynamicEntityText
-                          name={ent.driver.name}
-                          isOrphan={ent.driver.isOrphan}
-                          tooltipText={ent.driver.tooltipText}
-                          className="text-[#444444]"
-                        />
-                      </td>
-                      <td className="py-2.5 px-3 whitespace-nowrap w-[170px] align-middle">
+
+                      {/* Proyek Tujuan & Klien */}
+                      <td className="py-2.5 px-3 whitespace-nowrap w-[250px] min-w-[250px] align-middle">
                         <div className="flex flex-col items-start gap-0.5 max-w-full">
                           <DynamicEntityText
                             name={ent.project.name}
@@ -661,6 +667,8 @@ export function DispatchHistoryPage({ userEmail }: DispatchHistoryPageProps): Re
                           )}
                         </div>
                       </td>
+
+                      {/* Kuari Asal */}
                       <td className="py-2.5 px-3 whitespace-nowrap w-[130px] align-middle">
                         <DynamicEntityText
                           name={ent.quarry.name}
@@ -669,16 +677,20 @@ export function DispatchHistoryPage({ userEmail }: DispatchHistoryPageProps): Re
                           className="text-[#555555]"
                         />
                       </td>
-                      <td className="py-2.5 px-3 whitespace-nowrap w-[140px] align-middle">
-                        <DynamicEntityText
-                          name={ent.material.name}
-                          isOrphan={ent.material.isOrphan}
-                          tooltipText={ent.material.tooltipText}
-                          className="text-[#555555]"
-                        />
-                      </td>
-                      <td className="py-2.5 px-3 font-bold tracking-tight text-[#111111] whitespace-nowrap w-[90px] align-middle">
-                        {formatVolumeDisplay(tx.quantity, tx.unit)}
+
+                      {/* Material & Volume (Sama-sama Bold) */}
+                      <td className="py-2.5 px-3 whitespace-nowrap w-[130px] align-middle">
+                        <div className="flex flex-col items-start gap-0.5 max-w-full">
+                          <DynamicEntityText
+                            name={ent.material.name}
+                            isOrphan={ent.material.isOrphan}
+                            tooltipText={ent.material.tooltipText}
+                            className="font-bold text-[#111111] block truncate"
+                          />
+                          <span className="font-bold text-[11px] text-[#111111] tracking-tight block">
+                            {formatVolumeDisplay(tx.quantity, tx.unit)}
+                          </span>
+                        </div>
                       </td>
                       <td className="py-2.5 px-3 whitespace-nowrap w-[130px] align-middle">
                         <PricePerVolCell

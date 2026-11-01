@@ -37,7 +37,7 @@ export const PricePerVolCell: React.FC<PricePerVolCellProps> = ({
     <div className={`${alignClass} ${className} whitespace-nowrap`}>
       <span className="text-[11px] font-mono text-[#666666] block leading-tight">
         {formatRupiah(effectiveUnitPrice)}
-        {unit ? ` / ${unit}` : ''}
+        {unit ? `/${unit}` : ''}
       </span>
       <span className="font-mono font-bold tracking-tight text-[#111111] block mt-0.5 leading-tight">
         {formatRupiah(totalPrice || 0)}
