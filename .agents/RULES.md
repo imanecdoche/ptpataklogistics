@@ -1511,4 +1511,28 @@ Dokumen ini adalah hukum tertinggi operasional sistem. Kegagalan mematuhi aturan
     - **Kepatuhan AI Anti-Patterns**:
       * Dilarang menambahkan badge/tag/pill tanpa perintah, dilarang border outline stroke (`border`, `ring-*`), dilarang emoji di string UI, dan dilarang animasi berdenyut non-skeleton.
 
+128. **Mandatory Smooth Enter/Exit Transitions for Mobile Bottom Drawers**:
+    - **Bi-Directional Fluid Animation**:
+      * Setiap panel mobile bottom drawer WAJIB memiliki animasi slide masuk dan keluar yang halus tanpa stutter/kedip pada sumbu Y (`translate-y-full` ke `translate-y-0` saat terbuka/enter, dan `translate-y-0` ke `translate-y-full` saat ditutup/exit).
+    - **Graceful Unmounting Lifecycle**:
+      * DILARANG KERAS langsung menghapus/unmount komponen drawer dari DOM sebelum animasi keluar (exit transition) selesai.
+      * Wajib mengimplementasikan lifecycle transisi keluar (misalnya state `isClosing` atau status penutupan bertahap dengan timer unmount yang tertunda) sehingga drawer meluncur keluar sepenuhnya dari viewport dan backdrop memudar (*fade out*) secara mulus sebelum komponen di-unmount.
+    - **Transition Standards**:
+      * Menegakkan transisi hardware-accelerated dengan kurva easing yang luwes (contoh: `transition-transform duration-200 ease-out` untuk bodi drawer dan `transition-opacity duration-200 ease-out` untuk backdrop).
+
+129. **Mandatory Custom UI for All Pickers & Form Controls (Zero Native Browser Pickers)**:
+    - **Zero Native Browser Pickers**:
+      * Setiap input picker, selector, dan kontrol toggle—termasuk Date Picker, Time Picker, Dropdown Select, Combobox, Autocomplete, Radio Button, dan Checkbox—**WAJIB diimplementasikan menggunakan komponen Custom UI**.
+    - **Strictly Prohibited**:
+      * DILARANG KERAS menggunakan kontrol bawaan OS / browser native tanpa styling kustom (contoh: native browser `<select>`, `<input type="date">`, `<input type="time">`, atau checkbox/radio default OS).
+      * Seluruh kontrol seleksi wajib mematuhi design token monokromatis, solid-filled, dan borderless.
+
+130. **Mandatory Custom Dialog System (Zero Native Browser Dialog APIs)**:
+    - **Zero Native Dialog APIs**:
+      * Pemanggilan API dialog bawaan browser (`window.alert()`, `window.confirm()`, `window.prompt()`, atau `alert()` / `confirm()`) adalah **DILARANG KERAS (STRICTLY PROHIBITED)**.
+    - **Unified Custom Dialog Architecture**:
+      * Seluruh peringatan (alerts), konfirmasi (confirmations), prompt destruktif, dan notifikasi WAJIB dirender melalui sistem custom modal/dialog aplikasi atau context provider dialog (contoh: `CustomDialog`, `DialogContext` / `useDialog()`), dengan mematuhi spesifikasi ukuran terkunci desktop dan animasi bottom-drawer mobile.
+
+
+
 

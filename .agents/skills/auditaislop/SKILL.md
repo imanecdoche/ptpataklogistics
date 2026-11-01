@@ -54,6 +54,19 @@ Skill ini bertindak sebagai **Principal UI/UX Design System Engineer** yang meng
 - Menempel kokoh di dasar layar: `fixed inset-x-0 bottom-0 z-50 w-full rounded-t-[16px] rounded-b-none` dengan tinggi terkunci `h-[82dvh]` atau `h-[85dvh]`.
 - Judul header berada di tengah (*centered title*), **DILARANG KERAS menggunakan drag handle / pill bar dekoratif**.
 - Tombol aksi konfirmasi dan batal WAJIB menempel secara **sticky di bagian paling bawah drawer** (`sticky bottom-0 inset-x-0 z-10 mt-auto bg-white p-4`).
+- **MANDATORY SMOOTH ENTER/EXIT TRANSITIONS**:
+  - **Bi-Directional Fluid Animation**: Setiap mobile bottom drawer panel WAJIB memiliki animasi slide masuk dan keluar yang halus tanpa stutter pada sumbu Y (`translate-y-full` ke `translate-y-0` saat enter, dan `translate-y-0` ke `translate-y-full` saat exit).
+  - **Graceful Unmounting Lifecycle**: DILARANG KERAS langsung menghapus/unmount komponen drawer dari DOM sebelum animasi keluar selesai. Wajib mengimplementasikan lifecycle transisi keluar (misalnya state `isClosing` dengan timer unmount yang tertunda) sehingga drawer meluncur keluar sepenuhnya dari viewport dan backdrop memudar (*fade out*) secara mulus sebelum unmount.
+  - **Transition Standards**: Menegakkan transisi hardware-accelerated dengan kurva easing yang luwes (`transition-transform duration-200 ease-out` untuk bodi drawer dan `transition-opacity duration-200 ease-out` untuk backdrop).
+
+### 8. Custom UI untuk Seluruh Picker & Form Controls (Zero Native OS Controls)
+- **Zero Native Browser Pickers**: Setiap input picker, selector, dan kontrol toggle—termasuk Date Picker, Time Picker, Dropdown Select, Combobox, Autocomplete, Radio Button, dan Checkbox—**WAJIB diimplementasikan menggunakan komponen Custom UI**.
+- **Strictly Prohibited**: DILARANG KERAS menggunakan kontrol bawaan OS / browser native tanpa styling kustom (contoh: native browser `<select>`, `<input type="date">`, `<input type="time">`, atau checkbox/radio default OS).
+- Seluruh kontrol seleksi wajib mematuhi design token monokromatis, solid-filled, dan borderless.
+
+### 9. Custom Dialog System (Zero Browser Native Dialogs)
+- **Zero Native Dialog APIs**: Pemanggilan API dialog bawaan browser (`window.alert()`, `window.confirm()`, `window.prompt()`, atau `alert()` / `confirm()`) adalah **DILARANG KERAS (STRICTLY PROHIBITED)**.
+- **Unified Custom Dialog Architecture**: Seluruh peringatan (alerts), konfirmasi (confirmations), prompt destruktif, dan notifikasi WAJIB dirender melalui sistem custom modal/dialog aplikasi atau context provider dialog (contoh: `CustomDialog`, `DialogContext` / `useDialog()`), dengan mematuhi spesifikasi ukuran terkunci desktop dan animasi bottom-drawer mobile.
 
 ---
 
@@ -64,5 +77,7 @@ Saat slash command `/auditaislop` dipicu pada berkas atau komponen tertentu:
 2. **Pindai Emojis**: Temukan dan hapus seluruh emoji pada string teks tombol dan header.
 3. **Pindai Status Dot**: Hapus elemen `rounded-full` dekoratif di samping teks status.
 4. **Pindai Text Wrapping**: Pasang `whitespace-nowrap` pada nominal uang, tanggal, status, dan tombol aksi.
-5. **Verifikasi Responsivitas Mobile**: Pastikan modal beralih ke bottom drawer `h-[85dvh]` dengan sticky action footer di layar sempit.
-6. **Verifikasi Build**: Pastikan TypeScript kompilasi `tsc -b` lulus tanpa peringatan atau error.
+5. **Pindai Native Controls**: Deteksi elemen `<select>`, `<input type="date">`, `<input type="time">`, checkbox/radio native, dan ganti dengan komponen Custom UI.
+6. **Pindai Native Dialogs**: Deteksi panggilan `alert()`, `confirm()`, `prompt()` dan ganti dengan sistem dialog kustom (`useDialog()`).
+7. **Verifikasi Responsivitas & Transisi Mobile**: Pastikan modal beralih ke bottom drawer `h-[85dvh]` dengan enter/exit transition mulus dan sticky action footer di layar sempit.
+8. **Verifikasi Build**: Pastikan TypeScript kompilasi `tsc -b` lulus tanpa peringatan atau error.

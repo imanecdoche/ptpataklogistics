@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Project } from '@/types/database';
 import { X, SlidersHorizontal, RotateCcw, Check } from 'lucide-react';
 import { CurrencyInput } from '@/components/ui/CurrencyInput';
+import { useDrawerTransition } from '@/hooks/useDrawerTransition';
 
 export interface CashFilterState {
   sortBy: 'DATE_DESC' | 'DATE_ASC' | 'AMOUNT_DESC' | 'AMOUNT_ASC';
@@ -67,6 +68,8 @@ export function CashFilterDrawer({
   const [localFilters, setLocalFilters] = useState<CashFilterState>(filters);
   const drawerRef = useRef<HTMLDivElement | null>(null);
 
+  const { isRendered, isVisible, handleClose } = useDrawerTransition(isOpen, onClose, { durationMs: 200 });
+
   // Sinkronisasi local state saat drawer dibuka
   useEffect(() => {
     if (isOpen) {
@@ -77,15 +80,15 @@ export function CashFilterDrawer({
   // Handle ESC key
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
-        onClose();
+      if (e.key === 'Escape' && isVisible) {
+        handleClose();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
+  }, [isVisible, handleClose]);
 
-  if (!isOpen) return null;
+  if (!isRendered) return null;
 
   const activeCount = countActiveFilters(localFilters);
 
@@ -144,35 +147,40 @@ export function CashFilterDrawer({
 
   const handleApplyClick = () => {
     onApply(localFilters);
-    onClose();
+    handleClose();
   };
 
   const handleResetClick = () => {
     setLocalFilters(DEFAULT_CASH_FILTERS);
     onReset();
-    onClose();
+    handleClose();
   };
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden select-none">
       {/* Backdrop: Solid Dimmed (Zero Blur per Rule 1 & Rule 4) */}
       <div
-        className="fixed inset-0 bg-black/50 transition-opacity animate-in fade-in duration-200"
-        onClick={onClose}
+        className={`fixed inset-0 bg-black/50 transition-opacity duration-200 ease-out ${
+          isVisible ? 'opacity-100' : 'opacity-0'
+        }`}
+        onClick={handleClose}
         aria-hidden="true"
       />
 
       {/* 
         Container Adaptif:
-        - Mobile (< md): Bottom Drawer anchored flush to bottom with rounded-t-[16px]
-        - Desktop (>= md): Slide-over drawer from right edge
+        - Mobile (< md): Bottom Drawer anchored flush to bottom with smooth bi-directional Y slide
+        - Desktop (>= md): Slide-over drawer from right edge with smooth X slide
       */}
       <div
         ref={drawerRef}
-        className="
-          fixed inset-x-0 bottom-0 z-50 w-full h-[85dvh] max-h-[85dvh] rounded-t-[16px] rounded-b-none bg-white flex flex-col shadow-2xl animate-in slide-in-from-bottom duration-250 ease-out border-none
-          md:inset-y-0 md:right-0 md:left-auto md:w-[440px] md:max-w-md md:h-full md:max-h-full md:rounded-none md:slide-in-from-right
-        "
+        className={`
+          fixed inset-x-0 bottom-0 z-50 w-full h-[85dvh] max-h-[85dvh] rounded-t-[16px] rounded-b-none bg-white flex flex-col shadow-2xl border-none
+          transition-transform duration-200 ease-out transform
+          ${isVisible ? 'translate-y-0' : 'translate-y-full'}
+          md:inset-y-0 md:right-0 md:left-auto md:w-[440px] md:max-w-md md:h-full md:max-h-full md:rounded-none
+          ${isVisible ? 'md:translate-x-0' : 'md:translate-x-full md:translate-y-0'}
+        `}
       >
         {/* Header (No Drag Pill on Mobile per Rule 4.2) */}
         <div className="p-4 border-none flex items-center justify-between bg-[#fafafa] flex-shrink-0">
@@ -198,7 +206,7 @@ export function CashFilterDrawer({
             )}
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleClose}
               className="w-7 h-7 rounded-[6px] text-[#555555] hover:text-[#111111] bg-[#eeeeee] hover:bg-[#e2e2e2] border-none flex items-center justify-center transition-colors cursor-pointer flex-shrink-0"
               title="Tutup (Esc)"
             >

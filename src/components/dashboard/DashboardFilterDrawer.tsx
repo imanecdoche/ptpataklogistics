@@ -1,6 +1,7 @@
 import { X } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import { Project } from '@/types/database';
+import { useDrawerTransition } from '@/hooks/useDrawerTransition';
 
 export interface DashboardFilterState {
   datePreset: 'TODAY' | '7D' | '30D' | 'THIS_MONTH' | 'ALL' | 'CUSTOM';
@@ -34,12 +35,26 @@ export function DashboardFilterDrawer({
   materials
 }: DashboardFilterDrawerProps): React.JSX.Element | null {
   const [localFilters, setLocalFilters] = useState<DashboardFilterState>(filters);
+  const { isRendered, isVisible, handleClose } = useDrawerTransition(isOpen, onClose, { durationMs: 200 });
 
   useEffect(() => {
-    setLocalFilters(filters);
+    if (isOpen) {
+      setLocalFilters(filters);
+    }
   }, [filters, isOpen]);
 
-  if (!isOpen) return null;
+  // Handle ESC key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isVisible) {
+        handleClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isVisible, handleClose]);
+
+  if (!isRendered) return null;
 
   const handlePresetSelect = (preset: DashboardFilterState['datePreset']) => {
     const now = new Date();
@@ -100,40 +115,45 @@ export function DashboardFilterDrawer({
 
   const handleApply = () => {
     onApply(localFilters);
-    onClose();
+    handleClose();
   };
 
   const handleReset = () => {
     onReset();
-    onClose();
+    handleClose();
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col justify-end">
-      {/* Backdrop */}
+    <div className="fixed inset-0 z-50 flex flex-col justify-end select-none overflow-hidden">
+      {/* Backdrop: Solid Dimmed (Zero Blur) */}
       <div
-        className="fixed inset-0 bg-black/40 backdrop-blur-xs transition-opacity duration-300 animate-in fade-in"
-        onClick={onClose}
+        className={`fixed inset-0 bg-black/50 transition-opacity duration-200 ease-out ${
+          isVisible ? 'opacity-100' : 'opacity-0'
+        }`}
+        onClick={handleClose}
+        aria-hidden="true"
       />
 
       {/* Drawer Panel Bottom Sheet */}
-      <div className="relative z-10 bg-white rounded-t-[18px] border-t border-[#eaeaea] shadow-2xl max-h-[85vh] flex flex-col w-full max-w-2xl mx-auto overflow-hidden animate-in slide-in-from-bottom duration-300">
-        {/* Handle Bar */}
-        <div className="pt-3 pb-1 flex flex-col items-center cursor-pointer select-none" onClick={onClose}>
-          <div className="w-9 h-1.5 rounded-full bg-[#d5d5d5] mb-2" />
-        </div>
-
-        {/* Drawer Header */}
-        <div className="px-5 pb-3 border-b border-[#f0f0f0] flex items-center justify-between">
+      <div
+        className={`relative z-10 bg-white rounded-t-[18px] shadow-2xl h-[85dvh] max-h-[85dvh] flex flex-col w-full max-w-2xl mx-auto overflow-hidden transition-transform duration-200 ease-out transform border-none ${
+          isVisible ? 'translate-y-0' : 'translate-y-full'
+        }`}
+      >
+        {/* Drawer Header (Centered Title, No Drag Handle per Rule 128) */}
+        <div className="p-4 bg-[#fafafa] flex items-center justify-between flex-shrink-0 border-none">
           <div className="flex items-center gap-2.5">
             <img src="/icons/filter-slider.png" alt="" className="w-5 h-5 object-contain" />
             <h2 className="text-sm font-bold text-[#111111] tracking-tight">Filter Operasional Dashboard</h2>
           </div>
           <button
             type="button"
-            onClick={onClose}
-            className="text-[#888888] hover:text-[#111111] p-1 rounded-md transition-colors"
-           aria-label="Tutup"><X className="w-4 h-4" /></button>
+            onClick={handleClose}
+            className="w-7 h-7 rounded-[6px] text-[#555555] hover:text-[#111111] bg-[#eeeeee] hover:bg-[#e2e2e2] border-none flex items-center justify-center transition-colors cursor-pointer flex-shrink-0"
+            aria-label="Tutup"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
 
         {/* Drawer Body Scrollable */}
