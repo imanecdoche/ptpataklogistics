@@ -414,21 +414,25 @@ export function Sidebar({
         })}
       </nav>
 
-      {/* Footer (Info Profil Akun & Tombol Keluar) */}
-      <div className="p-3 md:p-4 border-t border-[#eaeaea] space-y-2 md:space-y-3">
+      {/* Footer (Info Profil Akun & Tombol Keluar) - Compact Design */}
+      <div className="p-2 md:p-2.5 border-t border-[#eaeaea] space-y-1">
         {/* Account Profile Card */}
-        <div className="flex items-center justify-between p-2 md:p-2.5 rounded-[6px] hover:bg-[#fafafa] transition-colors">
-          <div className="flex items-center space-x-2.5 md:space-x-3 min-w-0 flex-1 mr-1.5">
+        <div className="flex items-center justify-between p-1.5 md:p-2 rounded-[6px] bg-[#f8f9fa] hover:bg-[#f1f3f5] transition-colors">
+          <div
+            onClick={handleSettingsClick}
+            className="flex items-center space-x-2 md:space-x-2.5 min-w-0 flex-1 mr-1.5 cursor-pointer"
+            title="Buka Pengaturan Akun"
+          >
             <img
               src="/icons/avatar.png"
               alt="Profil Akun"
-              className="w-7 h-7 md:w-9 md:h-9 object-contain flex-shrink-0"
+              className="w-6 h-6 md:w-7 md:h-7 object-contain flex-shrink-0"
             />
             <div className="min-w-0 flex-1">
-              <span className="block text-xs md:text-sm font-semibold text-[#111111] truncate leading-tight">
+              <span className="block text-xs font-semibold text-[#111111] truncate leading-tight">
                 {user?.displayName || (user?.email ? user.email.split('@')[0] : 'Administrator')}
               </span>
-              <span className="block text-[10px] md:text-xs text-[#666666] truncate leading-tight mt-0.5">
+              <span className="block text-[10px] text-[#777777] truncate leading-tight mt-0.5">
                 {user?.email || 'admin@patak.id'}
               </span>
             </div>
@@ -439,12 +443,12 @@ export function Sidebar({
             onClick={handleSettingsClick}
             title="Pengaturan Akun"
             aria-label="Pengaturan Akun"
-            className="p-1 md:p-1.5 text-[#666666] hover:text-[#111111] hover:bg-[#f0f0f0] rounded-[4px] transition-colors flex-shrink-0 cursor-pointer"
+            className="p-1 text-[#666666] hover:text-[#111111] hover:bg-[#eaeaea] rounded-[4px] transition-colors flex-shrink-0 cursor-pointer"
           >
             <img
               src="/icons/settings.png"
               alt="Pengaturan"
-              className="w-4 h-4 md:w-5 md:h-5 object-contain"
+              className="w-3.5 h-3.5 md:w-4 md:h-4 object-contain"
             />
           </button>
         </div>
@@ -453,12 +457,12 @@ export function Sidebar({
         <button
           type="button"
           onClick={handleLogoutClick}
-          className="w-full flex items-center space-x-2.5 md:space-x-3 px-3 py-2 md:px-3.5 md:py-2.5 text-xs md:text-sm font-medium text-[#666666] hover:text-[#cf1124] hover:bg-[#fff5f5] rounded-[6px] transition-colors text-left"
+          className="w-full flex items-center space-x-2 px-2 py-1 md:py-1.5 text-xs font-medium text-[#666666] hover:text-[#cf1124] hover:bg-[#fff5f5] rounded-[5px] transition-colors text-left cursor-pointer"
         >
           <img
             src="/icons/logout.png"
             alt="Keluar"
-            className="w-4 h-4 md:w-5 md:h-5 object-contain flex-shrink-0"
+            className="w-3.5 h-3.5 md:w-4 md:h-4 object-contain flex-shrink-0"
           />
           <span>Keluar</span>
         </button>
