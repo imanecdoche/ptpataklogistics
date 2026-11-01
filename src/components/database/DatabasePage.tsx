@@ -780,7 +780,6 @@ export function DatabasePage({
                   {!isDispatcherUser && (
                     <th className="py-2.5 px-3 w-[125px] min-w-[125px] whitespace-nowrap">Laba Bersih</th>
                   )}
-                  <th className="py-2.5 px-3 w-[85px] min-w-[85px] text-center whitespace-nowrap">Status</th>
                   <th className="py-2.5 px-3 w-[180px] min-w-[180px] whitespace-nowrap">Catatan Ritase</th>
                   <th className="py-2.5 px-3 w-[105px] min-w-[105px] whitespace-nowrap">Dibuat Oleh</th>
                   {!isWatcherUser && <th className="py-2.5 px-3 w-[60px] min-w-[60px] text-right whitespace-nowrap">Aksi</th>}
@@ -789,7 +788,7 @@ export function DatabasePage({
               <tbody className="divide-y divide-[#eaeaea]">
                 {filteredTransactions.length === 0 ? (
                   <tr>
-                    <td colSpan={isDispatcherUser ? 15 : 17} className="py-10 text-center text-xs text-[#888888] whitespace-nowrap">
+                    <td colSpan={isDispatcherUser ? 14 : 16} className="py-10 text-center text-xs text-[#888888] whitespace-nowrap">
                       {isLoading ? 'Memuat riwayat ritase...' : 'Tidak ada data ritase yang sesuai filter.'}
                     </td>
                   </tr>
@@ -883,15 +882,6 @@ export function DatabasePage({
                           {formatRupiah(tx.netProfit)}
                         </td>
                       )}
-                      <td className="py-2.5 px-3 whitespace-nowrap w-[85px] align-middle text-center">
-                        <span
-                          className={`text-[11px] font-bold tracking-wide ${
-                            tx.status === 'LUNAS' ? 'text-emerald-700' : 'text-amber-700'
-                          }`}
-                        >
-                          {tx.status === 'LUNAS' ? 'LUNAS' : 'TEMPO'}
-                        </span>
-                      </td>
                       <td className="py-2.5 px-3 text-[#666666] whitespace-nowrap w-[180px] align-middle">
                         <RunningText text={tx.notes} placeholder="-" className="text-[#666666]" />
                       </td>

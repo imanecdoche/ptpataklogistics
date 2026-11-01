@@ -155,30 +155,63 @@ export function ReceivablesView({
         </div>
       </div>
 
-      {/* 2. Breakdown Piutang per Proyek */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {projectBreakdown.map(p => (
-          <div key={p.id} className="bg-white border border-[#eaeaea] rounded-[8px] p-3.5">
-            <div className="flex items-center justify-between pb-2 border-b border-[#f5f5f5]">
-              <span className="font-bold text-xs text-[#111111] truncate">{p.name}</span>
-              <span className="text-[10px] text-[#888888] font-mono">{p.count} Ritase</span>
-            </div>
-            <div className="flex items-center justify-between pt-2">
-              <div>
-                <span className="text-[10px] text-[#888888] block">Sisa Piutang Tempo</span>
-                <span className="text-xs font-bold tracking-tight text-[#cf1124] block mt-0.5">
-                  {formatRupiah(p.tempo)}
-                </span>
-              </div>
-              <div className="text-right">
-                <span className="text-[10px] text-[#888888] block">Terbayar Lunas</span>
-                <span className="text-xs font-bold tracking-tight text-emerald-700 block mt-0.5">
-                  {formatRupiah(p.lunas)}
-                </span>
-              </div>
-            </div>
+      {/* 2. Ringkasan Piutang per Proyek (Tabel Terstruktur) */}
+      <div className="bg-white border border-[#eaeaea] rounded-[10px] overflow-hidden">
+        <div className="px-4 py-3 border-b border-[#eaeaea] bg-[#fafafa] flex items-center justify-between">
+          <div>
+            <h3 className="text-xs font-bold text-[#111111] leading-tight">Ringkasan Piutang per Proyek</h3>
+            <p className="text-[11px] text-[#666666] leading-tight mt-0.5">Akumulasi tagihan dan sisa piutang tempo per proyek berjalan</p>
           </div>
-        ))}
+          <span className="text-[11px] font-mono font-bold text-[#555555] bg-white px-2.5 py-1 rounded-[5px] border border-[#eaeaea]">
+            {projectBreakdown.length} Proyek
+          </span>
+        </div>
+        <div className="overflow-x-auto select-text">
+          <table className="w-full min-w-[700px] table-fixed text-left text-xs border-collapse">
+            <thead className="bg-[#f9f9f9] border-b border-[#eaeaea] text-[#555555] font-semibold text-[11px] uppercase tracking-wider select-none">
+              <tr>
+                <th className="py-2.5 px-3 w-[240px] whitespace-nowrap">Proyek Tujuan</th>
+                <th className="py-2.5 px-3 w-[100px] text-center whitespace-nowrap">Jumlah Ritase</th>
+                <th className="py-2.5 px-3 w-[140px] text-right whitespace-nowrap">Total Tagihan</th>
+                <th className="py-2.5 px-3 w-[140px] text-right whitespace-nowrap">Sisa Piutang (Tempo)</th>
+                <th className="py-2.5 px-3 w-[140px] text-right whitespace-nowrap">Terbayar Lunas</th>
+                <th className="py-2.5 px-3 w-[90px] text-center whitespace-nowrap">Progres</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#eaeaea]">
+              {projectBreakdown.map(p => {
+                const total = p.tempo + p.lunas;
+                const percent = total > 0 ? Math.round((p.lunas / total) * 100) : 0;
+                return (
+                  <tr key={p.id} className="hover:bg-[#fafafa] transition-colors">
+                    <td className="py-2.5 px-3 font-semibold text-[#111111] whitespace-nowrap truncate">
+                      {p.name}
+                    </td>
+                    <td className="py-2.5 px-3 font-mono font-medium text-[#555555] text-center whitespace-nowrap">
+                      {p.count} Ritase
+                    </td>
+                    <td className="py-2.5 px-3 font-bold text-[#111111] text-right whitespace-nowrap">
+                      {formatRupiah(total)}
+                    </td>
+                    <td className="py-2.5 px-3 font-bold text-[#cf1124] text-right whitespace-nowrap">
+                      {formatRupiah(p.tempo)}
+                    </td>
+                    <td className="py-2.5 px-3 font-bold text-emerald-700 text-right whitespace-nowrap">
+                      {formatRupiah(p.lunas)}
+                    </td>
+                    <td className="py-2.5 px-3 text-center whitespace-nowrap">
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-[4px] border-none ${
+                        percent === 100 ? 'bg-[#e6f4ea] text-[#137333]' : 'bg-[#f1f3f4] text-[#555555]'
+                      }`}>
+                        {percent}%
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* 3. Tabel Piutang Ritase */}
@@ -259,7 +292,6 @@ export function ReceivablesView({
                 <th className="py-2.5 px-3 w-[200px] whitespace-nowrap">Proyek / Klien</th>
                 <th className="py-2.5 px-3 w-[160px] whitespace-nowrap">Material / Plat</th>
                 <th className="py-2.5 px-3 w-[130px] text-right whitespace-nowrap">Nilai Tagihan</th>
-                <th className="py-2.5 px-3 w-[100px] text-center whitespace-nowrap">Status</th>
                 <th className="py-2.5 px-3 w-[105px] whitespace-nowrap">Dibuat Oleh</th>
                 {!isWatcherUser && <th className="py-2.5 px-3 w-[110px] text-right whitespace-nowrap">Aksi</th>}
               </tr>
@@ -267,7 +299,7 @@ export function ReceivablesView({
             <tbody className="divide-y divide-[#eaeaea]">
               {filteredTransactions.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-10 text-center text-xs text-[#888888]">
+                  <td colSpan={7} className="py-10 text-center text-xs text-[#888888]">
                     Tidak ada tiket ritase piutang yang ditemukan.
                   </td>
                 </tr>
@@ -311,17 +343,6 @@ export function ReceivablesView({
                         quantity={tx.quantity}
                         align="right"
                       />
-                    </td>
-                    <td className="py-2.5 px-3 text-center whitespace-nowrap align-middle">
-                      <span
-                        className={`text-[10px] font-bold px-2 py-0.5 rounded-[4px] border-none ${
-                          tx.status === 'LUNAS'
-                            ? 'bg-[#e6f4ea] text-[#137333]'
-                            : 'bg-[#fce8e6] text-[#cf1124]'
-                        }`}
-                      >
-                        {tx.status}
-                      </span>
                     </td>
                     <td className="py-2.5 px-3 font-medium text-[#111111] whitespace-nowrap align-middle">
                       {resolveCreatorName(tx.createdBy)}

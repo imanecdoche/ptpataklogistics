@@ -647,3 +647,37 @@ Halo **Argon**! 👋 Melanjutkan sesi hari ini, berikut adalah rekapitulasi leng
 7. **Kesiapan Workstation Argon**:
    - Seluruh commit (`63090d0`) telah di-push ke GitHub repository `origin/main`.
    - Argon cukup menjalankan `git pull origin main` di Linux Workstation untuk mendapatkan seluruh kode dan pembaruan mutakhir.
+
+
+### FASE 18: Penghapusan Kolom Status Ritase & Transformasi Tabel Piutang Tempo untuk Argon (01 Nov 2026, 18:20 WIB)
+Dicatat oleh **`antigravity`** untuk sinkronisasi konteks arsitektur dan operasional bersama **Argon**:
+
+Halo **Argon**! 👋 Berikut adalah rekapitulasi pembaruan lanjutan yang baru saja diselesaikan atas instruksi langsung dari user:
+
+1. **Penghapusan Kolom Redundan 'Status' pada Tabel Transaksi Ritase (`DatabasePage.tsx`)**:
+   - Kolom `Status` (`<th ...>Status</th>`) dan sel datanya (`tx.status === 'LUNAS' ? 'LUNAS' : 'TEMPO'`) telah dihapus secara bersih dari tabel transaksi ritase di Database Page.
+   - Penyesuaian `colSpan` baris kosong (*empty state*) dari `15 : 17` menjadi `14 : 16`.
+   - Tombol operasional `"Tandai Lunas"` tetap tersedia dengan aman di menu aksi 3-titik (*TableActionMenu*) untuk tiket yang belum lunas.
+
+2. **Penghapusan Kolom 'Status' pada Tabel Data Piutang (`ReceivablesView.tsx`)**:
+   - Kolom status dengan badge teks `TEMPO` / `LUNAS` telah dihapus dari tabel data piutang ritase karena redundan dengan kolom aksi yang sudah secara jelas menampilkan tombol `"Tandai Lunas"` (untuk tiket belum lunas) atau label `"Sudah Lunas"`.
+   - Mengurangi kepadatan horizontal tabel dan menghindari elemen badge yang tidak perlu sesuai prinsip *Extreme Minimalism*.
+   - Penyesuaian `colSpan` baris kosong dari `8` menjadi `7`.
+
+3. **Transformasi Seksi Ringkasan Piutang Proyek Menjadi Tabel Terstruktur (`ReceivablesView.tsx`)**:
+   - **Latar Belakang & Klarifikasi Logika Piutang**:
+     - *Mengapa Terbayar Lunas tertera Rp 0?* Karena seluruh 28 tiket ritase armada saat dicatat memiliki status awal `TEMPO` dan belum pernah ditandai lunas per individu tiket ritase (umumnya klien konstruksi membayar termin gelondongan via transfer bank yang masuk ke kas besar, bukan per ritase).
+     - *Dari mana Sisa Piutang Tempo Rp 66.750.000?* Angka ini merupakan kalkulasi matematis presisi dari total omset / nilai jual seluruh 28 tiket ritase armada yang dikirim ke Proyek Konservasi Situ Cikedal.
+   - **Perubahan UI**:
+     - Mengubah seksi kartu ringkasan proyek yang sebelumnya berbentuk grid 2-kolom menjadi **Tabel Ringkasan Piutang per Proyek** yang profesional dan terstruktur.
+     - Kolom tabel baru:
+       - `PROYEK TUJUAN` (misal: Proyek Konservasi Situ Cikedal)
+       - `JUMLAH RITASE` (misal: 28 Ritase)
+       - `TOTAL TAGIHAN` (Akumulasi omset: Rp 66.750.000)
+       - `SISA PIUTANG (TEMPO)` (Nominal belum tertagih: Rp 66.750.000)
+       - `TERBAYAR LUNAS` (Nominal realisasi pelunasan tiket: Rp 0)
+       - `PROGRES` (Persentase penyelesaian: 0%)
+
+4. **Verifikasi Build & Sinkronisasi Git**:
+   - Telah lulus build produksi (`tsc -b && vite build`) dengan 0 error dan zero regression.
+   - Kode telah siap dan langsung di-push ke GitHub repository `origin/main` agar workstation Linux Argon dapat segera melakukan `git pull`.
