@@ -48,6 +48,8 @@ import { matchesDateQuery, formatDateID } from '@/lib/dateSearchUtils';
 import { formatVolumeDisplay } from '@/lib/volumeUtils';
 import { X } from 'lucide-react';
 import { TablePagination } from '@/components/ui/TablePagination';
+import { TablePdfExportButton } from '@/components/ui/TablePdfExportButton';
+import { TablePdfColumn } from '@/lib/pdfExportService';
 
 interface DispatchHistoryPageProps {
   userEmail: string;
@@ -435,6 +437,70 @@ export function DispatchHistoryPage({
     }
   };
 
+
+  // Precision Vector PDF Exporter
+  const getDispatchPdfProps = () => {
+    const totalRevenue = filteredTransactions.reduce((acc, tx) => acc + (tx.totalRevenue || 0), 0);
+    const totalBuyCost = filteredTransactions.reduce((acc, tx) => acc + (tx.totalBuyCost || 0), 0);
+    const totalOps = filteredTransactions.reduce((acc, tx) => acc + (tx.operationalCost || 0), 0);
+    const totalProfit = filteredTransactions.reduce((acc, tx) => acc + (tx.netProfit || 0), 0);
+
+    const filtersSummary: { label: string; value: string }[] = [];
+    if (searchQuery) filtersSummary.push({ label: "Pencarian", value: searchQuery });
+    if (filters.datePreset !== "ALL") {
+      filtersSummary.push({ label: "Preset Waktu", value: filters.datePreset });
+    } else if (filters.startDate || filters.endDate) {
+      filtersSummary.push({ label: "Rentang Tanggal", value: `${filters.startDate || "Awal"} s/d ${filters.endDate || "Akhir"}` });
+    }
+    if (filters.status !== "ALL") filtersSummary.push({ label: "Status", value: filters.status });
+    if (filters.projectId !== "ALL") {
+      const proj = projects.find(p => p.id === filters.projectId);
+      if (proj) filtersSummary.push({ label: "Proyek", value: proj.name });
+    }
+    if (filters.quarryId !== "ALL") {
+      const q = quarries.find(item => item.id === filters.quarryId);
+      if (q) filtersSummary.push({ label: "Kuari", value: q.name });
+    }
+
+    const columns: TablePdfColumn[] = [
+      { header: "No", width: "4%", align: "center", format: (_, __, i) => `${i + 1}` },
+      { header: "Tanggal", width: "9%", align: "center", format: (_, tx) => formatDateID(tx.deliveryDate || tx.date || "") },
+      { header: "Tiket & Plat", width: "11%", format: (_, tx) => `${tx.ticketNumber || "-"} (${tx.truckPlate || "-"})` },
+      { header: "Proyek Tujuan", width: "16%", format: (_, tx) => resolveTransactionEntities(tx, entityMaps).project.name || "-" },
+      { header: "Kuari Asal", width: "13%", format: (_, tx) => resolveTransactionEntities(tx, entityMaps).quarry.name || "-" },
+      { header: "Material & Vol", width: "12%", format: (_, tx) => `${resolveTransactionEntities(tx, entityMaps).material.name || "-"} (${formatVolumeDisplay(tx.quantity, tx.unit)})` },
+      { header: "Tagihan Jual", width: "10%", align: "right", format: (_, tx) => formatRupiah(tx.totalRevenue) },
+      ...(hideMargin ? [] : [
+        { header: "Biaya Kuari", width: "9%", align: "right" as const, format: (_: any, tx: any) => formatRupiah(tx.totalBuyCost) },
+        { header: "Beban Ops", width: "8%", align: "right" as const, format: (_: any, tx: any) => formatRupiah(tx.operationalCost) },
+        { header: "Laba Bersih", width: "8%", align: "right" as const, format: (_: any, tx: any) => formatRupiah(tx.netProfit) },
+      ])
+    ];
+
+    const grandTotals: { [key: number]: string } = {
+      6: formatRupiah(totalRevenue)
+    };
+    if (!hideMargin) {
+      grandTotals[7] = formatRupiah(totalBuyCost);
+      grandTotals[8] = formatRupiah(totalOps);
+      grandTotals[9] = formatRupiah(totalProfit);
+    }
+
+    return {
+      metadata: {
+        title: "Laporan Riwayat Ritase & Logistik Armada",
+        subtitle: `Total Catatan: ${filteredTransactions.length} Pengiriman Ritase`,
+        filtersSummary,
+        grandTotals,
+        totalLabel: "GRAND TOTAL"
+      },
+      columns,
+      data: filteredTransactions,
+      orientation: "landscape"
+    };
+  };
+
+
   return (
     <div className="w-full flex flex-col gap-4 select-none pb-12">
       {/* 1. ROW 4 KARTU METRIK KPI RINGKASAN */}
@@ -560,8 +626,9 @@ export function DispatchHistoryPage({
           ))}
         </div>
 
-        {/* Sisi Kanan: Tombol Popover Filter Lengkap */}
-        <div className="relative flex items-center justify-end">
+        {/* Sisi Kanan: Tombol Popover Filter Lengkap & Export PDF */}
+        <div className="relative flex items-center justify-end gap-2">
+          <TablePdfExportButton tableId="dispatch_history" getPdfProps={getDispatchPdfProps} fileName={`Ritase_Patak_${new Date().toISOString().slice(0, 10)}.pdf`} />
           <button
             ref={filterBtnRef}
             type="button"

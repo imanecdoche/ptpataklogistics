@@ -19,6 +19,8 @@ import { formatEntityNameLive } from '@/lib/nameUtils';
 import { CustomSelectCombobox, SelectOption } from '@/components/ui/CustomSelectCombobox';
 import { MobileTitlebarAction } from '@/components/ui/MobileTitlebarAction';
 import { ProjectFinancialsModal } from './ProjectFinancialsModal';
+import { TablePdfExportButton } from '@/components/ui/TablePdfExportButton';
+import { TablePdfColumn, TablePdfFilterSummary } from '@/lib/pdfExportService';
 import { X } from 'lucide-react';
 
 const PROJECT_STATUS_OPTIONS: SelectOption[] = [
@@ -161,6 +163,41 @@ export function ProjectsPage({
   const activeProjectsCount = useMemo(() => {
     return filteredProjects.filter(p => p.status === 'ACTIVE').length;
   }, [filteredProjects]);
+
+  const projectsPdfColumns = useMemo<TablePdfColumn[]>(
+    () => [
+      { header: 'Nama Proyek', format: (_, p) => `${p.name} (${p.location})` },
+      { header: 'Investor Pendana', format: (_, p) => p.investorName || '-' },
+      { header: 'Klien / Pemilik', format: (_, p) => p.clientName || '-' },
+      {
+        header: 'Modal Disetor',
+        align: 'right',
+        format: (_, p) => formatRupiah(p.initialDeposit || 0),
+      },
+      {
+        header: 'Saldo Kas Berjalan',
+        align: 'right',
+        format: (_, p) => formatRupiah(p.currentBalance || 0),
+      },
+      { header: 'Status', align: 'center', format: (_, p) => p.status },
+    ],
+    []
+  );
+
+  const projectsFiltersSummary = useMemo<TablePdfFilterSummary[]>(() => {
+    const list: TablePdfFilterSummary[] = [];
+    if (searchQuery.trim()) list.push({ label: 'Pencarian', value: searchQuery.trim() });
+    if (statusFilter !== 'ALL') list.push({ label: 'Status Proyek', value: statusFilter });
+    return list;
+  }, [searchQuery, statusFilter]);
+
+  const projectsGrandTotals = useMemo(() => {
+    return {
+      0: 'TOTAL PROYEK TERFILTER',
+      3: formatRupiah(totalDeposit),
+      4: formatRupiah(totalCurrentBalance),
+    };
+  }, [totalDeposit, totalCurrentBalance]);
 
   // Otorisasi Aksi Simpan Proyek Baru
   const handleOpenAdd = () => {
@@ -390,6 +427,18 @@ export function ProjectsPage({
                 className="w-full bg-white border border-[#eaeaea] rounded-[6px] pl-9 pr-3 py-1.5 text-xs text-[#111111] placeholder:text-[#999999] outline-none focus:border-[#111111] transition-colors"
               />
             </div>
+
+            <TablePdfExportButton
+              tableId="projects_master"
+              title="Daftar Master Proyek Lapangan"
+              subtitle="PT Patak Abadi Jaya • Status Kontrak, Klien & Finansial Proyek"
+              columns={projectsPdfColumns}
+              data={filteredProjects}
+              filtersSummary={projectsFiltersSummary}
+              grandTotals={projectsGrandTotals}
+              defaultOrientation="landscape"
+              fileName={`Master_Proyek_Patak_${new Date().toISOString().slice(0, 10)}.pdf`}
+            />
 
             {!isInvestorUser && (
               <button

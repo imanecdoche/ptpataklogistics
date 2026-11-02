@@ -1558,3 +1558,22 @@ Dokumen ini adalah hukum tertinggi operasional sistem. Kegagalan mematuhi aturan
 
 
 
+
+133. **Universal Precision Table PDF Export Engine (jsPDF + AutoTable & Full-Screen Live Preview Modal)**:
+    - **Engine Architecture (jsPDF + jspdf-autotable)**:
+      * Seluruh tabel sistem (Riwayat Ritase, Arus Kas, Piutang, Proyek, Kasbon Tukang, Upah Tenaga Kerja, Investor, dan Database Master) WAJIB menyediakan fitur export PDF berpresisi 100% menggunakan mesin **jsPDF + jspdf-autotable**.
+      * Teks dokumen wajib berupa teks vector murni (selectable, searchable, tajam tanpa pecah pixel atau distorsi CSS browser), pemotongan halaman per-baris tanpa membelah teks baris, dan ukuran file sangat ringan.
+    - **Full-Screen Live Preview Modal (`TablePdfExportModal.tsx`)**:
+      * Klik tombol Export PDF pada tabel memunculkan modal Full Width & Full Height (`fixed inset-0 z-50 bg-[#f9f9f9]`) dengan backdrop solid murni tanpa blur (`bg-black/50`, Rule 5 & Rule 26).
+      * **Live PDF Blob Viewer**: Merender dokumen jsPDF secara real-time ke dalam container iframe blob URL (`doc.output('bloburl')`), sehingga 100% identik dengan hasil cetak yang diunduh.
+      * **Custom Form Controls & Pickers (Rule 129)**: Dilarang menggunakan kontrol browser native. Semua pemilih menggunakan komponen kustom solid-filled:
+        1. *Paper Size Picker*: Preset A4, F4 / Folio, Letter, Legal, serta opsi *Custom Dimensions* (lebar & tinggi mm).
+        2. *Orientation Toggle*: Portrait vs Landscape.
+        3. *Margin Controls*: Preset Normal (10mm), Sempit (6mm), Lebar (15mm), atau Custom Margin (mm).
+        4. *Header & Footer Toggles*: Kop Surat Resmi PT Patak Abadi Jaya, Ringkasan Filter/Pencarian Aktif, Nomor Halaman Resmi ("Halaman X dari Y"), dan Dua Blok Tanda Tangan ("Dibuat Oleh" & "Menyetujui").
+      * **LocalStorage Persistence**: Menyimpan preferensi ukuran kertas, orientasi, dan margin per-tabel (`patak_pdf_pref_<table_id>`) agar pengguna tidak perlu mengatur ulang setiap sesi.
+    - **Formal Corporate Document Layout**:
+      * Desain formal kedinasan/audit: Kop Perusahaan resmi bergaris tegas, header abu-abu formal (`#f0f0f0`), border tipis (`#dcdcdc`), zebra striping halus (`#fafafa`), kolom angka rata kanan berfont tabular monokrom, baris Grand Total tebal (`#eaeaea`), dan blok tanda tangan formal.
+    - **Data Scope & Anti-Wrapping**:
+      * Ekspor WAJIB mencakup **seluruh data hasil pencarian dan filter aktif** yang sedang tampil di tabel saat tombol diklik.
+      * Kolom angka dan finansial dilindungi dari pemotongan atau wrapping patah.

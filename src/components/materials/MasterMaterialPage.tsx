@@ -26,6 +26,8 @@ import { formatEntityNameLive } from '@/lib/nameUtils';
 import { X } from 'lucide-react';
 import { TableActionMenu } from '@/components/ui/TableActionMenu';
 import { MobileTitlebarAction } from '@/components/ui/MobileTitlebarAction';
+import { TablePdfExportButton } from '@/components/ui/TablePdfExportButton';
+import { TablePdfColumn } from '@/lib/pdfExportService';
 
 export type MaterialSubTab = 'catalog' | 'pricing' | 'routes';
 
@@ -212,6 +214,68 @@ export function MasterMaterialPage({
     const q = searchQuery.toLowerCase().trim();
     return commodities.filter(c => c.name.toLowerCase().includes(q));
   }, [commodities, searchQuery]);
+
+  // PDF Export Memos
+  const ratesPdfColumns = useMemo<TablePdfColumn[]>(
+    () => [
+      { header: 'Jenis Material', dataKey: 'materialName' },
+      { header: 'PT Tambang (Titik Muat)', dataKey: 'quarryName' },
+      { header: 'Mutu / Kualitas', format: (_, r) => r.qualityGrade || '-' },
+      { header: 'Satuan', dataKey: 'unit' },
+      {
+        header: 'Tebus Cash',
+        align: 'right',
+        format: (_, r) => formatRupiah(r.buyPriceCash),
+      },
+      {
+        header: 'Jual Standar',
+        align: 'right',
+        format: (_, r) => formatRupiah(r.sellPriceDefault),
+      },
+      {
+        header: 'Margin Kotor',
+        align: 'right',
+        format: (_, r) => formatRupiah((r.sellPriceDefault || 0) - (r.buyPriceCash || 0)),
+      },
+    ],
+    []
+  );
+
+  const routesPdfColumns = useMemo<TablePdfColumn[]>(
+    () => [
+      { header: 'Titik Muat (Kuari Asal)', dataKey: 'quarryName' },
+      { header: 'Titik Bongkar (Proyek Tujuan)', dataKey: 'projectName' },
+      {
+        header: 'Jarak Tempuh',
+        align: 'right',
+        format: (_, r) => `${r.distanceKm} km`,
+      },
+      {
+        header: 'Biaya Jalan Acuan',
+        align: 'right',
+        format: (_, r) => formatRupiah(r.standardOperationalCost),
+      },
+    ],
+    []
+  );
+
+  const commoditiesPdfColumns = useMemo<TablePdfColumn[]>(
+    () => [
+      { header: 'Jenis Material', dataKey: 'name' },
+      { header: 'Satuan Standar', dataKey: 'unit' },
+      {
+        header: 'Harga Beli Acuan',
+        align: 'right',
+        format: (_, c) => formatRupiah(c.defaultBuyPrice || 0),
+      },
+      {
+        header: 'Harga Jual Acuan',
+        align: 'right',
+        format: (_, c) => formatRupiah(c.defaultSellPrice || 0),
+      },
+    ],
+    []
+  );
 
   // Helper Reset Rate Form
   const resetRateForm = () => {
@@ -660,14 +724,25 @@ export function MasterMaterialPage({
             <span className="text-xs font-bold uppercase tracking-wider text-[#666666]">
               Katalog Tebus Tambang & Harga Jual ({filteredRates.length} Konfigurasi)
             </span>
-            <button
-              type="button"
-              onClick={handleOpenAddRate}
-              className="hidden md:flex px-3 py-1.5 bg-[#111111] hover:bg-[#222222] text-white rounded-[6px] text-xs font-semibold transition-colors items-center gap-1.5"
-            >
-              <span>+</span>
-              <span>Atur Harga Kuari</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <TablePdfExportButton
+                tableId="material_pricing"
+                title="Katalog Tebus Kuari & Harga Jual Material"
+                subtitle="PT Patak Abadi Jaya • Daftar Harga Tambang & Margin"
+                columns={ratesPdfColumns}
+                data={filteredRates}
+                defaultOrientation="landscape"
+                fileName={`Katalog_Harga_Kuari_${new Date().toISOString().slice(0, 10)}.pdf`}
+              />
+              <button
+                type="button"
+                onClick={handleOpenAddRate}
+                className="hidden md:flex px-3 py-1.5 bg-[#111111] hover:bg-[#222222] text-white rounded-[6px] text-xs font-semibold transition-colors items-center gap-1.5"
+              >
+                <span>+</span>
+                <span>Atur Harga Kuari</span>
+              </button>
+            </div>
           </div>
 
           <div className="border border-[#eaeaea] rounded-[10px] bg-white overflow-hidden">
@@ -770,14 +845,25 @@ export function MasterMaterialPage({
             <span className="text-xs font-bold uppercase tracking-wider text-[#666666]">
               Standar Operasional Armada Berdasarkan Jarak Tempuh ({filteredRoutes.length} Rute)
             </span>
-            <button
-              type="button"
-              onClick={handleOpenAddRoute}
-              className="hidden md:flex px-3 py-1.5 bg-[#111111] hover:bg-[#222222] text-white rounded-[6px] text-xs font-semibold transition-colors items-center gap-1.5"
-            >
-              <span>+</span>
-              <span>Tambah Rute Acuan</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <TablePdfExportButton
+                tableId="material_routes"
+                title="Standar Biaya Operasional Rute Armada"
+                subtitle="PT Patak Abadi Jaya • Acuan Jarak Tempuh & Uang Jalan"
+                columns={routesPdfColumns}
+                data={filteredRoutes}
+                defaultOrientation="portrait"
+                fileName={`Tarif_Rute_Armada_${new Date().toISOString().slice(0, 10)}.pdf`}
+              />
+              <button
+                type="button"
+                onClick={handleOpenAddRoute}
+                className="hidden md:flex px-3 py-1.5 bg-[#111111] hover:bg-[#222222] text-white rounded-[6px] text-xs font-semibold transition-colors items-center gap-1.5"
+              >
+                <span>+</span>
+                <span>Tambah Rute Acuan</span>
+              </button>
+            </div>
           </div>
 
           <div className="border border-[#eaeaea] rounded-[10px] bg-white overflow-hidden">
@@ -859,17 +945,28 @@ export function MasterMaterialPage({
             <span className="text-xs font-bold uppercase tracking-wider text-[#666666]">
               Material Terdaftar
             </span>
-            <button
-              type="button"
-              onClick={handleOpenAddCommodity}
-              className="hidden md:flex px-3 py-1.5 bg-[#111111] hover:bg-[#222222] text-white rounded-[6px] text-xs font-semibold transition-colors items-center gap-1.5"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <line x1="12" y1="5" x2="12" y2="19" strokeLinecap="round" strokeLinejoin="round" />
-              <line x1="5" y1="12" x2="19" y2="12" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-              <span>Komoditas</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <TablePdfExportButton
+                tableId="material_catalog"
+                title="Katalog Komoditas Material"
+                subtitle="PT Patak Abadi Jaya • Master Satuan & Harga Acuan Dasar"
+                columns={commoditiesPdfColumns}
+                data={filteredCommodities}
+                defaultOrientation="portrait"
+                fileName={`Katalog_Material_${new Date().toISOString().slice(0, 10)}.pdf`}
+              />
+              <button
+                type="button"
+                onClick={handleOpenAddCommodity}
+                className="hidden md:flex px-3 py-1.5 bg-[#111111] hover:bg-[#222222] text-white rounded-[6px] text-xs font-semibold transition-colors items-center gap-1.5"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <line x1="12" y1="5" x2="12" y2="19" strokeLinecap="round" strokeLinejoin="round" />
+                  <line x1="5" y1="12" x2="19" y2="12" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <span>Komoditas</span>
+              </button>
+            </div>
           </div>
 
           <div className="border border-[#eaeaea] rounded-[10px] bg-white overflow-hidden">

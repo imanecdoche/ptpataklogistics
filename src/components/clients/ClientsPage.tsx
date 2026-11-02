@@ -10,6 +10,8 @@ import { NewClientModal } from '@/components/ui/NewClientModal';
 import { EditClientModal } from '@/components/clients/EditClientModal';
 import { formatPhoneNumber } from '@/lib/phoneUtils';
 import { MobileTitlebarAction } from '@/components/ui/MobileTitlebarAction';
+import { TablePdfExportButton } from '@/components/ui/TablePdfExportButton';
+import { TablePdfColumn, TablePdfFilterSummary } from '@/lib/pdfExportService';
 
 interface ClientsPageProps {
   userEmail: string;
@@ -77,6 +79,23 @@ const [clients, setClients] = useState<Client[]>([]);
     const corporateCount = ptCount + cvCount + udCount;
     return { total, corporateCount, peroranganCount };
   }, [clients]);
+
+  const clientsPdfColumns = useMemo<TablePdfColumn[]>(
+    () => [
+      { header: 'Nama Klien / Perusahaan', dataKey: 'name' },
+      { header: 'Klasifikasi', dataKey: 'type' },
+      { header: 'PIC Lapangan', format: (_, c) => c.picName || '-' },
+      { header: 'Nomor HP / WhatsApp', format: (_, c) => formatPhoneNumber(c.phone) },
+    ],
+    []
+  );
+
+  const clientsFiltersSummary = useMemo<TablePdfFilterSummary[]>(() => {
+    const list: TablePdfFilterSummary[] = [];
+    if (searchQuery.trim()) list.push({ label: 'Pencarian', value: searchQuery.trim() });
+    if (typeFilter !== 'ALL') list.push({ label: 'Klasifikasi', value: typeFilter });
+    return list;
+  }, [searchQuery, typeFilter]);
 
   // Eksekusi Hapus Klien setelah lolos PIN
   const handleConfirmDelete = async (): Promise<void> => {
@@ -216,6 +235,17 @@ const [clients, setClients] = useState<Client[]>([]);
                 className="w-full bg-white border border-[#eaeaea] rounded-[6px] pl-9 pr-3 py-1.5 text-xs text-[#111111] placeholder:text-[#999999] outline-none focus:border-[#111111] transition-colors"
               />
             </div>
+
+            <TablePdfExportButton
+              tableId="clients_master"
+              title="Daftar Master Klien & Rekanan Proyek"
+              subtitle="PT Patak Abadi Jaya • Kontak Pemilik, Rekanan PT & Perorangan"
+              columns={clientsPdfColumns}
+              data={filteredClients}
+              filtersSummary={clientsFiltersSummary}
+              defaultOrientation="portrait"
+              fileName={`Master_Klien_Patak_${new Date().toISOString().slice(0, 10)}.pdf`}
+            />
 
             {!isDispatcherUser && (
             <button

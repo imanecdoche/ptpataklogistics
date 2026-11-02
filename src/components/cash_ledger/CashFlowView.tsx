@@ -12,6 +12,8 @@ import { EditCashLedgerModal } from './EditCashLedgerModal';
 import { DeleteCashLedgerModal } from './DeleteCashLedgerModal';
 import { ImageIcon, Pencil, Trash2, SlidersHorizontal, X, RotateCcw } from 'lucide-react';
 import { CashFilterDrawer, CashFilterState, DEFAULT_CASH_FILTERS, countActiveFilters } from './CashFilterDrawer';
+import { TablePdfExportButton } from '@/components/ui/TablePdfExportButton';
+import { TablePdfColumn, TablePdfFilterSummary } from '@/lib/pdfExportService';
 
 interface CashFlowViewProps {
   entries: CashLedgerEntry[];
@@ -209,6 +211,67 @@ export function CashFlowView({
     return filteredEntries.slice(start, start + 20);
   }, [filteredEntries, currentPage]);
 
+  const cashPdfColumns = useMemo<TablePdfColumn[]>(
+    () => [
+      { header: 'Tanggal', format: (_, r) => formatDateID(r.date) },
+      { header: 'Kategori', format: (_, r) => r.type.replace(/_/g, ' ') },
+      {
+        header: 'Deskripsi / Referensi',
+        format: (_, r) => `${r.description}${r.referenceId ? ` (${r.referenceId})` : ''}`,
+      },
+      {
+        header: 'Kas Masuk (+)',
+        align: 'right',
+        format: (_, r) => (r.isCredit ? formatRupiah(r.amount) : '-'),
+      },
+      {
+        header: 'Kas Keluar (-)',
+        align: 'right',
+        format: (_, r) => (!r.isCredit ? formatRupiah(r.amount) : '-'),
+      },
+      {
+        header: 'Saldo Berjalan',
+        align: 'right',
+        format: (_, r) => formatRupiah(r.runningBalance),
+      },
+      { header: 'Dicatat Oleh', format: (_, r) => r.createdByName || '-' },
+    ],
+    []
+  );
+
+  const cashFiltersSummary = useMemo<TablePdfFilterSummary[]>(() => {
+    const list: TablePdfFilterSummary[] = [];
+    if (searchQuery.trim()) list.push({ label: 'Pencarian', value: searchQuery.trim() });
+    if (filters.flowDirection !== 'ALL') {
+      list.push({
+        label: 'Arah Kas',
+        value: filters.flowDirection === 'IN' ? 'Kas Masuk (+)' : 'Kas Keluar (-)',
+      });
+    }
+    if (filters.category !== 'ALL')
+      list.push({ label: 'Kategori', value: filters.category.replace(/_/g, ' ') });
+    if (filters.projectId !== 'ALL') {
+      const p = projects.find(item => item.id === filters.projectId);
+      list.push({ label: 'Proyek', value: p?.name || filters.projectId });
+    }
+    if (filters.datePreset !== 'ALL') list.push({ label: 'Periode', value: filters.datePreset });
+    return list;
+  }, [searchQuery, filters, projects]);
+
+  const cashGrandTotals = useMemo(() => {
+    let inTotal = 0;
+    let outTotal = 0;
+    filteredEntries.forEach(e => {
+      if (e.isCredit) inTotal += e.amount || 0;
+      else outTotal += e.amount || 0;
+    });
+    return {
+      0: 'TOTAL TERFILTER',
+      3: formatRupiah(inTotal),
+      4: formatRupiah(outTotal),
+    };
+  }, [filteredEntries]);
+
   return (
     <div className="space-y-4">
       {/* 1. Metric Cards Ringkasan Arus Kas */}
@@ -327,8 +390,20 @@ export function CashFlowView({
             />
           </div>
 
-          {/* Action Buttons: Filter & Mutasi Kas (Mobile: Row 2) */}
+          {/* Action Buttons: Export PDF, Filter & Mutasi Kas */}
           <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+            <TablePdfExportButton
+              tableId="cashflow_daily"
+              title="Buku Kas & Riwayat Mutasi Keuangan"
+              subtitle="PT Patak Abadi Jaya • Alur Arus Kas Riil Perusahaan"
+              columns={cashPdfColumns}
+              data={filteredEntries}
+              filtersSummary={cashFiltersSummary}
+              grandTotals={cashGrandTotals}
+              defaultOrientation="landscape"
+              fileName={`Buku_Kas_Patak_${new Date().toISOString().slice(0, 10)}.pdf`}
+            />
+
             {/* Filter & Sorting Drawer Trigger Button */}
             <button
               type="button"

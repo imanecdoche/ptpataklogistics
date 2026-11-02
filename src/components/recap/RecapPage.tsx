@@ -11,6 +11,9 @@ import { TablePagination } from '@/components/ui/TablePagination';
 import { formatRupiah } from '@/lib/currencyUtils';
 import { PricePerVolCell } from '@/components/ui/PricePerVolCell';
 import { matchesDateQuery, formatDateID } from '@/lib/dateSearchUtils';
+import { TablePdfExportButton } from '@/components/ui/TablePdfExportButton';
+import { TablePdfColumn, TablePdfFilterSummary } from '@/lib/pdfExportService';
+import { formatVolumeDisplay } from '@/lib/volumeUtils';
 
 interface RecapPageProps {
   userEmail: string;
@@ -305,6 +308,93 @@ export function RecapPage({
     return `${startFormatted} — ${endFormatted}`;
   }, [selectedCycle]);
 
+  const recapVolumePdfColumns = useMemo<TablePdfColumn[]>(
+    () => [
+      { header: 'Tanggal Jalan', format: (_, tx) => formatDateID(tx.deliveryDate || tx.date) },
+      { header: 'No. Tiket', dataKey: 'ticketNumber' },
+      { header: 'No. SJ', format: (_, tx) => tx.suratJalan || '-' },
+      { header: 'Plat Truk', dataKey: 'truckPlate' },
+      { header: 'Supir', format: (_, tx) => tx.driverName || '-' },
+      { header: 'Proyek Tujuan', format: (_, tx) => tx.projectName || 'Proyek Umum' },
+      { header: 'Kuari Asal', format: (_, tx) => tx.quarryName || '-' },
+      { header: 'Material', dataKey: 'materialName' },
+      {
+        header: 'Volume',
+        align: 'right',
+        format: (_, tx) => formatVolumeDisplay(tx.quantity, tx.unit),
+      },
+    ],
+    []
+  );
+
+  const recapFinancialPdfColumns = useMemo<TablePdfColumn[]>(
+    () => [
+      { header: 'Tanggal', format: (_, tx) => formatDateID(tx.deliveryDate || tx.date) },
+      { header: 'No. Tiket', dataKey: 'ticketNumber' },
+      { header: 'No. SJ', format: (_, tx) => tx.suratJalan || '-' },
+      { header: 'Proyek Tujuan', format: (_, tx) => tx.projectName || 'Proyek Umum' },
+      {
+        header: 'Komoditas & Vol',
+        format: (_, tx) => `${tx.materialName} (${formatVolumeDisplay(tx.quantity, tx.unit)})`,
+      },
+      {
+        header: 'Harga Beli',
+        align: 'right',
+        format: (_, tx) => formatRupiah(tx.totalBuyCost || 0),
+      },
+      {
+        header: 'HOK & Ops',
+        align: 'right',
+        format: (_, tx) => formatRupiah(tx.operationalCost || 0),
+      },
+      {
+        header: 'Harga Jual',
+        align: 'right',
+        format: (_, tx) => formatRupiah(tx.totalRevenue || 0),
+      },
+      {
+        header: 'Laba Bersih',
+        align: 'right',
+        format: (_, tx) => formatRupiah(tx.netProfit || 0),
+      },
+    ],
+    []
+  );
+
+  const recapFiltersSummary = useMemo<TablePdfFilterSummary[]>(() => {
+    const list: TablePdfFilterSummary[] = [];
+    if (activeRangeText) list.push({ label: 'Periode', value: activeRangeText });
+    if (selectedProjectId !== 'ALL') {
+      const p = projects.find(item => item.id === selectedProjectId);
+      list.push({ label: 'Proyek', value: p?.name || selectedProjectId });
+    }
+    if (selectedQuarry !== 'ALL') list.push({ label: 'Kuari', value: selectedQuarry });
+    if (selectedMaterial !== 'ALL') list.push({ label: 'Material', value: selectedMaterial });
+    if (searchQuery.trim()) list.push({ label: 'Pencarian', value: searchQuery.trim() });
+    return list;
+  }, [activeRangeText, selectedProjectId, selectedQuarry, selectedMaterial, searchQuery, projects]);
+
+  const recapVolumeGrandTotals = useMemo(() => {
+    return {
+      0: 'TOTAL RITASE OPERASIONAL',
+      8: `${filteredTransactions.length} Ritase`,
+    };
+  }, [filteredTransactions]);
+
+  const recapFinancialGrandTotals = useMemo(() => {
+    const totalBuy = filteredTransactions.reduce((acc, tx) => acc + (tx.totalBuyCost || 0), 0);
+    const totalOps = filteredTransactions.reduce((acc, tx) => acc + (tx.operationalCost || 0), 0);
+    const totalSell = filteredTransactions.reduce((acc, tx) => acc + (tx.totalRevenue || 0), 0);
+    const totalNet = filteredTransactions.reduce((acc, tx) => acc + (tx.netProfit || 0), 0);
+    return {
+      0: 'TOTAL FINANSIAL',
+      5: formatRupiah(totalBuy),
+      6: formatRupiah(totalOps),
+      7: formatRupiah(totalSell),
+      8: formatRupiah(totalNet),
+    };
+  }, [filteredTransactions]);
+
   return (
     <div className="space-y-4">
       {/* 1. Sub-Tab Switcher (Rule 88: Clean Title, No Subtitle) */}
@@ -545,8 +635,25 @@ export function RecapPage({
               ? 'Jurnal Logistik Transaksi Lapangan'
               : 'Rekapitulasi Finansial & Margin Perseroan'}
           </div>
-          <div className="text-[11px] text-[#777777]">
-            {filteredTransactions.length} dari {transactions.length} total tiket ritase
+          <div className="flex items-center gap-3">
+            <span className="text-[11px] text-[#777777]">
+              {filteredTransactions.length} dari {transactions.length} total tiket ritase
+            </span>
+            <TablePdfExportButton
+              tableId={activeSubTab === 'volume' ? 'recap_volume' : 'recap_financial'}
+              title={
+                activeSubTab === 'volume'
+                  ? 'Rekapitulasi Jurnal Logistik Ritase'
+                  : 'Rekapitulasi Finansial & Margin Ritase'
+              }
+              subtitle="PT Patak Abadi Jaya • Rekapitulasi Periode Terfilter"
+              columns={activeSubTab === 'volume' ? recapVolumePdfColumns : recapFinancialPdfColumns}
+              data={filteredTransactions}
+              filtersSummary={recapFiltersSummary}
+              grandTotals={activeSubTab === 'volume' ? recapVolumeGrandTotals : recapFinancialGrandTotals}
+              defaultOrientation="landscape"
+              fileName={`Rekap_${activeSubTab}_Patak_${new Date().toISOString().slice(0, 10)}.pdf`}
+            />
           </div>
         </div>
 

@@ -10,6 +10,8 @@ import { PricePerVolCell } from '@/components/ui/PricePerVolCell';
 import { matchesDateQuery, formatDateID } from '@/lib/dateSearchUtils';
 import { formatVolumeDisplay } from '@/lib/volumeUtils';
 import { useDialog } from '@/context/DialogContext';
+import { TablePdfExportButton } from '@/components/ui/TablePdfExportButton';
+import { TablePdfColumn, TablePdfFilterSummary } from '@/lib/pdfExportService';
 
 interface ReceivablesViewProps {
   transactions: DispatchTransaction[];
@@ -101,6 +103,56 @@ export function ReceivablesView({
     const start = (currentPage - 1) * 20;
     return filteredTransactions.slice(start, start + 20);
   }, [filteredTransactions, currentPage]);
+
+  const receivablesPdfColumns = useMemo<TablePdfColumn[]>(
+    () => [
+      {
+        header: 'No. Tiket / SJ',
+        format: (_, r) => `${r.ticketNumber}${r.suratJalan ? ` (SJ: ${r.suratJalan})` : ''}`,
+      },
+      { header: 'Tanggal', format: (_, r) => formatDateID(r.deliveryDate || r.date) },
+      {
+        header: 'Proyek / Klien',
+        format: (_, r) => `${r.projectName || '-'} (${r.clientName || '-'})`,
+      },
+      {
+        header: 'Material / Plat',
+        format: (_, r) => `${r.materialName || '-'} / ${r.truckPlate || '-'}`,
+      },
+      {
+        header: 'Status',
+        align: 'center',
+        format: (_, r) => (r.status === 'TEMPO' ? 'TEMPO' : 'LUNAS'),
+      },
+      {
+        header: 'Nilai Tagihan',
+        align: 'right',
+        format: (_, r) => formatRupiah(r.totalRevenue),
+      },
+      { header: 'Dicatat Oleh', format: (_, r) => r.createdByName || '-' },
+    ],
+    []
+  );
+
+  const receivablesFiltersSummary = useMemo<TablePdfFilterSummary[]>(() => {
+    const list: TablePdfFilterSummary[] = [];
+    if (searchQuery.trim()) list.push({ label: 'Pencarian', value: searchQuery.trim() });
+    if (statusFilter !== 'ALL') {
+      list.push({
+        label: 'Status Tagihan',
+        value: statusFilter === 'TEMPO' ? 'Tempo (Belum Lunas)' : 'Lunas',
+      });
+    }
+    return list;
+  }, [searchQuery, statusFilter]);
+
+  const receivablesGrandTotals = useMemo(() => {
+    const total = filteredTransactions.reduce((acc, tx) => acc + (tx.totalRevenue || 0), 0);
+    return {
+      0: 'TOTAL TAGIHAN TERFILTER',
+      5: formatRupiah(total),
+    };
+  }, [filteredTransactions]);
 
   const handleSettleTicket = (ticketId: string) => {
     showConfirm({
@@ -283,6 +335,18 @@ export function ReceivablesView({
                 className="w-full bg-white border border-[#eaeaea] rounded-[6px] pl-9 pr-3 py-1.5 text-xs text-[#111111] placeholder:text-[#999999] outline-none focus:border-[#111111] transition-colors"
               />
             </div>
+
+            <TablePdfExportButton
+              tableId="receivables_summary"
+              title="Rekapitulasi Piutang & Penagihan Ritase"
+              subtitle="PT Patak Abadi Jaya • Status Piutang Tempo & Pelunasan Klien"
+              columns={receivablesPdfColumns}
+              data={filteredTransactions}
+              filtersSummary={receivablesFiltersSummary}
+              grandTotals={receivablesGrandTotals}
+              defaultOrientation="landscape"
+              fileName={`Piutang_Patak_${new Date().toISOString().slice(0, 10)}.pdf`}
+            />
 
             {!isWatcherUser && <button
               type="button"

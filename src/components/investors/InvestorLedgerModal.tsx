@@ -8,6 +8,8 @@ import { formatCompactMonthlyProfitShare } from '@/lib/currencyUtils';
 import { calculateInvestorFinancials } from '@/lib/investorFinanceUtils';
 import { formatPhoneNumber } from '@/lib/phoneUtils';
 import { X } from 'lucide-react';
+import { TablePdfExportButton } from '@/components/ui/TablePdfExportButton';
+import { TablePdfColumn } from '@/lib/pdfExportService';
 
 interface InvestorLedgerModalProps {
   investor: Investor;
@@ -66,6 +68,57 @@ export function InvestorLedgerModal({
   const formatRupiah = (val: number): string => {
     return 'Rp ' + Math.round(val).toLocaleString('id-ID');
   };
+
+  const investorRitasePdfColumns = useMemo<TablePdfColumn[]>(
+    () => [
+      { header: 'No. Tiket', dataKey: 'ticketNumber' },
+      { header: 'Tanggal', format: (_, tx) => formatDateID(tx.deliveryDate || tx.date) },
+      {
+        header: 'Armada / Sopir',
+        format: (_, tx) => `${tx.truckPlate} ${tx.driverName ? `(${tx.driverName})` : ''}`,
+      },
+      { header: 'Proyek Tujuan', dataKey: 'projectName' },
+      {
+        header: 'Material & Vol',
+        format: (_, tx) => `${tx.materialName} (${formatVolumeDisplay(tx.quantity, tx.unit)})`,
+      },
+      {
+        header: 'Harga Beli',
+        align: 'right',
+        format: (_, tx) => formatRupiah(tx.totalBuyCost || 0),
+      },
+      {
+        header: 'Harga Jual',
+        align: 'right',
+        format: (_, tx) => formatRupiah(tx.totalRevenue || 0),
+      },
+      {
+        header: 'Biaya Ops',
+        align: 'right',
+        format: (_, tx) => formatRupiah(tx.operationalCost || 0),
+      },
+      {
+        header: 'Laba Bersih',
+        align: 'right',
+        format: (_, tx) => formatRupiah(tx.netProfit || 0),
+      },
+    ],
+    []
+  );
+
+  const investorPayoutsPdfColumns = useMemo<TablePdfColumn[]>(
+    () => [
+      { header: 'Tanggal', format: (_, p) => formatDateID(p.date) },
+      { header: 'Keterangan / Catatan', dataKey: 'note' },
+      { header: 'Dicatat Oleh', format: (_, p) => p.recordedBy?.split('@')[0] || 'Admin' },
+      {
+        header: 'Nominal Payout',
+        align: 'right',
+        format: (_, p) => formatRupiah(p.amount),
+      },
+    ],
+    []
+  );
 
   const handlePayoutSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -320,6 +373,20 @@ export function InvestorLedgerModal({
 
           {activeTab === 'ritase' && (
             <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold uppercase tracking-wider text-[#666666]">
+                  Riwayat Ritase Proyek ({investorTransactions.length} Pengiriman)
+                </span>
+                <TablePdfExportButton
+                  tableId={`investor_ritase_${investor.id}`}
+                  title={`Laporan Ritase Proyek - ${investor.name}`}
+                  subtitle={`PT Patak Abadi Jaya • Investor: ${investor.name} (${investor.bankAccount || '-'})`}
+                  columns={investorRitasePdfColumns}
+                  data={investorTransactions}
+                  defaultOrientation="landscape"
+                  fileName={`Ritase_Investor_${investor.name.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`}
+                />
+              </div>
               <div className="overflow-x-auto rounded-[10px] border border-[#eaeaea]">
                 <table className="w-full min-w-[1020px] table-fixed text-left text-xs border-collapse">
                   <thead className="bg-[#f9f9f9] border-b border-[#eaeaea] text-[#555555] font-semibold text-[11px] uppercase tracking-wider select-none">
@@ -495,6 +562,21 @@ export function InvestorLedgerModal({
                   </div>
                 </form>
               )}
+
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold uppercase tracking-wider text-[#666666]">
+                  Riwayat Payout Bagi Hasil ({investorPayouts.length} Transaksi)
+                </span>
+                <TablePdfExportButton
+                  tableId={`investor_payouts_${investor.id}`}
+                  title={`Riwayat Penyerahan Bagi Hasil - ${investor.name}`}
+                  subtitle={`PT Patak Abadi Jaya • Investor: ${investor.name}`}
+                  columns={investorPayoutsPdfColumns}
+                  data={investorPayouts}
+                  defaultOrientation="portrait"
+                  fileName={`Payout_Investor_${investor.name.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`}
+                />
+              </div>
 
               {/* Tabel Riwayat Payout */}
               <div className="overflow-x-auto">

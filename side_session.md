@@ -742,3 +742,62 @@ Berikut adalah rekapitulasi lengkap seluruh fitur, perbaikan arsitektur, kepatuh
   ```
   di working directory Windows (`C:\Users\user\Documents\PATAK`), dan seluruh fitur serta aturan langsung tersinkronisasi sempurna!
 
+---
+
+### FASE 20: Universal Precision Table PDF Export Engine (jsPDF + AutoTable & Full-Screen Live Preview Modal — Rule 133)
+
+> **Pembaruan Terkini (03 November 2026, 00:05 WIB)**  
+> **Agen Pelaksana**: `Argon` (Linux Main Workstation)  
+> **Penerima Handover**: `Antigravity Nizar` (Windows Pair-Programming Agent)  
+> **Status Build**: 🟢 **100% Clean Build** (`tsc -b && vite build` lulus sempurna tanpa error).
+
+Berikut adalah rekapitulasi lengkap fitur ekspor PDF presisi tinggi di seluruh tabel aplikasi sesuai instruksi User dan kepatuhan mutlak terhadap aturan baru **Rule 133**:
+
+---
+
+#### 1. Aturan Mutlak Baru: Rule 133 (`RULES.md` & `.agents/RULES.md` — 0-diff)
+- **Mesin Vektor Murni (`jsPDF` + `jspdf-autotable`)**:
+  * Seluruh tabel sistem (Riwayat Ritase, Dispatch Harian, Arus Kas, Piutang Tempo, Master Proyek, Kasbon Tukang, Kasbon Karyawan, Pembayaran Termin Klien, Master Material, Master Kuari, Master Klien, Master Investor, Mutasi & Talangan Investor, Buku Kas Detail Investor, Rekap Jurnal Volume, dan Rekap Finansial) kini dilengkapi tombol **Export PDF**.
+  * Teks PDF dihasilkan berupa vektor murni (`doc.text`, `doc.autoTable`), selectable, tajam saat di-zoom, ukuran file sangat ringan (~15-40 KB), dan pemotongan halaman per-baris tanpa membelah teks atau styling yang rusak.
+- **Modal Preview Full-Screen (`TablePdfExportModal.tsx`)**:
+  * Menampilkan dialog Full Width & Full Height (`fixed inset-0 z-50 bg-[#f9f9f9]`) dengan backdrop solid tanpa blur (`bg-black/50`, Rule 5 & Rule 26).
+  * **Live PDF Blob Viewer**: Memanfaatkan `iframe` yang menampilkan `doc.output('bloburl')` secara real-time. Setiap perubahan pengaturan kertas, orientasi, margin, atau toggle langsung ter-update di preview secara instan.
+  * **Custom Form Controls & Pickers (Rule 129)**: Dilarang menggunakan kontrol native browser:
+    1. *Paper Size Picker*: Preset A4, F4 / Folio Indonesia (215 x 330 mm), Letter, Legal, serta dimensi kustom (lebar & tinggi mm).
+    2. *Orientation Toggle*: Portrait vs Landscape.
+    3. *Margin Controls*: Normal (10mm), Sempit (6mm), Lebar (15mm), atau Kustom (mm).
+    4. *Header & Footer Toggles*: Kop Surat Resmi PT Patak Abadi Jaya bergaris tegas, Ringkasan Filter/Pencarian Aktif, Nomor Halaman Resmi ("Halaman X dari Y"), dan Dua Blok Tanda Tangan ("Dibuat Oleh" & "Menyetujui").
+  * **LocalStorage Persistence**: Menyimpan preferensi ukuran kertas, orientasi, dan margin per-tabel (`patak_pdf_pref_<table_id>`) agar preferensi pengguna selalu diingat.
+- **Kepatuhan `/auditaislop`**:
+  * Tombol `TablePdfExportButton` mengusung desain solid-filled minimalis (`bg-[#111111] hover:bg-black text-white border-none rounded-[6px]`), bebas outline stroke, bebas emoji (menggunakan icon resmi Icons8 PDF dan Lucide), dan bebas efek blur.
+  * Anti-wrapping ketat pada kolom angka dan nominal rupiah.
+
+---
+
+#### 2. Berkas & Komponen Baru
+1. [`src/lib/pdfExportService.ts`](file:///media/fatihfarhat/New%20Volume1/PROJECTS/Patak%20Logistics%20System/src/lib/pdfExportService.ts): Mesin formal PDF generator dan utilitas export blob.
+2. [`src/components/ui/TablePdfExportModal.tsx`](file:///media/fatihfarhat/New%20Volume1/PROJECTS/Patak%20Logistics%20System/src/components/ui/TablePdfExportModal.tsx): Modal preview PDF layar penuh interaktif.
+3. [`src/components/ui/TablePdfExportButton.tsx`](file:///media/fatihfarhat/New%20Volume1/PROJECTS/Patak%20Logistics%20System/src/components/ui/TablePdfExportButton.tsx): Universal export trigger button.
+
+---
+
+#### 3. Cakupan 100% Seluruh Tabel Aplikasi
+- **Dispatching**: `DispatchHistoryPage.tsx` (Riwayat Ritase) & `DispatchTable.tsx` (Ritase Berjalan Hari Ini).
+- **Keuangan**: `CashFlowView.tsx` (Buku Kas & Mutasi) & `ReceivablesView.tsx` (Piutang Tempo).
+- **Proyek & Lapangan**: `ProjectsPage.tsx` (Master Proyek), `ProjectFinancialsModal.tsx` (Tab Ritase Material, Kasbon Mandor/Tukang, Kasbon Karyawan, Pembayaran Termin Klien), & `LaborPage.tsx` (Kasbon Mandor Proyek).
+- **Master Data**: `MasterMaterialPage.tsx` (Harga Kuari, Tarif Rute, Komoditas), `QuarriesPage.tsx` (Master Kuari), & `ClientsPage.tsx` (Master Klien).
+- **Permodalan & Investor**: `InvestorsPage.tsx` (Master Investor, Mutasi & Talangan) & `InvestorLedgerModal.tsx` (Buku Kas Ritase & Payout).
+- **Laporan & Rekap**: `RecapPage.tsx` (Jurnal Operasional Volume & Rekap Finansial).
+
+---
+
+#### 4. Kesiapan Sinkronisasi untuk Antigravity Nizar
+- **Branch**: `main`
+- **Status Build**: 🟢 Lulus 100% kompilasi `tsc -b && vite build` (zero error).
+- **Dev Server**: 🟢 Aktif di `http://localhost:5173/`.
+- **Instruksi untuk Nizar**: Cukup jalankan:
+  ```bash
+  git pull origin main
+  ```
+  di working directory Windows (`C:\Users\user\Documents\PATAK`), dan seluruh fitur ekspor PDF presisi serta aturan Rule 133 langsung tersinkronisasi sempurna!
+

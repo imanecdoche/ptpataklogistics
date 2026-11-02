@@ -9,6 +9,8 @@ import { subscribeProjects } from '@/lib/projectService';
 import { LaborPaymentFormModal } from './LaborPaymentFormModal';
 import { LaborJobTypeModal } from './LaborJobTypeModal';
 import { matchesDateQuery, formatDateID } from '@/lib/dateSearchUtils';
+import { TablePdfExportButton } from '@/components/ui/TablePdfExportButton';
+import { TablePdfColumn, TablePdfFilterSummary } from '@/lib/pdfExportService';
 
 interface LaborPageProps {
   userEmail: string;
@@ -109,6 +111,50 @@ export function LaborPage({
         matchesDateQuery(p.paymentDate, q)
     );
   }, [payments, searchQuery]);
+
+  const laborPdfColumns = useMemo<TablePdfColumn[]>(
+    () => [
+      { header: 'Tanggal', format: (_, p) => formatDateID(p.paymentDate) },
+      {
+        header: 'Kepala Tukang / Mandor',
+        format: (_, p) => `${p.workerName}${p.workerPhone ? ` (${p.workerPhone})` : ''}`,
+      },
+      { header: 'Proyek Lapangan', dataKey: 'projectName' },
+      {
+        header: 'Pekerjaan & Detail',
+        format: (_, p) =>
+          `${p.jobTypeName} (${
+            p.calculationType === 'BORONGAN'
+              ? 'Borongan'
+              : p.calculationType === 'PER_M2'
+                ? `${p.areaSquareMeter} m² × ${formatRupiah(p.ratePerM2 || 0)}`
+                : `${p.daysWorked} Hari × ${formatRupiah(p.dailyRate || 0)}`
+          })`,
+      },
+      {
+        header: 'Total Upah',
+        align: 'right',
+        format: (_, p) => formatRupiah(p.totalAmount),
+      },
+      { header: 'Status', align: 'center', dataKey: 'status' },
+      { header: 'Catatan', format: (_, p) => p.notes || '-' },
+    ],
+    []
+  );
+
+  const laborFiltersSummary = useMemo<TablePdfFilterSummary[]>(() => {
+    const list: TablePdfFilterSummary[] = [];
+    if (searchQuery.trim()) list.push({ label: 'Pencarian', value: searchQuery.trim() });
+    return list;
+  }, [searchQuery]);
+
+  const laborGrandTotals = useMemo(() => {
+    const total = filteredPayments.reduce((acc, p) => acc + (p.totalAmount || 0), 0);
+    return {
+      0: 'TOTAL UPAH TUKANG TERFILTER',
+      4: formatRupiah(total),
+    };
+  }, [filteredPayments]);
 
   return (
     <div className="space-y-4">
@@ -213,6 +259,18 @@ export function LaborPage({
                     className="w-full bg-white border border-[#eaeaea] rounded-[6px] pl-9 pr-3 py-1.5 text-xs text-[#111111] placeholder:text-[#999999] outline-none focus:border-[#111111] transition-colors"
                   />
                 </div>
+
+                <TablePdfExportButton
+                  tableId="labor_kasbon"
+                  title="Laporan Pembayaran Upah & Kasbon Tukang"
+                  subtitle="PT Patak Abadi Jaya • Rekapitulasi Upah Borongan & Harian Tenaga Kerja"
+                  columns={laborPdfColumns}
+                  data={filteredPayments}
+                  filtersSummary={laborFiltersSummary}
+                  grandTotals={laborGrandTotals}
+                  defaultOrientation="landscape"
+                  fileName={`Upah_Tukang_Patak_${new Date().toISOString().slice(0, 10)}.pdf`}
+                />
 
                 <button
                   type="button"

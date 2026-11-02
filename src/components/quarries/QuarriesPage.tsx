@@ -14,6 +14,8 @@ import { PhoneInput } from '@/components/ui/PhoneInput';
 import { formatPhoneNumber } from '@/lib/phoneUtils';
 import { formatEntityNameLive, formatPersonNameLive } from '@/lib/nameUtils';
 import { MobileTitlebarAction } from '@/components/ui/MobileTitlebarAction';
+import { TablePdfExportButton } from '@/components/ui/TablePdfExportButton';
+import { TablePdfColumn, TablePdfFilterSummary } from '@/lib/pdfExportService';
 
 interface QuarriesPageProps {
   userEmail: string;
@@ -73,6 +75,23 @@ export function QuarriesPage({ userEmail: _userEmail }: QuarriesPageProps): Reac
     const setLoc = new Set(quarries.map(q => q.location?.trim()).filter(Boolean));
     return setLoc.size;
   }, [quarries]);
+
+  const quarriesPdfColumns = useMemo<TablePdfColumn[]>(
+    () => [
+      { header: 'Nama PT Tambang / Kuari', dataKey: 'name' },
+      { header: 'Lokasi Tambang (Titik Muat)', format: (_, q) => q.location || '-' },
+      { header: 'Kontak Person (PIC)', format: (_, q) => q.contactPerson || '-' },
+      { header: 'Nomor Telepon', format: (_, q) => formatPhoneNumber(q.phoneNumber) },
+      { header: 'Status Mitra', align: 'center', format: () => '100% Siap Suplai' },
+    ],
+    []
+  );
+
+  const quarriesFiltersSummary = useMemo<TablePdfFilterSummary[]>(() => {
+    const list: TablePdfFilterSummary[] = [];
+    if (searchQuery.trim()) list.push({ label: 'Pencarian', value: searchQuery.trim() });
+    return list;
+  }, [searchQuery]);
 
   // Otorisasi Aksi Tambah Kuari
   const handleOpenAdd = () => {
@@ -210,6 +229,17 @@ export function QuarriesPage({ userEmail: _userEmail }: QuarriesPageProps): Reac
                 className="w-full bg-white border border-[#eaeaea] rounded-[6px] pl-9 pr-3 py-1.5 text-xs text-[#111111] placeholder:text-[#999999] outline-none focus:border-[#111111] transition-colors"
               />
             </div>
+
+            <TablePdfExportButton
+              tableId="quarries_master"
+              title="Daftar Master PT Tambang & Kuari"
+              subtitle="PT Patak Abadi Jaya • Titik Muat Mitra & Kontak Operasional"
+              columns={quarriesPdfColumns}
+              data={filteredQuarries}
+              filtersSummary={quarriesFiltersSummary}
+              defaultOrientation="portrait"
+              fileName={`Master_Kuari_Patak_${new Date().toISOString().slice(0, 10)}.pdf`}
+            />
 
             {!isInvestorUser && !isDispatcherUser && (
               <button

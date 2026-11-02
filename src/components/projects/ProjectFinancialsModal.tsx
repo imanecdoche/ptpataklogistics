@@ -31,6 +31,8 @@ import { RecordClientPaymentModal } from './RecordClientPaymentModal';
 import { WorkerKasbonPrintModal } from './WorkerKasbonPrintModal';
 import { Loader2, Trash2, Eye, X, Plus, Pencil, Search } from 'lucide-react';
 import { useDialog } from '@/context/DialogContext';
+import { TablePdfExportButton } from '@/components/ui/TablePdfExportButton';
+import { TablePdfColumn, TablePdfFilterSummary } from '@/lib/pdfExportService';
 
 interface ProjectFinancialsModalProps {
   isOpen: boolean;
@@ -255,6 +257,132 @@ export function ProjectFinancialsModal({
   }, [kasbonLogs]);
 
   const isKasbonFiltered = Boolean(kasbonSearchText.trim() || kasbonWorkerFilter || kasbonSubJobFilter);
+
+  // PDF Export Memos
+  const workerKasbonPdfColumns = useMemo<TablePdfColumn[]>(
+    () => [
+      { header: 'Tanggal', format: (_, bon) => formatDateID(bon.date) },
+      { header: 'Mandor / Kepala Tukang', format: (_, bon) => bon.workerLeaderName },
+      { header: 'Sub-Pekerjaan', format: (_, bon) => bon.subJobName || '-' },
+      {
+        header: 'Nominal Kasbon',
+        align: 'right',
+        format: (_, bon) => formatRupiah(bon.amount),
+      },
+      { header: 'Catatan / Keperluan', format: (_, bon) => bon.note || '-' },
+      { header: 'Dicatat Oleh', format: (_, bon) => bon.recordedBy?.split('@')[0] || '-' },
+    ],
+    []
+  );
+
+  const workerKasbonFiltersSummary = useMemo<TablePdfFilterSummary[]>(() => {
+    const list: TablePdfFilterSummary[] = [];
+    if (kasbonSearchText.trim()) list.push({ label: 'Pencarian', value: kasbonSearchText.trim() });
+    if (kasbonWorkerFilter) list.push({ label: 'Mandor', value: kasbonWorkerFilter });
+    if (kasbonSubJobFilter) {
+      const sj = subJobs.find(j => j.id === kasbonSubJobFilter);
+      list.push({ label: 'Sub-Pekerjaan', value: sj?.jobName || kasbonSubJobFilter });
+    }
+    return list;
+  }, [kasbonSearchText, kasbonWorkerFilter, kasbonSubJobFilter, subJobs]);
+
+  const workerKasbonGrandTotals = useMemo(() => {
+    return {
+      0: 'TOTAL KASBON MANDOR TERFILTER',
+      3: formatRupiah(totalFilteredKasbon),
+    };
+  }, [totalFilteredKasbon]);
+
+  const materialPdfColumns = useMemo<TablePdfColumn[]>(
+    () => [
+      { header: 'No. Tiket', dataKey: 'ticketNumber' },
+      { header: 'Tanggal', format: (_, tx) => formatDateID(tx.deliveryDate || tx.date) },
+      {
+        header: 'Armada / Sopir',
+        format: (_, tx) => `${tx.truckPlate} ${tx.driverName ? `(${tx.driverName})` : ''}`,
+      },
+      {
+        header: 'Material & Muatan',
+        format: (_, tx) => `${tx.materialName} (${formatVolumeDisplay(tx.quantity, tx.unit)})`,
+      },
+      { header: 'Kuari Asal', format: (_, tx) => tx.quarryName || '-' },
+      {
+        header: 'Harga Beli',
+        align: 'right',
+        format: (_, tx) => formatRupiah(tx.totalBuyCost || 0),
+      },
+      {
+        header: 'Harga Jual',
+        align: 'right',
+        format: (_, tx) => formatRupiah(tx.totalRevenue || 0),
+      },
+    ],
+    []
+  );
+
+  const materialGrandTotals = useMemo(() => {
+    const totalBuy = transactions.reduce((acc, tx) => acc + (tx.totalBuyCost || 0), 0);
+    const totalSell = transactions.reduce((acc, tx) => acc + (tx.totalRevenue || 0), 0);
+    return {
+      0: 'TOTAL RITASE MATERIAL',
+      5: formatRupiah(totalBuy),
+      6: formatRupiah(totalSell),
+    };
+  }, [transactions]);
+
+  const employeeKasbonPdfColumns = useMemo<TablePdfColumn[]>(
+    () => [
+      { header: 'Tanggal', format: (_, emp) => formatDateID(emp.date) },
+      {
+        header: 'Nama Karyawan & Peran',
+        format: (_, emp) => `${emp.employeeName}${emp.role ? ` (${emp.role})` : ''}`,
+      },
+      {
+        header: 'Nominal Kasbon',
+        align: 'right',
+        format: (_, emp) => formatRupiah(emp.amount),
+      },
+      { header: 'Catatan / Keperluan', format: (_, emp) => emp.note || '-' },
+      { header: 'Dicatat Oleh', format: (_, emp) => emp.recordedBy?.split('@')[0] || '-' },
+    ],
+    []
+  );
+
+  const employeeKasbonGrandTotals = useMemo(() => {
+    const total = employeeKasbonLogs.reduce((acc, emp) => acc + (emp.amount || 0), 0);
+    return {
+      0: 'TOTAL KASBON KARYAWAN',
+      2: formatRupiah(total),
+    };
+  }, [employeeKasbonLogs]);
+
+  const clientPaymentsPdfColumns = useMemo<TablePdfColumn[]>(
+    () => [
+      { header: 'Tanggal Masuk', format: (_, pay) => formatDateID(pay.paymentDate) },
+      { header: 'Klien / Pembayar', dataKey: 'clientName' },
+      {
+        header: 'Nominal Masuk',
+        align: 'right',
+        format: (_, pay) => `+${formatRupiah(pay.amount)}`,
+      },
+      {
+        header: 'Metode & Referensi',
+        format: (_, pay) =>
+          `${pay.paymentMethod || 'Transfer'}${pay.referenceNumber ? ` (${pay.referenceNumber})` : ''}`,
+      },
+      { header: 'Catatan', format: (_, pay) => pay.note || '-' },
+      { header: 'Pencatat', format: (_, pay) => pay.recordedBy?.split('@')[0] || 'Admin' },
+    ],
+    []
+  );
+
+  const clientPaymentsGrandTotals = useMemo(() => {
+    const total = clientPayments.reduce((acc, pay) => acc + (pay.amount || 0), 0);
+    return {
+      0: 'TOTAL PEMBAYARAN KLIEN',
+      2: `+${formatRupiah(total)}`,
+    };
+  }, [clientPayments]);
 
   return (
     <>
@@ -671,8 +799,24 @@ export function ProjectFinancialsModal({
                   Belum ada catatan ritase material armada untuk proyek ini.
                 </div>
               ) : (
-                <div className="bg-white border border-[#eaeaea] rounded-[10px] overflow-x-auto">
-                  <table className="w-full min-w-[780px] text-xs text-left border-collapse">
+                <div className="bg-white border border-[#eaeaea] rounded-[10px] overflow-hidden">
+                  <div className="p-3 border-b border-[#eaeaea] bg-[#fafafa] flex items-center justify-between">
+                    <span className="text-xs font-bold text-[#111111]">
+                      Daftar Ritase Material Proyek ({transactions.length} Pengiriman)
+                    </span>
+                    <TablePdfExportButton
+                      tableId={`project_ritase_${project.id}`}
+                      title={`Laporan Ritase Material - ${project.name}`}
+                      subtitle={`PT Patak Abadi Jaya • Klien: ${project.clientName || '-'} | Investor: ${project.investorName || '-'}`}
+                      columns={materialPdfColumns}
+                      data={transactions}
+                      grandTotals={materialGrandTotals}
+                      defaultOrientation="landscape"
+                      fileName={`Ritase_${project.name.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`}
+                    />
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full min-w-[780px] text-xs text-left border-collapse">
                     <thead className="bg-[#f9f9f9] border-b border-[#eaeaea] text-[#555555] font-semibold text-[10px] uppercase">
                       <tr>
                         <th className="py-2.5 px-3 whitespace-nowrap">Tanggal & Tiket</th>
@@ -720,6 +864,7 @@ export function ProjectFinancialsModal({
                       ))}
                     </tbody>
                   </table>
+                  </div>
                 </div>
               )
             ) : activeTab === 'kasbon' ? (
@@ -831,6 +976,18 @@ export function ProjectFinancialsModal({
                         <Plus className="w-3.5 h-3.5" />
                         <span>Tarik Kasbon</span>
                       </button>
+
+                      <TablePdfExportButton
+                        tableId={`project_kasbon_worker_${project.id}`}
+                        title={`Daftar Penarikan Kasbon Tukang - ${project.name}`}
+                        subtitle={`PT Patak Abadi Jaya • Klien: ${project.clientName || '-'} | Investor: ${project.investorName || '-'}`}
+                        columns={workerKasbonPdfColumns}
+                        data={filteredKasbonLogs}
+                        filtersSummary={workerKasbonFiltersSummary}
+                        grandTotals={workerKasbonGrandTotals}
+                        defaultOrientation="landscape"
+                        fileName={`Kasbon_Tukang_${project.name.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`}
+                      />
 
                       <button
                         type="button"
@@ -1016,17 +1173,30 @@ export function ProjectFinancialsModal({
                         Memotong langsung saldo kas fisik dan mengurangi porsi laba bersih siap bagi
                       </span>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => setIsEmployeeKasbonModalOpen(true)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#111111] hover:bg-black text-white text-xs font-semibold rounded-[6px] transition-colors cursor-pointer whitespace-nowrap"
-                    >
-                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                        <line x1="12" y1="5" x2="12" y2="19" strokeLinecap="round" strokeLinejoin="round" />
-                        <line x1="5" y1="12" x2="19" y2="12" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                      <span>Tambah Kasbon</span>
-                    </button>
+                    <div className="flex items-center gap-1.5">
+                      <TablePdfExportButton
+                        tableId={`project_kasbon_employee_${project.id}`}
+                        title={`Daftar Kasbon Karyawan - ${project.name}`}
+                        subtitle={`PT Patak Abadi Jaya • Klien: ${project.clientName || '-'} | Investor: ${project.investorName || '-'}`}
+                        columns={employeeKasbonPdfColumns}
+                        data={employeeKasbonLogs}
+                        grandTotals={employeeKasbonGrandTotals}
+                        defaultOrientation="landscape"
+                        fileName={`Kasbon_Karyawan_${project.name.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`}
+                      />
+
+                      <button
+                        type="button"
+                        onClick={() => setIsEmployeeKasbonModalOpen(true)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#111111] hover:bg-black text-white text-xs font-semibold rounded-[6px] transition-colors cursor-pointer whitespace-nowrap"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <line x1="12" y1="5" x2="12" y2="19" strokeLinecap="round" strokeLinejoin="round" />
+                          <line x1="5" y1="12" x2="19" y2="12" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                        <span>Tambah Kasbon</span>
+                      </button>
+                    </div>
                   </div>
 
                   {/* Tabel Riwayat Kasbon Karyawan */}
@@ -1103,10 +1273,20 @@ export function ProjectFinancialsModal({
                 </div>
               ) : (
                 <div className="bg-white border border-[#eaeaea] rounded-[10px] overflow-hidden">
-                  <div className="p-3 border-b border-[#eaeaea] bg-[#fafafa]">
+                  <div className="p-3 border-b border-[#eaeaea] bg-[#fafafa] flex items-center justify-between">
                     <span className="text-xs font-bold text-[#111111]">
                       Daftar Pembayaran Termin Masuk ({clientPayments.length} Pembukuan)
                     </span>
+                    <TablePdfExportButton
+                      tableId={`project_payments_${project.id}`}
+                      title={`Riwayat Pembayaran Klien - ${project.name}`}
+                      subtitle={`PT Patak Abadi Jaya • Klien: ${project.clientName || '-'} | Investor: ${project.investorName || '-'}`}
+                      columns={clientPaymentsPdfColumns}
+                      data={clientPayments}
+                      grandTotals={clientPaymentsGrandTotals}
+                      defaultOrientation="landscape"
+                      fileName={`Pembayaran_Klien_${project.name.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`}
+                    />
                   </div>
                   <div className="overflow-x-auto">
                     <table className="w-full min-w-[650px] text-xs text-left border-collapse">

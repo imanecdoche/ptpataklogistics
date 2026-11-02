@@ -3,7 +3,11 @@
   "icons": {
     "pack": "material_rounded",
     "style": "solid-glyph",
-    "sizes": [16, 20, 24],
+    "sizes": [
+      16,
+      20,
+      24
+    ],
     "color": "currentColor",
     "items": {
       "truck": {
@@ -64,6 +68,11 @@
       "close": {
         "id": "6483",
         "commonName": "close",
+        "style": "glyph-filled"
+      },
+      "pdf": {
+        "id": "338",
+        "commonName": "pdf",
         "style": "glyph-filled"
       }
     }

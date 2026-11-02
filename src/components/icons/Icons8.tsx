@@ -230,3 +230,19 @@ export function Icons8Close({ size = 20, className = '', ...props }: IconProps):
     </svg>
   );
 }
+
+export function Icons8Pdf({ size = 18, className = "", ...props }: IconProps): React.JSX.Element {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 50 50"
+      fill="currentColor"
+      className={className}
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
+      <path d="M 12 4 C 9.79 4 8 5.79 8 8 L 8 42 C 8 44.21 9.79 46 12 46 L 38 46 C 40.21 46 42 44.21 42 42 L 42 16 L 30 4 L 12 4 z M 12 6 L 28 6 L 28 16 C 28 17.1 28.9 18 30 18 L 40 18 L 40 42 C 40 43.1 39.1 44 38 44 L 12 44 C 10.9 44 10 43.1 10 42 L 10 8 C 10 6.9 10.9 6 12 6 z M 30 7.414 L 38.586 16 L 30 16 L 30 7.414 z M 15 24 L 15 38 L 18 38 L 18 32 L 21 32 C 22.66 32 24 30.66 24 29 L 24 27 C 24 25.34 22.66 24 21 24 L 15 24 z M 18 26 L 21 26 C 21.55 26 22 26.45 22 27 L 22 29 C 22 29.55 21.55 30 21 30 L 18 30 L 18 26 z M 26 24 L 26 38 L 30 38 C 32.21 38 34 36.21 34 34 L 34 28 C 34 25.79 32.21 24 30 24 L 26 24 z M 28 26 L 30 26 C 31.1 26 32 26.9 32 28 L 32 34 C 32 35.1 31.1 36 30 36 L 28 36 L 28 26 z" />
+    </svg>
+  );
+}

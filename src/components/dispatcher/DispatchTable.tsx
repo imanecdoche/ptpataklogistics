@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { DispatchTransaction } from '@/types/database';
 import { settleTransaction } from '@/lib/dispatcherService';
 import { useDialog } from '@/context/DialogContext';
@@ -10,6 +10,8 @@ import { useProjectFilter } from '@/context/ProjectFilterContext';
 import { MetricCardCurrency } from '@/components/ui/MetricCardCurrency';
 import { formatDateID } from '@/lib/dateSearchUtils';
 import { formatVolumeDisplay } from '@/lib/volumeUtils';
+import { TablePdfExportButton } from '@/components/ui/TablePdfExportButton';
+import { TablePdfColumn } from '@/lib/pdfExportService';
 
 interface DispatchTableProps {
   transactions: DispatchTransaction[];
@@ -63,6 +65,48 @@ export function DispatchTable({
   const totalRitase = filteredTransactions.length;
   const totalOmset = filteredTransactions.reduce((acc, curr) => acc + (curr.totalRevenue || 0), 0);
   const totalLaba = filteredTransactions.reduce((acc, curr) => acc + (curr.netProfit || 0), 0);
+
+  // Definisi Ekspor PDF Presisi (jsPDF + AutoTable)
+  const pdfColumns = useMemo<TablePdfColumn[]>(() => [
+    { header: 'No', dataKey: 'no', width: 10, align: 'center' },
+    { header: 'No. Tiket', dataKey: 'ticketNumber', width: 24, align: 'left' },
+    { header: 'Armada', dataKey: 'truckPlate', width: 24, align: 'left' },
+    { header: 'Sopir', dataKey: 'driverName', width: 26, align: 'left' },
+    { header: 'Pembeli / Proyek', dataKey: 'customer', width: 44, align: 'left' },
+    { header: 'Kuari Asal', dataKey: 'quarryName', width: 26, align: 'left' },
+    { header: 'Material', dataKey: 'materialName', width: 28, align: 'left' },
+    { header: 'Muatan', dataKey: 'volume', width: 20, align: 'right' },
+    { header: 'Total Tagihan', dataKey: 'totalRevenue', width: 30, align: 'right' },
+    ...(!hideMargin ? [{ header: 'Laba Bersih', dataKey: 'netProfit', width: 28, align: 'right' as const }] : []),
+    { header: 'Status', dataKey: 'status', width: 20, align: 'center' }
+  ], [hideMargin]);
+
+  const pdfData = useMemo(() => {
+    return filteredTransactions.map((tx, idx) => ({
+      no: idx + 1,
+      ticketNumber: tx.ticketNumber,
+      truckPlate: tx.truckPlate,
+      driverName: tx.driverName || '-',
+      customer: `${tx.customerName}${tx.projectName ? ` • ${tx.projectName}` : ''}`,
+      quarryName: tx.quarryName || '-',
+      materialName: tx.materialName,
+      volume: formatVolumeDisplay(tx.quantity, tx.unit),
+      totalRevenue: formatRupiah(tx.totalRevenue || 0),
+      netProfit: formatRupiah(tx.netProfit || 0),
+      status: tx.isPaid ? 'LUNAS' : 'TEMPO'
+    }));
+  }, [filteredTransactions]);
+
+  const pdfGrandTotals = useMemo(() => {
+    const totals: { [colIndex: number]: string } = {
+      0: `TOTAL (${filteredTransactions.length} Trip)`,
+      8: formatRupiah(totalOmset)
+    };
+    if (!hideMargin) {
+      totals[9] = formatRupiah(totalLaba);
+    }
+    return totals;
+  }, [filteredTransactions.length, totalOmset, totalLaba, hideMargin]);
 
   // Aksi Tandai Lunas dengan CustomDialog
   const handleSettle = (tx: DispatchTransaction): void => {
@@ -129,6 +173,23 @@ export function DispatchTable({
               className="w-44 sm:w-56 bg-[#f5f5f5] focus:bg-[#ebebeb] outline-none rounded-[6px] pl-9 pr-3 py-1.5 text-xs text-[#111111] placeholder:text-[#999999] transition-colors"
             />
           </div>
+
+          {/* Export PDF Button (Rule 133: Universal Precision Table PDF Export Engine) */}
+          <TablePdfExportButton
+            tableId="dispatch_daily_table"
+            title="Riwayat Ritase Armada Berjalan"
+            subtitle={`PT Patak Abadi Jaya • Tanggal: ${formatDateID(selectedDate)}`}
+            columns={pdfColumns}
+            data={pdfData}
+            filtersSummary={[
+              { label: 'Tanggal', value: formatDateID(selectedDate) },
+              ...(searchQuery.trim() ? [{ label: 'Pencarian', value: `"${searchQuery}"` }] : []),
+              ...(selectedProjectId !== 'ALL' ? [{ label: 'Filter Proyek', value: selectedProjectId }] : [])
+            ]}
+            grandTotals={pdfGrandTotals}
+            defaultOrientation="landscape"
+            fileName={`Ritase_Harian_${selectedDate}.pdf`}
+          />
         </div>
       </div>
 

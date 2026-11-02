@@ -33,6 +33,8 @@ import { formatEntityNameLive } from '@/lib/nameUtils';
 import { MobileTitlebarAction } from '@/components/ui/MobileTitlebarAction';
 import { InvestorLedgerModal } from './InvestorLedgerModal';
 import { InvestorTransferModal } from './InvestorTransferModal';
+import { TablePdfExportButton } from '@/components/ui/TablePdfExportButton';
+import { TablePdfColumn, TablePdfFilterSummary } from '@/lib/pdfExportService';
 import { PayTalanganModal } from './PayTalanganModal';
 import { ReceiptLightboxModal } from '@/components/ui/ReceiptLightboxModal';
 import { ImageIcon, X } from 'lucide-react';
@@ -266,6 +268,81 @@ export function InvestorsPage({
     }
     return transfers;
   }, [transfers, transferFilter]);
+
+  const investorsPdfColumns = useMemo<TablePdfColumn[]>(
+    () => [
+      { header: 'Nama Investor', dataKey: 'name' },
+      {
+        header: 'Proyek Terkait',
+        format: (_, inv) => {
+          const stats = investorProjectsMap.get(inv.id);
+          const prjs = stats?.projects || [];
+          return prjs.length > 0 ? prjs.map(p => p.name).join(', ') : 'Umum';
+        },
+      },
+      {
+        header: 'Modal Bersih Berjalan',
+        align: 'right',
+        format: (_, inv) => {
+          const base = inv.initialCapital || 0;
+          const tInfo = investorTransferBalanceMap.get(inv.id) || { net: 0 };
+          return formatRupiah(base + tInfo.net);
+        },
+      },
+      {
+        header: 'Hak Bagi Hasil',
+        align: 'right',
+        format: (_, inv) => {
+          const share = investorProfitShareMap.get(inv.id) || 0;
+          return formatRupiah(share);
+        },
+      },
+      { header: 'Nomor HP', format: (_, inv) => inv.phoneNumber || '-' },
+      { header: 'Rekening Bank', format: (_, inv) => inv.bankAccount || '-' },
+    ],
+    [investorProjectsMap, investorTransferBalanceMap, investorProfitShareMap]
+  );
+
+  const investorsFiltersSummary = useMemo<TablePdfFilterSummary[]>(() => {
+    const list: TablePdfFilterSummary[] = [];
+    if (searchQuery.trim()) list.push({ label: 'Pencarian', value: searchQuery.trim() });
+    return list;
+  }, [searchQuery]);
+
+  const transfersPdfColumns = useMemo<TablePdfColumn[]>(
+    () => [
+      { header: 'Tanggal', format: (_, t) => formatDateID(t.date) },
+      { header: 'Dari (Pengirim)', dataKey: 'fromInvestorName' },
+      { header: 'Ke (Penerima)', dataKey: 'toInvestorName' },
+      {
+        header: 'Kategori Mutasi',
+        format: (_, t) => (t.category === 'TALANGAN' ? 'Talangan Proyek' : 'Transfer Modal'),
+      },
+      {
+        header: 'Nominal',
+        align: 'right',
+        format: (_, t) => formatRupiah(t.amount),
+      },
+      {
+        header: 'Status',
+        align: 'center',
+        format: (_, t) => (t.status === 'LUNAS' ? 'LUNAS' : 'TALANGAN AKTIF'),
+      },
+      { header: 'Catatan', format: (_, t) => t.notes || '-' },
+    ],
+    []
+  );
+
+  const transfersFiltersSummary = useMemo<TablePdfFilterSummary[]>(() => {
+    const list: TablePdfFilterSummary[] = [];
+    if (transferFilter !== 'ALL') {
+      list.push({
+        label: 'Status Mutasi',
+        value: transferFilter === 'BELUM_LUNAS' ? 'Talangan Aktif' : 'Lunas',
+      });
+    }
+    return list;
+  }, [transferFilter]);
 
   // Otorisasi Aksi Tambah Investor
   const handleOpenAdd = () => {
@@ -692,34 +769,47 @@ export function InvestorsPage({
             />
           </div>
 
-          {!isInvestorUser && !isWatcherUser && (
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setIsTransferModalOpen(true)}
-                className="px-3 py-1.5 bg-[#111111] hover:bg-[#2b2b2b] text-white text-xs font-semibold rounded-[6px] transition-colors cursor-pointer whitespace-nowrap flex items-center gap-1.5 shadow-xs"
-              >
-                <img
-                  src="/icons/transfer.png"
-                  alt=""
-                  className="w-3.5 h-3.5 object-contain brightness-0 invert pointer-events-none"
-                />
-                <span>Transfer Antar-Investor</span>
-              </button>
-              <button
-                type="button"
-                onClick={handleOpenAdd}
-                className="px-3 py-1.5 bg-[#111111] hover:bg-[#2b2b2b] text-white text-xs font-semibold rounded-[6px] transition-colors cursor-pointer whitespace-nowrap flex items-center gap-1.5 shadow-xs"
-              >
-                <img
-                  src="/icons/plus.png"
-                  alt=""
-                  className="w-3.5 h-3.5 object-contain brightness-0 invert pointer-events-none"
-                />
-                <span>Tambah Investor</span>
-              </button>
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            <TablePdfExportButton
+              tableId="investors_master"
+              title="Daftar Master Investor & Finansial Modal"
+              subtitle="PT Patak Abadi Jaya • Status Modal Bersih Berjalan & Hak Bagi Hasil"
+              columns={investorsPdfColumns}
+              data={filteredInvestors}
+              filtersSummary={investorsFiltersSummary}
+              defaultOrientation="landscape"
+              fileName={`Master_Investor_Patak_${new Date().toISOString().slice(0, 10)}.pdf`}
+            />
+
+            {!isInvestorUser && !isWatcherUser && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setIsTransferModalOpen(true)}
+                  className="px-3 py-1.5 bg-[#111111] hover:bg-[#2b2b2b] text-white text-xs font-semibold rounded-[6px] transition-colors cursor-pointer whitespace-nowrap flex items-center gap-1.5 shadow-xs"
+                >
+                  <img
+                    src="/icons/transfer.png"
+                    alt=""
+                    className="w-3.5 h-3.5 object-contain brightness-0 invert pointer-events-none"
+                  />
+                  <span>Transfer Antar-Investor</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleOpenAdd}
+                  className="px-3 py-1.5 bg-[#111111] hover:bg-[#2b2b2b] text-white text-xs font-semibold rounded-[6px] transition-colors cursor-pointer whitespace-nowrap flex items-center gap-1.5 shadow-xs"
+                >
+                  <img
+                    src="/icons/plus.png"
+                    alt=""
+                    className="w-3.5 h-3.5 object-contain brightness-0 invert pointer-events-none"
+                  />
+                  <span>Tambah Investor</span>
+                </button>
+              </>
+            )}
+          </div>
         </div>
 
         {/* Tabel Master Investor */}
@@ -942,6 +1032,17 @@ export function InvestorsPage({
             >
               Lunas ({transfers.filter(t => t.status === 'LUNAS').length})
             </button>
+
+            <TablePdfExportButton
+              tableId="investors_transfers"
+              title="Riwayat Mutasi & Talangan Antar-Investor"
+              subtitle="PT Patak Abadi Jaya • Alur Pergeseran Modal & Pelunasan Talangan"
+              columns={transfersPdfColumns}
+              data={filteredTransfers}
+              filtersSummary={transfersFiltersSummary}
+              defaultOrientation="landscape"
+              fileName={`Mutasi_Investor_Patak_${new Date().toISOString().slice(0, 10)}.pdf`}
+            />
           </div>
         </div>
 
