@@ -37,6 +37,7 @@ interface UserPreferences {
   showFiltersSummary: boolean;
   showSignatures: boolean;
   showPageNumbers: boolean;
+  hiddenColumnKeys?: string[];
 }
 
 const PREF_STORAGE_PREFIX = 'patak_pdf_pref_';
@@ -74,6 +75,7 @@ export function TablePdfExportModal({
           showFiltersSummary: parsed.showFiltersSummary ?? true,
           showSignatures: parsed.showSignatures ?? true,
           showPageNumbers: parsed.showPageNumbers ?? true,
+          hiddenColumnKeys: Array.isArray(parsed.hiddenColumnKeys) ? parsed.hiddenColumnKeys : [],
         };
       }
     } catch (e) {
@@ -91,6 +93,7 @@ export function TablePdfExportModal({
       showFiltersSummary: true,
       showSignatures: true,
       showPageNumbers: true,
+      hiddenColumnKeys: [],
     };
   }, [storageKey, defaultOrientation, columns.length]);
 
@@ -105,6 +108,7 @@ export function TablePdfExportModal({
   const [showFiltersSummary, setShowFiltersSummary] = useState<boolean>(initialPreferences.showFiltersSummary);
   const [showSignatures, setShowSignatures] = useState<boolean>(initialPreferences.showSignatures);
   const [showPageNumbers, setShowPageNumbers] = useState<boolean>(initialPreferences.showPageNumbers);
+  const [hiddenColumnKeys, setHiddenColumnKeys] = useState<string[]>(initialPreferences.hiddenColumnKeys || []);
 
   const [customTitle, setCustomTitle] = useState<string>(title);
   const [customNotes, setCustomNotes] = useState<string>('');
@@ -122,6 +126,40 @@ export function TablePdfExportModal({
     setCustomTitle(title);
   }, [title]);
 
+  // Sync hidden columns when tableId / initialPreferences changes
+  useEffect(() => {
+    setHiddenColumnKeys(initialPreferences.hiddenColumnKeys || []);
+  }, [initialPreferences.hiddenColumnKeys]);
+
+  // Filter Active Columns
+  const visibleColumns = useMemo<TablePdfColumn[]>(() => {
+    const active = columns.filter(col => {
+      const key = col.dataKey || col.header;
+      return !hiddenColumnKeys.includes(key);
+    });
+    return active.length > 0 ? active : columns.slice(0, 1);
+  }, [columns, hiddenColumnKeys]);
+
+  // Remap Grand Totals to align accurately with visible columns
+  const mappedGrandTotals = useMemo(() => {
+    if (!grandTotals) return undefined;
+
+    const remapped: { [newColIdx: number]: string } = {};
+
+    visibleColumns.forEach((vCol, newIdx) => {
+      const origIdx = columns.findIndex(c => (c.dataKey || c.header) === (vCol.dataKey || vCol.header));
+      if (origIdx !== -1 && grandTotals[origIdx] !== undefined) {
+        remapped[newIdx] = grandTotals[origIdx];
+      }
+    });
+
+    if (grandTotals[0] !== undefined && remapped[0] === undefined) {
+      remapped[0] = grandTotals[0];
+    }
+
+    return remapped;
+  }, [grandTotals, visibleColumns, columns]);
+
   // Save Preferences to LocalStorage
   useEffect(() => {
     try {
@@ -136,6 +174,7 @@ export function TablePdfExportModal({
         showFiltersSummary,
         showSignatures,
         showPageNumbers,
+        hiddenColumnKeys,
       };
       localStorage.setItem(storageKey, JSON.stringify(prefs));
     } catch (e) {
@@ -153,6 +192,7 @@ export function TablePdfExportModal({
     showFiltersSummary,
     showSignatures,
     showPageNumbers,
+    hiddenColumnKeys,
   ]);
 
   // Build PDF Options
@@ -161,7 +201,7 @@ export function TablePdfExportModal({
       title: customTitle || title,
       subtitle,
       fileName,
-      columns,
+      columns: visibleColumns,
       data,
       paperSize,
       customWidthMm,
@@ -174,7 +214,7 @@ export function TablePdfExportModal({
       showSignatures,
       showPageNumbers,
       filtersSummary,
-      grandTotals,
+      grandTotals: mappedGrandTotals,
       totalLabel,
       customNotes,
     };
@@ -183,7 +223,7 @@ export function TablePdfExportModal({
     title,
     subtitle,
     fileName,
-    columns,
+    visibleColumns,
     data,
     paperSize,
     customWidthMm,
@@ -196,7 +236,7 @@ export function TablePdfExportModal({
     showSignatures,
     showPageNumbers,
     filtersSummary,
-    grandTotals,
+    mappedGrandTotals,
     totalLabel,
     customNotes,
   ]);
@@ -401,6 +441,7 @@ export function TablePdfExportModal({
                     { id: 'f4', label: 'F4 / Folio' },
                     { id: 'letter', label: 'Letter' },
                     { id: 'legal', label: 'Legal' },
+                    { id: 'continuous', label: 'Bersambung' },
                     { id: 'custom', label: 'Kustom mm' },
                   ] as const
                 ).map(item => (
@@ -418,6 +459,13 @@ export function TablePdfExportModal({
                   </button>
                 ))}
               </div>
+
+              {paperSize === 'continuous' && (
+                <div className="p-2 bg-[#f9f9f9] rounded-[6px] border border-[#eaeaea] text-[11px] text-[#555555] leading-relaxed">
+                  <span className="font-semibold text-[#111111] block">Mode Kertas Bersambung (1 Lembar Utuh)</span>
+                  Dokumen dicetak memanjang ke bawah tanpa potongan/jeda halaman. Lebar standar {orientation === 'landscape' ? '297 mm' : '210 mm'}, tinggi otomatis pas dengan seluruh baris tabel.
+                </div>
+              )}
 
               {/* Custom Size Inputs if custom selected */}
               {paperSize === 'custom' && (
@@ -451,7 +499,7 @@ export function TablePdfExportModal({
             {/* 2. Orientation Switch */}
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-[#222222] block">
-                Orientasi Cetak
+                {paperSize === 'continuous' ? 'Lebar Lembar Bersambung' : 'Orientasi Cetak'}
               </label>
               <div className="grid grid-cols-2 gap-1.5 bg-[#f5f5f5] p-1 rounded-[6px]">
                 <button
@@ -463,7 +511,7 @@ export function TablePdfExportModal({
                       : 'text-[#555555] hover:text-[#111111]'
                   }`}
                 >
-                  Landscape (Mendatar)
+                  {paperSize === 'continuous' ? 'Landscape (297 mm)' : 'Landscape (Mendatar)'}
                 </button>
                 <button
                   type="button"
@@ -474,7 +522,7 @@ export function TablePdfExportModal({
                       : 'text-[#555555] hover:text-[#111111]'
                   }`}
                 >
-                  Portrait (Tegak)
+                  {paperSize === 'continuous' ? 'Portrait (210 mm)' : 'Portrait (Tegak)'}
                 </button>
               </div>
             </div>
@@ -523,7 +571,83 @@ export function TablePdfExportModal({
               )}
             </div>
 
-            {/* 4. Structural Feature Toggles */}
+            {/* 4. Column Visibility Selector (Accordion / Panel) */}
+            <div className="space-y-2 pt-2 border-t border-[#eaeaea]">
+              <div className="flex items-center justify-between">
+                <div>
+                  <label className="text-xs font-semibold text-[#222222] block">
+                    Kolom Tabel
+                  </label>
+                  <span className="text-[10px] text-[#777777] block">
+                    {visibleColumns.length} dari {columns.length} kolom tampil di cetakan
+                  </span>
+                </div>
+                {hiddenColumnKeys.length > 0 && (
+                  <div className="flex items-center space-x-1">
+                    <button
+                      type="button"
+                      onClick={() => setHiddenColumnKeys([])}
+                      className="px-2 py-0.5 text-[11px] font-semibold text-[#111111] bg-[#f0f0f0] hover:bg-[#e4e4e4] rounded-[4px] transition-colors cursor-pointer"
+                      title="Tampilkan semua kolom"
+                    >
+                      Pilih Semua
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setHiddenColumnKeys([])}
+                      className="px-2 py-0.5 text-[11px] font-semibold text-[#666666] hover:text-[#111111] hover:bg-[#f0f0f0] rounded-[4px] transition-colors cursor-pointer"
+                      title="Kembalikan ke susunan asli"
+                    >
+                      Reset
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Grid Toggle Chips */}
+              <div className="grid grid-cols-2 gap-1.5 pt-1">
+                {columns.map((col, idx) => {
+                  const key = col.dataKey || col.header || `col_${idx}`;
+                  const isVisible = !hiddenColumnKeys.includes(key);
+                  const isLastVisible = isVisible && visibleColumns.length === 1;
+
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      disabled={isLastVisible}
+                      onClick={() => {
+                        if (isLastVisible) return;
+                        setHiddenColumnKeys(prev =>
+                          isVisible ? [...prev, key] : prev.filter(k => k !== key)
+                        );
+                      }}
+                      className={`h-8 px-2 text-xs font-medium rounded-[6px] flex items-center justify-between transition-all cursor-pointer text-left ${
+                        isVisible
+                          ? 'bg-[#111111] text-white shadow-xs'
+                          : 'bg-[#f5f5f5] text-[#888888] hover:bg-[#ebebeb] hover:text-[#111111]'
+                      } ${isLastVisible ? 'opacity-80 cursor-not-allowed' : ''}`}
+                      title={
+                        isLastVisible
+                          ? 'Minimal satu kolom harus tetap tampil'
+                          : `${isVisible ? 'Sembunyikan' : 'Tampilkan'} kolom ${col.header}`
+                      }
+                    >
+                      <span className="truncate pr-1">{col.header}</span>
+                      {isVisible ? (
+                        <svg className="w-3.5 h-3.5 shrink-0 text-white" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      ) : (
+                        <span className="text-[10px] uppercase font-bold text-[#aaaaaa]">Off</span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 5. Structural Feature Toggles */}
             <div className="space-y-2 pt-2 border-t border-[#eaeaea]">
               <label className="text-xs font-semibold text-[#222222] block">
                 Elemen Dokumen Formal
@@ -584,7 +708,7 @@ export function TablePdfExportModal({
               </div>
             </div>
 
-            {/* 5. Custom Document Title & Notes */}
+            {/* 6. Custom Document Title & Notes */}
             <div className="space-y-3 pt-2 border-t border-[#eaeaea]">
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-[#222222] block">
@@ -621,7 +745,9 @@ export function TablePdfExportModal({
                 className="w-full h-10 bg-[#111111] hover:bg-[#2b2b2b] active:scale-[0.99] text-white text-xs font-bold rounded-[6px] flex items-center justify-center space-x-2 transition-all cursor-pointer shadow-xs"
               >
                 <Icons8Pdf size={16} className="text-white" />
-                <span>Unduh Dokumen PDF ({orientation})</span>
+                <span>
+                  Unduh Dokumen PDF ({paperSize === 'continuous' ? 'Bersambung' : orientation})
+                </span>
               </button>
             </div>
           </aside>

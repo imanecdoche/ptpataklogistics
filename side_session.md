@@ -732,7 +732,7 @@ Berikut adalah rekapitulasi lengkap seluruh fitur, perbaikan arsitektur, kepatuh
 
 ---
 
-#### 4. Kesiapan Sinkronisasi untuk Antigravity Nizar
+#### 5. Kesiapan Sinkronisasi untuk Antigravity Nizar
 - **Branch**: `main`
 - **Latest Commit**: `0a6b2da` (`feat(projects): add search, filter, dynamic totals, and proof upload to worker kasbon (Rule 132)`)
 - **Status Build**: 🟢 Lulus 100% kompilasi `tsc -b && vite build` (zero error).
@@ -775,13 +775,28 @@ Berikut adalah rekapitulasi lengkap fitur ekspor PDF presisi tinggi di seluruh t
 ---
 
 #### 2. Berkas & Komponen Baru
-1. [`src/lib/pdfExportService.ts`](file:///media/fatihfarhat/New%20Volume1/PROJECTS/Patak%20Logistics%20System/src/lib/pdfExportService.ts): Mesin formal PDF generator dan utilitas export blob.
-2. [`src/components/ui/TablePdfExportModal.tsx`](file:///media/fatihfarhat/New%20Volume1/PROJECTS/Patak%20Logistics%20System/src/components/ui/TablePdfExportModal.tsx): Modal preview PDF layar penuh interaktif.
+1. [`src/lib/pdfExportService.ts`](file:///media/fatihfarhat/New%20Volume1/PROJECTS/Patak%20Logistics%20System/src/lib/pdfExportService.ts): Mesin formal PDF generator, two-pass measurement untuk mode Kertas Bersambung (Roll), dan utilitas export blob.
+2. [`src/components/ui/TablePdfExportModal.tsx`](file:///media/fatihfarhat/New%20Volume1/PROJECTS/Patak%20Logistics%20System/src/components/ui/TablePdfExportModal.tsx): Modal preview PDF layar penuh interaktif dengan kontrol pemilihan kolom tabel (hide/show specific columns) dan preset Kertas Bersambung (Continuous Roll).
 3. [`src/components/ui/TablePdfExportButton.tsx`](file:///media/fatihfarhat/New%20Volume1/PROJECTS/Patak%20Logistics%20System/src/components/ui/TablePdfExportButton.tsx): Universal export trigger button.
 
 ---
 
-#### 3. Cakupan 100% Seluruh Tabel Aplikasi
+#### 3. Fitur Lanjutan Ekspor PDF (Rule 133 Extension)
+- **Penyembunyian Kolom Tertentu (Dynamic Column Visibility)**:
+  * Pengguna dapat memilih kolom mana saja yang ingin dicetak/disembunyikan melalui panel toggle chip solid-filled di sidebar pengaturan.
+  * Terdapat shortcut "Pilih Semua" dan "Reset".
+  * Sistem membatasi minimal 1 kolom wajib tampil agar dokumen tidak kosong.
+  * Baris **Grand Total (Footer Tabel)** secara cerdas dipetakan ulang (*remapped*): jika kolom nominal (seperti Total Tagihan atau Laba) disembunyikan, totalnya otomatis dikeluarkan dari footer sehingga posisi rupiah tidak pernah bergeser atau salah kolom.
+  * Preferensi kolom tersembunyi disimpan secara persisten di LocalStorage per-tabel (`patak_pdf_pref_<table_id>`).
+- **Mode Kertas Bersambung / Roll (Continuous Single-Sheet)**:
+  * Tersedia opsi kertas **"Bersambung"** di deretan Paper Size: menghasilkan satu lembar dokumen PDF utuh tanpa jeda/pemotongan halaman (0 page breaks) berapa pun panjang baris tabelnya.
+  * Lebar acuan mengikuti standar: **210 mm saat Portrait** dan **297 mm saat Landscape**.
+  * Tinggi lembar dihitung secara presisi matematis (*two-pass virtual measurement*) pas dengan isi tabel, catatan, dan blok tanda tangan.
+  * Footer otomatis mencantumkan identitas resmi: *"Dokumen Bersambung • 1 Lembar Penuh"*.
+
+---
+
+#### 4. Cakupan 100% Seluruh Tabel Aplikasi
 - **Dispatching**: `DispatchHistoryPage.tsx` (Riwayat Ritase) & `DispatchTable.tsx` (Ritase Berjalan Hari Ini).
 - **Keuangan**: `CashFlowView.tsx` (Buku Kas & Mutasi) & `ReceivablesView.tsx` (Piutang Tempo).
 - **Proyek & Lapangan**: `ProjectsPage.tsx` (Master Proyek), `ProjectFinancialsModal.tsx` (Tab Ritase Material, Kasbon Mandor/Tukang, Kasbon Karyawan, Pembayaran Termin Klien), & `LaborPage.tsx` (Kasbon Mandor Proyek).
@@ -791,7 +806,7 @@ Berikut adalah rekapitulasi lengkap fitur ekspor PDF presisi tinggi di seluruh t
 
 ---
 
-#### 4. Kesiapan Sinkronisasi untuk Antigravity Nizar
+#### 5. Kesiapan Sinkronisasi untuk Antigravity Nizar
 - **Branch**: `main`
 - **Status Build**: 🟢 Lulus 100% kompilasi `tsc -b && vite build` (zero error).
 - **Dev Server**: 🟢 Aktif di `http://localhost:5173/`.

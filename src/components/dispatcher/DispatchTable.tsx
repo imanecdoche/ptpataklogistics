@@ -93,7 +93,7 @@ export function DispatchTable({
       volume: formatVolumeDisplay(tx.quantity, tx.unit),
       totalRevenue: formatRupiah(tx.totalRevenue || 0),
       netProfit: formatRupiah(tx.netProfit || 0),
-      status: tx.isPaid ? 'LUNAS' : 'TEMPO'
+      status: tx.status === 'LUNAS' ? 'LUNAS' : 'TEMPO'
     }));
   }, [filteredTransactions]);
 

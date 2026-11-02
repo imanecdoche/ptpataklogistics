@@ -1567,11 +1567,18 @@ Dokumen ini adalah hukum tertinggi operasional sistem. Kegagalan mematuhi aturan
       * Klik tombol Export PDF pada tabel memunculkan modal Full Width & Full Height (`fixed inset-0 z-50 bg-[#f9f9f9]`) dengan backdrop solid murni tanpa blur (`bg-black/50`, Rule 5 & Rule 26).
       * **Live PDF Blob Viewer**: Merender dokumen jsPDF secara real-time ke dalam container iframe blob URL (`doc.output('bloburl')`), sehingga 100% identik dengan hasil cetak yang diunduh.
       * **Custom Form Controls & Pickers (Rule 129)**: Dilarang menggunakan kontrol browser native. Semua pemilih menggunakan komponen kustom solid-filled:
-        1. *Paper Size Picker*: Preset A4, F4 / Folio, Letter, Legal, serta opsi *Custom Dimensions* (lebar & tinggi mm).
-        2. *Orientation Toggle*: Portrait vs Landscape.
+        1. *Paper Size Picker*: Preset A4, F4 / Folio, Letter, Legal, Bersambung / Roll (Single Continuous Sheet tanpa jeda halaman), serta opsi *Custom Dimensions* (lebar & tinggi mm).
+        2. *Orientation Toggle*: Portrait vs Landscape (pada mode Bersambung menentukan lebar 210mm vs 297mm).
         3. *Margin Controls*: Preset Normal (10mm), Sempit (6mm), Lebar (15mm), atau Custom Margin (mm).
-        4. *Header & Footer Toggles*: Kop Surat Resmi PT Patak Abadi Jaya, Ringkasan Filter/Pencarian Aktif, Nomor Halaman Resmi ("Halaman X dari Y"), dan Dua Blok Tanda Tangan ("Dibuat Oleh" & "Menyetujui").
-      * **LocalStorage Persistence**: Menyimpan preferensi ukuran kertas, orientasi, dan margin per-tabel (`patak_pdf_pref_<table_id>`) agar pengguna tidak perlu mengatur ulang setiap sesi.
+        4. *Header & Footer Toggles*: Kop Surat Resmi PT Patak Abadi Jaya, Ringkasan Filter/Pencarian Aktif, Nomor Halaman Resmi ("Halaman X dari Y" atau "Dokumen Bersambung • 1 Lembar Penuh"), dan Dua Blok Tanda Tangan ("Dibuat Oleh" & "Menyetujui").
+      * **Dynamic Column Visibility & Automatic Grand Total Alignment**:
+        - Panel pemilihan kolom tabel memungkinkan menyembunyikan kolom tertentu sebelum ekspor ke PDF.
+        - Minimal 1 kolom wajib aktif (tidak dapat menyembunyikan seluruh kolom).
+        - Posisi baris Grand Total footer secara otomatis dipetakan ulang (*remapped*) mengikuti kolom yang tetap tampil, dan kolom nominal yang disembunyikan otomatis ditiadakan dari baris footer agar nilai tidak salah kolom.
+      * **Continuous Page Roll Architecture (Kertas Bersambung)**:
+        - Mode Bersambung menghasilkan satu lembar PDF utuh memanjang ke bawah tanpa pemotongan atau jeda halaman (0 page breaks).
+        - Menggunakan teknik *two-pass virtual measurement* untuk menghitung tinggi dokumen secara presisi matematis mengikuti total baris tabel, blok catatan, dan tanda tangan pengesahan.
+      * **LocalStorage Persistence**: Menyimpan preferensi ukuran kertas, orientasi, margin, dan kolom yang disembunyikan per-tabel (`patak_pdf_pref_<table_id>`) agar pengguna tidak perlu mengatur ulang setiap sesi.
     - **Formal Corporate Document Layout**:
       * Desain formal kedinasan/audit: Kop Perusahaan resmi bergaris tegas, header abu-abu formal (`#f0f0f0`), border tipis (`#dcdcdc`), zebra striping halus (`#fafafa`), kolom angka rata kanan berfont tabular monokrom, baris Grand Total tebal (`#eaeaea`), dan blok tanda tangan formal.
     - **Data Scope & Anti-Wrapping**:

@@ -1,7 +1,7 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
-export type PaperSize = 'a4' | 'f4' | 'letter' | 'legal' | 'custom';
+export type PaperSize = 'a4' | 'f4' | 'letter' | 'legal' | 'continuous' | 'custom';
 export type PageOrientation = 'portrait' | 'landscape';
 export type MarginPreset = 'normal' | 'compact' | 'wide' | 'custom';
 
@@ -9,7 +9,7 @@ export interface TablePdfColumn {
   header: string;
   dataKey?: string;
   align?: 'left' | 'center' | 'right';
-  width?: number; // Approximate width weight in mm
+  width?: number | string; // Approximate width weight in mm or percentage
   format?: (value: any, row: any, index: number) => string;
 }
 
@@ -46,7 +46,7 @@ export interface TablePdfOptions {
 /**
  * Standard paper dimensions in mm [width, height] in portrait orientation.
  */
-export const PAPER_DIMENSIONS: Record<Exclude<PaperSize, 'custom'>, [number, number]> = {
+export const PAPER_DIMENSIONS: Record<Exclude<PaperSize, 'custom' | 'continuous'>, [number, number]> = {
   a4: [210, 297],
   f4: [215, 330], // Standar F4 / Folio Indonesia
   letter: [215.9, 279.4],
@@ -68,6 +68,10 @@ function resolvePaperFormat(options: TablePdfOptions): [number, number] {
     const h = Math.max(100, options.customHeightMm || 297);
     return [w, h];
   }
+  if (options.paperSize === 'continuous') {
+    const rollWidth = options.orientation === 'portrait' ? 210 : 297;
+    return [rollWidth, 297];
+  }
   const sizeKey = options.paperSize || 'a4';
   return PAPER_DIMENSIONS[sizeKey] || PAPER_DIMENSIONS.a4;
 }
@@ -84,20 +88,15 @@ function resolveMargin(options: TablePdfOptions): number {
 }
 
 /**
- * Generates an official, publication-grade vector PDF document from tabular data.
+ * Renders all document elements (Kop, Title, Filter, AutoTable, Signatures, Footers)
+ * Returns the final bottom Y coordinate.
  */
-export function generateTablePdf(options: TablePdfOptions): jsPDF {
-  const orientation = options.orientation || 'landscape';
-  const paperFormat = resolvePaperFormat(options);
-  const marginMm = resolveMargin(options);
-
-  const doc = new jsPDF({
-    orientation,
-    unit: 'mm',
-    format: paperFormat,
-    compress: true,
-  });
-
+function renderPdfBody(
+  doc: jsPDF,
+  options: TablePdfOptions,
+  marginMm: number,
+  isContinuous: boolean = false
+): number {
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
   const contentWidth = pageWidth - marginMm * 2;
@@ -220,6 +219,7 @@ export function generateTablePdf(options: TablePdfOptions): jsPDF {
   options.columns.forEach((col, idx) => {
     columnStylesMap[idx] = {
       halign: col.align || 'left',
+      ...(col.width ? { cellWidth: col.width } : {}),
     };
   });
 
@@ -230,7 +230,7 @@ export function generateTablePdf(options: TablePdfOptions): jsPDF {
       left: marginMm,
       right: marginMm,
       top: marginMm,
-      bottom: marginMm + 10,
+      bottom: isContinuous ? marginMm : marginMm + 10,
     },
     head: [headers],
     body: rows.length > 0 ? rows : [['Tidak ada data yang sesuai dengan filter / pencarian.']],
@@ -271,7 +271,7 @@ export function generateTablePdf(options: TablePdfOptions): jsPDF {
 
   // 6. CATATAN KUSTOM (JIKA ADA)
   if (options.customNotes && options.customNotes.trim()) {
-    if (postTableY + 12 > pageHeight - marginMm - 20) {
+    if (!isContinuous && postTableY + 12 > pageHeight - marginMm - 20) {
       doc.addPage();
       postTableY = marginMm + 10;
     }
@@ -285,7 +285,7 @@ export function generateTablePdf(options: TablePdfOptions): jsPDF {
   // 7. BLOK TANDA TANGAN FORMAL
   if (options.showSignatures !== false) {
     const signBlockHeight = 35;
-    if (postTableY + signBlockHeight > pageHeight - marginMm - 10) {
+    if (!isContinuous && postTableY + signBlockHeight > pageHeight - marginMm - 10) {
       doc.addPage();
       postTableY = marginMm + 10;
     }
@@ -341,6 +341,8 @@ export function generateTablePdf(options: TablePdfOptions): jsPDF {
     doc.text('( ................................................... )', rightX + signWidth / 2, lineY + 4, {
       align: 'center',
     });
+
+    postTableY = lineY + 8;
   }
 
   // 8. PENOMORAN HALAMAN DAN TANDA AIR FOOTER DI SETIAP HALAMAN
@@ -360,12 +362,66 @@ export function generateTablePdf(options: TablePdfOptions): jsPDF {
       );
 
       // Kanan: Penomoran halaman
-      doc.text(`Halaman ${i} dari ${totalPages}`, pageWidth - marginMm, pageHeight - 5, {
-        align: 'right',
-      });
+      if (isContinuous) {
+        doc.text('Dokumen Bersambung • 1 Lembar Penuh', pageWidth - marginMm, pageHeight - 5, {
+          align: 'right',
+        });
+      } else {
+        doc.text(`Halaman ${i} dari ${totalPages}`, pageWidth - marginMm, pageHeight - 5, {
+          align: 'right',
+        });
+      }
     }
   }
 
+  return postTableY;
+}
+
+/**
+ * Generates an official, publication-grade vector PDF document from tabular data.
+ */
+export function generateTablePdf(options: TablePdfOptions): jsPDF {
+  const orientation = options.orientation || 'landscape';
+  const marginMm = resolveMargin(options);
+
+  // Mode Kertas Bersambung (Continuous Roll / 1 Lembar Panjang Tanpa Potong)
+  if (options.paperSize === 'continuous') {
+    const rollWidth = orientation === 'landscape' ? 297 : 210;
+
+    // Pass 1: Ukur kebutuhan tinggi dalam canvas virtual panjang
+    const measureDoc = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: [rollWidth, 30000], // 30 meter canvas virtual
+      compress: false,
+    });
+    const measuredEndY = renderPdfBody(measureDoc, options, marginMm, true);
+
+    // Hitung tinggi bersih pas lembar
+    const calculatedHeight = Math.max(140, Math.ceil(measuredEndY + marginMm + 8));
+
+    // Pass 2: Hasilkan lembar PDF bersambung presisi utuh 1 halaman
+    const doc = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: [rollWidth, calculatedHeight],
+      compress: true,
+    });
+
+    renderPdfBody(doc, options, marginMm, true);
+    return doc;
+  }
+
+  // Standard Paged Document (A4, F4, Letter, Legal, Custom)
+  const paperFormat = resolvePaperFormat(options);
+  const doc = new jsPDF({
+    orientation,
+    unit: 'mm',
+    format: paperFormat,
+    compress: true,
+  });
+
+  renderPdfBody(doc, options, marginMm, false);
   return doc;
 }
 
