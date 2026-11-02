@@ -1582,6 +1582,12 @@ Dokumen ini adalah hukum tertinggi operasional sistem. Kegagalan mematuhi aturan
         - Saat aktif, baris data dikelompokkan secara terstruktur berdasarkan jenis material dengan *sub-header section* abu-abu formal (`#eef2f6`).
         - Di bawah setiap kelompok material, sistem menyajikan baris *Subtotal Kelompok Material* lengkap (`#f5f7fa`) yang merangkum Volume/Muatan, Total Tagihan Klien, Biaya Kuari, Beban Operasional, dan Laba Bersih.
         - Pada akhir tabel, tetap disajikan baris *Grand Total (Semua Material)* yang merangkum akumulasi keseluruhan transaksi.
+      * **Merge Sel Footer Subtotal & Grand Total (ColSpan & Label Rata Kiri)**:
+        - Label footer Subtotal (`SUBTOTAL <MATERIAL>`) maupun Grand Total (`TOTAL / GRAND TOTAL`) secara otomatis di-merge menggunakan `colSpan` dari kolom 0 hingga tepat sebelum kolom nilai pertama (`firstValIdx`), dengan teks label diposisikan rata kiri (`halign: 'left'`) berbobot tebal (`fontStyle: 'bold'`).
+        - Kolom-kolom nilai di antara nilai pertama hingga nilai terakhir (`firstValIdx` s.d. `lastValIdx`) diletakkan presisi pada kolom masing-masing sesuai perataan data (`halign: col.align || 'right'`).
+        - Seluruh kolom kosong di sebelah kanan angka nilai terakhir (`lastValIdx + 1` hingga akhir) secara otomatis di-merge menjadi 1 sel bersih dengan `colSpan` tanpa sekat garis vertikal yang memotong kotak kosong.
+        - Jika seluruh baris footer tidak memiliki kolom numerik (hanya label), label secara otomatis di-merge memenuhi seluruh lebar tabel (`colSpan: columns.length`).
+        - Pada kalkulasi anti-wrapping, label footer di kolom 0 dikecualikan dari pengukuran lebar kolom 0 (`idx > 0 && options.grandTotals?.[idx]`) agar kolom pertama tidak membesar secara artifisial akibat teks label yang panjang.
       * **Anti-Wrapped Text Architecture (Panjang Kolom Menyesuaikan Konten)**:
         - Ketika toggle Anti-Wrapped aktif, sistem secara matematis mengukur panjang konten terpanjang (`doc.getTextWidth`) pada setiap kolom (header, data baris, dan total) serta menambahkan padding aman.
         - Panjang kolom otomatis menyesuaikan ukuran panjang kontennya secara dinamis tanpa meluber, tanpa merusak sel, dan DILARANG KERAS menabrak sel kolom di sebelahnya (`overflow: 'linebreak'` aman).

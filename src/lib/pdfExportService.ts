@@ -248,13 +248,11 @@ function renderPdfBody(
       });
 
       // Baris Subtotal Kelompok Material
-      const subtotalRow = options.columns.map((col, cIdx) => {
-        if (cIdx === 0) {
-          return {
-            content: `SUBTOTAL ${matName.toUpperCase()} (${groupRows.length} Rit):`,
-            styles: { fontStyle: 'bold', halign: 'right', fillColor: [245, 247, 250], textColor: [17, 17, 17] },
-          };
-        }
+      const subValues: { [colIdx: number]: { content: string; styles: any } } = {};
+      const subValueIndices: number[] = [];
+
+      options.columns.forEach((col, cIdx) => {
+        if (cIdx === 0) return;
 
         const dKey = (col.dataKey || '').toLowerCase();
         const headerLower = col.header.toLowerCase();
@@ -262,52 +260,97 @@ function renderPdfBody(
         // Tagihan Jual / Omset
         if (dKey === 'totalrevenue' || dKey.includes('revenue') || headerLower.includes('tagihan') || headerLower.includes('jual')) {
           const sum = groupRows.reduce((acc, r) => acc + (Number(r.totalRevenue) || 0), 0);
-          return {
+          subValues[cIdx] = {
             content: formatRupiah(sum),
             styles: { fontStyle: 'bold', halign: 'right', fillColor: [245, 247, 250], textColor: [17, 17, 17] },
           };
+          subValueIndices.push(cIdx);
         }
-
         // Biaya Kuari / Beli
-        if (dKey === 'totalbuycost' || dKey.includes('buy') || headerLower.includes('beli') || headerLower.includes('kuari')) {
+        else if (dKey === 'totalbuycost' || dKey.includes('buy') || headerLower.includes('beli') || headerLower.includes('kuari')) {
           const sum = groupRows.reduce((acc, r) => acc + (Number(r.totalBuyCost) || 0), 0);
-          return {
+          subValues[cIdx] = {
             content: formatRupiah(sum),
             styles: { fontStyle: 'bold', halign: 'right', fillColor: [245, 247, 250], textColor: [17, 17, 17] },
           };
+          subValueIndices.push(cIdx);
         }
-
         // Beban Ops
-        if (dKey === 'operationalcost' || dKey.includes('ops') || headerLower.includes('ops')) {
+        else if (dKey === 'operationalcost' || dKey.includes('ops') || headerLower.includes('ops')) {
           const sum = groupRows.reduce((acc, r) => acc + (Number(r.operationalCost) || 0), 0);
-          return {
+          subValues[cIdx] = {
             content: formatRupiah(sum),
             styles: { fontStyle: 'bold', halign: 'right', fillColor: [245, 247, 250], textColor: [17, 17, 17] },
           };
+          subValueIndices.push(cIdx);
         }
-
         // Laba Bersih
-        if (dKey === 'netprofit' || dKey.includes('profit') || headerLower.includes('laba')) {
+        else if (dKey === 'netprofit' || dKey.includes('profit') || headerLower.includes('laba')) {
           const sum = groupRows.reduce((acc, r) => acc + (Number(r.netProfit) || 0), 0);
-          return {
+          subValues[cIdx] = {
             content: formatRupiah(sum),
             styles: { fontStyle: 'bold', halign: 'right', fillColor: [245, 247, 250], textColor: sum >= 0 ? [0, 128, 96] : [207, 17, 36] },
           };
+          subValueIndices.push(cIdx);
         }
-
         // Volume / Muatan
-        if (dKey === 'quantity' || dKey === 'volume' || headerLower.includes('muatan') || headerLower.includes('volume')) {
+        else if (dKey === 'quantity' || dKey === 'volume' || headerLower.includes('muatan') || headerLower.includes('volume')) {
           const sum = groupRows.reduce((acc, r) => acc + (Number(r.quantity) || 0), 0);
-          return {
+          subValues[cIdx] = {
             content: `${sum.toLocaleString('id-ID')} ${groupRows[0]?.unit || 'DT'}`,
-            styles: { fontStyle: 'bold', halign: 'right', fillColor: [245, 247, 250] },
+            styles: { fontStyle: 'bold', halign: 'right', fillColor: [245, 247, 250], textColor: [17, 17, 17] },
           };
+          subValueIndices.push(cIdx);
         }
-
-        return { content: '', styles: { fillColor: [245, 247, 250] } };
       });
 
-      bodyRows.push(subtotalRow);
+      const subtotalLabel = `SUBTOTAL ${matName.toUpperCase()} (${groupRows.length} Rit):`;
+      const subtotalRowCells: any[] = [];
+
+      if (subValueIndices.length === 0) {
+        subtotalRowCells.push({
+          content: subtotalLabel,
+          colSpan: options.columns.length,
+          styles: { fontStyle: 'bold', halign: 'left', fillColor: [245, 247, 250], textColor: [17, 17, 17] },
+        });
+      } else {
+        const firstSubIdx: number = subValueIndices[0] ?? 0;
+        const lastSubIdx: number = subValueIndices[subValueIndices.length - 1] ?? 0;
+
+        // 1. Label cell: merge dari kolom 0 hingga tepat sebelum kolom nilai pertama
+        if (firstSubIdx > 0) {
+          subtotalRowCells.push({
+            content: subtotalLabel,
+            colSpan: firstSubIdx,
+            styles: { fontStyle: 'bold', halign: 'left', fillColor: [245, 247, 250], textColor: [17, 17, 17] },
+          });
+        }
+
+        // 2. Kolom nilai antara firstSubIdx sampai lastSubIdx
+        for (let c: number = firstSubIdx; c <= lastSubIdx; c++) {
+          const subCell = subValues[c];
+          if (subCell) {
+            subtotalRowCells.push(subCell);
+          } else {
+            subtotalRowCells.push({
+              content: '',
+              styles: { fillColor: [245, 247, 250] },
+            });
+          }
+        }
+
+        // 3. Kolom trailing: merge seluruh kolom kosong di sebelah kanan nilai terakhir
+        const trailingCount = options.columns.length - (lastSubIdx + 1);
+        if (trailingCount > 0) {
+          subtotalRowCells.push({
+            content: '',
+            colSpan: trailingCount,
+            styles: { fillColor: [245, 247, 250] },
+          });
+        }
+      }
+
+      bodyRows.push(subtotalRowCells);
     });
   } else {
     // Normal sequential flat rows
@@ -324,17 +367,68 @@ function renderPdfBody(
     });
   }
 
-  // Footer / Grand Total Baris
-  let footRows: string[][] | undefined = undefined;
+  // Footer / Grand Total Baris (dengan Merge ColSpan & Label Rata Kiri)
+  let footRows: any[][] | undefined = undefined;
   if (options.grandTotals && options.data.length > 0) {
-    const footRow = options.columns.map((_col, cIdx) => {
-      const totalVal = options.grandTotals?.[cIdx];
-      if (cIdx === 0 && !totalVal) {
-        return options.totalLabel || (isGroupingByMaterial ? 'GRAND TOTAL (SEMUA MATERIAL)' : 'TOTAL');
+    const totalLabel = options.grandTotals[0] || options.totalLabel || (isGroupingByMaterial ? 'GRAND TOTAL (SEMUA MATERIAL)' : 'TOTAL');
+
+    // Temukan semua indeks kolom nilai (indeks > 0 yang memiliki teks/angka)
+    const valueIndices: number[] = [];
+    Object.keys(options.grandTotals).forEach(k => {
+      const colIdx = Number(k);
+      if (colIdx > 0 && colIdx < options.columns.length && options.grandTotals![colIdx]?.trim()) {
+        valueIndices.push(colIdx);
       }
-      return totalVal || '';
     });
-    footRows = [footRow];
+    valueIndices.sort((a, b) => a - b);
+
+    const footRowCells: any[] = [];
+
+    if (valueIndices.length === 0) {
+      // Tidak ada kolom nilai terisi, merge seluruh kolom untuk label
+      footRowCells.push({
+        content: totalLabel,
+        colSpan: options.columns.length,
+        styles: { fontStyle: 'bold', halign: 'left' },
+      });
+    } else {
+      const firstValIdx: number = valueIndices[0] ?? 0;
+      const lastValIdx: number = valueIndices[valueIndices.length - 1] ?? 0;
+
+      // 1. Label cell: merge dari kolom 0 sampai tepat sebelum kolom nilai pertama
+      if (firstValIdx > 0) {
+        footRowCells.push({
+          content: totalLabel,
+          colSpan: firstValIdx,
+          styles: { fontStyle: 'bold', halign: 'left' },
+        });
+      }
+
+      // 2. Kolom nilai antara firstValIdx sampai lastValIdx
+      for (let c: number = firstValIdx; c <= lastValIdx; c++) {
+        const val = options.grandTotals[c];
+        const col = options.columns[c];
+        footRowCells.push({
+          content: val || '',
+          styles: {
+            fontStyle: 'bold',
+            halign: col?.align || 'right',
+          },
+        });
+      }
+
+      // 3. Kolom trailing: merge seluruh kolom kosong di sebelah kanan nilai terakhir
+      const trailingCount = options.columns.length - (lastValIdx + 1);
+      if (trailingCount > 0) {
+        footRowCells.push({
+          content: '',
+          colSpan: trailingCount,
+          styles: { fontStyle: 'bold' },
+        });
+      }
+    }
+
+    footRows = [footRowCells];
   }
 
   // Font Size Resolution & Metrics
@@ -388,7 +482,7 @@ function renderPdfBody(
         if (w > maxTextWidth) maxTextWidth = w;
       }
 
-      if (options.grandTotals?.[idx]) {
+      if (idx > 0 && options.grandTotals?.[idx]) {
         doc.setFont('helvetica', 'bold');
         const totalW = doc.getTextWidth(options.grandTotals[idx]);
         if (totalW > maxTextWidth) maxTextWidth = totalW;

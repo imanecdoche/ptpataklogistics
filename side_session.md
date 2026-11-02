@@ -867,3 +867,38 @@ Dicatat oleh **Argon** (Linux Workstation) untuk **Antigravity Nizar** (Windows)
 - **Git Commit**: Siap di-push ke branch `main`.
 - **Instruksi untuk Nizar**: Cukup jalankan `git pull origin main`.
 
+
+### FASE 21: Merge Kolom Footer Subtotal & Grand Total PDF, ColSpan Rata Kiri & Clean Trailing Cell (Rule 133)
+Dicatat oleh **Argon** (Linux Workstation) untuk **Antigravity Nizar** (Windows):
+
+#### 1. Masalah & Kebutuhan Pengguna
+- **Masalah**:
+  1. Pada baris Grand Total atau Subtotal tabel ekspor PDF, kolom label teks (kolom 0) terbungkus (*text-wrapping*) sempit dan patah menjadi beberapa baris karena kolom pertama biasanya berupa kolom kecil (misal: "No" atau "Tanggal").
+  2. Terdapat sekat kotak kosong bersekat vertikal di antara kolom label dengan kolom nilai nominal pertama, serta kotak-kotak sel kosong bersekat vertikal di sebelah kanan nominal terakhir.
+  3. Pada mode *anti-wrapped text*, kolom 0 membesar secara artifisial karena sistem mengukur teks label grand total yang panjang.
+- **Kesepakatan Sesi /grill-me**:
+  1. *Perataan Teks Label*: Rata Kiri (`halign: 'left'`) berbobot tebal (`fontStyle: 'bold'`).
+  2. *Merge Kolom Label*: Dimerge dari kolom 0 sampai tepat sebelum kolom nilai pertama (`colSpan: firstValIdx`).
+  3. *Merge Kolom Trailing*: Seluruh kolom kosong di sebelah kanan angka nilai terakhir dimerge menjadi 1 sel bersih dengan `colSpan` tanpa sekat pembatas vertikal.
+
+#### 2. Solusi & Perubahan Teknis yang Diterapkan
+1. **Implementasi `colSpan` pada Baris Grand Total (`footRows`) di `src/lib/pdfExportService.ts`**:
+   - Mendeteksi indeks kolom nilai (`valueIndices`) di `options.grandTotals` (indeks `> 0` yang memiliki teks/angka).
+   - Jika tidak ada nilai numerik, seluruh kolom tabel dimerge menjadi 1 sel teks label (`colSpan: options.columns.length`).
+   - Jika terdapat nilai numerik (`firstValIdx` s.d. `lastValIdx`):
+     - Sel Label: `colSpan: firstValIdx`, `content: totalLabel`, `styles: { fontStyle: 'bold', halign: 'left' }`.
+     - Sel Nilai: Setiap kolom dari `firstValIdx` sampai `lastValIdx` merender nilai masing-masing dengan perataan kolom (`halign: col.align || 'right'`).
+     - Sel Trailing: Jika terdapat sisa kolom di sebelah kanan (`trailingCount > 0`), disatukan menjadi 1 sel bersih: `{ content: '', colSpan: trailingCount, styles: { fontStyle: 'bold' } }`.
+2. **Implementasi `colSpan` pada Baris Subtotal Kelompok Material (`subtotalRow`) di `src/lib/pdfExportService.ts`**:
+   - Logika merge diterapkan identik: Label `SUBTOTAL <MATERIAL>` dimerge dari kolom 0 hingga kolom tepat sebelum nilai subtotal pertama (`colSpan: firstSubIdx`, `halign: 'left'`), sel nilai masing-masing, dan sel trailing kosong dimerge menjadi 1 sel dengan `colSpan: trailingCount` bertema background `#f5f7fa`.
+3. **Pengecualian Label Footer dari Kalkulasi Anti-Wrapping**:
+   - Pada `pdfExportService.ts:484`, kondisi diubah menjadi `if (idx > 0 && options.grandTotals?.[idx])` sehingga teks label panjang di kolom 0 tidak lagi menggembungkan kolom pertama secara artifisial.
+4. **Pembaruan Aturan Sistem (Rule 133)**:
+   - Ketentuan merge footer dicatat lengkap di `RULES.md` dan `.agents/RULES.md` (0 diff).
+
+#### 3. Verifikasi & Kesiapan Sinkronisasi
+- **Build Status**: 🟢 `tsc -b && vite build` lulus 100% tanpa error.
+- **Dev Server**: 🟢 Aktif di `http://localhost:5173/`.
+- **Instruksi untuk Nizar**: Cukup jalankan `git pull origin main` di repositori Windows.
+
+

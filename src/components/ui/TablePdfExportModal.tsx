@@ -181,12 +181,12 @@ export function TablePdfExportModal({
 
     visibleColumns.forEach((vCol, newIdx) => {
       const origIdx = columns.findIndex(c => (c.dataKey || c.header) === (vCol.dataKey || vCol.header));
-      if (origIdx !== -1 && grandTotals[origIdx] !== undefined) {
+      if (origIdx > 0 && grandTotals[origIdx] !== undefined) {
         remapped[newIdx] = grandTotals[origIdx];
       }
     });
 
-    if (grandTotals[0] !== undefined && remapped[0] === undefined) {
+    if (grandTotals[0] !== undefined) {
       remapped[0] = grandTotals[0];
     }
 
