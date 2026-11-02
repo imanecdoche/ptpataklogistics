@@ -782,11 +782,19 @@ Berikut adalah rekapitulasi lengkap fitur ekspor PDF presisi tinggi di seluruh t
 ---
 
 #### 3. Fitur Lanjutan Ekspor PDF (Rule 133 Extension)
-- **Penyembunyian Kolom Tertentu (Dynamic Column Visibility)**:
-  * Pengguna dapat memilih kolom mana saja yang ingin dicetak/disembunyikan melalui panel toggle chip solid-filled di sidebar pengaturan.
-  * Terdapat shortcut "Pilih Semua" dan "Reset".
-  * Sistem membatasi minimal 1 kolom wajib tampil agar dokumen tidak kosong.
+- **Penyetelan Lebar Kolom Manual & Visibilitas (Column Width & Visibility)**:
+  * Pengguna dapat memilih kolom mana saja yang ingin dicetak/disembunyikan melalui panel kontrol baris di sidebar pengaturan.
+  * Setiap kolom aktif kini dilengkapi input numerik kustom lebar kolom dalam milimeter (`mm`) dengan placeholder `Auto` dan tombol reset `✕` per-kolom.
+  * Terdapat shortcut "Pilih Semua", "Reset Kolom", serta "Reset Lebar" ke otomatis.
   * Baris **Grand Total (Footer Tabel)** secara cerdas dipetakan ulang (*remapped*): jika kolom nominal (seperti Total Tagihan atau Laba) disembunyikan, totalnya otomatis dikeluarkan dari footer sehingga posisi rupiah tidak pernah bergeser atau salah kolom.
+- **Kontrol Ukuran Font Dokumen (Font Size)**:
+  * Stepper (- / +) dengan resolusi 0.5 pt (rentang 5.0 pt hingga 12.0 pt) dan display nilai pt real-time.
+  * 4 Tombol Preset Cepat solid-filled: **6.0 pt (Ringkas)**, **7.2 pt (Standar)**, **8.5 pt (Nyaman)**, dan **10.0 pt (Jelas)**.
+- **Perbaikan Bug Custom Paper Size (Input mm)**:
+  * Ukuran kertas Kustom mm (Lebar & Tinggi) kini mematuhi 100% input pengguna tanpa lagi dipaksa override oleh engine atau terbalik orientasi portrait/landscape-nya.
+- **Arsitektur Anti-Wrapped Text Dinamis (Tanpa Tabrakan Kolom)**:
+  * Toggle *"Anti-Wrapped Text"* kini mengukur panjang konten terpanjang (`getTextWidth`) pada setiap kolom dan secara dinamis menyesuaikan lebar kolom (`cellWidth`) pas dengan konten.
+  * Menggunakan `overflow: 'linebreak'` aman (bukan `visible`), sehingga teks panjang tidak pernah meluber atau menabrak sel kolom di sebelahnya.
 - **Mode Kertas Bersambung / Roll (Continuous Single-Sheet) & Kontrol Lebar**:
   * Tersedia opsi kertas **"Bersambung"** di deretan Paper Size: menghasilkan satu lembar dokumen PDF utuh tanpa jeda/pemotongan halaman (0 page breaks) berapa pun panjang baris tabelnya.
   * Dilengkapi pengatur lebar kertas bersambung yang fleksibel: **Preset A4 (210 mm)**, **F4 (215 mm)**, **Landscape (297 mm)**, atau **Input Kustom (mm)** dengan validasi batas aman.
@@ -797,11 +805,8 @@ Berikut adalah rekapitulasi lengkap fitur ekspor PDF presisi tinggi di seluruh t
   * Data otomatis dipisah per komoditas material dengan sub-header kelompok formal (`#eef2f6`).
   * Di bawah setiap kelompok material, terdapat baris *Subtotal Material* (`#f5f7fa`) yang merangkum Volume rit/ton, Tagihan Jual, Biaya Kuari, Beban Ops, dan Laba Bersih.
   * Di bagian paling bawah dokumen, disajikan baris *Grand Total (Semua Material)* yang merangkum akumulasi seluruh jenis material.
-- **Kunci Lebar Minimum (Anti-Wrapped Text Lock)**:
-  * Toggle *"Kunci Lebar Minimum (Anti-Wrapped)"* aktif secara default untuk mencegah terpotongnya atau terbungkusnya teks sel tabel.
-  * Sistem secara otomatis menghitung lebar aman tabel (*tableMinSafeWidth*) dan memperlebar kertas bersambung atau menyarankan orientasi landscape saat teks panjang terdeteksi agar tidak terjadi teks terlipat melanggar Rule 45.
 - **Penyimpanan Pengaturan Persisten Lengkap & Reset Pabrik**:
-  * Preferensi ukuran kertas, preset/lebar bersambung, orientasi, margin, visibilitas kolom, grouping material, anti-wrapped, 4 toggle formal, dan catatan kaki tersimpan otomatis di LocalStorage per kategori tabel (`patak_pdf_pref_<exportType>`).
+  * Preferensi ukuran kertas, preset/lebar bersambung, dimensi kustom, orientasi, margin, ukuran font, lebar kolom per-kolom, visibilitas kolom, grouping material, anti-wrapped, 4 toggle formal, dan catatan kaki tersimpan otomatis di LocalStorage per kategori tabel (`patak_pdf_pref_<exportType>`).
   * Disediakan tombol *"Reset Pengaturan Awal"* untuk mengembalikan preferensi tabel kembali ke setelan default pabrik dengan satu klik.
 
 ---

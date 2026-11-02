@@ -33,6 +33,8 @@ export interface TablePdfOptions {
   orientation?: PageOrientation;
   marginPreset?: MarginPreset;
   customMarginMm?: number;
+  fontSize?: number; // Custom font size in pt (default: 7.2)
+  columnWidths?: Record<string, number>; // Custom manual column widths in mm (key: dataKey or col index)
   // Feature Toggles
   showLetterhead?: boolean;
   showFiltersSummary?: boolean;
@@ -68,8 +70,8 @@ export const MARGIN_PRESETS: Record<Exclude<MarginPreset, 'custom'>, number> = {
  */
 function resolvePaperFormat(options: TablePdfOptions): [number, number] {
   if (options.paperSize === 'custom') {
-    const w = Math.max(100, options.customWidthMm || 210);
-    const h = Math.max(100, options.customHeightMm || 297);
+    const w = Math.max(30, options.customWidthMm || 210);
+    const h = Math.max(30, options.customHeightMm || 297);
     return [w, h];
   }
   if (options.paperSize === 'continuous') {
@@ -335,13 +337,75 @@ function renderPdfBody(
     footRows = [footRow];
   }
 
-  // Column styles mapping
+  // Font Size Resolution & Metrics
+  const tableFontSize = options.fontSize && options.fontSize >= 4 ? options.fontSize : 7.2;
+  const headerFontSize = Math.min(11, Math.max(6, Math.round((tableFontSize + 0.3) * 10) / 10));
+  const footFontSize = Math.min(11, Math.max(6, Math.round((tableFontSize + 0.3) * 10) / 10));
+  const paddingMm = 2;
+
+  // Column styles mapping & dynamic content-fit anti-wrapping calculation
   const columnStylesMap: { [key: number]: any } = {};
+
+  // Temporary font setup to measure exact character width
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(tableFontSize);
+
   options.columns.forEach((col, idx) => {
-    columnStylesMap[idx] = {
-      halign: col.align || 'left',
-      ...(col.width ? { cellWidth: col.width } : {}),
-    };
+    const colKey = col.dataKey || col.header || String(idx);
+    const manualWidth = options.columnWidths?.[colKey] ?? options.columnWidths?.[String(idx)];
+
+    if (manualWidth && manualWidth > 0) {
+      // 1. User manual override takes highest priority
+      columnStylesMap[idx] = {
+        halign: col.align || 'left',
+        cellWidth: manualWidth,
+      };
+    } else if (col.width && !options.preventTextWrapping) {
+      // 2. Predefined static width from column spec
+      columnStylesMap[idx] = {
+        halign: col.align || 'left',
+        cellWidth: col.width,
+      };
+    } else if (options.preventTextWrapping) {
+      // 3. Dynamic content-fit: measure maximum text width in header, data, and totals
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(headerFontSize);
+      let maxTextWidth = doc.getTextWidth(col.header.toUpperCase()) + 1.5;
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(tableFontSize);
+
+      const sampleRows = options.data.slice(0, 150);
+      for (let rIdx = 0; rIdx < sampleRows.length; rIdx++) {
+        const row = sampleRows[rIdx];
+        let text = '';
+        if (col.format) {
+          text = col.format(col.dataKey ? row[col.dataKey] : undefined, row, rIdx) || '';
+        } else if (col.dataKey && row[col.dataKey] != null) {
+          text = String(row[col.dataKey]);
+        }
+        const w = doc.getTextWidth(text);
+        if (w > maxTextWidth) maxTextWidth = w;
+      }
+
+      if (options.grandTotals?.[idx]) {
+        doc.setFont('helvetica', 'bold');
+        const totalW = doc.getTextWidth(options.grandTotals[idx]);
+        if (totalW > maxTextWidth) maxTextWidth = totalW;
+      }
+
+      // Safe width = max content text width + padding on both sides (2 * 2mm) + safety spacing (2.5mm)
+      const safeColWidth = Math.ceil(maxTextWidth + paddingMm * 2 + 2.5);
+
+      columnStylesMap[idx] = {
+        halign: col.align || 'left',
+        cellWidth: Math.max(14, safeColWidth),
+      };
+    } else {
+      columnStylesMap[idx] = {
+        halign: col.align || 'left',
+      };
+    }
   });
 
   // 5. RENDER TABEL DENGAN AUTO-TABLE
@@ -360,16 +424,17 @@ function renderPdfBody(
     tableWidth: contentWidth,
     styles: {
       font: 'helvetica',
-      fontSize: 7.2,
-      cellPadding: 2,
+      fontSize: tableFontSize,
+      cellPadding: paddingMm,
       lineColor: [220, 220, 220],
       lineWidth: 0.15,
       textColor: [20, 20, 20],
-      overflow: options.preventTextWrapping ? 'visible' : 'linebreak',
+      overflow: 'linebreak', // Always linebreak (never visible to avoid bleed/collision)
     },
     headStyles: {
       fillColor: [240, 240, 240],
       textColor: [0, 0, 0],
+      fontSize: headerFontSize,
       fontStyle: 'bold',
       lineColor: [180, 180, 180],
       lineWidth: 0.25,
@@ -381,6 +446,7 @@ function renderPdfBody(
     footStyles: {
       fillColor: [234, 234, 234],
       textColor: [0, 0, 0],
+      fontSize: footFontSize,
       fontStyle: 'bold',
       lineWidth: 0.3,
       lineColor: [100, 100, 100],
@@ -507,7 +573,7 @@ export function generateTablePdf(options: TablePdfOptions): jsPDF {
 
   // Mode Kertas Bersambung (Continuous Roll / 1 Lembar Panjang Tanpa Potong)
   if (options.paperSize === 'continuous') {
-    const rollWidth = Math.max(
+    let rollWidth = Math.max(
       50,
       options.continuousWidthMm || (orientation === 'landscape' ? 297 : 210)
     );
@@ -533,6 +599,23 @@ export function generateTablePdf(options: TablePdfOptions): jsPDF {
     });
 
     renderPdfBody(doc, options, marginMm, true);
+    return doc;
+  }
+
+  // Custom Paper Dimensions (Width & Height in mm strictly specified by user)
+  if (options.paperSize === 'custom') {
+    const customW = Math.max(30, options.customWidthMm || 210);
+    const customH = Math.max(30, options.customHeightMm || 297);
+    // Align orientation with custom aspect ratio to prevent jsPDF from auto-flipping dimensions
+    const customOrient = customW >= customH ? 'landscape' : 'portrait';
+    const doc = new jsPDF({
+      orientation: customOrient,
+      unit: 'mm',
+      format: [customW, customH],
+      compress: true,
+    });
+
+    renderPdfBody(doc, options, marginMm, false);
     return doc;
   }
 

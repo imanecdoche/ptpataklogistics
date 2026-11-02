@@ -35,6 +35,8 @@ interface UserPreferences {
   orientation: PageOrientation;
   marginPreset: MarginPreset;
   customMarginMm: number;
+  fontSize: number;
+  columnWidths: Record<string, number>;
   showLetterhead: boolean;
   showFiltersSummary: boolean;
   showSignatures: boolean;
@@ -82,6 +84,8 @@ export function TablePdfExportModal({
           orientation: parsed.orientation || defaultOrientation || (columns.length >= 6 ? 'landscape' : 'portrait'),
           marginPreset: parsed.marginPreset || 'normal',
           customMarginMm: parsed.customMarginMm || 10,
+          fontSize: typeof parsed.fontSize === 'number' ? parsed.fontSize : 7.2,
+          columnWidths: parsed.columnWidths && typeof parsed.columnWidths === 'object' ? parsed.columnWidths : {},
           showLetterhead: parsed.showLetterhead ?? true,
           showFiltersSummary: parsed.showFiltersSummary ?? true,
           showSignatures: parsed.showSignatures ?? true,
@@ -105,6 +109,8 @@ export function TablePdfExportModal({
       orientation: defaultOrientation || (columns.length >= 6 ? 'landscape' : 'portrait'),
       marginPreset: 'normal',
       customMarginMm: 10,
+      fontSize: 7.2,
+      columnWidths: {},
       showLetterhead: true,
       showFiltersSummary: true,
       showSignatures: true,
@@ -127,6 +133,8 @@ export function TablePdfExportModal({
   const [orientation, setOrientation] = useState<PageOrientation>(initialPreferences.orientation);
   const [marginPreset, setMarginPreset] = useState<MarginPreset>(initialPreferences.marginPreset);
   const [customMarginMm, setCustomMarginMm] = useState<number>(initialPreferences.customMarginMm);
+  const [fontSize, setFontSize] = useState<number>(initialPreferences.fontSize || 7.2);
+  const [columnWidths, setColumnWidths] = useState<Record<string, number>>(initialPreferences.columnWidths || {});
   const [showLetterhead, setShowLetterhead] = useState<boolean>(initialPreferences.showLetterhead);
   const [showFiltersSummary, setShowFiltersSummary] = useState<boolean>(initialPreferences.showFiltersSummary);
   const [showSignatures, setShowSignatures] = useState<boolean>(initialPreferences.showSignatures);
@@ -227,20 +235,21 @@ export function TablePdfExportModal({
     return Math.ceil(totalColsWidth + marginVal * 2);
   }, [visibleColumns, data, marginPreset, customMarginMm]);
 
-  // Effective continuous and custom widths taking anti-wrapped lock into account
+  // Effective continuous and custom widths
   const effectiveContinuousWidth = useMemo(() => {
-    if (preventTextWrapping) {
+    if (preventTextWrapping && continuousWidthPreset !== 'custom') {
       return Math.max(continuousWidthMm, tableMinSafeWidth);
     }
-    return continuousWidthMm;
-  }, [preventTextWrapping, continuousWidthMm, tableMinSafeWidth]);
+    return Math.max(30, continuousWidthMm || 210);
+  }, [preventTextWrapping, continuousWidthPreset, continuousWidthMm, tableMinSafeWidth]);
 
   const effectiveCustomWidth = useMemo(() => {
-    if (preventTextWrapping) {
-      return Math.max(customWidthMm, tableMinSafeWidth);
-    }
-    return customWidthMm;
-  }, [preventTextWrapping, customWidthMm, tableMinSafeWidth]);
+    return Math.max(30, customWidthMm || 210);
+  }, [customWidthMm]);
+
+  const effectiveCustomHeight = useMemo(() => {
+    return Math.max(30, customHeightMm || 297);
+  }, [customHeightMm]);
 
   // Auto-switch to landscape if standard portrait will wrap text
   useEffect(() => {
@@ -266,6 +275,8 @@ export function TablePdfExportModal({
     setOrientation(defaultOrientation || (columns.length >= 6 ? 'landscape' : 'portrait'));
     setMarginPreset('normal');
     setCustomMarginMm(10);
+    setFontSize(7.2);
+    setColumnWidths({});
     setShowLetterhead(true);
     setShowFiltersSummary(true);
     setShowSignatures(true);
@@ -289,6 +300,8 @@ export function TablePdfExportModal({
         orientation,
         marginPreset,
         customMarginMm,
+        fontSize,
+        columnWidths,
         showLetterhead,
         showFiltersSummary,
         showSignatures,
@@ -312,6 +325,8 @@ export function TablePdfExportModal({
     orientation,
     marginPreset,
     customMarginMm,
+    fontSize,
+    columnWidths,
     showLetterhead,
     showFiltersSummary,
     showSignatures,
@@ -333,10 +348,12 @@ export function TablePdfExportModal({
       paperSize,
       continuousWidthMm: effectiveContinuousWidth,
       customWidthMm: effectiveCustomWidth,
-      customHeightMm,
+      customHeightMm: effectiveCustomHeight,
       orientation,
       marginPreset,
       customMarginMm,
+      fontSize,
+      columnWidths,
       showLetterhead,
       showFiltersSummary,
       showSignatures,
@@ -358,10 +375,12 @@ export function TablePdfExportModal({
     paperSize,
     effectiveContinuousWidth,
     effectiveCustomWidth,
-    customHeightMm,
+    effectiveCustomHeight,
     orientation,
     marginPreset,
     customMarginMm,
+    fontSize,
+    columnWidths,
     showLetterhead,
     showFiltersSummary,
     showSignatures,
@@ -659,29 +678,44 @@ export function TablePdfExportModal({
 
               {/* Custom Size Inputs if custom selected */}
               {paperSize === 'custom' && (
-                <div className="grid grid-cols-2 gap-2 pt-1.5">
-                  <div>
-                    <span className="text-[10px] text-[#777777] block mb-1">Lebar (mm)</span>
-                    <input
-                      type="number"
-                      min={80}
-                      max={1000}
-                      value={customWidthMm}
-                      onChange={e => setCustomWidthMm(Number(e.target.value))}
-                      className="w-full h-8 px-2.5 text-xs bg-[#f5f5f5] rounded-[4px] outline-none text-[#111111]"
-                    />
+                <div className="space-y-1.5 pt-1.5">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <span className="text-[10px] text-[#777777] block mb-1">Lebar (mm)</span>
+                      <input
+                        type="number"
+                        min={30}
+                        max={1000}
+                        value={customWidthMm || ''}
+                        placeholder="210"
+                        onChange={e => {
+                          const val = e.target.value;
+                          setCustomWidthMm(val === '' ? 0 : Number(val));
+                        }}
+                        className="w-full h-8 px-2.5 text-xs bg-[#f5f5f5] rounded-[4px] outline-none text-[#111111] focus:bg-white focus:ring-1 focus:ring-[#111111]"
+                      />
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-[#777777] block mb-1">Tinggi (mm)</span>
+                      <input
+                        type="number"
+                        min={30}
+                        max={1000}
+                        value={customHeightMm || ''}
+                        placeholder="297"
+                        onChange={e => {
+                          const val = e.target.value;
+                          setCustomHeightMm(val === '' ? 0 : Number(val));
+                        }}
+                        className="w-full h-8 px-2.5 text-xs bg-[#f5f5f5] rounded-[4px] outline-none text-[#111111] focus:bg-white focus:ring-1 focus:ring-[#111111]"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <span className="text-[10px] text-[#777777] block mb-1">Tinggi (mm)</span>
-                    <input
-                      type="number"
-                      min={80}
-                      max={1000}
-                      value={customHeightMm}
-                      onChange={e => setCustomHeightMm(Number(e.target.value))}
-                      className="w-full h-8 px-2.5 text-xs bg-[#f5f5f5] rounded-[4px] outline-none text-[#111111]"
-                    />
-                  </div>
+                  {preventTextWrapping && customWidthMm > 0 && customWidthMm < tableMinSafeWidth && (
+                    <div className="text-[10px] text-amber-700 bg-amber-50 p-1.5 rounded-[4px] leading-tight">
+                      * Catatan: Lebar {customWidthMm} mm lebih sempit dari kebutuhan tabel ({tableMinSafeWidth} mm). Kolom mungkin meluber ke samping.
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -761,77 +795,195 @@ export function TablePdfExportModal({
               )}
             </div>
 
-            {/* 4. Column Visibility Selector (Accordion / Panel) */}
+            {/* 3.1 Ukuran Font Dokumen (Font Size) */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-semibold text-[#222222] block">
+                  Ukuran Font Tabel
+                </label>
+                <span className="text-[11px] font-mono font-bold text-[#111111] bg-[#f0f0f0] px-2 py-0.5 rounded-[4px]">
+                  {fontSize.toFixed(1)} pt
+                </span>
+              </div>
+
+              {/* Stepper & 4 Quick Presets */}
+              <div className="flex items-center gap-1.5">
+                <div className="flex items-center bg-[#f5f5f5] rounded-[4px] p-0.5 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setFontSize(prev => Math.max(5.0, Math.round((prev - 0.5) * 10) / 10))}
+                    className="w-7 h-7 flex items-center justify-center text-sm font-bold text-[#333333] hover:bg-[#e8e8e8] rounded-[3px] transition-colors cursor-pointer"
+                    title="Perkecil huruf"
+                  >
+                    -
+                  </button>
+                  <span className="w-11 text-center text-xs font-mono font-bold text-[#111111]">
+                    {fontSize.toFixed(1)}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setFontSize(prev => Math.min(12.0, Math.round((prev + 0.5) * 10) / 10))}
+                    className="w-7 h-7 flex items-center justify-center text-sm font-bold text-[#333333] hover:bg-[#e8e8e8] rounded-[3px] transition-colors cursor-pointer"
+                    title="Perbesar huruf"
+                  >
+                    +
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-4 gap-1 flex-1">
+                  {[
+                    { pt: 6.0, label: '6 pt' },
+                    { pt: 7.2, label: '7.2 pt' },
+                    { pt: 8.5, label: '8.5 pt' },
+                    { pt: 10.0, label: '10 pt' },
+                  ].map(preset => (
+                    <button
+                      key={preset.pt}
+                      type="button"
+                      onClick={() => setFontSize(preset.pt)}
+                      className={`h-8 text-[11px] font-semibold rounded-[4px] transition-colors cursor-pointer ${
+                        Math.abs(fontSize - preset.pt) < 0.1
+                          ? 'bg-[#111111] text-white shadow-xs'
+                          : 'bg-[#f5f5f5] text-[#555555] hover:bg-[#ebebeb] hover:text-[#111111]'
+                      }`}
+                    >
+                      {preset.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* 4. Column Visibility & Custom Width Selector */}
             <div className="space-y-2 pt-2 border-t border-[#eaeaea]">
               <div className="flex items-center justify-between">
                 <div>
                   <label className="text-xs font-semibold text-[#222222] block">
-                    Kolom Tabel
+                    Kolom Tabel & Lebar (mm)
                   </label>
                   <span className="text-[10px] text-[#777777] block">
-                    {visibleColumns.length} dari {columns.length} kolom tampil di cetakan
+                    {visibleColumns.length} dari {columns.length} kolom aktif • Sesuaikan lebar kolom
                   </span>
                 </div>
-                {hiddenColumnKeys.length > 0 && (
-                  <div className="flex items-center space-x-1">
+                <div className="flex items-center space-x-1">
+                  {Object.keys(columnWidths).length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setColumnWidths({})}
+                      className="px-2 py-0.5 text-[10px] font-semibold text-amber-800 bg-amber-50 hover:bg-amber-100 rounded-[4px] transition-colors cursor-pointer"
+                      title="Reset semua lebar kolom ke otomatis"
+                    >
+                      Reset Lebar
+                    </button>
+                  )}
+                  {hiddenColumnKeys.length > 0 && (
                     <button
                       type="button"
                       onClick={() => setHiddenColumnKeys([])}
-                      className="px-2 py-0.5 text-[11px] font-semibold text-[#111111] bg-[#f0f0f0] hover:bg-[#e4e4e4] rounded-[4px] transition-colors cursor-pointer"
+                      className="px-2 py-0.5 text-[10px] font-semibold text-[#111111] bg-[#f0f0f0] hover:bg-[#e4e4e4] rounded-[4px] transition-colors cursor-pointer"
                       title="Tampilkan semua kolom"
                     >
                       Pilih Semua
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => setHiddenColumnKeys([])}
-                      className="px-2 py-0.5 text-[11px] font-semibold text-[#666666] hover:text-[#111111] hover:bg-[#f0f0f0] rounded-[4px] transition-colors cursor-pointer"
-                      title="Kembalikan ke susunan asli"
-                    >
-                      Reset
-                    </button>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
 
-              {/* Grid Toggle Chips */}
-              <div className="grid grid-cols-2 gap-1.5 pt-1">
+              {/* Column Rows with Visibility Toggle and Width Input */}
+              <div className="space-y-1.5 max-h-[280px] overflow-y-auto pr-1">
                 {columns.map((col, idx) => {
                   const key = col.dataKey || col.header || `col_${idx}`;
                   const isVisible = !hiddenColumnKeys.includes(key);
                   const isLastVisible = isVisible && visibleColumns.length === 1;
+                  const currentWidth = columnWidths[key];
 
                   return (
-                    <button
+                    <div
                       key={key}
-                      type="button"
-                      disabled={isLastVisible}
-                      onClick={() => {
-                        if (isLastVisible) return;
-                        setHiddenColumnKeys(prev =>
-                          isVisible ? [...prev, key] : prev.filter(k => k !== key)
-                        );
-                      }}
-                      className={`h-8 px-2 text-xs font-medium rounded-[6px] flex items-center justify-between transition-all cursor-pointer text-left ${
+                      className={`flex items-center justify-between p-1.5 rounded-[6px] transition-all ${
                         isVisible
-                          ? 'bg-[#111111] text-white shadow-xs'
-                          : 'bg-[#f5f5f5] text-[#888888] hover:bg-[#ebebeb] hover:text-[#111111]'
-                      } ${isLastVisible ? 'opacity-80 cursor-not-allowed' : ''}`}
-                      title={
-                        isLastVisible
-                          ? 'Minimal satu kolom harus tetap tampil'
-                          : `${isVisible ? 'Sembunyikan' : 'Tampilkan'} kolom ${col.header}`
-                      }
+                          ? 'bg-white border border-[#eaeaea]'
+                          : 'bg-[#f7f7f7] border border-transparent opacity-60'
+                      }`}
                     >
-                      <span className="truncate pr-1">{col.header}</span>
-                      {isVisible ? (
-                        <svg className="w-3.5 h-3.5 shrink-0 text-white" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                      ) : (
-                        <span className="text-[10px] uppercase font-bold text-[#aaaaaa]">Off</span>
+                      <button
+                        type="button"
+                        disabled={isLastVisible}
+                        onClick={() => {
+                          if (isLastVisible) return;
+                          setHiddenColumnKeys(prev =>
+                            isVisible ? [...prev, key] : prev.filter(k => k !== key)
+                          );
+                        }}
+                        className={`flex items-center space-x-2 text-left cursor-pointer flex-1 min-w-0 pr-2 ${
+                          isLastVisible ? 'cursor-not-allowed' : ''
+                        }`}
+                        title={
+                          isLastVisible
+                            ? 'Minimal satu kolom harus tetap tampil'
+                            : `${isVisible ? 'Sembunyikan' : 'Tampilkan'} kolom ${col.header}`
+                        }
+                      >
+                        <div
+                          className={`w-4 h-4 rounded-[3px] flex items-center justify-center shrink-0 transition-colors ${
+                            isVisible ? 'bg-[#111111] text-white' : 'bg-[#dddddd]'
+                          }`}
+                        >
+                          {isVisible && (
+                            <svg className="w-3 h-3" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                          )}
+                        </div>
+                        <span className={`text-xs truncate ${isVisible ? 'font-semibold text-[#111111]' : 'text-[#888888]'}`}>
+                          {col.header}
+                        </span>
+                      </button>
+
+                      {/* Width Control in mm (only active if column is visible) */}
+                      {isVisible && (
+                        <div className="flex items-center space-x-1 shrink-0">
+                          <input
+                            type="number"
+                            min={10}
+                            max={500}
+                            value={currentWidth ?? ''}
+                            placeholder="Auto"
+                            onChange={e => {
+                              const val = e.target.value;
+                              setColumnWidths(prev => {
+                                const next = { ...prev };
+                                if (val === '' || Number(val) <= 0) {
+                                  delete next[key];
+                                } else {
+                                  next[key] = Number(val);
+                                }
+                                return next;
+                              });
+                            }}
+                            className="w-16 h-7 px-1.5 text-right font-mono text-xs bg-[#f5f5f5] rounded-[4px] outline-none text-[#111111] focus:bg-white focus:ring-1 focus:ring-[#111111]"
+                            title={`Lebar kolom ${col.header} (mm)`}
+                          />
+                          <span className="text-[10px] text-[#888888] font-mono">mm</span>
+                          {currentWidth !== undefined && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setColumnWidths(prev => {
+                                  const next = { ...prev };
+                                  delete next[key];
+                                  return next;
+                                });
+                              }}
+                              className="w-5 h-5 flex items-center justify-center text-[10px] text-[#888888] hover:text-[#111111] hover:bg-[#eaeaea] rounded-[3px] transition-colors cursor-pointer"
+                              title="Kembalikan ke lebar otomatis"
+                            >
+                              ✕
+                            </button>
+                          )}
+                        </div>
                       )}
-                    </button>
+                    </div>
                   );
                 })}
               </div>
@@ -854,10 +1006,10 @@ export function TablePdfExportModal({
                   />
                   <div>
                     <span className="text-[#222222] font-semibold block">
-                      Anti-Wrapped Text (Kunci Lebar Minimum)
+                      Anti-Wrapped Text (Panjang Kolom Menyesuaikan Konten)
                     </span>
                     <span className="text-[10px] text-[#777777] block mt-0.5">
-                      Mencegah teks tabel terpotong atau membungkus 2 baris (lebar aman: min. {tableMinSafeWidth} mm).
+                      Panjang setiap kolom otomatis menyesuaikan ukuran konten teks agar tidak terlipat dan tidak menabrak kolom sebelah.
                     </span>
                   </div>
                 </label>
