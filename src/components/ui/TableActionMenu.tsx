@@ -80,7 +80,8 @@ export function TableActionMenu({
     }
   };
 
-  // Integrasi Klik Kanan (Desktop) dan Tap & Hold 500ms (Mobile) pada Baris Tabel (<tr>)
+  // Integrasi Klik Kanan (Desktop) dan Tap & Hold 450ms (Mobile) pada Baris Tabel (<tr>)
+  // Dilengkapi Supresi Seleksi Teks (Rule 131)
   useEffect(() => {
     if (disableRowTrigger || !buttonRef.current) return;
 
@@ -88,8 +89,30 @@ export function TableActionMenu({
     if (!row) return;
     activeRowRef.current = row;
 
+    // Supresi seleksi teks & callout pada baris tabel (Rule 131)
+    row.classList.add('select-none');
+    row.style.userSelect = 'none';
+    row.style.webkitUserSelect = 'none';
+    (row.style as CSSStyleDeclaration & { webkitTouchCallout?: string }).webkitTouchCallout = 'none';
+
     let touchTimer: ReturnType<typeof setTimeout> | null = null;
     let touchStartPos: { x: number; y: number } | null = null;
+
+    // Bersihkan selection range aktif
+    const clearTextSelection = () => {
+      if (typeof window !== 'undefined' && window.getSelection) {
+        try {
+          window.getSelection()?.removeAllRanges();
+        } catch (_) {
+          // Abaikan jika tidak didukung
+        }
+      }
+    };
+
+    // Cegah seleksi teks bawaan saat user menyentuh/menahan area baris
+    const handleSelectStart = (e: Event) => {
+      e.preventDefault();
+    };
 
     // 1. Desktop: Klik Kanan (contextmenu)
     const handleContextMenu = (e: MouseEvent) => {
@@ -100,18 +123,22 @@ export function TableActionMenu({
       }
       e.preventDefault();
       e.stopPropagation();
+      clearTextSelection();
       updatePosition({ x: e.clientX, y: e.clientY });
       setIsOpen(true);
     };
 
-    // 2. Mobile: Tap & Hold 500ms
+    // 2. Mobile: Tap & Hold 450ms dengan Haptic Feedback & Zero Text Highlight
     const handleTouchStart = (e: TouchEvent) => {
       if (e.touches.length !== 1) return;
       const touch = e.touches[0];
       if (!touch) return;
       touchStartPos = { x: touch.clientX, y: touch.clientY };
 
+      clearTextSelection();
+
       touchTimer = setTimeout(() => {
+        clearTextSelection();
         if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
           try {
             navigator.vibrate(40);
@@ -121,7 +148,7 @@ export function TableActionMenu({
         }
         updatePosition({ x: touch.clientX, y: touch.clientY });
         setIsOpen(true);
-      }, 500);
+      }, 450);
     };
 
     const handleTouchMove = (e: TouchEvent) => {
@@ -144,6 +171,7 @@ export function TableActionMenu({
       }
     };
 
+    row.addEventListener('selectstart', handleSelectStart);
     row.addEventListener('contextmenu', handleContextMenu);
     row.addEventListener('touchstart', handleTouchStart, { passive: true });
     row.addEventListener('touchmove', handleTouchMove, { passive: true });
@@ -152,11 +180,17 @@ export function TableActionMenu({
 
     return () => {
       if (touchTimer) clearTimeout(touchTimer);
+      row.removeEventListener('selectstart', handleSelectStart);
       row.removeEventListener('contextmenu', handleContextMenu);
       row.removeEventListener('touchstart', handleTouchStart);
       row.removeEventListener('touchmove', handleTouchMove);
       row.removeEventListener('touchend', handleTouchEnd);
       row.removeEventListener('touchcancel', handleTouchEnd);
+
+      row.classList.remove('select-none');
+      row.style.userSelect = '';
+      row.style.webkitUserSelect = '';
+      (row.style as CSSStyleDeclaration & { webkitTouchCallout?: string }).webkitTouchCallout = '';
     };
   }, [disableRowTrigger, updatePosition]);
 

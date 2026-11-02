@@ -1533,6 +1533,16 @@ Dokumen ini adalah hukum tertinggi operasional sistem. Kegagalan mematuhi aturan
     - **Unified Custom Dialog Architecture**:
       * Seluruh peringatan (alerts), konfirmasi (confirmations), prompt destruktif, dan notifikasi WAJIB dirender melalui sistem custom modal/dialog aplikasi atau context provider dialog (contoh: `CustomDialog`, `DialogContext` / `useDialog()`), dengan mematuhi spesifikasi ukuran terkunci desktop dan animasi bottom-drawer mobile.
 
+131. **Mandatory Text Selection Suppression for Contextual Menus (Zero Text Highlight on Hold & Right-Click)**:
+    - **Zero Accidental Text Selection on Hold**:
+      * Seluruh elemen yang memicu menu kontekstual (khususnya baris tabel `<tr>` atau container dengan interaksi tap-and-hold/long-press mobile) WAJIB menerapkan supresi seleksi teks (`select-none`, `user-select: none`, `-webkit-user-select: none`, `-webkit-touch-callout: none`).
+      * Event `selectstart` wajib dicegah (`e.preventDefault()`) pada baris tabel kontekstual agar engine browser tidak menginisiasi seleksi teks/magnifier saat jari menyentuh dan menahan layar.
+    - **Active Range Clearing**:
+      * Saat gesture tap-and-hold (450ms) terpicu di mobile/layar sentuh maupun saat klik kanan (`contextmenu`) di desktop, sistem WAJIB secara proaktif memanggil `window.getSelection()?.removeAllRanges()` untuk membersihkan seleksi teks yang mungkin sempat ter-highlight di layar.
+    - **Haptic & Scrolling Integrity**:
+      * Long-press 450ms dilengkapi haptic vibration halus (40ms) dan wajib langsung membatalkan timer jika pergeseran sentuhan (delta) melebihi 10px untuk menjaga kelancaran scroll native tanpa lag.
+
+
 
 
 
