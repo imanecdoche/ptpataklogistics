@@ -17,6 +17,7 @@ export type NavigationTab =
   | 'cash_ledger'
   | 'hok_labor'
   | 'recap'
+  | 'quick_reports'
   | 'database'
   | 'dev';
 
@@ -88,6 +89,11 @@ const MENU_ITEMS: SidebarItem[] = [
     iconSrc: '/icons/chart.png'
   },
   {
+    id: 'quick_reports',
+    label: 'Laporan Cepat',
+    iconSrc: '/icons/quick-reports.png'
+  },
+  {
     id: 'database',
     label: 'Database',
     iconSrc: '/icons/database.png'
@@ -126,6 +132,7 @@ export const SUB_MENU_ITEMS: Record<NavigationTab, SubTabItem[]> = {
     { id: 'volume', label: 'Volume Muatan' },
     { id: 'financial', label: 'Laba & Finansial' }
   ],
+  quick_reports: [],
   database: [
     { id: 'ritase', label: 'Riwayat Ritase' },
     { id: 'vehicles', label: 'Armada & Plat Nomor' },

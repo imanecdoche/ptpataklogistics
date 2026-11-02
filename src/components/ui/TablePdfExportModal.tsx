@@ -10,6 +10,7 @@ import {
   exportTableToPdfBlobUrl,
   downloadTablePdf,
 } from '@/lib/pdfExportService';
+import { AddToQuickReportModal } from '@/components/quick_reports/AddToQuickReportModal';
 
 export interface TablePdfExportModalProps {
   isOpen: boolean;
@@ -148,6 +149,9 @@ export function TablePdfExportModal({
 
   // Mobile View Tab: 'preview' vs 'settings'
   const [mobileTab, setMobileTab] = useState<'preview' | 'settings'>('preview');
+
+  // Quick Report Modal State
+  const [isQuickReportModalOpen, setIsQuickReportModalOpen] = useState<boolean>(false);
 
   // Preview Blob URL
   const [previewBlobUrl, setPreviewBlobUrl] = useState<string | null>(null);
@@ -494,6 +498,17 @@ export function TablePdfExportModal({
                 Pengaturan
               </button>
             </div>
+
+            {/* Action: Tambah ke Laporan Cepat */}
+            <button
+              type="button"
+              onClick={() => setIsQuickReportModalOpen(true)}
+              className="px-3 py-2 bg-[#f0f0f0] hover:bg-[#e0e0e0] active:scale-[0.98] text-[#111111] text-xs font-semibold rounded-[6px] flex items-center space-x-1.5 transition-all cursor-pointer whitespace-nowrap shadow-xs"
+              title="Simpan konfigurasi saat ini ke Laporan Cepat"
+            >
+              <img src="/icons/quick-reports.png" alt="Laporan Cepat" className="w-4 h-4 object-contain" />
+              <span className="hidden sm:inline">Tambah ke Laporan Cepat</span>
+            </button>
 
             {/* Action: Download PDF */}
             <button
@@ -1142,6 +1157,38 @@ export function TablePdfExportModal({
           </aside>
         </div>
       </div>
+
+      {isQuickReportModalOpen && (
+        <AddToQuickReportModal
+          isOpen={isQuickReportModalOpen}
+          onClose={() => setIsQuickReportModalOpen(false)}
+          tableId={tableId}
+          title={customTitle || title}
+          subtitle={subtitle}
+          fileName={fileName}
+          pdfPreferences={{
+            paperSize,
+            continuousWidthPreset,
+            continuousWidthMm: effectiveContinuousWidth,
+            customWidthMm: effectiveCustomWidth,
+            customHeightMm: effectiveCustomHeight,
+            orientation,
+            marginPreset,
+            customMarginMm,
+            fontSize,
+            columnWidths,
+            showLetterhead,
+            showFiltersSummary,
+            showSignatures,
+            showPageNumbers,
+            groupByMaterial,
+            preventTextWrapping,
+            hiddenColumnKeys,
+            customNotes,
+          }}
+          filtersSummary={filtersSummary}
+        />
+      )}
     </div>
   );
 }

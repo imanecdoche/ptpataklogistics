@@ -76,6 +76,11 @@ const TAB_TITLES: Record<NavigationTab, { title: string; mobileTitle?: string; s
     mobileTitle: 'Rekapitulasi',
     subtitle: ''
   },
+  quick_reports: {
+    title: 'Laporan Cepat',
+    mobileTitle: 'Laporan Cepat',
+    subtitle: 'Pusat ekspor laporan instan sekali klik'
+  },
   database: {
     title: 'Master Database',
     mobileTitle: 'Database',

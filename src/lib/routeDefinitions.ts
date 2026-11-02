@@ -20,6 +20,7 @@ export const TAB_TO_SLUG: Record<NavigationTab, string> = {
   materials: 'material',
   hok_labor: 'mandor-borongan',
   recap: 'rekapitulasi',
+  quick_reports: 'laporan-cepat',
   database: 'database',
   dev: 'dev'
 };
@@ -38,10 +39,13 @@ export const SLUG_TO_TAB: Record<string, NavigationTab> = {
   'material': 'materials',
   'mandor-borongan': 'hok_labor',
   'rekapitulasi': 'recap',
+  'laporan-cepat': 'quick_reports',
   'database': 'database',
   'dev': 'dev',
 
   // Alias & backward compatibility
+  'quick_reports': 'quick_reports',
+  'quick-reports': 'quick_reports',
   'hok-tukang': 'hok_labor',
   'cash-ledger': 'cash_ledger',
   'cash_ledger': 'cash_ledger',
@@ -86,6 +90,7 @@ export const SUBTAB_TO_SLUG: Record<NavigationTab, Record<string, string>> = {
     volume: 'volume',
     financial: 'finansial'
   },
+  quick_reports: {},
   database: {
     ritase: 'ritase',
     vehicles: 'armada',
@@ -142,6 +147,7 @@ export const SLUG_TO_SUBTAB: Record<NavigationTab, Record<string, string>> = {
     'finansial': 'financial',
     'financial': 'financial'
   },
+  quick_reports: {},
   database: {
     'ritase': 'ritase',
     'armada': 'vehicles',
@@ -176,6 +182,7 @@ export const DEFAULT_SUBTAB: Record<NavigationTab, string | undefined> = {
   materials: 'catalog',
   hok_labor: 'payments',
   recap: 'volume',
+  quick_reports: undefined,
   database: 'ritase',
   dev: 'all'
 };

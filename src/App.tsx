@@ -18,6 +18,7 @@ import { ClientsPage } from '@/components/clients/ClientsPage';
 import { RecapPage } from '@/components/recap/RecapPage';
 import { CashLedgerPage } from '@/components/cash_ledger/CashLedgerPage';
 import { LaborPage } from '@/components/labor/LaborPage';
+import { QuickReportsPage } from '@/components/quick_reports/QuickReportsPage';
 import { DevPage } from '@/components/dev/DevPage';
 import { OfflineOverlay } from '@/components/ui/OfflineOverlay';
 import { isDeveloperEmail } from '@/lib/userManagementService';
@@ -267,6 +268,10 @@ function AuthenticatedApp({ user, onLogout }: AuthenticatedAppProps): React.JSX.
           activeSubTab={currentSubTab}
           onNavigateSubTab={handleSelectSubTab}
         />
+      )}
+
+      {currentTab === 'quick_reports' && (
+        <QuickReportsPage userEmail={user?.email || 'admin@patak.id'} />
       )}
     </AppShell>
   );

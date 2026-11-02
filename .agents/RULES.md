@@ -1629,3 +1629,24 @@ Dokumen ini adalah hukum tertinggi operasional sistem. Kegagalan mematuhi aturan
   5. **Kepatuhan Mutlak React Rules of Hooks (Top-Level Hook Invariant)**:
      - DILARANG KERAS meletakkan kondisi keluar awal (*early return* seperti `if (!isOpen || !project) return null;`) di atas hook `useMemo`, `useEffect`, `useState`, atau `useCallback`.
      - Seluruh hooks wajib dieksekusi tanpa syarat (*unconditionally*) di tingkat atas fungsi sebelum pernyataan return apa pun agar urutan dan jumlah hooks selalu konsisten 100% pada setiap render.
+
+### Rule 135: Arsitektur Fitur Laporan Cepat (1-Click Quick Reports) & Standar Koleksi Firestore
+- **Latar Belakang & Tujuan**:
+  - Menyediakan mekanisme ekspor instan sekali klik (*1-click instant PDF export*) dari tab baru **"Laporan Cepat"** (`/laporan-cepat`) tanpa mengharuskan pengguna membuka modal atau mengonfigurasi ulang preferensi kertas, font, margin, kolom, dan filter secara berulang-ulang.
+  - Setiap tabel sistem yang memiliki fitur ekspor dilengkapi tombol *"Tambah ke Laporan Cepat"* di bilah toolbar dan di dalam modal ekspor, yang menyimpan konfigurasi dokumen ke Cloud Firestore.
+- **Ketentuan Implementasi**:
+  1. **Navigasi & Ikon Resmi**:
+     - Menggunakan ikon resmi dokumen grafik (`/icons/quick-reports.png`).
+     - Didaftarkan pada `Sidebar.tsx`, `routeDefinitions.ts` (`/laporan-cepat`), dan `AppShell.tsx` dengan label *"Laporan Cepat"*.
+  2. **Koleksi Cloud Firestore (`quick_reports`)**:
+     - Setiap dokumen memuat: `name`, `tableId`, `exportType`, `categoryLabel`, `title`, `subtitle`, `pdfPreferences` (ukuran kertas, continuous roll, custom width/height, orientasi, margin, font size, columnWidths, 6 boolean formal toggles, customNotes), `savedFilters`, `filtersSummary`, `createdAt`, `updatedAt`, dan `createdByEmail`.
+     - Mendukung sinkronisasi realtime melalui listener `subscribeQuickReports`.
+  3. **Engine Ekspor 1-Klik di Background (`quickReportExportEngine.ts`)**:
+     - Menangani pengambilan data live Firestore terbaru secara mandiri berdasarkan `exportType` (ritase, rekap volume, rekap finansial, arus kas, piutang tempo, upah mandor/tukang, dan proyek).
+     - Mengaplikasikan filter tersimpan (`savedFilters`), menyusun kolom dan kalkulasi footer (Grand Total), menerapkan preferensi PDF, dan langsung memicu unduhan browser via `downloadTablePdf` tanpa perlu membuka modal.
+  4. **Manajemen Pintasan (Edit & Hapus)**:
+     - **Edit Komprehensif (`EditQuickReportModal.tsx`)**: Memungkinkan pengguna mengubah Nama Pintasan, Catatan Kaki, serta preferensi tata letak PDF (kertas, orientasi, margin, font, dan 6 komponen formal).
+     - **Hapus Aman**: Menggunakan dialog konfirmasi formal `CustomDialog` sebelum menghapus dokumen dari Firestore.
+  5. **Kepatuhan Desain Mutlak (`/auditaislop`)**:
+     - Seluruh tombol dan komponen wajib menggunakan solid-filled token (`bg-[#111111]`, `bg-[#f0f0f0]`, `bg-[#fdf2f2]`).
+     - DILARANG menggunakan outline stroke tipis bercampur blur (*glassmorphism*), DILARANG pulsing dot, dan DILARANG membuat badge/tag/pill tanpa perintah eksplisit.

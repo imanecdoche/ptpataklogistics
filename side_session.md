@@ -902,3 +902,41 @@ Dicatat oleh **Argon** (Linux Workstation) untuk **Antigravity Nizar** (Windows)
 - **Instruksi untuk Nizar**: Cukup jalankan `git pull origin main` di repositori Windows.
 
 
+### FASE 22: Fitur Laporan Cepat (1-Click Instant PDF Export), Koleksi Firestore `quick_reports` & Tombol Tambah ke Laporan Cepat (Rule 135)
+Dicatat oleh **Argon** (Linux Workstation) untuk **Antigravity Nizar** (Windows):
+
+#### 1. Masalah & Kebutuhan Pengguna
+- Pengguna membutuhkan cara untuk mengekspor laporan secara instan dalam sekali klik (*1-click export*) tanpa harus membuka dialog konfigurasi dan menyetel ulang kertas, margin, font, dan filter secara manual berulang-ulang.
+- Pengguna meminta:
+  1. Tab navigasi baru dengan ikon resmi dokumen grafik (`/icons/quick-reports.png`) berlabel *"Laporan Cepat"*.
+  2. Tombol *"Tambah ke Laporan Cepat"* di bilah header tabel export dan di dalam modal export.
+  3. Dialog untuk memberikan nama pintasan dan konfirmasi konfigurasi tersimpan.
+  4. Halaman tab Laporan Cepat dengan tabel daftar pintasan, lengkap dengan aksi: **Ekspor** (1-klik instan), **Edit** (dialog edit komprehensif), dan **Hapus** (dengan konfirmasi).
+
+#### 2. Solusi & Perubahan Teknis yang Diterapkan
+1. **Aset & Routing Sistem**:
+   - Ikon dokumen grafik 100x100 disimpan ke `public/icons/quick-reports.png`.
+   - `Sidebar.tsx`: Ditambahkan tab `'quick_reports'` dengan label *"Laporan Cepat"*.
+   - `routeDefinitions.ts`: Dipetakan ke slug `/laporan-cepat`.
+   - `AppShell.tsx`: Ditambahkan judul resmi *"Laporan Cepat"*.
+   - `App.tsx`: Rute memuat `<QuickReportsPage />`.
+2. **Koleksi Firestore & Service (`src/lib/quickReportService.ts`)**:
+   - Mendefinisikan interface `QuickReportShortcut` (nama pintasan, tableId, exportType, categoryLabel, title, subtitle, pdfPreferences lengkap, savedFilters, filtersSummary, timestamps).
+   - Fungsi realtime `subscribeQuickReports` dan operasi CRUD (`createQuickReportShortcut`, `updateQuickReportShortcut`, `deleteQuickReportShortcut`).
+3. **Engine Ekspor Background (`src/lib/quickReportExportEngine.ts`)**:
+   - `executeQuickReportExport(shortcut)`: Menangani penarikan data live Firestore terbaru, filter data sesuai kriteria aktif tersimpan, kalkulasi footer/grand totals otomatis, penerapan format PDF, dan eksekusi download browser langsung (`downloadTablePdf`).
+4. **Komponen Antarmuka**:
+   - `AddToQuickReportModal.tsx`: Dialog penamaan pintasan dengan pratinjau ringkas kategori dan filter tersimpan.
+   - `EditQuickReportModal.tsx`: Dialog edit komprehensif untuk mengubah nama pintasan, catatan kaki, ukuran kertas, orientasi, margin, font size, dan 6 komponen formal.
+   - `QuickReportsPage.tsx`: Halaman tabel pintasan laporan cepat dengan pencarian, loading spinner per-baris saat ekspor, aksi edit, dan aksi hapus dengan `CustomDialog`.
+   - `TablePdfExportButton.tsx` & `TablePdfExportModal.tsx`: Dilengkapi tombol *"Tambah ke Laporan Cepat"*.
+5. **Pembaruan Aturan Sistem (Rule 135)**:
+   - Dicatat lengkap di `RULES.md` dan `.agents/RULES.md` (0 diff).
+
+#### 3. Verifikasi & Kesiapan Sinkronisasi
+- **Build Status**: 🟢 `tsc -b && vite build` lulus 100% tanpa error.
+- **Dev Server**: 🟢 Aktif di `http://localhost:5173/`.
+- **Instruksi untuk Nizar**: Cukup jalankan `git pull origin main` di repositori Windows.
+
+
+
