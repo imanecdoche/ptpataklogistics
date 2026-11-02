@@ -1,5 +1,6 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { formatRupiah } from '@/lib/currencyUtils';
 
 export type PaperSize = 'a4' | 'f4' | 'letter' | 'legal' | 'continuous' | 'custom';
 export type PageOrientation = 'portrait' | 'landscape';
@@ -26,6 +27,7 @@ export interface TablePdfOptions {
   data: any[];
   // Settings
   paperSize?: PaperSize;
+  continuousWidthMm?: number;
   customWidthMm?: number;
   customHeightMm?: number;
   orientation?: PageOrientation;
@@ -36,6 +38,8 @@ export interface TablePdfOptions {
   showFiltersSummary?: boolean;
   showSignatures?: boolean;
   showPageNumbers?: boolean;
+  groupByMaterial?: boolean;
+  preventTextWrapping?: boolean;
   // Data additions
   filtersSummary?: TablePdfFilterSummary[];
   grandTotals?: { [columnIndex: number]: string };
@@ -186,20 +190,137 @@ function renderPdfBody(
     currentY += filterBoxHeight + 2;
   }
 
-  // 4. SUSUN DATA TABEL
+  // 4. SUSUN DATA TABEL (DENGAN SUPPORT GROUP BY MATERIAL DALAM 1 LEMBAR)
   const headers = options.columns.map(col => col.header.toUpperCase());
 
-  const rows = options.data.map((row, rIdx) => {
-    return options.columns.map(col => {
-      if (col.format) {
-        return col.format(col.dataKey ? row[col.dataKey] : undefined, row, rIdx);
+  const hasMaterial = options.data.some(d => Boolean(d.materialName || d.material));
+  const isGroupingByMaterial = Boolean(options.groupByMaterial && hasMaterial);
+
+  let bodyRows: any[] = [];
+
+  if (isGroupingByMaterial) {
+    // Kelompokkan data per jenis material
+    const groups = new Map<string, any[]>();
+    options.data.forEach(row => {
+      const mat = (row.materialName || row.material || 'Material Lainnya').trim();
+      if (!groups.has(mat)) {
+        groups.set(mat, []);
       }
-      if (col.dataKey && row[col.dataKey] !== undefined && row[col.dataKey] !== null) {
-        return String(row[col.dataKey]);
-      }
-      return '-';
+      groups.get(mat)!.push(row);
     });
-  });
+
+    let overallRowIdx = 0;
+    groups.forEach((groupRows, matName) => {
+      // Baris Sub-Header Kelompok Material
+      const groupVolume = groupRows.reduce((acc, r) => acc + (Number(r.quantity) || 0), 0);
+      const unitStr = groupRows[0]?.unit || 'DT';
+      const volumeSummary = groupVolume > 0 ? ` • Total Muatan: ${groupVolume.toLocaleString('id-ID')} ${unitStr}` : '';
+
+      bodyRows.push([
+        {
+          content: `KELOMPOK MATERIAL: ${matName.toUpperCase()} (${groupRows.length} RITASE${volumeSummary})`,
+          colSpan: options.columns.length,
+          styles: {
+            fillColor: [238, 242, 246],
+            textColor: [17, 24, 39],
+            fontStyle: 'bold',
+            halign: 'left',
+            fontSize: 7.5,
+          },
+        },
+      ]);
+
+      // Baris-baris data dalam kelompok ini
+      groupRows.forEach(row => {
+        const rowCells = options.columns.map(col => {
+          if (col.format) {
+            return col.format(col.dataKey ? row[col.dataKey] : undefined, row, overallRowIdx);
+          }
+          if (col.dataKey && row[col.dataKey] !== undefined && row[col.dataKey] !== null) {
+            return String(row[col.dataKey]);
+          }
+          return '-';
+        });
+        bodyRows.push(rowCells);
+        overallRowIdx++;
+      });
+
+      // Baris Subtotal Kelompok Material
+      const subtotalRow = options.columns.map((col, cIdx) => {
+        if (cIdx === 0) {
+          return {
+            content: `SUBTOTAL ${matName.toUpperCase()} (${groupRows.length} Rit):`,
+            styles: { fontStyle: 'bold', halign: 'right', fillColor: [245, 247, 250], textColor: [17, 17, 17] },
+          };
+        }
+
+        const dKey = (col.dataKey || '').toLowerCase();
+        const headerLower = col.header.toLowerCase();
+
+        // Tagihan Jual / Omset
+        if (dKey === 'totalrevenue' || dKey.includes('revenue') || headerLower.includes('tagihan') || headerLower.includes('jual')) {
+          const sum = groupRows.reduce((acc, r) => acc + (Number(r.totalRevenue) || 0), 0);
+          return {
+            content: formatRupiah(sum),
+            styles: { fontStyle: 'bold', halign: 'right', fillColor: [245, 247, 250], textColor: [17, 17, 17] },
+          };
+        }
+
+        // Biaya Kuari / Beli
+        if (dKey === 'totalbuycost' || dKey.includes('buy') || headerLower.includes('beli') || headerLower.includes('kuari')) {
+          const sum = groupRows.reduce((acc, r) => acc + (Number(r.totalBuyCost) || 0), 0);
+          return {
+            content: formatRupiah(sum),
+            styles: { fontStyle: 'bold', halign: 'right', fillColor: [245, 247, 250], textColor: [17, 17, 17] },
+          };
+        }
+
+        // Beban Ops
+        if (dKey === 'operationalcost' || dKey.includes('ops') || headerLower.includes('ops')) {
+          const sum = groupRows.reduce((acc, r) => acc + (Number(r.operationalCost) || 0), 0);
+          return {
+            content: formatRupiah(sum),
+            styles: { fontStyle: 'bold', halign: 'right', fillColor: [245, 247, 250], textColor: [17, 17, 17] },
+          };
+        }
+
+        // Laba Bersih
+        if (dKey === 'netprofit' || dKey.includes('profit') || headerLower.includes('laba')) {
+          const sum = groupRows.reduce((acc, r) => acc + (Number(r.netProfit) || 0), 0);
+          return {
+            content: formatRupiah(sum),
+            styles: { fontStyle: 'bold', halign: 'right', fillColor: [245, 247, 250], textColor: sum >= 0 ? [0, 128, 96] : [207, 17, 36] },
+          };
+        }
+
+        // Volume / Muatan
+        if (dKey === 'quantity' || dKey === 'volume' || headerLower.includes('muatan') || headerLower.includes('volume')) {
+          const sum = groupRows.reduce((acc, r) => acc + (Number(r.quantity) || 0), 0);
+          return {
+            content: `${sum.toLocaleString('id-ID')} ${groupRows[0]?.unit || 'DT'}`,
+            styles: { fontStyle: 'bold', halign: 'right', fillColor: [245, 247, 250] },
+          };
+        }
+
+        return { content: '', styles: { fillColor: [245, 247, 250] } };
+      });
+
+      bodyRows.push(subtotalRow);
+    });
+  } else {
+    // Normal sequential flat rows
+    bodyRows = options.data.map((row, rIdx) => {
+      return options.columns.map(col => {
+        if (col.format) {
+          return col.format(col.dataKey ? row[col.dataKey] : undefined, row, rIdx);
+        }
+        if (col.dataKey && row[col.dataKey] !== undefined && row[col.dataKey] !== null) {
+          return String(row[col.dataKey]);
+        }
+        return '-';
+      });
+    });
+  }
 
   // Footer / Grand Total Baris
   let footRows: string[][] | undefined = undefined;
@@ -207,7 +328,7 @@ function renderPdfBody(
     const footRow = options.columns.map((_col, cIdx) => {
       const totalVal = options.grandTotals?.[cIdx];
       if (cIdx === 0 && !totalVal) {
-        return options.totalLabel || 'TOTAL';
+        return options.totalLabel || (isGroupingByMaterial ? 'GRAND TOTAL (SEMUA MATERIAL)' : 'TOTAL');
       }
       return totalVal || '';
     });
@@ -233,7 +354,7 @@ function renderPdfBody(
       bottom: isContinuous ? marginMm : marginMm + 10,
     },
     head: [headers],
-    body: rows.length > 0 ? rows : [['Tidak ada data yang sesuai dengan filter / pencarian.']],
+    body: bodyRows.length > 0 ? bodyRows : [['Tidak ada data yang sesuai dengan filter / pencarian.']],
     foot: footRows,
     theme: 'plain',
     tableWidth: contentWidth,
@@ -244,7 +365,7 @@ function renderPdfBody(
       lineColor: [220, 220, 220],
       lineWidth: 0.15,
       textColor: [20, 20, 20],
-      overflow: 'linebreak',
+      overflow: options.preventTextWrapping ? 'visible' : 'linebreak',
     },
     headStyles: {
       fillColor: [240, 240, 240],
@@ -386,7 +507,10 @@ export function generateTablePdf(options: TablePdfOptions): jsPDF {
 
   // Mode Kertas Bersambung (Continuous Roll / 1 Lembar Panjang Tanpa Potong)
   if (options.paperSize === 'continuous') {
-    const rollWidth = orientation === 'landscape' ? 297 : 210;
+    const rollWidth = Math.max(
+      50,
+      options.continuousWidthMm || (orientation === 'landscape' ? 297 : 210)
+    );
 
     // Pass 1: Ukur kebutuhan tinggi dalam canvas virtual panjang
     const measureDoc = new jsPDF({

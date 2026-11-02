@@ -805,7 +805,7 @@ export function ProjectFinancialsModal({
                       Daftar Ritase Material Proyek ({transactions.length} Pengiriman)
                     </span>
                     <TablePdfExportButton
-                      tableId={`project_ritase_${project.id}`}
+                      tableId="project_ritase"
                       title={`Laporan Ritase Material - ${project.name}`}
                       subtitle={`PT Patak Abadi Jaya • Klien: ${project.clientName || '-'} | Investor: ${project.investorName || '-'}`}
                       columns={materialPdfColumns}
@@ -978,7 +978,7 @@ export function ProjectFinancialsModal({
                       </button>
 
                       <TablePdfExportButton
-                        tableId={`project_kasbon_worker_${project.id}`}
+                        tableId="project_kasbon_worker"
                         title={`Daftar Penarikan Kasbon Tukang - ${project.name}`}
                         subtitle={`PT Patak Abadi Jaya • Klien: ${project.clientName || '-'} | Investor: ${project.investorName || '-'}`}
                         columns={workerKasbonPdfColumns}
@@ -1175,7 +1175,7 @@ export function ProjectFinancialsModal({
                     </div>
                     <div className="flex items-center gap-1.5">
                       <TablePdfExportButton
-                        tableId={`project_kasbon_employee_${project.id}`}
+                        tableId="project_kasbon_employee"
                         title={`Daftar Kasbon Karyawan - ${project.name}`}
                         subtitle={`PT Patak Abadi Jaya • Klien: ${project.clientName || '-'} | Investor: ${project.investorName || '-'}`}
                         columns={employeeKasbonPdfColumns}
@@ -1278,7 +1278,7 @@ export function ProjectFinancialsModal({
                       Daftar Pembayaran Termin Masuk ({clientPayments.length} Pembukuan)
                     </span>
                     <TablePdfExportButton
-                      tableId={`project_payments_${project.id}`}
+                      tableId="project_payments"
                       title={`Riwayat Pembayaran Klien - ${project.name}`}
                       subtitle={`PT Patak Abadi Jaya • Klien: ${project.clientName || '-'} | Investor: ${project.investorName || '-'}`}
                       columns={clientPaymentsPdfColumns}

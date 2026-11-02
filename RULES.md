@@ -1567,10 +1567,19 @@ Dokumen ini adalah hukum tertinggi operasional sistem. Kegagalan mematuhi aturan
       * Klik tombol Export PDF pada tabel memunculkan modal Full Width & Full Height (`fixed inset-0 z-50 bg-[#f9f9f9]`) dengan backdrop solid murni tanpa blur (`bg-black/50`, Rule 5 & Rule 26).
       * **Live PDF Blob Viewer**: Merender dokumen jsPDF secara real-time ke dalam container iframe blob URL (`doc.output('bloburl')`), sehingga 100% identik dengan hasil cetak yang diunduh.
       * **Custom Form Controls & Pickers (Rule 129)**: Dilarang menggunakan kontrol browser native. Semua pemilih menggunakan komponen kustom solid-filled:
-        1. *Paper Size Picker*: Preset A4, F4 / Folio, Letter, Legal, Bersambung / Roll (Single Continuous Sheet tanpa jeda halaman), serta opsi *Custom Dimensions* (lebar & tinggi mm).
-        2. *Orientation Toggle*: Portrait vs Landscape (pada mode Bersambung menentukan lebar 210mm vs 297mm).
-        3. *Margin Controls*: Preset Normal (10mm), Sempit (6mm), Lebar (15mm), atau Custom Margin (mm).
-        4. *Header & Footer Toggles*: Kop Surat Resmi PT Patak Abadi Jaya, Ringkasan Filter/Pencarian Aktif, Nomor Halaman Resmi ("Halaman X dari Y" atau "Dokumen Bersambung • 1 Lembar Penuh"), dan Dua Blok Tanda Tangan ("Dibuat Oleh" & "Menyetujui").
+        1. *Paper Size Picker*: Preset A4 (210×297mm), F4 / Folio (215×330mm), Letter, Legal, Bersambung / Roll (Single Continuous Sheet tanpa jeda halaman), serta opsi *Custom Dimensions* (lebar & tinggi mm).
+        2. *Continuous Width Controls*: Pada mode Bersambung, lebar kertas dapat dipilih melalui preset cepat: A4 (210mm), F4 (215mm), Landscape (297mm), atau input numerik kustom (mm) dengan proteksi batas aman minimum.
+        3. *Orientation Toggle*: Portrait vs Landscape.
+        4. *Margin Controls*: Preset Normal (10mm), Sempit (6mm), Lebar (15mm), atau Custom Margin (mm).
+        5. *Header & Footer Toggles*: Kop Surat Resmi PT Patak Abadi Jaya, Ringkasan Filter/Pencarian Aktif, Nomor Halaman Resmi ("Halaman X dari Y" atau "Dokumen Bersambung • 1 Lembar Penuh"), dan Dua Blok Tanda Tangan ("Dibuat Oleh" & "Menyetujui").
+      * **Grouping Per Material dalam 1 Lembar (Arahan Komisaris)**:
+        - Pada tabel pengiriman/ritase material, sistem menyediakan toggle *"Kelompokkan Per Material (1 Lembar)"*.
+        - Saat aktif, baris data dikelompokkan secara terstruktur berdasarkan jenis material dengan *sub-header section* abu-abu formal (`#eef2f6`).
+        - Di bawah setiap kelompok material, sistem menyajikan baris *Subtotal Kelompok Material* lengkap (`#f5f7fa`) yang merangkum Volume/Muatan, Total Tagihan Klien, Biaya Kuari, Beban Operasional, dan Laba Bersih.
+        - Pada akhir tabel, tetap disajikan baris *Grand Total (Semua Material)* yang merangkum akumulasi keseluruhan transaksi.
+      * **Anti-Wrapped Text Lock (Kunci Lebar Minimum)**:
+        - Toggle *"Kunci Lebar Minimum (Anti-Wrapped)"* aktif secara default untuk mencegah terpotongnya atau terbungkusnya teks dalam sel tabel.
+        - Sistem menghitung lebar minimum aman (*tableMinSafeWidth*) berdasarkan kepadatan kolom aktif. Jika terdeteksi lebar kertas kurang dari batas aman, sistem secara otomatis mengunci lebar kertas bersambung atau mengalihkan orientasi ke landscape agar keterbacaan data tetap optimal dan tidak melanggar Rule 45.
       * **Dynamic Column Visibility & Automatic Grand Total Alignment**:
         - Panel pemilihan kolom tabel memungkinkan menyembunyikan kolom tertentu sebelum ekspor ke PDF.
         - Minimal 1 kolom wajib aktif (tidak dapat menyembunyikan seluruh kolom).
@@ -1578,7 +1587,9 @@ Dokumen ini adalah hukum tertinggi operasional sistem. Kegagalan mematuhi aturan
       * **Continuous Page Roll Architecture (Kertas Bersambung)**:
         - Mode Bersambung menghasilkan satu lembar PDF utuh memanjang ke bawah tanpa pemotongan atau jeda halaman (0 page breaks).
         - Menggunakan teknik *two-pass virtual measurement* untuk menghitung tinggi dokumen secara presisi matematis mengikuti total baris tabel, blok catatan, dan tanda tangan pengesahan.
-      * **LocalStorage Persistence**: Menyimpan preferensi ukuran kertas, orientasi, margin, dan kolom yang disembunyikan per-tabel (`patak_pdf_pref_<table_id>`) agar pengguna tidak perlu mengatur ulang setiap sesi.
+      * **LocalStorage Categorical Persistence & Factory Reset**:
+        - Seluruh pengaturan export (ukuran kertas, preset lebar bersambung, orientasi, margin, visibilitas kolom, grouping material, anti-wrapped, 4 toggle formal, dan catatan kaki) disimpan secara persisten di LocalStorage per kategori tabel (`patak_pdf_pref_<exportType>`).
+        - Disediakan tombol *"Reset Pengaturan Awal"* untuk mengembalikan preferensi tabel kembali ke setelan default pabrik dengan satu klik.
     - **Formal Corporate Document Layout**:
       * Desain formal kedinasan/audit: Kop Perusahaan resmi bergaris tegas, header abu-abu formal (`#f0f0f0`), border tipis (`#dcdcdc`), zebra striping halus (`#fafafa`), kolom angka rata kanan berfont tabular monokrom, baris Grand Total tebal (`#eaeaea`), dan blok tanda tangan formal.
     - **Data Scope & Anti-Wrapping**:

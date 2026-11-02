@@ -378,7 +378,7 @@ export function InvestorLedgerModal({
                   Riwayat Ritase Proyek ({investorTransactions.length} Pengiriman)
                 </span>
                 <TablePdfExportButton
-                  tableId={`investor_ritase_${investor.id}`}
+                  tableId="investor_ritase"
                   title={`Laporan Ritase Proyek - ${investor.name}`}
                   subtitle={`PT Patak Abadi Jaya • Investor: ${investor.name} (${investor.bankAccount || '-'})`}
                   columns={investorRitasePdfColumns}
@@ -568,7 +568,7 @@ export function InvestorLedgerModal({
                   Riwayat Payout Bagi Hasil ({investorPayouts.length} Transaksi)
                 </span>
                 <TablePdfExportButton
-                  tableId={`investor_payouts_${investor.id}`}
+                  tableId="investor_payouts"
                   title={`Riwayat Penyerahan Bagi Hasil - ${investor.name}`}
                   subtitle={`PT Patak Abadi Jaya • Investor: ${investor.name}`}
                   columns={investorPayoutsPdfColumns}

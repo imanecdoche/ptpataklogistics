@@ -787,12 +787,22 @@ Berikut adalah rekapitulasi lengkap fitur ekspor PDF presisi tinggi di seluruh t
   * Terdapat shortcut "Pilih Semua" dan "Reset".
   * Sistem membatasi minimal 1 kolom wajib tampil agar dokumen tidak kosong.
   * Baris **Grand Total (Footer Tabel)** secara cerdas dipetakan ulang (*remapped*): jika kolom nominal (seperti Total Tagihan atau Laba) disembunyikan, totalnya otomatis dikeluarkan dari footer sehingga posisi rupiah tidak pernah bergeser atau salah kolom.
-  * Preferensi kolom tersembunyi disimpan secara persisten di LocalStorage per-tabel (`patak_pdf_pref_<table_id>`).
-- **Mode Kertas Bersambung / Roll (Continuous Single-Sheet)**:
+- **Mode Kertas Bersambung / Roll (Continuous Single-Sheet) & Kontrol Lebar**:
   * Tersedia opsi kertas **"Bersambung"** di deretan Paper Size: menghasilkan satu lembar dokumen PDF utuh tanpa jeda/pemotongan halaman (0 page breaks) berapa pun panjang baris tabelnya.
-  * Lebar acuan mengikuti standar: **210 mm saat Portrait** dan **297 mm saat Landscape**.
-  * Tinggi lembar dihitung secara presisi matematis (*two-pass virtual measurement*) pas dengan isi tabel, catatan, dan blok tanda tangan.
+  * Dilengkapi pengatur lebar kertas bersambung yang fleksibel: **Preset A4 (210 mm)**, **F4 (215 mm)**, **Landscape (297 mm)**, atau **Input Kustom (mm)** dengan validasi batas aman.
+  * Tinggi lembar dihitung secara presisi matematis (*two-pass virtual measurement*) pas dengan isi tabel, subtotal, catatan, dan blok tanda tangan.
   * Footer otomatis mencantumkan identitas resmi: *"Dokumen Bersambung • 1 Lembar Penuh"*.
+- **Grouping Per Material dalam 1 Lembar (Arahan Komisaris)**:
+  * Khusus tabel ritase dan pengiriman material, disediakan toggle *"Kelompokkan Per Material (1 Lembar)"*.
+  * Data otomatis dipisah per komoditas material dengan sub-header kelompok formal (`#eef2f6`).
+  * Di bawah setiap kelompok material, terdapat baris *Subtotal Material* (`#f5f7fa`) yang merangkum Volume rit/ton, Tagihan Jual, Biaya Kuari, Beban Ops, dan Laba Bersih.
+  * Di bagian paling bawah dokumen, disajikan baris *Grand Total (Semua Material)* yang merangkum akumulasi seluruh jenis material.
+- **Kunci Lebar Minimum (Anti-Wrapped Text Lock)**:
+  * Toggle *"Kunci Lebar Minimum (Anti-Wrapped)"* aktif secara default untuk mencegah terpotongnya atau terbungkusnya teks sel tabel.
+  * Sistem secara otomatis menghitung lebar aman tabel (*tableMinSafeWidth*) dan memperlebar kertas bersambung atau menyarankan orientasi landscape saat teks panjang terdeteksi agar tidak terjadi teks terlipat melanggar Rule 45.
+- **Penyimpanan Pengaturan Persisten Lengkap & Reset Pabrik**:
+  * Preferensi ukuran kertas, preset/lebar bersambung, orientasi, margin, visibilitas kolom, grouping material, anti-wrapped, 4 toggle formal, dan catatan kaki tersimpan otomatis di LocalStorage per kategori tabel (`patak_pdf_pref_<exportType>`).
+  * Disediakan tombol *"Reset Pengaturan Awal"* untuk mengembalikan preferensi tabel kembali ke setelan default pabrik dengan satu klik.
 
 ---
 

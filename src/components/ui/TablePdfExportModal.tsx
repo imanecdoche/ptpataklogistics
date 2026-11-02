@@ -28,6 +28,8 @@ export interface TablePdfExportModalProps {
 
 interface UserPreferences {
   paperSize: PaperSize;
+  continuousWidthPreset: 'a4' | 'f4' | 'landscape' | 'custom';
+  continuousWidthMm: number;
   customWidthMm: number;
   customHeightMm: number;
   orientation: PageOrientation;
@@ -37,7 +39,10 @@ interface UserPreferences {
   showFiltersSummary: boolean;
   showSignatures: boolean;
   showPageNumbers: boolean;
+  groupByMaterial: boolean;
+  preventTextWrapping: boolean;
   hiddenColumnKeys?: string[];
+  customNotes?: string;
 }
 
 const PREF_STORAGE_PREFIX = 'patak_pdf_pref_';
@@ -56,8 +61,12 @@ export function TablePdfExportModal({
   totalLabel,
   defaultOrientation,
 }: TablePdfExportModalProps): React.JSX.Element | null {
-  // 1. Initial State from LocalStorage
-  const storageKey = `${PREF_STORAGE_PREFIX}${tableId}`;
+  // 1. Normalize tableId to exportType so preferences persist categorically per table type
+  const exportType = useMemo(() => {
+    return tableId.replace(/_[a-zA-Z0-9_-]{10,}$/, '');
+  }, [tableId]);
+
+  const storageKey = `${PREF_STORAGE_PREFIX}${exportType}`;
 
   const initialPreferences = useMemo<UserPreferences>(() => {
     try {
@@ -66,6 +75,8 @@ export function TablePdfExportModal({
         const parsed = JSON.parse(saved);
         return {
           paperSize: parsed.paperSize || 'a4',
+          continuousWidthPreset: parsed.continuousWidthPreset || 'a4',
+          continuousWidthMm: parsed.continuousWidthMm || 210,
           customWidthMm: parsed.customWidthMm || 210,
           customHeightMm: parsed.customHeightMm || 297,
           orientation: parsed.orientation || defaultOrientation || (columns.length >= 6 ? 'landscape' : 'portrait'),
@@ -75,7 +86,10 @@ export function TablePdfExportModal({
           showFiltersSummary: parsed.showFiltersSummary ?? true,
           showSignatures: parsed.showSignatures ?? true,
           showPageNumbers: parsed.showPageNumbers ?? true,
+          groupByMaterial: parsed.groupByMaterial ?? true,
+          preventTextWrapping: parsed.preventTextWrapping ?? true,
           hiddenColumnKeys: Array.isArray(parsed.hiddenColumnKeys) ? parsed.hiddenColumnKeys : [],
+          customNotes: parsed.customNotes || '',
         };
       }
     } catch (e) {
@@ -84,6 +98,8 @@ export function TablePdfExportModal({
 
     return {
       paperSize: 'a4',
+      continuousWidthPreset: 'a4',
+      continuousWidthMm: 210,
       customWidthMm: 210,
       customHeightMm: 297,
       orientation: defaultOrientation || (columns.length >= 6 ? 'landscape' : 'portrait'),
@@ -93,12 +109,19 @@ export function TablePdfExportModal({
       showFiltersSummary: true,
       showSignatures: true,
       showPageNumbers: true,
+      groupByMaterial: true,
+      preventTextWrapping: true,
       hiddenColumnKeys: [],
+      customNotes: '',
     };
   }, [storageKey, defaultOrientation, columns.length]);
 
   // Form Controls State
   const [paperSize, setPaperSize] = useState<PaperSize>(initialPreferences.paperSize);
+  const [continuousWidthPreset, setContinuousWidthPreset] = useState<'a4' | 'f4' | 'landscape' | 'custom'>(
+    initialPreferences.continuousWidthPreset
+  );
+  const [continuousWidthMm, setContinuousWidthMm] = useState<number>(initialPreferences.continuousWidthMm);
   const [customWidthMm, setCustomWidthMm] = useState<number>(initialPreferences.customWidthMm);
   const [customHeightMm, setCustomHeightMm] = useState<number>(initialPreferences.customHeightMm);
   const [orientation, setOrientation] = useState<PageOrientation>(initialPreferences.orientation);
@@ -108,10 +131,12 @@ export function TablePdfExportModal({
   const [showFiltersSummary, setShowFiltersSummary] = useState<boolean>(initialPreferences.showFiltersSummary);
   const [showSignatures, setShowSignatures] = useState<boolean>(initialPreferences.showSignatures);
   const [showPageNumbers, setShowPageNumbers] = useState<boolean>(initialPreferences.showPageNumbers);
+  const [groupByMaterial, setGroupByMaterial] = useState<boolean>(initialPreferences.groupByMaterial);
+  const [preventTextWrapping, setPreventTextWrapping] = useState<boolean>(initialPreferences.preventTextWrapping);
   const [hiddenColumnKeys, setHiddenColumnKeys] = useState<string[]>(initialPreferences.hiddenColumnKeys || []);
 
   const [customTitle, setCustomTitle] = useState<string>(title);
-  const [customNotes, setCustomNotes] = useState<string>('');
+  const [customNotes, setCustomNotes] = useState<string>(initialPreferences.customNotes || '');
 
   // Mobile View Tab: 'preview' vs 'settings'
   const [mobileTab, setMobileTab] = useState<'preview' | 'settings'>('preview');
@@ -160,11 +185,105 @@ export function TablePdfExportModal({
     return remapped;
   }, [grandTotals, visibleColumns, columns]);
 
+  // Check if data contains material records
+  const hasMaterialData = useMemo(() => {
+    return (
+      columns.some(c => (c.dataKey || '').toLowerCase().includes('material')) ||
+      data.some(d => Boolean(d.materialName || d.material))
+    );
+  }, [columns, data]);
+
+  // Calculate table minimum safe width to avoid text wrapping
+  const tableMinSafeWidth = useMemo(() => {
+    let totalColsWidth = 0;
+    visibleColumns.forEach(col => {
+      let maxLen = col.header.length;
+      data.slice(0, 80).forEach(row => {
+        let val = '';
+        if (col.format) {
+          val = col.format(col.dataKey ? row[col.dataKey] : undefined, row, 0) || '';
+        } else if (col.dataKey && row[col.dataKey] != null) {
+          val = String(row[col.dataKey]);
+        }
+        if (val.length > maxLen) maxLen = val.length;
+      });
+
+      const dKey = (col.dataKey || '').toLowerCase();
+      if (dKey.includes('note') || dKey.includes('catatan') || dKey.includes('desc')) {
+        totalColsWidth += Math.min(60, Math.max(25, maxLen * 1.5 + 4));
+      } else {
+        totalColsWidth += Math.max(16, maxLen * 1.7 + 5);
+      }
+    });
+
+    const marginVal =
+      marginPreset === 'compact'
+        ? 6
+        : marginPreset === 'wide'
+        ? 15
+        : marginPreset === 'custom'
+        ? customMarginMm
+        : 10;
+    return Math.ceil(totalColsWidth + marginVal * 2);
+  }, [visibleColumns, data, marginPreset, customMarginMm]);
+
+  // Effective continuous and custom widths taking anti-wrapped lock into account
+  const effectiveContinuousWidth = useMemo(() => {
+    if (preventTextWrapping) {
+      return Math.max(continuousWidthMm, tableMinSafeWidth);
+    }
+    return continuousWidthMm;
+  }, [preventTextWrapping, continuousWidthMm, tableMinSafeWidth]);
+
+  const effectiveCustomWidth = useMemo(() => {
+    if (preventTextWrapping) {
+      return Math.max(customWidthMm, tableMinSafeWidth);
+    }
+    return customWidthMm;
+  }, [preventTextWrapping, customWidthMm, tableMinSafeWidth]);
+
+  // Auto-switch to landscape if standard portrait will wrap text
+  useEffect(() => {
+    if (preventTextWrapping && (paperSize === 'a4' || paperSize === 'f4')) {
+      if (tableMinSafeWidth > 200 && orientation === 'portrait') {
+        setOrientation('landscape');
+      }
+    }
+  }, [preventTextWrapping, paperSize, tableMinSafeWidth, orientation]);
+
+  // Reset all preferences for this table type to factory defaults
+  const handleResetToDefaults = () => {
+    try {
+      localStorage.removeItem(storageKey);
+    } catch (e) {
+      console.warn('[TablePdfExportModal] Failed to remove storageKey:', e);
+    }
+    setPaperSize('a4');
+    setContinuousWidthPreset('a4');
+    setContinuousWidthMm(210);
+    setCustomWidthMm(210);
+    setCustomHeightMm(297);
+    setOrientation(defaultOrientation || (columns.length >= 6 ? 'landscape' : 'portrait'));
+    setMarginPreset('normal');
+    setCustomMarginMm(10);
+    setShowLetterhead(true);
+    setShowFiltersSummary(true);
+    setShowSignatures(true);
+    setShowPageNumbers(true);
+    setGroupByMaterial(true);
+    setPreventTextWrapping(true);
+    setHiddenColumnKeys([]);
+    setCustomTitle(title);
+    setCustomNotes('');
+  };
+
   // Save Preferences to LocalStorage
   useEffect(() => {
     try {
       const prefs: UserPreferences = {
         paperSize,
+        continuousWidthPreset,
+        continuousWidthMm,
         customWidthMm,
         customHeightMm,
         orientation,
@@ -174,7 +293,10 @@ export function TablePdfExportModal({
         showFiltersSummary,
         showSignatures,
         showPageNumbers,
+        groupByMaterial,
+        preventTextWrapping,
         hiddenColumnKeys,
+        customNotes,
       };
       localStorage.setItem(storageKey, JSON.stringify(prefs));
     } catch (e) {
@@ -183,6 +305,8 @@ export function TablePdfExportModal({
   }, [
     storageKey,
     paperSize,
+    continuousWidthPreset,
+    continuousWidthMm,
     customWidthMm,
     customHeightMm,
     orientation,
@@ -192,7 +316,10 @@ export function TablePdfExportModal({
     showFiltersSummary,
     showSignatures,
     showPageNumbers,
+    groupByMaterial,
+    preventTextWrapping,
     hiddenColumnKeys,
+    customNotes,
   ]);
 
   // Build PDF Options
@@ -204,7 +331,8 @@ export function TablePdfExportModal({
       columns: visibleColumns,
       data,
       paperSize,
-      customWidthMm,
+      continuousWidthMm: effectiveContinuousWidth,
+      customWidthMm: effectiveCustomWidth,
       customHeightMm,
       orientation,
       marginPreset,
@@ -213,6 +341,8 @@ export function TablePdfExportModal({
       showFiltersSummary,
       showSignatures,
       showPageNumbers,
+      groupByMaterial: hasMaterialData ? groupByMaterial : false,
+      preventTextWrapping,
       filtersSummary,
       grandTotals: mappedGrandTotals,
       totalLabel,
@@ -226,7 +356,8 @@ export function TablePdfExportModal({
     visibleColumns,
     data,
     paperSize,
-    customWidthMm,
+    effectiveContinuousWidth,
+    effectiveCustomWidth,
     customHeightMm,
     orientation,
     marginPreset,
@@ -235,6 +366,9 @@ export function TablePdfExportModal({
     showFiltersSummary,
     showSignatures,
     showPageNumbers,
+    hasMaterialData,
+    groupByMaterial,
+    preventTextWrapping,
     filtersSummary,
     mappedGrandTotals,
     totalLabel,
@@ -461,9 +595,65 @@ export function TablePdfExportModal({
               </div>
 
               {paperSize === 'continuous' && (
-                <div className="p-2 bg-[#f9f9f9] rounded-[6px] border border-[#eaeaea] text-[11px] text-[#555555] leading-relaxed">
-                  <span className="font-semibold text-[#111111] block">Mode Kertas Bersambung (1 Lembar Utuh)</span>
-                  Dokumen dicetak memanjang ke bawah tanpa potongan/jeda halaman. Lebar standar {orientation === 'landscape' ? '297 mm' : '210 mm'}, tinggi otomatis pas dengan seluruh baris tabel.
+                <div className="space-y-2 pt-1.5">
+                  <div className="space-y-1">
+                    <span className="text-[10px] font-semibold text-[#555555] block">
+                      Pilihan Lebar Kertas Roll:
+                    </span>
+                    <div className="grid grid-cols-4 gap-1.5 bg-[#f5f5f5] p-1 rounded-[6px]">
+                      {(
+                        [
+                          { id: 'a4', label: '210 mm (A4)', width: 210 },
+                          { id: 'f4', label: '215 mm (F4)', width: 215 },
+                          { id: 'landscape', label: '297 mm (L)', width: 297 },
+                          { id: 'custom', label: 'Kustom mm', width: continuousWidthMm },
+                        ] as const
+                      ).map(item => (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => {
+                            setContinuousWidthPreset(item.id);
+                            if (item.id !== 'custom') {
+                              setContinuousWidthMm(item.width);
+                            }
+                          }}
+                          className={`h-7 text-[11px] font-semibold rounded-[4px] transition-colors cursor-pointer ${
+                            continuousWidthPreset === item.id
+                              ? 'bg-[#111111] text-white shadow-xs'
+                              : 'text-[#555555] hover:text-[#111111]'
+                          }`}
+                        >
+                          {item.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {continuousWidthPreset === 'custom' && (
+                    <div>
+                      <span className="text-[10px] text-[#777777] block mb-1">Lebar Roll Kustom (mm)</span>
+                      <input
+                        type="number"
+                        min={60}
+                        max={1000}
+                        value={continuousWidthMm}
+                        onChange={e => setContinuousWidthMm(Number(e.target.value))}
+                        className="w-full h-8 px-2.5 text-xs bg-[#f5f5f5] rounded-[4px] outline-none text-[#111111]"
+                      />
+                    </div>
+                  )}
+
+                  <div className="p-2 bg-[#f9f9f9] rounded-[6px] border border-[#eaeaea] text-[11px] text-[#555555] leading-relaxed">
+                    <span className="font-semibold text-[#111111] block">Mode Kertas Bersambung (Roll)</span>
+                    Dokumen dicetak memanjang ke bawah tanpa potongan halaman. Lebar efektif:{' '}
+                    <span className="font-mono font-bold text-[#111111]">{effectiveContinuousWidth} mm</span>, tinggi otomatis pas dengan seluruh isi data tabel.
+                    {preventTextWrapping && effectiveContinuousWidth > continuousWidthMm && (
+                      <span className="block text-[10px] text-amber-700 mt-0.5">
+                        * Lebar otomatis disesuaikan dari {continuousWidthMm}mm ke {effectiveContinuousWidth}mm agar teks tidak terpotong.
+                      </span>
+                    )}
+                  </div>
                 </div>
               )}
 
@@ -650,10 +840,48 @@ export function TablePdfExportModal({
             {/* 5. Structural Feature Toggles */}
             <div className="space-y-2 pt-2 border-t border-[#eaeaea]">
               <label className="text-xs font-semibold text-[#222222] block">
-                Elemen Dokumen Formal
+                Struktur & Fitur Dokumen
               </label>
 
               <div className="space-y-2 text-xs">
+                {/* Anti-Wrapped Text (Kunci Lebar Minimum) */}
+                <label className="flex items-start space-x-2.5 p-2 rounded-[6px] bg-[#f9f9f9] hover:bg-[#f4f4f4] cursor-pointer transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={preventTextWrapping}
+                    onChange={e => setPreventTextWrapping(e.target.checked)}
+                    className="rounded text-[#111111] focus:ring-0 w-4 h-4 cursor-pointer mt-0.5"
+                  />
+                  <div>
+                    <span className="text-[#222222] font-semibold block">
+                      Anti-Wrapped Text (Kunci Lebar Minimum)
+                    </span>
+                    <span className="text-[10px] text-[#777777] block mt-0.5">
+                      Mencegah teks tabel terpotong atau membungkus 2 baris (lebar aman: min. {tableMinSafeWidth} mm).
+                    </span>
+                  </div>
+                </label>
+
+                {/* Kelompokkan Per Material (Arahan Komisaris) */}
+                {hasMaterialData && (
+                  <label className="flex items-start space-x-2.5 p-2 rounded-[6px] bg-[#f4f6fa] hover:bg-[#eaf0f8] cursor-pointer transition-colors">
+                    <input
+                      type="checkbox"
+                      checked={groupByMaterial}
+                      onChange={e => setGroupByMaterial(e.target.checked)}
+                      className="rounded text-[#111111] focus:ring-0 w-4 h-4 cursor-pointer mt-0.5"
+                    />
+                    <div>
+                      <span className="text-[#111111] font-semibold block">
+                        Kelompokkan Per Material dalam 1 Lembar
+                      </span>
+                      <span className="text-[10px] text-[#555555] block mt-0.5">
+                        Menyusun data per jenis material dengan sub-header dan subtotal muatan & rupiah dalam 1 lembar utuh.
+                      </span>
+                    </div>
+                  </label>
+                )}
+
                 {/* Kop Surat */}
                 <label className="flex items-center space-x-2.5 p-2 rounded-[6px] bg-[#f9f9f9] hover:bg-[#f4f4f4] cursor-pointer transition-colors">
                   <input
@@ -737,8 +965,17 @@ export function TablePdfExportModal({
               </div>
             </div>
 
-            {/* Bottom Download CTA inside Panel */}
-            <div className="pt-3 mt-auto">
+            {/* Bottom Actions: Reset to Factory Defaults & Download CTA */}
+            <div className="pt-3 mt-auto space-y-2">
+              <button
+                type="button"
+                onClick={handleResetToDefaults}
+                className="w-full h-8 bg-transparent hover:bg-[#f0f0f0] text-[#777777] hover:text-[#111111] text-[11px] font-semibold rounded-[6px] transition-colors cursor-pointer"
+                title="Kembalikan semua preferensi jenis tabel ini ke standar awal pabrik"
+              >
+                Reset Pengaturan Awal
+              </button>
+
               <button
                 type="button"
                 onClick={handleDownload}
