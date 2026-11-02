@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Project,
   ProjectSubJob,
@@ -13,7 +13,8 @@ import {
   subscribeEmployeeKasbonLogs,
   subscribeClientPayments,
   deleteProjectSubJob,
-  deleteEmployeeKasbon
+  deleteEmployeeKasbon,
+  deleteWorkerKasbon
 } from '@/lib/projectFinanceService';
 import { subscribeAllTransactions } from '@/lib/dispatcherService';
 import { formatRupiah } from '@/lib/currencyUtils';
@@ -21,12 +22,14 @@ import { PricePerVolCell } from '@/components/ui/PricePerVolCell';
 import { formatDateID } from '@/lib/dateSearchUtils';
 import { formatVolumeDisplay } from '@/lib/volumeUtils';
 import { MetricCardCurrency } from '@/components/ui/MetricCardCurrency';
+import { CustomSelectCombobox } from '@/components/ui/CustomSelectCombobox';
+import { ReceiptLightboxModal } from '@/components/ui/ReceiptLightboxModal';
 import { RecordSubJobModal } from './RecordSubJobModal';
 import { RecordKasbonModal } from './RecordKasbonModal';
 import { RecordEmployeeKasbonModal } from './RecordEmployeeKasbonModal';
 import { RecordClientPaymentModal } from './RecordClientPaymentModal';
 import { WorkerKasbonPrintModal } from './WorkerKasbonPrintModal';
-import { Loader2, Trash2, Eye, X, Plus, Pencil } from 'lucide-react';
+import { Loader2, Trash2, Eye, X, Plus, Pencil, Search } from 'lucide-react';
 import { useDialog } from '@/context/DialogContext';
 
 interface ProjectFinancialsModalProps {
@@ -61,6 +64,11 @@ export function ProjectFinancialsModal({
 
   const [isEmployeeKasbonModalOpen, setIsEmployeeKasbonModalOpen] = useState(false);
   const [activeReceiptPreview, setActiveReceiptPreview] = useState<string | null>(null);
+
+  // Filter & Search Kasbon Tukang
+  const [kasbonSearchText, setKasbonSearchText] = useState('');
+  const [kasbonWorkerFilter, setKasbonWorkerFilter] = useState('');
+  const [kasbonSubJobFilter, setKasbonSubJobFilter] = useState('');
 
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
@@ -172,6 +180,81 @@ export function ProjectFinancialsModal({
       }
     });
   };
+
+  const handleDeleteWorkerKasbon = (id: string, subJobId: string, amount: number, workerName: string) => {
+    showConfirm({
+      title: 'Hapus Kasbon Tukang',
+      message: `Hapus catatan kasbon mandor "${workerName}" sebesar ${formatRupiah(amount)}?\n\nSaldo sisa hak upah tukang akan otomatis dikembalikan ke sub-pekerjaan terkait.`,
+      confirmText: 'Hapus Kasbon',
+      cancelText: 'Batal',
+      isDestructive: true,
+      onConfirm: async () => {
+        try {
+          await deleteWorkerKasbon(id, subJobId, amount);
+          showAlert({
+            title: 'Kasbon Dihapus',
+            message: `Catatan kasbon mandor "${workerName}" berhasil dihapus dan saldo upah telah dipulihkan.`
+          });
+        } catch (err) {
+          console.error('Gagal menghapus kasbon tukang:', err);
+          showAlert({
+            title: 'Kesalahan',
+            message: 'Gagal menghapus kasbon tukang.'
+          });
+        }
+      }
+    });
+  };
+
+  // Kalkulasi & Filter Kasbon Tukang Lapangan
+  const uniqueWorkerLeaders = useMemo(() => {
+    const set = new Set<string>();
+    kasbonLogs.forEach(k => {
+      if (k.workerLeaderName) set.add(k.workerLeaderName);
+    });
+    return Array.from(set).sort();
+  }, [kasbonLogs]);
+
+  const uniqueKasbonSubJobs = useMemo(() => {
+    const map = new Map<string, string>();
+    kasbonLogs.forEach(k => {
+      if (k.subJobId && k.subJobName) map.set(k.subJobId, k.subJobName);
+    });
+    return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
+  }, [kasbonLogs]);
+
+  const filteredKasbonLogs = useMemo(() => {
+    return kasbonLogs.filter(bon => {
+      if (kasbonSearchText.trim()) {
+        const q = kasbonSearchText.toLowerCase();
+        const matchWorker = bon.workerLeaderName?.toLowerCase().includes(q);
+        const matchSubJob = bon.subJobName?.toLowerCase().includes(q);
+        const matchNote = bon.note?.toLowerCase().includes(q);
+        const matchRecorded = bon.recordedBy?.toLowerCase().includes(q);
+        const matchDate = bon.date?.toLowerCase().includes(q);
+        if (!matchWorker && !matchSubJob && !matchNote && !matchRecorded && !matchDate) {
+          return false;
+        }
+      }
+      if (kasbonWorkerFilter && bon.workerLeaderName !== kasbonWorkerFilter) {
+        return false;
+      }
+      if (kasbonSubJobFilter && bon.subJobId !== kasbonSubJobFilter) {
+        return false;
+      }
+      return true;
+    });
+  }, [kasbonLogs, kasbonSearchText, kasbonWorkerFilter, kasbonSubJobFilter]);
+
+  const totalFilteredKasbon = useMemo(() => {
+    return filteredKasbonLogs.reduce((acc, k) => acc + (k.amount || 0), 0);
+  }, [filteredKasbonLogs]);
+
+  const totalAllKasbon = useMemo(() => {
+    return kasbonLogs.reduce((acc, k) => acc + (k.amount || 0), 0);
+  }, [kasbonLogs]);
+
+  const isKasbonFiltered = Boolean(kasbonSearchText.trim() || kasbonWorkerFilter || kasbonSubJobFilter);
 
   return (
     <>
@@ -640,57 +723,254 @@ export function ProjectFinancialsModal({
                 </div>
               )
             ) : activeTab === 'kasbon' ? (
-              /* TAB 3: RIWAYAT BON-BON KASBON TUKANG */
+              /* TAB 3: RIWAYAT BON-BON KASBON TUKANG DENGAN FILTER, SEARCH & KARTU TOTAL */
               kasbonLogs.length === 0 ? (
-                <div className="py-16 text-center text-xs text-[#888888] bg-white rounded-[12px] border border-[#eaeaea]">
-                  Belum ada catatan bon tukang yang ditarik untuk proyek ini.
-                </div>
-              ) : (
-                <div className="bg-white border border-[#eaeaea] rounded-[10px] overflow-hidden">
-                  <div className="p-3 border-b border-[#eaeaea] bg-[#fafafa] flex items-center justify-between">
-                    <span className="text-xs font-bold text-[#111111]">
-                      Daftar Penarikan Kasbon Lapangan ({kasbonLogs.length} Bukti Bon)
-                    </span>
+                <div className="py-16 text-center text-xs text-[#888888] bg-white rounded-[12px] border border-[#eaeaea] space-y-3 p-8 max-w-md mx-auto my-6">
+                  <p className="font-bold text-[#111111] text-sm">Belum Ada Catatan Kasbon Tukang</p>
+                  <p className="text-[#666666] text-xs leading-relaxed">
+                    Belum ada catatan bon tukang yang ditarik untuk proyek ini. Kasbon tukang akan memotong plafon hak upah borongan mandor dan mencatat pengeluaran kas.
+                  </p>
+                  <div className="pt-2">
                     <button
                       type="button"
-                      onClick={() => setIsPrintModalOpen(true)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-[#111111] text-white rounded-[6px] hover:bg-black transition-colors cursor-pointer"
+                      onClick={() => {
+                        setTargetSubJobForKasbon(undefined);
+                        setIsKasbonModalOpen(true);
+                      }}
+                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#111111] hover:bg-black text-white text-xs font-semibold rounded-[8px] transition-colors cursor-pointer"
                     >
-                      <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4H7v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                      </svg>
-                      <span>Cetak Lembar Bon</span>
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Tarik Kasbon Sekarang</span>
                     </button>
                   </div>
-                  <div className="overflow-x-auto">
-                    <table className="w-full min-w-[650px] text-xs text-left border-collapse">
-                      <thead className="bg-[#f9f9f9] border-b border-[#eaeaea] text-[#555555] font-semibold text-[10px] uppercase">
-                        <tr>
-                          <th className="py-2.5 px-3 whitespace-nowrap">Tanggal</th>
-                          <th className="py-2.5 px-3 whitespace-nowrap">Mandor / Kepala Tukang</th>
-                          <th className="py-2.5 px-3 whitespace-nowrap">Sub-Pekerjaan</th>
-                          <th className="py-2.5 px-3 text-right whitespace-nowrap">Nominal Kasbon</th>
-                          <th className="py-2.5 px-3 whitespace-nowrap">Catatan / Keperluan</th>
-                          <th className="py-2.5 px-3 whitespace-nowrap">Dicatat Oleh</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-[#eaeaea]">
-                        {kasbonLogs.map(bon => (
-                          <tr key={bon.id} className="hover:bg-[#fafafa]">
-                            <td className="py-2 px-3 font-mono font-medium whitespace-nowrap">{formatDateID(bon.date)}</td>
-                            <td className="py-2 px-3 font-bold text-[#111111] whitespace-nowrap">{bon.workerLeaderName}</td>
-                            <td className="py-2 px-3 text-[#555555] whitespace-nowrap">{bon.subJobName}</td>
-                            <td className="py-2 px-3 text-right font-mono font-bold text-[#cf1124] whitespace-nowrap">
-                              {formatRupiah(bon.amount)}
-                            </td>
-                            <td className="py-2 px-3 text-[#666666] whitespace-nowrap">{bon.note || '-'}</td>
-                            <td className="py-2 px-3 font-mono text-[10px] text-[#888888] whitespace-nowrap">
-                              {bon.recordedBy?.split('@')[0] || 'Admin'}
-                            </td>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {/* Toolbar Filter & Pencarian */}
+                  <div className="p-3 bg-[#fafafa] rounded-[10px] border border-[#eaeaea] flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2.5">
+                    {/* Sisi Kiri: Search Box & Dropdown Filters */}
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 flex-1">
+                      {/* Search Input */}
+                      <div className="relative flex-1 min-w-[180px]">
+                        <Search className="w-3.5 h-3.5 text-[#888888] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        <input
+                          type="text"
+                          value={kasbonSearchText}
+                          onChange={e => setKasbonSearchText(e.target.value)}
+                          placeholder="Cari mandor, sub-pekerjaan, catatan..."
+                          className="w-full pl-8 pr-7 py-1.5 bg-white border border-[#dcdcdc] rounded-[6px] text-xs text-[#111111] placeholder:text-[#999999] outline-none focus:border-[#111111]"
+                        />
+                        {kasbonSearchText && (
+                          <button
+                            type="button"
+                            onClick={() => setKasbonSearchText('')}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 text-[#888888] hover:text-[#111111] cursor-pointer"
+                            title="Hapus pencarian"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Filter Mandor */}
+                      <div className="w-full sm:w-44">
+                        <CustomSelectCombobox
+                          options={[
+                            { id: '', label: 'Semua Mandor' },
+                            ...uniqueWorkerLeaders.map(w => ({ id: w, label: w }))
+                          ]}
+                          value={kasbonWorkerFilter}
+                          onChange={setKasbonWorkerFilter}
+                          placeholder="Filter Mandor"
+                          variant="white"
+                          searchable={true}
+                        />
+                      </div>
+
+                      {/* Filter Sub-Pekerjaan */}
+                      <div className="w-full sm:w-48">
+                        <CustomSelectCombobox
+                          options={[
+                            { id: '', label: 'Semua Sub-Pekerjaan' },
+                            ...uniqueKasbonSubJobs.map(s => ({ id: s.id, label: s.name }))
+                          ]}
+                          value={kasbonSubJobFilter}
+                          onChange={setKasbonSubJobFilter}
+                          placeholder="Filter Sub-Pekerjaan"
+                          variant="white"
+                          searchable={true}
+                        />
+                      </div>
+
+                      {/* Reset Button */}
+                      {isKasbonFiltered && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setKasbonSearchText('');
+                            setKasbonWorkerFilter('');
+                            setKasbonSubJobFilter('');
+                          }}
+                          className="px-2.5 py-1.5 text-xs text-[#666666] hover:text-[#111111] hover:bg-[#eaeaea] rounded-[6px] transition-colors cursor-pointer whitespace-nowrap self-start sm:self-auto"
+                        >
+                          Reset Filter
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Sisi Kanan: Cetak & Tarik Kasbon */}
+                    <div className="flex items-center gap-1.5 self-end md:self-auto flex-shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setTargetSubJobForKasbon(undefined);
+                          setIsKasbonModalOpen(true);
+                        }}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-[#111111] text-white rounded-[6px] hover:bg-black transition-colors cursor-pointer whitespace-nowrap"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Tarik Kasbon</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setIsPrintModalOpen(true)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-white border border-[#d1d5db] text-[#111111] rounded-[6px] hover:bg-[#f9fafb] transition-colors cursor-pointer whitespace-nowrap"
+                      >
+                        <svg className="w-3.5 h-3.5 text-[#555555]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4H7v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                        </svg>
+                        <span>Cetak Lembar Bon</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Kartu Ringkasan Dinamis Total Kasbon Tukang */}
+                  <div className="bg-white p-3.5 rounded-[10px] border border-[#eaeaea] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#777777] block">
+                        {isKasbonFiltered ? 'Total Kasbon Tukang (Hasil Filter / Pencarian)' : 'Total Akumulasi Kasbon Tukang / Mandor'}
+                      </span>
+                      <span className="text-base sm:text-lg font-bold font-mono text-[#cf1124] block mt-0.5">
+                        {formatRupiah(totalFilteredKasbon)}
+                      </span>
+                      <span className="text-[10px] text-[#666666] block mt-0.5">
+                        {isKasbonFiltered ? (
+                          <>
+                            Menampilkan <span className="font-semibold text-[#111111]">{filteredKasbonLogs.length}</span> dari {kasbonLogs.length} bukti bon (Total seluruh kasbon proyek: <span className="font-mono font-medium">{formatRupiah(totalAllKasbon)}</span>)
+                          </>
+                        ) : (
+                          <>
+                            Total akumulasi dari <span className="font-semibold text-[#111111]">{kasbonLogs.length}</span> bukti bon penarikan kasbon fisik lapangan
+                          </>
+                        )}
+                      </span>
+                    </div>
+                    {isKasbonFiltered && (
+                      <div className="self-start sm:self-center">
+                        <span className="text-[11px] font-mono font-semibold text-amber-800 bg-amber-50 px-2.5 py-1 rounded-[6px] border border-amber-200 block">
+                          {filteredKasbonLogs.length} bon terpilih
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Tabel Riwayat Kasbon Tukang */}
+                  <div className="bg-white border border-[#eaeaea] rounded-[10px] overflow-hidden">
+                    <div className="overflow-x-auto">
+                      <table className="w-full min-w-[750px] text-xs text-left border-collapse">
+                        <thead className="bg-[#f9f9f9] border-b border-[#eaeaea] text-[#555555] font-semibold text-[10px] uppercase">
+                          <tr>
+                            <th className="py-2.5 px-3 whitespace-nowrap">Tanggal</th>
+                            <th className="py-2.5 px-3 whitespace-nowrap">Mandor / Kepala Tukang</th>
+                            <th className="py-2.5 px-3 whitespace-nowrap">Sub-Pekerjaan</th>
+                            <th className="py-2.5 px-3 text-right whitespace-nowrap">Nominal Kasbon</th>
+                            <th className="py-2.5 px-3 whitespace-nowrap">Catatan / Keperluan</th>
+                            <th className="py-2.5 px-3 whitespace-nowrap">Bukti TF / Kwitansi</th>
+                            <th className="py-2.5 px-3 whitespace-nowrap">Dicatat Oleh</th>
+                            <th className="py-2.5 px-3 text-center whitespace-nowrap">Aksi</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody className="divide-y divide-[#eaeaea]">
+                          {filteredKasbonLogs.length === 0 ? (
+                            <tr>
+                              <td colSpan={8} className="py-12 text-center text-xs text-[#888888] bg-white">
+                                <p className="font-medium">Tidak ada kasbon yang cocok dengan filter atau kata kunci.</p>
+                                {isKasbonFiltered && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setKasbonSearchText('');
+                                      setKasbonWorkerFilter('');
+                                      setKasbonSubJobFilter('');
+                                    }}
+                                    className="mt-2 text-xs font-semibold text-[#111111] underline cursor-pointer"
+                                  >
+                                    Reset semua filter
+                                  </button>
+                                )}
+                              </td>
+                            </tr>
+                          ) : (
+                            filteredKasbonLogs.map(bon => (
+                              <tr key={bon.id} className="hover:bg-[#fafafa]">
+                                <td className="py-2 px-3 font-mono font-medium whitespace-nowrap">{formatDateID(bon.date)}</td>
+                                <td className="py-2 px-3 font-bold text-[#111111] whitespace-nowrap">{bon.workerLeaderName}</td>
+                                <td className="py-2 px-3 text-[#555555] whitespace-nowrap">{bon.subJobName}</td>
+                                <td className="py-2 px-3 text-right font-mono font-bold text-[#cf1124] whitespace-nowrap">
+                                  {formatRupiah(bon.amount)}
+                                </td>
+                                <td className="py-2 px-3 text-[#666666] whitespace-nowrap">{bon.note || '-'}</td>
+                                <td className="py-2 px-3 whitespace-nowrap">
+                                  {bon.receiptUrl ? (
+                                    <button
+                                      type="button"
+                                      onClick={() => setActiveReceiptPreview(bon.receiptUrl || null)}
+                                      className="inline-flex items-center gap-1 px-2 py-1 bg-[#f0f0f0] hover:bg-[#e4e4e4] text-[#111111] rounded text-[11px] font-medium transition-colors cursor-pointer"
+                                    >
+                                      <Eye className="w-3 h-3 text-[#555555]" />
+                                      <span>Lihat Foto</span>
+                                    </button>
+                                  ) : (
+                                    <span className="text-[#999999] text-[11px]">-</span>
+                                  )}
+                                </td>
+                                <td className="py-2 px-3 font-mono text-[10px] text-[#888888] whitespace-nowrap">
+                                  {bon.recordedBy?.split('@')[0] || 'Admin'}
+                                </td>
+                                <td className="py-2 px-3 text-center whitespace-nowrap">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteWorkerKasbon(bon.id, bon.subJobId, bon.amount, bon.workerLeaderName)}
+                                    className="p-1 text-[#888888] hover:text-[#cf1124] hover:bg-red-50 rounded transition-colors cursor-pointer"
+                                    title="Hapus Kasbon"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                        {filteredKasbonLogs.length > 0 && (
+                          <tfoot className="bg-[#fafafa] border-t-2 border-[#eaeaea] font-bold text-xs text-[#111111]">
+                            <tr>
+                              <td colSpan={3} className="py-2.5 px-3 text-right">
+                                {isKasbonFiltered
+                                  ? `Total Terfilter (${filteredKasbonLogs.length} Bon):`
+                                  : `Total Seluruh Kasbon (${kasbonLogs.length} Bon):`}
+                              </td>
+                              <td className="py-2.5 px-3 text-right font-mono font-bold text-[#cf1124] whitespace-nowrap">
+                                {formatRupiah(totalFilteredKasbon)}
+                              </td>
+                              <td colSpan={4} className="py-2.5 px-3 text-[10px] font-normal text-[#888888]">
+                                {isKasbonFiltered ? `(akumulasi total proyek: ${formatRupiah(totalAllKasbon)})` : ''}
+                              </td>
+                            </tr>
+                          </tfoot>
+                        )}
+                      </table>
+                    </div>
                   </div>
                 </div>
               )
@@ -925,35 +1205,12 @@ export function ProjectFinancialsModal({
       />
 
       {/* LIGHTBOX PREVIEW BUKTI TRANSFER / KWITANSI */}
-      {activeReceiptPreview && (
-        <div 
-          className="fixed inset-0 z-60 bg-black/80 flex items-center justify-center p-4 cursor-pointer"
-          onClick={() => setActiveReceiptPreview(null)}
-        >
-          <div 
-            className="relative max-w-xl max-h-[85vh] bg-white rounded-[12px] p-2 overflow-hidden shadow-2xl cursor-default"
-            onClick={e => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between p-2 border-b border-[#eaeaea]">
-              <span className="text-xs font-bold text-[#111111]">Foto Bukti Kasbon Karyawan</span>
-              <button
-                type="button"
-                onClick={() => setActiveReceiptPreview(null)}
-                className="p-1 text-[#555555] hover:text-[#111111] hover:bg-[#f0f0f0] rounded-[6px] transition-colors cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="p-2 flex items-center justify-center max-h-[75vh] overflow-auto">
-              <img
-                src={activeReceiptPreview}
-                alt="Bukti Transfer Kasbon"
-                className="max-w-full max-h-[70vh] object-contain rounded"
-              />
-            </div>
-          </div>
-        </div>
-      )}
+      <ReceiptLightboxModal
+        isOpen={Boolean(activeReceiptPreview)}
+        imageUrl={activeReceiptPreview}
+        onClose={() => setActiveReceiptPreview(null)}
+        title="Foto Bukti Kasbon / Transaksi"
+      />
     </>
   );
 }

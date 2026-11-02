@@ -381,6 +381,7 @@ export interface WorkerKasbonLog {
   date: string;                 // YYYY-MM-DD
   amount: number;               // Nominal kasbon
   note?: string;                // Keterangan kasbon
+  receiptUrl?: string;          // Foto bukti transfer / kwitansi kasbon tukang
   recordedBy: string;
   createdAt: string;
 }

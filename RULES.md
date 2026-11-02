@@ -1542,6 +1542,18 @@ Dokumen ini adalah hukum tertinggi operasional sistem. Kegagalan mematuhi aturan
     - **Haptic & Scrolling Integrity**:
       * Long-press 450ms dilengkapi haptic vibration halus (40ms) dan wajib langsung membatalkan timer jika pergeseran sentuhan (delta) melebihi 10px untuk menjaga kelancaran scroll native tanpa lag.
 
+132. **Worker Kasbon Management Architecture (Search, Multi-Filter, Dynamic Totals, Proof Upload & Safe Reversal)**:
+    - **Search & Multi-Filter Specification**:
+      * Tab Kasbon Tukang (Mandor) pada modal keuangan proyek WAJIB menyediakan kontrol pencarian teks bebas (mencari nama mandor, sub-pekerjaan, catatan, dan pencatat) serta filter kontekstual Mandor/Tukang dan Sub-Pekerjaan.
+      * Seluruh kontrol filter WAJIB menggunakan Custom Select/Combobox solid-filled, bukan native `<select>` (mematuhi Rule 129).
+    - **Dynamic Calculation & Double-Total Presentation**:
+      * Ketika filter atau pencarian aktif, sistem WAJIB menampilkan **Kartu Ringkasan Dinamis** di atas tabel yang memperlihatkan total nominal kasbon terfilter vs total akumulasi keseluruhan secara transparan, serta menyajikan baris `<tfoot>` di bawah tabel yang menjumlahkan nominal baris yang sedang tampil.
+    - **Proof of Transfer (Bukti TF) Support**:
+      * Form input kasbon tukang (`RecordKasbonModal`) WAJIB mendukung upload bukti foto transfer/kwitansi opsional (maks 2MB) dengan preview dan thumbnail di tabel data yang dapat dibuka dalam modal lightbox.
+    - **Safe Reversal on Deletion**:
+      * Penghapusan kasbon tukang wajib mengonfirmasi lewat `showConfirm` (Rule 130), menghapus log dari Firestore, dan secara aman mengembalikan saldo plafon upah tukang (`remainingWorkerPay` bertambah dan `totalKasbonPaid` berkurang) pada sub-pekerjaan fisik terkait.
+
+
 
 
 

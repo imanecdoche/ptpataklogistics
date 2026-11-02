@@ -1,9 +1,11 @@
-import { X } from 'lucide-react';
+import { X, Upload, Loader2 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import { ProjectSubJob } from '@/types/database';
 import { recordWorkerKasbon } from '@/lib/projectFinanceService';
 import { formatRupiah } from '@/lib/currencyUtils';
 import { CurrencyInput } from '@/components/ui/CurrencyInput';
+import { CustomDatePicker } from '@/components/ui/CustomDatePicker';
+import { CustomSelectCombobox, SelectOption } from '@/components/ui/CustomSelectCombobox';
 import { useDialog } from '@/context/DialogContext';
 import { useDrawerTransition } from '@/hooks/useDrawerTransition';
 
@@ -28,6 +30,7 @@ export function RecordKasbonModal({
   const [date, setDate] = useState<string>(new Date().toISOString().slice(0, 10));
   const [amount, setAmount] = useState<number>(0);
   const [note, setNote] = useState<string>('');
+  const [receiptUrl, setReceiptUrl] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { showAlert } = useDialog();
@@ -42,11 +45,37 @@ export function RecordKasbonModal({
     setDate(new Date().toISOString().slice(0, 10));
     setAmount(0);
     setNote('');
+    setReceiptUrl('');
   }, [defaultSubJobId, subJobs, isOpen]);
 
   if (!isRendered) return null;
 
   const targetSubJob = subJobs.find(s => s.id === selectedSubJobId);
+
+  const subJobOptions: SelectOption[] = subJobs.map(s => ({
+    id: s.id,
+    label: `${s.jobName} - ${s.workerLeaderName}`,
+    subLabel: `Sisa upah: ${formatRupiah(s.remainingWorkerPay)}`
+  }));
+
+  const handleReceiptUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      showAlert({
+        title: 'Batas Ukuran',
+        message: 'Ukuran foto bukti transfer maksimal 2 MB.'
+      });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = evt => {
+      setReceiptUrl(evt.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,6 +105,7 @@ export function RecordKasbonModal({
         date,
         amount: Number(amount),
         note: note.trim(),
+        receiptUrl: receiptUrl || undefined,
         userEmail
       });
 
@@ -140,28 +170,25 @@ export function RecordKasbonModal({
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-4 sm:p-5 space-y-4 bg-white text-xs">
-          {/* Pilihan Sub-Pekerjaan */}
+        <form onSubmit={handleSubmit} className="p-4 sm:p-5 space-y-4 bg-white text-xs max-h-[75vh] overflow-y-auto">
+          {/* Pilihan Sub-Pekerjaan (Custom Select) */}
           <div className="space-y-1">
             <label className="font-bold text-[#111111] block">
               Pekerjaan & Mandor Penerima Kasbon <span className="text-red-500">*</span>
             </label>
-            <select
+            <CustomSelectCombobox
+              options={subJobOptions}
               value={selectedSubJobId}
-              onChange={e => setSelectedSubJobId(e.target.value)}
-              className="w-full p-2.5 bg-white border border-[#dcdcdc] rounded-[8px] text-xs font-semibold text-[#111111] outline-none focus:border-[#111111]"
-            >
-              {subJobs.map(s => (
-                <option key={s.id} value={s.id}>
-                  {s.jobName} - {s.workerLeaderName} ({s.projectName})
-                </option>
-              ))}
-            </select>
+              onChange={setSelectedSubJobId}
+              placeholder="Pilih Sub-Pekerjaan & Mandor..."
+              variant="white"
+              searchable={true}
+            />
           </div>
 
           {/* Status Plafon Saat Ini */}
           {targetSubJob && (
-            <div className="p-3 bg-[#fafafa] border border-[#ebebeb] rounded-[8px] space-y-1.5">
+            <div className="p-3 bg-[#fafafa] rounded-[8px] space-y-1.5 border border-[#eaeaea]">
               <div className="flex justify-between items-center text-[11px]">
                 <span className="text-[#666666]">Mandor / Kepala Tukang:</span>
                 <span className="font-bold text-[#111111]">{targetSubJob.workerLeaderName}</span>
@@ -193,11 +220,11 @@ export function RecordKasbonModal({
               <label className="font-bold text-[#111111] block">
                 Tanggal Penarikan Kasbon
               </label>
-              <input
-                type="date"
+              <CustomDatePicker
                 value={date}
-                onChange={e => setDate(e.target.value)}
-                className="w-full p-2.5 bg-white border border-[#dcdcdc] rounded-[8px] text-xs font-mono font-semibold text-[#111111] outline-none focus:border-[#111111]"
+                onChange={setDate}
+                variant="solid-white"
+                fullWidth
               />
             </div>
 
@@ -229,6 +256,36 @@ export function RecordKasbonModal({
             />
           </div>
 
+          {/* Bukti Transfer / Kwitansi Kasbon */}
+          <div className="space-y-1.5">
+            <label className="font-bold text-[#111111] block">
+              Bukti Kwitansi / Transfer (Opsional)
+            </label>
+            {receiptUrl ? (
+              <div className="relative p-2 bg-[#fafafa] rounded-[8px] border border-[#e5e5e5] flex items-center justify-between">
+                <img src={receiptUrl} alt="Bukti Kasbon" className="w-12 h-12 object-cover rounded-[6px]" />
+                <button
+                  type="button"
+                  onClick={() => setReceiptUrl('')}
+                  className="px-2.5 py-1 text-[11px] bg-[#fee2e2] hover:bg-[#fecaca] text-[#cf1124] rounded-[6px] border-none font-semibold cursor-pointer"
+                >
+                  Hapus Foto
+                </button>
+              </div>
+            ) : (
+              <label className="flex items-center justify-center gap-2 p-3 border border-dashed border-[#dcdcdc] rounded-[8px] bg-[#fafafa] hover:bg-[#f0f0f0] cursor-pointer transition-colors text-xs text-[#666666]">
+                <Upload className="w-4 h-4 text-[#888888]" />
+                <span>Unggah Foto Kwitansi / Bukti TF</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleReceiptUpload}
+                  className="hidden"
+                />
+              </label>
+            )}
+          </div>
+
           {/* Simulasi Sisa Upah Baru */}
           {amount > 0 && targetSubJob && (
             <div className="p-3 bg-amber-50 border border-amber-200 rounded-[8px] flex items-center justify-between text-xs">
@@ -248,18 +305,25 @@ export function RecordKasbonModal({
           <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#eaeaea]">
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleClose}
               disabled={isSubmitting}
-              className="px-4 py-2 text-xs font-semibold text-[#666666] hover:bg-[#f0f0f0] rounded-[8px]"
+              className="px-4 py-2 text-xs font-semibold text-[#666666] hover:bg-[#f0f0f0] rounded-[8px] cursor-pointer"
             >
               Batal
             </button>
             <button
               type="submit"
               disabled={isSubmitting || !amount || amount <= 0}
-              className="px-5 py-2 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 active:bg-amber-800 rounded-[8px] transition-colors disabled:opacity-40 cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-5 py-2 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 active:bg-amber-800 rounded-[8px] transition-colors disabled:opacity-40 cursor-pointer"
             >
-              {isSubmitting ? 'Mencatat...' : 'Simpan Kasbon Tukang'}
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>Mencatat...</span>
+                </>
+              ) : (
+                <span>Simpan Kasbon Tukang</span>
+              )}
             </button>
           </div>
         </form>

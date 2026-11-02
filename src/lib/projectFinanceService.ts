@@ -205,6 +205,7 @@ export interface RecordKasbonPayload {
   date: string;
   amount: number;
   note?: string;
+  receiptUrl?: string;
   userEmail: string;
 }
 
@@ -233,6 +234,7 @@ export async function recordWorkerKasbon(payload: RecordKasbonPayload): Promise<
     date: payload.date || new Date().toISOString().slice(0, 10),
     amount: numAmount,
     note: payload.note?.trim() || '',
+    receiptUrl: payload.receiptUrl || '',
     recordedBy: payload.userEmail,
     createdAt: new Date().toISOString()
   };
@@ -259,10 +261,49 @@ export async function recordWorkerKasbon(payload: RecordKasbonPayload): Promise<
     isCredit: false,
     description: `Kasbon Mandor: ${payload.workerLeaderName} (${payload.subJobName} - ${payload.projectName}) ${payload.note ? `[${payload.note}]` : ''}`,
     referenceId: kasbonId,
-    createdByName: payload.userEmail.split('@')[0] || 'Manajemen'
+    createdByName: payload.userEmail.split('@')[0] || 'Manajemen',
+    receiptUrl: payload.receiptUrl
   });
 
   return kasbonId;
+}
+
+/**
+ * Hapus dokumen kasbon tukang/mandor, kembalikan saldo upah tukang, dan hapus mutasi kas di Buku Kas
+ */
+export async function deleteWorkerKasbon(kasbonId: string, subJobId: string, amount: number): Promise<void> {
+  const numAmount = Number(amount) || 0;
+
+  // 1. Hapus dokumen kasbon
+  const docRef = doc(db, KASBON_COLLECTION, kasbonId);
+  await deleteDoc(docRef);
+
+  // 2. Pulihkan akumulasi kasbon dan sisa hak upah tukang
+  try {
+    const subJobRef = doc(db, SUB_JOBS_COLLECTION, subJobId);
+    const snap = await getDoc(subJobRef);
+    if (snap.exists()) {
+      const data = snap.data() as ProjectSubJob;
+      const newTotalKasbon = Math.max(0, (data.totalKasbonPaid || 0) - numAmount);
+      const newRemaining = Math.max(0, data.contractAmountWorker - newTotalKasbon);
+      await updateDoc(subJobRef, {
+        totalKasbonPaid: newTotalKasbon,
+        remainingWorkerPay: newRemaining
+      });
+    }
+  } catch (e) {
+    console.warn('Gagal memulihkan saldo upah tukang di sub-job:', e);
+  }
+
+  // 3. Cascade delete mutasi di cash_ledger
+  try {
+    const ledgerSnap = await getDocs(query(collection(db, 'cash_ledger'), where('referenceId', '==', kasbonId)));
+    for (const d of ledgerSnap.docs) {
+      await deleteDoc(d.ref);
+    }
+  } catch (e) {
+    console.warn('Gagal menghapus mutasi kasbon tukang di cash_ledger:', e);
+  }
 }
 
 /**
