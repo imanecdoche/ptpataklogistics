@@ -681,3 +681,64 @@ Halo **Argon**! 👋 Berikut adalah rekapitulasi pembaruan lanjutan yang baru sa
 4. **Verifikasi Build & Sinkronisasi Git**:
    - Telah lulus build produksi (`tsc -b && vite build`) dengan 0 error dan zero regression.
    - Kode telah siap dan langsung di-push ke GitHub repository `origin/main` agar workstation Linux Argon dapat segera melakukan `git pull`.
+
+
+### FASE 19: Handover Arsitektur & Fitur Baru dari Argon ke Antigravity Nizar (02 Nov 2026, 18:25 WIB)
+Dicatat oleh **`Argon`** (Workstation Linux Utama) untuk **`Antigravity Nizar`** (Windows Workstation):
+
+Halo **Antigravity Nizar**! 👋  
+Berikut adalah rekapitulasi lengkap seluruh fitur, perbaikan arsitektur, kepatuhan aturan baru (Rule 127 – 132), serta panduan integrasi yang baru saja diselesaikan dan di-push ke branch `origin/main`:
+
+---
+
+#### 1. Aturan Mutlak & Standar Proyek Baru (`RULES.md` & `.agents/RULES.md` — 0-diff)
+- **Rule 127 (Standar Halaman 404 Standalone Minimalis)**:
+  * Route tak terdaftar (`NotFoundPage.tsx`) dirender sebagai *standalone full-screen surface* tanpa AppShell/sidebar, monokromatis, dengan tombol navigasi kembali ke Beranda (`/`).
+- **Rule 128 (Mandatory Smooth Enter/Exit Transitions for Mobile Bottom Drawers)**:
+  * Seluruh modal dan mobile bottom drawer WAJIB memiliki transisi enter (`translate-y-full` $\rightarrow$ `translate-y-0`) dan exit (`translate-y-0` $\rightarrow$ `translate-y-full`) bi-directional yang halus (200ms `ease-out`).
+  * DILARANG KERAS langsung me-return `null` sebelum animasi exit selesai. Disediakan hook reusable baru [`useDrawerTransition.ts`](file:///media/fatihfarhat/New%20Volume1/PROJECTS/Patak%20Logistics%20System/src/hooks/useDrawerTransition.ts) untuk mengelola unmounting tertunda secara otomatis.
+- **Rule 129 (Mandatory Custom UI for All Pickers & Form Controls)**:
+  * Dilarang keras menggunakan kontrol bawaan browser / OS native seperti `<select>`, `<input type="date">`, `<input type="time">`, atau checkbox default OS. Wajib menggunakan `CustomDatePicker`, `CustomSelectCombobox`, atau custom toggle.
+- **Rule 130 (Mandatory Custom Dialog System / Zero Native Dialogs)**:
+  * Pemanggilan `window.alert()`, `window.confirm()`, dan `window.prompt()` dilarang keras. Seluruh prompt wajib menggunakan hook `useDialog()` dari `DialogContext` (`showAlert` dan `showConfirm`).
+- **Rule 131 (Mandatory Text Selection Suppression for Contextual Menus)**:
+  * Baris tabel dengan trigger kontekstual (`TableActionMenu`) diterapkan supresi seleksi teks (`select-none`, `user-select: none`, `-webkit-user-select: none`, `-webkit-touch-callout: none`) serta event `selectstart` di-`preventDefault`.
+  * Saat gesture tap-and-hold (450ms) terpicu di mobile maupun klik kanan di desktop, sistem secara otomatis mengeksekusi `window.getSelection()?.removeAllRanges()` sehingga tidak ada teks yang ter-blok biru.
+- **Rule 132 (Worker Kasbon Management Architecture)**:
+  * Mengatur arsitektur lengkap pengelolaan Kasbon Tukang (Mandor): live search teks bebas, multi-filter dropdown mandor & sub-job, kartu total dinamis terfilter vs akumulasi proyek, baris footer `<tfoot>`, upload bukti transfer (Bukti TF) opsional, serta tombol hapus dengan pemulihan plafon upah tukang secara atomik.
+
+---
+
+#### 2. Rincian Modifikasi Fitur Kasbon Tukang Lapangan
+1. **Pencarian & Multi-Filter di Tab Kasbon Tukang (`ProjectFinancialsModal.tsx`)**:
+   - Live search input untuk pencarian teks mandor, sub-pekerjaan, catatan, dan email pencatat dengan tombol reset cepat.
+   - Dropdown filter Mandor dan Sub-Pekerjaan menggunakan `CustomSelectCombobox` (Rule 129).
+   - Kartu Ringkasan Dinamis Kasbon Tukang di atas tabel: menampilkan total nominal kasbon terfilter dinamis, status jumlah bon terfilter, dan total akumulasi keseluruhan proyek.
+   - Baris `<tfoot>` di bawah tabel yang menjumlahkan nominal kasbon yang sedang tampil di layar.
+2. **Upload Bukti Transfer / Kwitansi Kasbon (`RecordKasbonModal.tsx`)**:
+   - Form input kasbon tukang kini mendukung unggah foto bukti transfer bank / kwitansi fisik (opsional, maks 2MB, FileReader base64).
+   - Form direfaktor menggunakan `CustomDatePicker` dan `CustomSelectCombobox` (menghapus `<select>` dan `<input type="date">` native).
+   - Kolom "Bukti TF / Kwitansi" di tabel kasbon dengan tombol "Lihat Foto" menggunakan modal preview [`ReceiptLightboxModal.tsx`](file:///media/fatihfarhat/New%20Volume1/PROJECTS/Patak%20Logistics%20System/src/components/ui/ReceiptLightboxModal.tsx) (mendukung unduh gambar langsung).
+3. **Pencatatan & Penghapusan Kasbon yang Aman (`projectFinanceService.ts` & `database.ts`)**:
+   - Interface `WorkerKasbonLog` dan payload `recordWorkerKasbon` kini menyimpan `receiptUrl?: string`.
+   - Dibuat fungsi baru `deleteWorkerKasbon(kasbonId, subJobId, amount)`: menghapus log Firestore, memulihkan akumulasi `totalKasbonPaid` dan sisa hak upah `remainingWorkerPay` di `project_sub_jobs`, serta menghapus mutasi kas keluar di `cash_ledger`.
+   - Di tabel kasbon mandor ditambahkan tombol aksi Hapus dengan konfirmasi aman `showConfirm`.
+
+---
+
+#### 3. Eliminasi Blur & Refaktor UI Mobile (`/auditaislop`)
+- Seluruh `backdrop-blur` pada 8 modal/drawer telah dihilangkan 100% dan diganti dengan overlay pekat solid `bg-black/50` demi performa GPU mobile yang ringan tanpa lag.
+- Dipasang hook `useDrawerTransition` pada seluruh modal dan drawer aplikasi (`CustomDialog`, `CashFilterDrawer`, `DashboardFilterDrawer`, `DashboardChartDrawer`, `DispatchFilterPopover`, `ApprovalCenterModal`, `RecordClientPaymentModal`, `RecordEmployeeKasbonModal`, `RecordKasbonModal`, `RecordSubJobModal`).
+
+---
+
+#### 4. Kesiapan Sinkronisasi untuk Antigravity Nizar
+- **Branch**: `main`
+- **Latest Commit**: `0a6b2da` (`feat(projects): add search, filter, dynamic totals, and proof upload to worker kasbon (Rule 132)`)
+- **Status Build**: 🟢 Lulus 100% kompilasi `tsc -b && vite build` (zero error).
+- **Instruksi untuk Nizar**: Cukup jalankan:
+  ```bash
+  git pull origin main
+  ```
+  di working directory Windows (`C:\Users\user\Documents\PATAK`), dan seluruh fitur serta aturan langsung tersinkronisasi sempurna!
+
