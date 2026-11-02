@@ -90,7 +90,9 @@ export function AddToQuickReportModal({
       onClose();
     } catch (err: any) {
       console.error('[AddToQuickReportModal] Gagal menyimpan:', err);
-      setErrorMsg('Terjadi kendala saat menyimpan ke Cloud Firestore. Silakan coba lagi.');
+      setErrorMsg(
+        err?.message || 'Terjadi kendala saat menyimpan ke Cloud Firestore. Silakan coba lagi.'
+      );
     } finally {
       setIsSubmitting(false);
     }
