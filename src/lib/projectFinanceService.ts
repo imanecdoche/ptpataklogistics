@@ -43,7 +43,7 @@ export function subscribeProjectSubJobs(
         id: d.id,
         ...(d.data() as Omit<ProjectSubJob, 'id'>)
       }));
-      list.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+      list.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
       callback(list);
     },
     err => {
@@ -187,7 +187,7 @@ export function subscribeWorkerKasbonLogs(
         id: d.id,
         ...(d.data() as Omit<WorkerKasbonLog, 'id'>)
       }));
-      list.sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
+      list.sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.createdAt || '').localeCompare(a.createdAt || ''));
       callback(list);
     },
     err => {
@@ -325,7 +325,7 @@ export function subscribeEmployeeKasbonLogs(
         id: d.id,
         ...(d.data() as Omit<EmployeeKasbonLog, 'id'>)
       }));
-      list.sort((a, b) => (b.date || b.createdAt).localeCompare(a.date || a.createdAt));
+      list.sort((a, b) => ((b.date || b.createdAt) || '').localeCompare((a.date || a.createdAt) || ''));
       callback(list);
     },
     err => {
@@ -427,7 +427,7 @@ export function subscribeClientPayments(
         id: d.id,
         ...(d.data() as Omit<ClientProjectPayment, 'id'>)
       }));
-      list.sort((a, b) => b.paymentDate.localeCompare(a.paymentDate) || b.createdAt.localeCompare(a.createdAt));
+      list.sort((a, b) => (b.paymentDate || '').localeCompare(a.paymentDate || '') || (b.createdAt || '').localeCompare(a.createdAt || ''));
       callback(list);
     },
     err => {

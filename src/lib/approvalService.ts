@@ -88,7 +88,7 @@ export function subscribePendingApprovals(
           id: d.id,
           ...(d.data() as Omit<TicketApprovalRequest, 'id'>)
         }));
-        list.sort((a, b) => b.requestedAt.localeCompare(a.requestedAt));
+        list.sort((a, b) => (b.requestedAt || '').localeCompare(a.requestedAt || ''));
         callback(list);
       });
     }
@@ -120,7 +120,7 @@ export function subscribeAllApprovals(
           id: d.id,
           ...(d.data() as Omit<TicketApprovalRequest, 'id'>)
         }));
-        list.sort((a, b) => b.requestedAt.localeCompare(a.requestedAt));
+        list.sort((a, b) => (b.requestedAt || '').localeCompare(a.requestedAt || ''));
         callback(list);
       });
     }

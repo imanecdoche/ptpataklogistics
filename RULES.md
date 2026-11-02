@@ -1602,3 +1602,21 @@ Dokumen ini adalah hukum tertinggi operasional sistem. Kegagalan mematuhi aturan
     - **Data Scope & Anti-Wrapping**:
       * Ekspor WAJIB mencakup **seluruh data hasil pencarian dan filter aktif** yang sedang tampil di tabel saat tombol diklik.
       * Kolom angka dan finansial dilindungi dari pemotongan atau wrapping patah.
+
+### Rule 134: Standar Ketahanan Runtime, Proteksi Null Safety & Global Error Boundary
+- **Latar Belakang & Masalah**:
+  - Pada arsitektur SPA React 19 (Vite), setiap unhandled exception pada komponen atau lifecycle subscriber (seperti Firestore snapshot listener) dapat menyebabkan *unmounting* seluruh tree komponen DOM, menghasilkan tampilan kosong melompong (*blank white page* / `#root` kosong).
+  - Kasus terjadi saat membuka modal finansial proyek (`/proyek/:projectId/finansial`), di mana data lama atau dokumen tidak lengkap dari Firestore memicu `Uncaught TypeError: Cannot read properties of undefined` saat mengeksekusi operasi string seperti `.toLowerCase()`, `.replace()`, `.localeCompare()`, atau manipulasi array.
+- **Ketentuan Implementasi**:
+  1. **Komponen Global & Local Error Boundary (`src/components/ui/ErrorBoundary.tsx`)**:
+     - Wajib membungkus root aplikasi (`src/main.tsx`) dengan `<ErrorBoundary>` agar runtime crash apa pun tidak pernah meninggalkan layar putih kosong tanpa pesan.
+     - Wajib membungkus modal-modal finansial atau fitur kompleks di tingkat komponen (`ProjectsPage.tsx`) sehingga jika terjadi galat terisolasi, aplikasi utama tetap aktif dan pengguna dapat me-reset modal tanpa harus reload penuh.
+     - **UI Fallback Audit-Compliant (`/auditaislop`)**: Menggunakan logo resmi PT Patak Abadi Jaya (`/icons/pt-logo.png`), solid-filled tokens (`bg-white`, `bg-[#f5f5f5]`), zero outline stroke, zero blur, font sans-serif tegas, tombol *"Muat Ulang Halaman"* (`bg-[#111111]`) dan tombol *"Kembali ke Proyek"* (`bg-[#f0f0f0]`), serta menyajikan detail galat dalam kotak mono merah (`#cf1124`).
+  2. **Proteksi Null Safety String Operations Mutlak**:
+     - DILARANG KERAS memanggil `.toLowerCase()`, `.toUpperCase()`, `.trim()`, `.replace()`, atau `.split()` langsung pada properti opsional tanpa fallback default string:
+       * Contoh wajib: `(p.clientName || '').toLowerCase()`, `(project.name || 'Proyek').replace(/\s+/g, '_')`.
+  3. **Proteksi Null Safety Pengurutan (`localeCompare`)**:
+     - Seluruh fungsi pengurutan array `.sort((a, b) => ...)` di seluruh service Firestore (`projectFinanceService.ts`, `clientService.ts`, `approvalService.ts`) WAJIB memproteksi kedua operand:
+       * Contoh wajib: `(b.createdAt || '').localeCompare(a.createdAt || '')`.
+  4. **Proteksi Perhitungan Finansial & Progress Bar**:
+     - Kalkulasi persentase dan nilai rasio finansial wajib mengonversi nilai menjadi `Number(val) || 0` untuk menghindari `NaN` atau pembagian dengan nol (`0`).

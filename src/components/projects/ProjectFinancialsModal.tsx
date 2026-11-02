@@ -94,7 +94,13 @@ export function ProjectFinancialsModal({
     }, project.id);
 
     const unsubPayments = subscribeClientPayments(list => {
-      setClientPayments(list.filter(p => p.projectId === project.id || p.clientName.toLowerCase() === (project.clientName || '').toLowerCase()));
+      setClientPayments(
+        list.filter(
+          p =>
+            p.projectId === project.id ||
+            (p.clientName || '').toLowerCase() === (project.clientName || '').toLowerCase()
+        )
+      );
     }, project.id);
 
     const unsubTx = subscribeAllTransactions(list => {
@@ -404,12 +410,12 @@ export function ProjectFinancialsModal({
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <h2 className="text-sm sm:text-base font-bold text-[#111111] tracking-tight">
-                  {project.name}
+                  {project.name || 'Detail Proyek'}
                 </h2>
                 <p className="text-[11px] text-[#666666] mt-0.5 truncate">
                   Klien: <span className="font-semibold text-[#111111]">{project.clientName || 'Mitra Proyek'}</span>
                   <span className="mx-1.5 text-[#cccccc]">|</span>
-                  Investor: <span className="font-semibold text-[#111111]">{project.investorName}</span>
+                  Investor: <span className="font-semibold text-[#111111]">{project.investorName || '-'}</span>
                 </p>
               </div>
 
@@ -677,8 +683,10 @@ export function ProjectFinancialsModal({
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {subJobs.map(job => {
-                    const percentTaken = job.contractAmountWorker > 0
-                      ? Math.min(100, Math.round((job.totalKasbonPaid / job.contractAmountWorker) * 100))
+                    const paid = Number(job.totalKasbonPaid) || 0;
+                    const workerContract = Number(job.contractAmountWorker) || 0;
+                    const percentTaken = workerContract > 0
+                      ? Math.min(100, Math.round((paid / workerContract) * 100))
                       : 0;
 
                     return (
@@ -806,13 +814,13 @@ export function ProjectFinancialsModal({
                     </span>
                     <TablePdfExportButton
                       tableId="project_ritase"
-                      title={`Laporan Ritase Material - ${project.name}`}
+                      title={`Laporan Ritase Material - ${project.name || 'Proyek'}`}
                       subtitle={`PT Patak Abadi Jaya • Klien: ${project.clientName || '-'} | Investor: ${project.investorName || '-'}`}
                       columns={materialPdfColumns}
                       data={transactions}
                       grandTotals={materialGrandTotals}
                       defaultOrientation="landscape"
-                      fileName={`Ritase_${project.name.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`}
+                      fileName={`Ritase_${(project.name || 'Proyek').replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`}
                     />
                   </div>
                   <div className="overflow-x-auto">
@@ -979,14 +987,14 @@ export function ProjectFinancialsModal({
 
                       <TablePdfExportButton
                         tableId="project_kasbon_worker"
-                        title={`Daftar Penarikan Kasbon Tukang - ${project.name}`}
+                        title={`Daftar Penarikan Kasbon Tukang - ${project.name || 'Proyek'}`}
                         subtitle={`PT Patak Abadi Jaya • Klien: ${project.clientName || '-'} | Investor: ${project.investorName || '-'}`}
                         columns={workerKasbonPdfColumns}
                         data={filteredKasbonLogs}
                         filtersSummary={workerKasbonFiltersSummary}
                         grandTotals={workerKasbonGrandTotals}
                         defaultOrientation="landscape"
-                        fileName={`Kasbon_Tukang_${project.name.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`}
+                        fileName={`Kasbon_Tukang_${(project.name || 'Proyek').replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`}
                       />
 
                       <button
@@ -1176,13 +1184,13 @@ export function ProjectFinancialsModal({
                     <div className="flex items-center gap-1.5">
                       <TablePdfExportButton
                         tableId="project_kasbon_employee"
-                        title={`Daftar Kasbon Karyawan - ${project.name}`}
+                        title={`Daftar Kasbon Karyawan - ${project.name || 'Proyek'}`}
                         subtitle={`PT Patak Abadi Jaya • Klien: ${project.clientName || '-'} | Investor: ${project.investorName || '-'}`}
                         columns={employeeKasbonPdfColumns}
                         data={employeeKasbonLogs}
                         grandTotals={employeeKasbonGrandTotals}
                         defaultOrientation="landscape"
-                        fileName={`Kasbon_Karyawan_${project.name.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`}
+                        fileName={`Kasbon_Karyawan_${(project.name || 'Proyek').replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`}
                       />
 
                       <button
@@ -1279,13 +1287,13 @@ export function ProjectFinancialsModal({
                     </span>
                     <TablePdfExportButton
                       tableId="project_payments"
-                      title={`Riwayat Pembayaran Klien - ${project.name}`}
+                      title={`Riwayat Pembayaran Klien - ${project.name || 'Proyek'}`}
                       subtitle={`PT Patak Abadi Jaya • Klien: ${project.clientName || '-'} | Investor: ${project.investorName || '-'}`}
                       columns={clientPaymentsPdfColumns}
                       data={clientPayments}
                       grandTotals={clientPaymentsGrandTotals}
                       defaultOrientation="landscape"
-                      fileName={`Pembayaran_Klien_${project.name.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`}
+                      fileName={`Pembayaran_Klien_${(project.name || 'Proyek').replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`}
                     />
                   </div>
                   <div className="overflow-x-auto">
@@ -1370,8 +1378,8 @@ export function ProjectFinancialsModal({
       <WorkerKasbonPrintModal
         isOpen={isPrintModalOpen}
         onClose={() => setIsPrintModalOpen(false)}
-        projectName={project.name}
-        clientName={project.clientName}
+        projectName={project.name || 'Proyek'}
+        clientName={project.clientName || ''}
         subJobs={subJobs}
         kasbonLogs={kasbonLogs}
       />

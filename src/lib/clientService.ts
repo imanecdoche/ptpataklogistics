@@ -117,7 +117,7 @@ export async function getClients(): Promise<Client[]> {
   }
 
   const list = Array.from(uniqueMap.values());
-  list.sort((a, b) => a.name.localeCompare(b.name));
+  list.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
   return list;
 }
 

@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import { DialogProvider } from '@/context/DialogContext';
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { registerSW } from 'virtual:pwa-register';
 import './index.css';
 
@@ -23,8 +24,10 @@ registerSW({
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <DialogProvider>
-      <App />
-    </DialogProvider>
+    <ErrorBoundary>
+      <DialogProvider>
+        <App />
+      </DialogProvider>
+    </ErrorBoundary>
   </React.StrictMode>
 );

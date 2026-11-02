@@ -19,6 +19,7 @@ import { formatEntityNameLive } from '@/lib/nameUtils';
 import { CustomSelectCombobox, SelectOption } from '@/components/ui/CustomSelectCombobox';
 import { MobileTitlebarAction } from '@/components/ui/MobileTitlebarAction';
 import { ProjectFinancialsModal } from './ProjectFinancialsModal';
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { TablePdfExportButton } from '@/components/ui/TablePdfExportButton';
 import { TablePdfColumn, TablePdfFilterSummary } from '@/lib/pdfExportService';
 import { X } from 'lucide-react';
@@ -140,11 +141,11 @@ export function ProjectsPage({
       const q = searchQuery.toLowerCase().trim();
       result = result.filter(
         p =>
-          p.name.toLowerCase().includes(q) ||
-          p.location.toLowerCase().includes(q) ||
-          p.investorName.toLowerCase().includes(q) ||
-          p.clientName.toLowerCase().includes(q) ||
-          p.id.toLowerCase().includes(q)
+          (p.name || '').toLowerCase().includes(q) ||
+          (p.location || '').toLowerCase().includes(q) ||
+          (p.investorName || '').toLowerCase().includes(q) ||
+          (p.clientName || '').toLowerCase().includes(q) ||
+          (p.id || '').toLowerCase().includes(q)
       );
     }
 
@@ -834,13 +835,15 @@ export function ProjectsPage({
       )}
 
       {/* Modal Finansial & Sub-Pekerjaan Terpadu */}
-      <ProjectFinancialsModal
-        isOpen={Boolean(selectedFinanceProject)}
-        onClose={() => handleOpenFinanceProject(null)}
-        project={selectedFinanceProject}
-        projects={projects}
-        userEmail={_userEmail}
-      />
+      <ErrorBoundary onReset={() => handleOpenFinanceProject(null)}>
+        <ProjectFinancialsModal
+          isOpen={Boolean(selectedFinanceProject)}
+          onClose={() => handleOpenFinanceProject(null)}
+          project={selectedFinanceProject}
+          projects={projects}
+          userEmail={_userEmail}
+        />
+      </ErrorBoundary>
 
       {/* Pin Authorization Modal */}
       <PinAuthModal

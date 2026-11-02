@@ -831,3 +831,35 @@ Berikut adalah rekapitulasi lengkap fitur ekspor PDF presisi tinggi di seluruh t
   ```
   di working directory Windows (`C:\Users\user\Documents\PATAK`), dan seluruh fitur ekspor PDF presisi serta aturan Rule 133 langsung tersinkronisasi sempurna!
 
+
+### FASE 20: Perbaikan Fatal Blank Putih Finansial Proyek, Null Safety String Operations & Global Error Boundary (Rule 134)
+Dicatat oleh **Argon** (Linux Workstation) untuk **Antigravity Nizar** (Windows):
+
+#### 1. Masalah & Investigasi Root Cause
+- **Masalah**: Pengguna melaporkan layar blank putih total saat mengakses deep link rute detail finansial proyek (`http://localhost:5173/proyek/prj-situ-cikedal/finansial`).
+- **Penyebab Utama (Root Cause)**:
+  1. Pada `ProjectFinancialsModal.tsx:97`: Filter listener `subscribeClientPayments` memanggil `p.clientName.toLowerCase()` tanpa null-safety fallback. Jika ada dokumen pembayaran klien yang tidak memiliki atribut `clientName` (atau `undefined`), eksekusi langsung melempar `Uncaught TypeError: Cannot read properties of undefined (reading 'toLowerCase')`.
+  2. Pada `projectFinanceService.ts` lines 46, 190, 328, 430: Fungsi `.sort((a, b) => ...)` memanggil `.localeCompare()` langsung pada atribut opsional (`createdAt`, `date`, `paymentDate`) tanpa pelindung `|| ''`, yang melempar exception fatal jika salah satu dokumen Firestore memiliki atribut tanggal/waktu yang belum terisi.
+  3. Pada `ProjectFinancialsModal.tsx` lines 815, 989, 1185, 1288: Properti `fileName` tombol ekspor PDF memanggil `project.name.replace(...)` secara langsung tanpa fallback `(project.name || 'Proyek')`.
+  4. Pada `ProjectsPage.tsx` line 143: Filter pencarian memanggil `p.clientName.toLowerCase()` yang dapat melempar exception saat memfilter proyek dengan `clientName` kosong.
+  5. Ketiadaan komponen `ErrorBoundary` menyebabkan React 19 meng-unmount seluruh tree DOM dari `#root` saat uncaught exception terjadi, meninggalkan halaman putih bersih tanpa pesan apa pun.
+
+#### 2. Solusi & Perubahan yang Diterapkan
+1. **Global & Component Error Boundary (`src/components/ui/ErrorBoundary.tsx` - Rule 134)**:
+   - Dibuat komponen `ErrorBoundary` solid-filled audit-compliant (`/auditaislop`).
+   - Membungkus `<App />` di `src/main.tsx` dan membungkus `<ProjectFinancialsModal />` di `src/components/projects/ProjectsPage.tsx`.
+   - Menyajikan fallback UI elegan dengan logo resmi PT Patak Abadi Jaya (`/icons/pt-logo.png`), detail galat merah (`#cf1124`), tombol *"Muat Ulang Halaman"*, dan tombol *"Kembali ke Proyek"*.
+2. **Proteksi Null-Safety di `ProjectFinancialsModal.tsx`**:
+   - Filter `clientPayments`: `(p.clientName || '').toLowerCase() === (project.clientName || '').toLowerCase()`.
+   - Seluruh properti `fileName` dan `title` PDF diproteksi: `(project.name || 'Proyek').replace(/\s+/g, '_')`.
+   - Progress bar sub-pekerjaan diproteksi: `Number(job.totalKasbonPaid) || 0` dan `Number(job.contractAmountWorker) || 0`.
+3. **Proteksi Null-Safety di `projectFinanceService.ts`, `clientService.ts`, & `approvalService.ts`**:
+   - Seluruh pemanggilan `localeCompare` diproteksi dengan fallback string kosong `(val || '').localeCompare(...)`.
+4. **Proteksi Null-Safety di `ProjectsPage.tsx`**:
+   - Pencarian proyek diproteksi: `(p.clientName || '').toLowerCase().includes(q)`.
+
+#### 3. Verifikasi & Kesiapan Sinkronisasi
+- **Build Status**: 🟢 `tsc -b && vite build` lulus 100% tanpa error.
+- **Git Commit**: Siap di-push ke branch `main`.
+- **Instruksi untuk Nizar**: Cukup jalankan `git pull origin main`.
+
