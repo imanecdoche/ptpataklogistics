@@ -1650,3 +1650,7 @@ Dokumen ini adalah hukum tertinggi operasional sistem. Kegagalan mematuhi aturan
   5. **Kepatuhan Desain Mutlak (`/auditaislop`)**:
      - Seluruh tombol dan komponen wajib menggunakan solid-filled token (`bg-[#111111]`, `bg-[#f0f0f0]`, `bg-[#fdf2f2]`).
      - DILARANG menggunakan outline stroke tipis bercampur blur (*glassmorphism*), DILARANG pulsing dot, dan DILARANG membuat badge/tag/pill tanpa perintah eksplisit.
+  6. **Standar Kolom & Menu Kontekstual Tabel Laporan Cepat**:
+     - Kolom tabel Laporan Cepat dibuat ringkas dan bersih, hanya terdiri dari: `No`, `Nama Pintasan Laporan` (dengan subtitle title/kategori bila ada), `Format Dokumen PDF`, `Terakhir Diubah`, dan `Aksi`.
+     - Kolom `Kategori Laporan` dan `Filter Aktif Tersimpan` dihilangkan dari tampilan tabel utama untuk menghindari pemborosan ruang horizontal dan badge/pill berlebihan per aturan `/auditaislop`.
+     - Kolom `Aksi` wajib menggunakan menu kontekstual standar `TableActionMenu` (`w-[60px] min-w-[60px]`) dengan ikon menu standar (`assets/menu-bars.png`), yang memuat opsi: *"Ekspor PDF"*, *"Edit Pintasan"*, dan *"Hapus Pintasan"*, serta mendukung klik kanan desktop dan long-press (tap & hold) 450ms pada baris tabel.

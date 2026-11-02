@@ -902,6 +902,34 @@ Dicatat oleh **Argon** (Linux Workstation) untuk **Antigravity Nizar** (Windows)
 - **Instruksi untuk Nizar**: Cukup jalankan `git pull origin main` di repositori Windows.
 
 
+### FASE 23: Penyempurnaan Tabel Laporan Cepat (Standarisasi TableActionMenu & Eliminasi Kolom Redundan)
+Dicatat oleh **Argon** (Linux Workstation) untuk **Antigravity Nizar** (Windows):
+
+#### 1. Masalah & Permintaan Pengguna
+- Pengguna meminta perbaikan pada tampilan tabel di halaman **Laporan Cepat** (`/laporan-cepat`):
+  1. Menghapus kolom **Kategori Laporan** dan kolom **Filter Aktif Tersimpan** untuk menghemat ruang horizontal dan menghilangkan badge/pill yang tidak perlu.
+  2. Mengganti tombol aksi teks horizontal (`[⬇ Ekspor] [Edit] [Hapus]`) dengan **ikon menu kontekstual standar** (`TableActionMenu`) sebagaimana diterapkan di seluruh tabel lain dalam aplikasi.
+
+#### 2. Solusi & Perubahan Teknis
+1. **Modifikasi `src/components/quick_reports/QuickReportsPage.tsx`**:
+   - Menghapus kolom `Kategori Laporan` dan `Filter Aktif Tersimpan` dari `<thead>` dan `<tbody>`.
+   - Mengintegrasikan subtitle pada kolom `Nama Pintasan Laporan` (`s.title || s.categoryLabel`) sehingga informasi kategori tetap terlihat secara elegan tanpa memerlukan kolom khusus.
+   - Kolom `AKSI` distandarkan ke ukuran tetap `w-[60px] min-w-[60px]` menggunakan komponen `TableActionMenu`.
+   - `TableActionMenu` menyediakan 3 opsi:
+     - **Ekspor PDF** (memicu ekspor background 1-klik dengan spinner indikator status di baris terkait).
+     - **Edit Pintasan** (membuka modal edit komprehensif).
+     - **Hapus Pintasan** (membuka dialog konfirmasi destruktif `CustomDialog`).
+   - Mendukung interaksi standar: klik tombol menu, klik kanan pada baris tabel (desktop), dan long-press / tap-and-hold 450ms (mobile) dengan supresi seleksi teks otomatis.
+2. **Sinkronisasi Aturan Mutlak**:
+   - Ditambahkan butir 6 pada **Rule 135** di `RULES.md` dan `.agents/RULES.md` (0 diff terjaga 100%).
+
+#### 3. Verifikasi & Build Status
+- **Typecheck**: 🟢 `npx tsc -b` lulus tanpa error.
+- **Production Build**: 🟢 `vite build` sukses (`built in 54.03s`).
+- **Instruksi untuk Nizar**: Jalankan `git pull origin main`.
+
+
+
 ### FASE 22: Fitur Laporan Cepat (1-Click Instant PDF Export), Koleksi Firestore `quick_reports` & Tombol Tambah ke Laporan Cepat (Rule 135)
 Dicatat oleh **Argon** (Linux Workstation) untuk **Antigravity Nizar** (Windows):
 
@@ -937,6 +965,34 @@ Dicatat oleh **Argon** (Linux Workstation) untuk **Antigravity Nizar** (Windows)
 - **Build Status**: 🟢 `tsc -b && vite build` lulus 100% tanpa error.
 - **Dev Server**: 🟢 Aktif di `http://localhost:5173/`.
 - **Instruksi untuk Nizar**: Cukup jalankan `git pull origin main` di repositori Windows.
+
+
+### FASE 23: Penyempurnaan Tabel Laporan Cepat (Standarisasi TableActionMenu & Eliminasi Kolom Redundan)
+Dicatat oleh **Argon** (Linux Workstation) untuk **Antigravity Nizar** (Windows):
+
+#### 1. Masalah & Permintaan Pengguna
+- Pengguna meminta perbaikan pada tampilan tabel di halaman **Laporan Cepat** (`/laporan-cepat`):
+  1. Menghapus kolom **Kategori Laporan** dan kolom **Filter Aktif Tersimpan** untuk menghemat ruang horizontal dan menghilangkan badge/pill yang tidak perlu.
+  2. Mengganti tombol aksi teks horizontal (`[⬇ Ekspor] [Edit] [Hapus]`) dengan **ikon menu kontekstual standar** (`TableActionMenu`) sebagaimana diterapkan di seluruh tabel lain dalam aplikasi.
+
+#### 2. Solusi & Perubahan Teknis
+1. **Modifikasi `src/components/quick_reports/QuickReportsPage.tsx`**:
+   - Menghapus kolom `Kategori Laporan` dan `Filter Aktif Tersimpan` dari `<thead>` dan `<tbody>`.
+   - Mengintegrasikan subtitle pada kolom `Nama Pintasan Laporan` (`s.title || s.categoryLabel`) sehingga informasi kategori tetap terlihat secara elegan tanpa memerlukan kolom khusus.
+   - Kolom `AKSI` distandarkan ke ukuran tetap `w-[60px] min-w-[60px]` menggunakan komponen `TableActionMenu`.
+   - `TableActionMenu` menyediakan 3 opsi:
+     - **Ekspor PDF** (memicu ekspor background 1-klik dengan spinner indikator status di baris terkait).
+     - **Edit Pintasan** (membuka modal edit komprehensif).
+     - **Hapus Pintasan** (membuka dialog konfirmasi destruktif `CustomDialog`).
+   - Mendukung interaksi standar: klik tombol menu, klik kanan pada baris tabel (desktop), dan long-press / tap-and-hold 450ms (mobile) dengan supresi seleksi teks otomatis.
+2. **Sinkronisasi Aturan Mutlak**:
+   - Ditambahkan butir 6 pada **Rule 135** di `RULES.md` dan `.agents/RULES.md` (0 diff terjaga 100%).
+
+#### 3. Verifikasi & Build Status
+- **Typecheck**: 🟢 `npx tsc -b` lulus tanpa error.
+- **Production Build**: 🟢 `vite build` sukses (`built in 54.03s`).
+- **Instruksi untuk Nizar**: Jalankan `git pull origin main`.
+
 
 
 

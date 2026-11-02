@@ -7,6 +7,7 @@ import {
 import { executeQuickReportExport } from '@/lib/quickReportExportEngine';
 import { EditQuickReportModal } from '@/components/quick_reports/EditQuickReportModal';
 import { CustomDialog } from '@/components/ui/CustomDialog';
+import { TableActionMenu } from '@/components/ui/TableActionMenu';
 
 interface QuickReportsPageProps {
   userEmail: string;
@@ -168,14 +169,12 @@ export function QuickReportsPage({ userEmail: _userEmail }: QuickReportsPageProp
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-[#f8f9fa] border-b border-[#e5e7eb] text-[11px] font-bold text-[#555555] uppercase tracking-wider">
-                  <th className="py-3 px-4 w-12 text-center">No</th>
-                  <th className="py-3 px-4">Nama Pintasan Laporan</th>
-                  <th className="py-3 px-4">Kategori Laporan</th>
-                  <th className="py-3 px-4">Format Dokumen PDF</th>
-                  <th className="py-3 px-4">Filter Aktif Tersimpan</th>
-                  <th className="py-3 px-4">Terakhir Diubah</th>
-                  <th className="py-3 px-4 text-right w-48">Aksi</th>
+                <tr className="bg-[#f9f9f9] border-b border-[#eaeaea] text-[#555555] font-semibold text-[11px] uppercase tracking-wider select-none">
+                  <th className="py-2.5 px-3 w-12 text-center whitespace-nowrap">No</th>
+                  <th className="py-2.5 px-3 whitespace-nowrap">Nama Pintasan Laporan</th>
+                  <th className="py-2.5 px-3 whitespace-nowrap">Format Dokumen PDF</th>
+                  <th className="py-2.5 px-3 whitespace-nowrap">Terakhir Diubah</th>
+                  <th className="py-2.5 px-3 w-[60px] min-w-[60px] text-right whitespace-nowrap">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#eeeeee] text-xs">
@@ -186,27 +185,34 @@ export function QuickReportsPage({ userEmail: _userEmail }: QuickReportsPageProp
                   return (
                     <tr key={s.id} className="hover:bg-[#fafafa] transition-colors">
                       {/* No */}
-                      <td className="py-3.5 px-4 text-center font-mono text-[#888888]">
+                      <td className="py-2.5 px-3 text-center font-mono text-[#888888] align-middle">
                         {idx + 1}
                       </td>
 
-                      {/* Nama Pintasan */}
-                      <td className="py-3.5 px-4 font-bold text-[#111111]">
-                        <div>{s.name}</div>
-                        {s.title && s.title !== s.name && (
+                      {/* Nama Pintasan Laporan */}
+                      <td className="py-2.5 px-3 font-bold text-[#111111] align-middle">
+                        <div className="flex items-center gap-2">
+                          <span>{s.name}</span>
+                          {isThisExporting && (
+                            <span className="text-[11px] font-normal text-[#666666] flex items-center gap-1">
+                              <span className="inline-block animate-spin">⟳</span>
+                              <span>Mengekspor...</span>
+                            </span>
+                          )}
+                        </div>
+                        {s.title && s.title !== s.name ? (
                           <div className="text-[11px] font-normal text-[#777777] mt-0.5">
                             {s.title}
                           </div>
-                        )}
-                      </td>
-
-                      {/* Kategori Laporan */}
-                      <td className="py-3.5 px-4 font-medium text-[#333333]">
-                        {s.categoryLabel || s.exportType}
+                        ) : s.categoryLabel ? (
+                          <div className="text-[11px] font-normal text-[#777777] mt-0.5">
+                            {s.categoryLabel}
+                          </div>
+                        ) : null}
                       </td>
 
                       {/* Format Dokumen PDF */}
-                      <td className="py-3.5 px-4 text-[#555555]">
+                      <td className="py-2.5 px-3 text-[#555555] align-middle whitespace-nowrap">
                         <span className="font-semibold text-[#111111]">
                           {prefs.paperSize.toUpperCase()}
                         </span>{' '}
@@ -214,78 +220,35 @@ export function QuickReportsPage({ userEmail: _userEmail }: QuickReportsPageProp
                         {prefs.fontSize}pt
                       </td>
 
-                      {/* Filter Aktif Tersimpan */}
-                      <td className="py-3.5 px-4">
-                        {s.filtersSummary && s.filtersSummary.length > 0 ? (
-                          <div className="flex flex-wrap gap-1 max-w-xs">
-                            {s.filtersSummary.map((f, fIdx) => (
-                              <span
-                                key={fIdx}
-                                className="px-1.5 py-0.5 bg-[#f0f2f5] text-[10px] text-[#333333] font-medium"
-                              >
-                                {f.label}: {f.value}
-                              </span>
-                            ))}
-                          </div>
-                        ) : (
-                          <span className="text-[#999999] italic">Semua Data Kumulatif</span>
-                        )}
-                      </td>
-
                       {/* Terakhir Diubah */}
-                      <td className="py-3.5 px-4 text-[#666666] font-mono text-[11px]">
+                      <td className="py-2.5 px-3 text-[#666666] font-mono text-[11px] align-middle whitespace-nowrap">
                         {s.updatedAt ? s.updatedAt.slice(0, 10) : s.createdAt.slice(0, 10)}
                       </td>
 
-                      {/* Aksi: Ekspor, Edit, Hapus */}
-                      <td className="py-3.5 px-4 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
-                          {/* Tombol Ekspor 1-Klik */}
-                          <button
-                            type="button"
-                            onClick={() => handleExport(s)}
-                            disabled={isThisExporting || exportingId !== null}
-                            className={`px-3 py-1.5 text-xs font-bold text-white transition-colors flex items-center gap-1.5 ${
-                              isThisExporting
-                                ? 'bg-[#555555] cursor-wait'
-                                : 'bg-[#111111] hover:bg-black'
-                            }`}
-                            title="Ekspor PDF sekarang dalam 1-klik"
-                          >
-                            {isThisExporting ? (
-                              <>
-                                <span className="inline-block animate-spin">⟳</span>
-                                <span>Memproses...</span>
-                              </>
-                            ) : (
-                              <>
-                                <span>⬇</span>
-                                <span>Ekspor</span>
-                              </>
-                            )}
-                          </button>
-
-                          {/* Tombol Edit */}
-                          <button
-                            type="button"
-                            onClick={() => setEditingShortcut(s)}
-                            disabled={exportingId !== null}
-                            className="px-2.5 py-1.5 text-xs font-semibold text-[#333333] bg-[#f0f0f0] hover:bg-[#e0e0e0] transition-colors"
-                            title="Edit konfigurasi pintasan ini"
-                          >
-                            Edit
-                          </button>
-
-                          {/* Tombol Hapus */}
-                          <button
-                            type="button"
-                            onClick={() => setDeletingShortcut(s)}
-                            disabled={exportingId !== null}
-                            className="px-2.5 py-1.5 text-xs font-semibold text-[#cf1124] bg-[#fdf2f2] hover:bg-[#fae2e2] transition-colors"
-                            title="Hapus pintasan ini"
-                          >
-                            Hapus
-                          </button>
+                      {/* Aksi (Fixed 60px, Zero Wrap, Popover Context Menu) */}
+                      <td className="py-2.5 px-3 text-right whitespace-nowrap w-[60px] align-middle">
+                        <div className="flex items-center justify-end">
+                          <TableActionMenu
+                            title={`Aksi untuk ${s.name}`}
+                            items={[
+                              {
+                                label: isThisExporting ? 'Mengekspor PDF...' : 'Ekspor PDF',
+                                disabled: isThisExporting || exportingId !== null,
+                                onClick: () => handleExport(s)
+                              },
+                              {
+                                label: 'Edit Pintasan',
+                                disabled: exportingId !== null,
+                                onClick: () => setEditingShortcut(s)
+                              },
+                              {
+                                label: 'Hapus Pintasan',
+                                variant: 'danger',
+                                disabled: exportingId !== null,
+                                onClick: () => setDeletingShortcut(s)
+                              }
+                            ]}
+                          />
                         </div>
                       </td>
                     </tr>
