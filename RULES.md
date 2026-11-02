@@ -1620,3 +1620,6 @@ Dokumen ini adalah hukum tertinggi operasional sistem. Kegagalan mematuhi aturan
        * Contoh wajib: `(b.createdAt || '').localeCompare(a.createdAt || '')`.
   4. **Proteksi Perhitungan Finansial & Progress Bar**:
      - Kalkulasi persentase dan nilai rasio finansial wajib mengonversi nilai menjadi `Number(val) || 0` untuk menghindari `NaN` atau pembagian dengan nol (`0`).
+  5. **Kepatuhan Mutlak React Rules of Hooks (Top-Level Hook Invariant)**:
+     - DILARANG KERAS meletakkan kondisi keluar awal (*early return* seperti `if (!isOpen || !project) return null;`) di atas hook `useMemo`, `useEffect`, `useState`, atau `useCallback`.
+     - Seluruh hooks wajib dieksekusi tanpa syarat (*unconditionally*) di tingkat atas fungsi sebelum pernyataan return apa pun agar urutan dan jumlah hooks selalu konsisten 100% pada setiap render.

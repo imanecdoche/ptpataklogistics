@@ -836,13 +836,15 @@ export function ProjectsPage({
 
       {/* Modal Finansial & Sub-Pekerjaan Terpadu */}
       <ErrorBoundary onReset={() => handleOpenFinanceProject(null)}>
-        <ProjectFinancialsModal
-          isOpen={Boolean(selectedFinanceProject)}
-          onClose={() => handleOpenFinanceProject(null)}
-          project={selectedFinanceProject}
-          projects={projects}
-          userEmail={_userEmail}
-        />
+        {selectedFinanceProject && (
+          <ProjectFinancialsModal
+            isOpen={Boolean(selectedFinanceProject)}
+            onClose={() => handleOpenFinanceProject(null)}
+            project={selectedFinanceProject}
+            projects={projects}
+            userEmail={_userEmail}
+          />
+        )}
       </ErrorBoundary>
 
       {/* Pin Authorization Modal */}

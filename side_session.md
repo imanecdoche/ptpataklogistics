@@ -843,9 +843,13 @@ Dicatat oleh **Argon** (Linux Workstation) untuk **Antigravity Nizar** (Windows)
   3. Pada `ProjectFinancialsModal.tsx` lines 815, 989, 1185, 1288: Properti `fileName` tombol ekspor PDF memanggil `project.name.replace(...)` secara langsung tanpa fallback `(project.name || 'Proyek')`.
   4. Pada `ProjectsPage.tsx` line 143: Filter pencarian memanggil `p.clientName.toLowerCase()` yang dapat melempar exception saat memfilter proyek dengan `clientName` kosong.
   5. Ketiadaan komponen `ErrorBoundary` menyebabkan React 19 meng-unmount seluruh tree DOM dari `#root` saat uncaught exception terjadi, meninggalkan halaman putih bersih tanpa pesan apa pun.
+  6. **Pelanggaran React Rules of Hooks**: Terdapat pernyataan keluar awal `if (!isOpen || !project) return null;` di tengah baris kode `ProjectFinancialsModal.tsx` sebelum 14 hook `useMemo` dieksekusi. Saat modal berubah status buka/tutup atau saat proyek terdeteksi, jumlah hook yang dieksekusi berbeda antar-render sehingga React melempar galat: `Rendered more hooks than during the previous render`.
 
 #### 2. Solusi & Perubahan yang Diterapkan
-1. **Global & Component Error Boundary (`src/components/ui/ErrorBoundary.tsx` - Rule 134)**:
+1. **Kepatuhan Mutlak React Rules of Hooks di `ProjectFinancialsModal.tsx`**:
+   - Memindahkan `if (!isOpen || !project) return null;` ke bagian paling bawah komponen setelah seluruh 14 hook `useMemo` dieksekusi.
+   - Membungkus pemanggilan `<ProjectFinancialsModal>` di `ProjectsPage.tsx` dengan `{selectedFinanceProject && ...}` agar komponen hanya di-mount saat objek proyek valid.
+2. **Global & Component Error Boundary (`src/components/ui/ErrorBoundary.tsx` - Rule 134)**:
    - Dibuat komponen `ErrorBoundary` solid-filled audit-compliant (`/auditaislop`).
    - Membungkus `<App />` di `src/main.tsx` dan membungkus `<ProjectFinancialsModal />` di `src/components/projects/ProjectsPage.tsx`.
    - Menyajikan fallback UI elegan dengan logo resmi PT Patak Abadi Jaya (`/icons/pt-logo.png`), detail galat merah (`#cf1124`), tombol *"Muat Ulang Halaman"*, dan tombol *"Kembali ke Proyek"*.

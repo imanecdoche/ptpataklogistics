@@ -116,8 +116,6 @@ export function ProjectFinancialsModal({
     };
   }, [isOpen, project]);
 
-  if (!isOpen || !project) return null;
-
   // Kalkulasi Keuangan Terpadu
   // 1. Material
   const totalMaterialRevenue = transactions.reduce((acc, t) => acc + (t.totalRevenue || 0), 0);
@@ -389,6 +387,8 @@ export function ProjectFinancialsModal({
       2: `+${formatRupiah(total)}`,
     };
   }, [clientPayments]);
+
+  if (!isOpen || !project) return null;
 
   return (
     <>
