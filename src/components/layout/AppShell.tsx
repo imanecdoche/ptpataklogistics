@@ -67,9 +67,9 @@ const TAB_TITLES: Record<NavigationTab, { title: string; mobileTitle?: string; s
     subtitle: ''
   },
   hok_labor: {
-    title: 'HOK Tukang Lapangan',
-    mobileTitle: 'HOK Tukang',
-    subtitle: ''
+    title: 'Kasbon & Upah Tukang',
+    mobileTitle: 'Kasbon Tukang',
+    subtitle: 'Manajemen kasbon borongan fisik & upah lapangan'
   },
   recap: {
     title: 'Rekapitulasi Periode',

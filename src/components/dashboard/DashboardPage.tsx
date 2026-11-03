@@ -17,6 +17,7 @@ import { formatDateID } from '@/lib/dateSearchUtils';
 import { formatVolumeDisplay } from '@/lib/volumeUtils';
 import { subscribeMasterQuarries } from '@/lib/databaseMasterService';
 import { subscribeCommodities } from '@/lib/materialMasterService';
+import { MobileThreePillarsWidget } from '@/components/dashboard/MobileThreePillarsWidget';
 
 interface DashboardPageProps {
   userEmail: string;
@@ -282,6 +283,16 @@ export function DashboardPage({
       {/* 1. SECTION: KPI CARDS RINGKASAN UTAMA */}
       {activeSubTab === 'overview' && (
         <>
+          {/* Widget 3 Pilar Khusus Layar HP (Rule Papah & /auditaislop) */}
+          <MobileThreePillarsWidget
+            userEmail={userEmail}
+            transactions={filteredTransactions}
+            cashEntries={cashEntries}
+            latestCash={todayMetrics.latestCash}
+            totalRevenue={todayMetrics.totalRevenue}
+            onNavigateTab={onNavigateTab}
+          />
+
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
             {/* Card 1: Ritase */}
             <div className="bg-white rounded-[10px] p-4 border border-[#eaeaea] flex flex-col justify-between">

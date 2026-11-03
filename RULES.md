@@ -1654,3 +1654,31 @@ Dokumen ini adalah hukum tertinggi operasional sistem. Kegagalan mematuhi aturan
      - Kolom tabel Laporan Cepat dibuat ringkas dan bersih, hanya terdiri dari: `No`, `Nama Pintasan Laporan` (dengan subtitle title/kategori bila ada), `Format Dokumen PDF`, `Terakhir Diubah`, dan `Aksi`.
      - Kolom `Kategori Laporan` dan `Filter Aktif Tersimpan` dihilangkan dari tampilan tabel utama untuk menghindari pemborosan ruang horizontal dan badge/pill berlebihan per aturan `/auditaislop`.
      - Kolom `Aksi` wajib menggunakan menu kontekstual standar `TableActionMenu` (`w-[60px] min-w-[60px]`) dengan ikon menu standar (`assets/menu-bars.png`), yang memuat opsi: *"Ekspor PDF"*, *"Edit Pintasan"*, dan *"Hapus Pintasan"*, serta mendukung klik kanan desktop dan long-press (tap & hold) 450ms pada baris tabel.
+
+### Rule 136: Arsitektur Eksekutif 3 Pilar Lapangan & Manajemen Kasbon Tukang Borongan
+- **Latar Belakang & Keluhan Operasional Komisaris**:
+  - Berdasarkan evaluasi penggunaan aplikasi melalui ponsel cerdas (HP), navigasi menu terlalu banyak dan membuat pengguna lapangan merasa kewalahan (*"kewalahan, muter-muter, lompat ke sana ke mari, nggak ketemu kasbon tukang"*).
+  - Komisaris membutuhkan akses langsung 1-klik untuk kasbon tukang/mandor tanpa harus masuk ke tab kas atau membuka rincian proyek.
+  - Nilai borongan dan kasbon wajib dihitung transparan secara otomatis: Nilai Kontrak Borongan (misal MCK Rp 15 Jt) - Total Kasbon Ditarik (misal Rp 3 Jt) = Sisa Hak Borongan (Rp 12 Jt).
+- **Ketentuan Implementasi**:
+  1. **Widget Pintasan 3 Pilar di Mobile Dashboard (`MobileThreePillarsWidget.tsx`)**:
+     - Ditampilkan secara responsif pada perangkat ponsel cerdas (`block md:hidden`) di bagian teratas beranda Dashboard.
+     - Menyajikan 3 Pilar Operasional:
+       * **1. Dana & Kas** (Saldo kas riil, kas masuk, kas keluar $\rightarrow$ klik langsung ke Arus Kas).
+       * **2. Perputaran Material** (Total ritase & penjualan material $\rightarrow$ klik langsung ke Riwayat Ritase).
+       * **3. Kasbon Lapangan & Borongan** (Total kasbon tukang ditarik, sisa hak upah borongan, jumlah pekerjaan $\rightarrow$ klik langsung ke Kasbon Tukang).
+     - Dilengkapi tombol aksi cepat **`+ Catat Kasbon`** yang langsung memicu modal pencatatan kasbon instan di HP.
+  2. **Standarisasi Tab & Label Menu Sidebar**:
+     - Label menu teknis lama `"HOK Tukang Lapangan"` resmi diubah menjadi **"Kasbon & Upah Tukang"** di `Sidebar.tsx`, `AppShell.tsx`, dan `routeDefinitions.ts` (`/mandor-borongan` dan alias `/kasbon-tukang`).
+     - Memiliki 3 sub-tab terarah:
+       * Sub-Tab 1: **"Kasbon Tukang & Borongan"** (`kasbon_borongan`): Menampilkan tabel saldo borongan fisik (MCK, Paving, Drainase) dengan sisa hak upah, log riwayat kasbon mandor, dan tombol aksi catat bon.
+       * Sub-Tab 2: **"Kasbon Tim & Relawan"** (`kasbon_employee`): Menampilkan riwayat kasbon karyawan internal proyek.
+       * Sub-Tab 3: **"Tipe Pekerjaan & Master Tarif"** (`job_types`): Konfigurasi acuan tarif pekerjaan fisik.
+  3. **Pencatatan Terpadu & Sinkronisasi Ganda (Zero Double Entry)**:
+     - Setiap pencatatan kasbon melalui `QuickRecordKasbonModal.tsx` secara otomatis memotong saldo sisa hak upah pada `project_sub_jobs` dan mencatat mutasi kas keluar di Buku Kas Utama (`cash_ledger` dengan kategori `KASBON_MANDOR` atau `KASBON_KARYAWAN`).
+     - Penghapusan kasbon otomatis memulihkan saldo hak borongan dan membatalkan mutasi kas keluar di Buku Kas secara terintegrasi.
+  4. **Kepatuhan Desain Mutlak (`/auditaislop`)**:
+     - Tombol dan badge wajib menggunakan solid-filled token padat (`bg-[#111111]`, `bg-[#f5f5f5]`, `bg-[#cf1124]`).
+     - DILARANG menggunakan outline stroke dekoratif (`border-none`), DILARANG glassmorphism blur, dan wajib anti-wrapping (`whitespace-nowrap`).
+     - Modal di HP otomatis menggunakan bottom drawer `h-[85dvh]` dengan transisi keluar-masuk halus berdurasi 200ms.
+

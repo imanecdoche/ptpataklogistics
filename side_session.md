@@ -929,6 +929,49 @@ Dicatat oleh **Argon** (Linux Workstation) untuk **Antigravity Nizar** (Windows)
 - **Instruksi untuk Nizar**: Jalankan `git pull origin main`.
 
 
+### FASE 24: Solusi Jalan Pintas 3 Pilar Mobile & Pusat Kasbon Tukang Borongan (Rule 136)
+Dicatat oleh **Argon** (Linux Workstation) untuk **Antigravity Nizar** (Windows):
+
+#### 1. Masalah & Keluhan Operasional Komisaris (Papah)
+- Melalui 7 rekaman suara WhatsApp, Komisaris mengeluhkan navigasi di HP yang terlalu membingungkan dan banyak menu ("kewalahan, muter-muter, lompat ke sana ke mari").
+- Keluhan paling krusial: *"Nggak ketemu kasbon tukang, Fatih."*
+- Komisaris membutuhkan:
+  1. Akses cepat 1-klik untuk kasbon tukang langsung dari layar depan HP.
+  2. Logika borongan fisik yang transparan dan otomatis: Nilai Borongan (misal MCK Rp 15 Jt) - Kasbon Ditarik (misal Rp 3 Jt) = Sisa Hak Upah (Rp 12 Jt).
+  3. Struktur 3 Pilar Utama di HP: (1) Dana & Kas, (2) Perputaran Material, (3) Kasbon & Biaya Lapangan.
+
+#### 2. Solusi & Perubahan Teknis yang Diimplementasikan
+1. **Navigasi & Label Standar Sistem**:
+   - `Sidebar.tsx`, `AppShell.tsx`, `routeDefinitions.ts`: Menu `'hok_labor'` resmi diubah namanya dari *"HOK Tukang Lapangan"* menjadi **"Kasbon & Upah Tukang"**.
+   - Sub-menu disusun terarah:
+     - `kasbon_borongan`: *"Kasbon Tukang Fisik"*
+     - `kasbon_employee`: *"Kasbon Tim & Relawan"*
+     - `job_types`: *"Tipe Pekerjaan & Tarif"*
+2. **Widget Pintasan 3 Pilar di Mobile Dashboard (`MobileThreePillarsWidget.tsx`)**:
+   - Ditampilkan di baris teratas Dashboard khusus tampilan layar HP (`block md:hidden`).
+   - Merangkum 3 Pilar Operasional:
+     - **Pilar 1: Dana & Kas** (Saldo kas riil, kas masuk, kas keluar $\rightarrow$ 1-klik ke Arus Kas).
+     - **Pilar 2: Perputaran Material** (Total ritase & penjualan material $\rightarrow$ 1-klik ke Riwayat Ritase).
+     - **Pilar 3: Kasbon Lapangan & Borongan** (Total kasbon ditarik, sisa hak upah, jumlah pekerjaan $\rightarrow$ 1-klik ke Kasbon Tukang).
+   - Tombol utama solid hitam: **`+ Catat Kasbon`** (akses instan 1-klik di HP).
+3. **Modal Input Kasbon Terpadu (`QuickRecordKasbonModal.tsx`)**:
+   - Mendukung pencatatan Kasbon Tukang (MCK, Paving, Drainase) dan Kasbon Tim/Relawan.
+   - Mengikuti standar `/auditaislop`: Bottom drawer di mobile `h-[85dvh]` dengan animasi transisi 200ms mulus, desktop modal `md:w-[500px] md:h-[620px]`.
+   - Menggunakan backend service `recordWorkerKasbon` & `recordEmployeeKasbon` yang otomatis memotong saldo sisa hak borongan dan mencatat mutasi kas keluar di Buku Kas (`cash_ledger`).
+4. **Rekonstruksi Halaman Kasbon & Upah Tukang (`LaborPage.tsx`)**:
+   - Sub-Tab 1: Menampilkan KPI Nilai Borongan, Total Kasbon Ditarik, Sisa Hak Borongan, tabel sub-pekerjaan fisik, dan riwayat transaksi kasbon tukang dengan opsi hapus aman.
+   - Sub-Tab 2: Menampilkan KPI dan tabel riwayat kasbon tim & relawan internal proyek.
+   - Sub-Tab 3: Konfigurasi master tipe pekerjaan & tarif acuan HOK.
+5. **Pendaftaran Aturan**:
+   - Dituliskan lengkap sebagai **Rule 136** di `RULES.md` dan `.agents/RULES.md` (0 diff).
+
+#### 3. Verifikasi & Build Status
+- **Typecheck**: 🟢 `npx tsc -b` lulus 100% tanpa error.
+- **Production Build**: 🟢 `vite build` sukses (`built in 52.18s`).
+- **Instruksi untuk Nizar**: Cukup jalankan `git pull origin main` di repositori Windows.
+
+
+
 
 ### FASE 22: Fitur Laporan Cepat (1-Click Instant PDF Export), Koleksi Firestore `quick_reports` & Tombol Tambah ke Laporan Cepat (Rule 135)
 Dicatat oleh **Argon** (Linux Workstation) untuk **Antigravity Nizar** (Windows):
@@ -992,6 +1035,49 @@ Dicatat oleh **Argon** (Linux Workstation) untuk **Antigravity Nizar** (Windows)
 - **Typecheck**: 🟢 `npx tsc -b` lulus tanpa error.
 - **Production Build**: 🟢 `vite build` sukses (`built in 54.03s`).
 - **Instruksi untuk Nizar**: Jalankan `git pull origin main`.
+
+
+### FASE 24: Solusi Jalan Pintas 3 Pilar Mobile & Pusat Kasbon Tukang Borongan (Rule 136)
+Dicatat oleh **Argon** (Linux Workstation) untuk **Antigravity Nizar** (Windows):
+
+#### 1. Masalah & Keluhan Operasional Komisaris (Papah)
+- Melalui 7 rekaman suara WhatsApp, Komisaris mengeluhkan navigasi di HP yang terlalu membingungkan dan banyak menu ("kewalahan, muter-muter, lompat ke sana ke mari").
+- Keluhan paling krusial: *"Nggak ketemu kasbon tukang, Fatih."*
+- Komisaris membutuhkan:
+  1. Akses cepat 1-klik untuk kasbon tukang langsung dari layar depan HP.
+  2. Logika borongan fisik yang transparan dan otomatis: Nilai Borongan (misal MCK Rp 15 Jt) - Kasbon Ditarik (misal Rp 3 Jt) = Sisa Hak Upah (Rp 12 Jt).
+  3. Struktur 3 Pilar Utama di HP: (1) Dana & Kas, (2) Perputaran Material, (3) Kasbon & Biaya Lapangan.
+
+#### 2. Solusi & Perubahan Teknis yang Diimplementasikan
+1. **Navigasi & Label Standar Sistem**:
+   - `Sidebar.tsx`, `AppShell.tsx`, `routeDefinitions.ts`: Menu `'hok_labor'` resmi diubah namanya dari *"HOK Tukang Lapangan"* menjadi **"Kasbon & Upah Tukang"**.
+   - Sub-menu disusun terarah:
+     - `kasbon_borongan`: *"Kasbon Tukang Fisik"*
+     - `kasbon_employee`: *"Kasbon Tim & Relawan"*
+     - `job_types`: *"Tipe Pekerjaan & Tarif"*
+2. **Widget Pintasan 3 Pilar di Mobile Dashboard (`MobileThreePillarsWidget.tsx`)**:
+   - Ditampilkan di baris teratas Dashboard khusus tampilan layar HP (`block md:hidden`).
+   - Merangkum 3 Pilar Operasional:
+     - **Pilar 1: Dana & Kas** (Saldo kas riil, kas masuk, kas keluar $\rightarrow$ 1-klik ke Arus Kas).
+     - **Pilar 2: Perputaran Material** (Total ritase & penjualan material $\rightarrow$ 1-klik ke Riwayat Ritase).
+     - **Pilar 3: Kasbon Lapangan & Borongan** (Total kasbon ditarik, sisa hak upah, jumlah pekerjaan $\rightarrow$ 1-klik ke Kasbon Tukang).
+   - Tombol utama solid hitam: **`+ Catat Kasbon`** (akses instan 1-klik di HP).
+3. **Modal Input Kasbon Terpadu (`QuickRecordKasbonModal.tsx`)**:
+   - Mendukung pencatatan Kasbon Tukang (MCK, Paving, Drainase) dan Kasbon Tim/Relawan.
+   - Mengikuti standar `/auditaislop`: Bottom drawer di mobile `h-[85dvh]` dengan animasi transisi 200ms mulus, desktop modal `md:w-[500px] md:h-[620px]`.
+   - Menggunakan backend service `recordWorkerKasbon` & `recordEmployeeKasbon` yang otomatis memotong saldo sisa hak borongan dan mencatat mutasi kas keluar di Buku Kas (`cash_ledger`).
+4. **Rekonstruksi Halaman Kasbon & Upah Tukang (`LaborPage.tsx`)**:
+   - Sub-Tab 1: Menampilkan KPI Nilai Borongan, Total Kasbon Ditarik, Sisa Hak Borongan, tabel sub-pekerjaan fisik, dan riwayat transaksi kasbon tukang dengan opsi hapus aman.
+   - Sub-Tab 2: Menampilkan KPI dan tabel riwayat kasbon tim & relawan internal proyek.
+   - Sub-Tab 3: Konfigurasi master tipe pekerjaan & tarif acuan HOK.
+5. **Pendaftaran Aturan**:
+   - Dituliskan lengkap sebagai **Rule 136** di `RULES.md` dan `.agents/RULES.md` (0 diff).
+
+#### 3. Verifikasi & Build Status
+- **Typecheck**: 🟢 `npx tsc -b` lulus 100% tanpa error.
+- **Production Build**: 🟢 `vite build` sukses (`built in 52.18s`).
+- **Instruksi untuk Nizar**: Cukup jalankan `git pull origin main` di repositori Windows.
+
 
 
 

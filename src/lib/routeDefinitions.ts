@@ -38,6 +38,7 @@ export const SLUG_TO_TAB: Record<string, NavigationTab> = {
   'klien': 'clients',
   'material': 'materials',
   'mandor-borongan': 'hok_labor',
+  'kasbon-tukang': 'hok_labor',
   'rekapitulasi': 'recap',
   'laporan-cepat': 'quick_reports',
   'database': 'database',
@@ -83,6 +84,8 @@ export const SUBTAB_TO_SLUG: Record<NavigationTab, Record<string, string>> = {
     pricing: 'harga'
   },
   hok_labor: {
+    kasbon_borongan: 'kasbon-tukang',
+    kasbon_employee: 'kasbon-tim',
     payments: 'pembayaran',
     job_types: 'tipe-pekerjaan'
   },
@@ -137,8 +140,12 @@ export const SLUG_TO_SUBTAB: Record<NavigationTab, Record<string, string>> = {
     'pricing': 'pricing'
   },
   hok_labor: {
-    'pembayaran': 'payments',
-    'payments': 'payments',
+    'kasbon-tukang': 'kasbon_borongan',
+    'kasbon_borongan': 'kasbon_borongan',
+    'kasbon-tim': 'kasbon_employee',
+    'kasbon_employee': 'kasbon_employee',
+    'pembayaran': 'kasbon_borongan',
+    'payments': 'kasbon_borongan',
     'tipe-pekerjaan': 'job_types',
     'job_types': 'job_types'
   },
@@ -180,7 +187,7 @@ export const DEFAULT_SUBTAB: Record<NavigationTab, string | undefined> = {
   quarries: undefined,
   clients: undefined,
   materials: 'catalog',
-  hok_labor: 'payments',
+  hok_labor: 'kasbon_borongan',
   recap: 'volume',
   quick_reports: undefined,
   database: 'ritase',

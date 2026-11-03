@@ -80,7 +80,7 @@ const MENU_ITEMS: SidebarItem[] = [
   },
   {
     id: 'hok_labor',
-    label: 'HOK Tukang Lapangan',
+    label: 'Kasbon & Upah Tukang',
     iconSrc: '/icons/layers.png'
   },
   {
@@ -125,8 +125,9 @@ export const SUB_MENU_ITEMS: Record<NavigationTab, SubTabItem[]> = {
     { id: 'receivables', label: 'Piutang Tempo' }
   ],
   hok_labor: [
-    { id: 'payments', label: 'Pembayaran HOK' },
-    { id: 'job_types', label: 'Tipe Pekerjaan' }
+    { id: 'kasbon_borongan', label: 'Kasbon Tukang Fisik' },
+    { id: 'kasbon_employee', label: 'Kasbon Tim & Relawan' },
+    { id: 'job_types', label: 'Tipe Pekerjaan & Tarif' }
   ],
   recap: [
     { id: 'volume', label: 'Volume Muatan' },
